@@ -107,11 +107,11 @@ For the end-to-end flow — from orchestrator trigger through to how output reac
 ├── /.github/             # Actions and workflows
 ├── /microsoft/           # Microsoft-endorsed layer
 │   ├── /knowledge/       # Knowledge files by domain
-│   │   └── /<domain>/
+│   │   └── /<domain>/    # Each article: <slug>.md + optional <slug>.good.al / <slug>.bad.al
 │   └── /skills/          # Microsoft-endorsed action skills
 ├── /community/           # BC community layer
 │   ├── /knowledge/       # Knowledge files by domain
-│   │   └── /<domain>/
+│   │   └── /<domain>/    # Article + sibling samples, same convention
 │   └── /skills/          # Community action skills
 ├── /custom/              # Partner/customer-specific overrides (empty; populated in forks)
 │   ├── /knowledge/

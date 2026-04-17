@@ -19,11 +19,11 @@ Every write operation runs inside a transaction that holds locks until the trans
 
 Perform data reads, calculations, and external integrations outside the transaction whenever possible. Enter the writing phase with all inputs computed, execute the minimum set of Insert, Modify, and Delete calls, and exit. If you have a long-running batch, split it into checkpoints at safe boundaries (see avoid-commit-inside-loops).
 
-See sample: `samples/performance/keep-transaction-scope-short/good.al`.
+See sample: `keep-transaction-scope-short.good.al`.
 
 ## Anti Pattern
 
 Opening a transaction, then performing external web-service calls, heavy report runs, or user-facing dialogs while the locks are held, suspends every other session that needs the same rows for as long as the external operation takes.
 
-See sample: `samples/performance/keep-transaction-scope-short/bad.al`.
+See sample: `keep-transaction-scope-short.bad.al`.
 

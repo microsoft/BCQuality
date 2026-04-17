@@ -23,5 +23,5 @@ Keep subscribers small: guard early with inexpensive checks, defer heavy work to
 
 Calling an external web service, running a report, or iterating a large table from inside an event subscriber on a hot publisher makes every operation on that publisher as slow as the heaviest subscriber.
 
-See sample: `samples/performance/keep-event-subscribers-lightweight/bad.al`.
+See sample: `keep-event-subscribers-lightweight.bad.al`.
 

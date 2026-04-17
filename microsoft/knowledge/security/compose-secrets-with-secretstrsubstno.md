@@ -19,11 +19,11 @@ SecretStrSubstNo is the SecretText analogue of StrSubstNo. The template is a reg
 
 Format SecretText templates with SecretStrSubstNo. This is the correct primitive for building authorization headers, secret URIs, and any other formatted string that embeds a SecretText. Provide the static parts of the template as a regular string literal; only the substitutions carry the secret value.
 
-See sample: `samples/security/compose-secrets-with-secretstrsubstno/good.al`.
+See sample: `compose-secrets-with-secretstrsubstno.good.al`.
 
 ## Anti Pattern
 
 Using StrSubstNo (or plain string concatenation) on a plain-Text token to build an authorization header. The result is a Text containing the secret in plaintext, visible in the debugger, inspectable in snapshot debug sessions, and captured by any logging the caller does not control. SecretText should have been used end-to-end.
 
-See sample: `samples/security/compose-secrets-with-secretstrsubstno/bad.al`.
+See sample: `compose-secrets-with-secretstrsubstno.bad.al`.
 

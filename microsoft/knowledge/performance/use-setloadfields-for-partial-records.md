@@ -19,11 +19,11 @@ SetLoadFields instructs the platform to hydrate only the listed fields on a reco
 
 Call SetLoadFields before FindSet, FindFirst, or Get whenever the code path only reads a subset of fields. List every field that is read during the operation, including fields used in filters, calculations, and downstream function calls. Omitting a field that is later accessed triggers a second round-trip.
 
-See sample: `samples/performance/use-setloadfields-for-partial-records/good.al`.
+See sample: `use-setloadfields-for-partial-records.good.al`.
 
 ## Anti Pattern
 
 Iterating a large set and reading only two or three fields without SetLoadFields forces the platform to transport every column for every row, including BLOBs and unused text fields.
 
-See sample: `samples/performance/use-setloadfields-for-partial-records/bad.al`.
+See sample: `use-setloadfields-for-partial-records.bad.al`.
 

@@ -19,11 +19,11 @@ A secret embedded in AL source â€” API key, password, connection string, token â
 
 Retrieve secrets at runtime from a protected store: Azure Key Vault for production workloads (see prefer-azure-key-vault-for-production-secrets) or IsolatedStorage for tenant-local encrypted values (see use-isolated-storage-for-module-and-company-secrets). Carry the retrieved value in a SecretText variable end-to-end (see use-secrettext-for-credentials).
 
-See sample: `samples/security/never-hardcode-secrets-in-al/good.al`.
+See sample: `never-hardcode-secrets-in-al.good.al`.
 
 ## Anti Pattern
 
 Assigning a secret literal to a Text, Code, or Label variable (including labels marked as constants). The secret is now part of the compiled app and indistinguishable from non-sensitive content to callers and tools.
 
-See sample: `samples/security/never-hardcode-secrets-in-al/bad.al`.
+See sample: `never-hardcode-secrets-in-al.bad.al`.
 

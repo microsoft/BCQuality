@@ -19,11 +19,11 @@ StrSubstNo formats values into a placeholder template in a single call. Manual c
 
 Declare the template as a Label (so it can be localized) and format with StrSubstNo. Pass values in the order the placeholders expect; StrSubstNo handles locale-sensitive conversions consistently.
 
-See sample: `samples/performance/use-strsubstno-for-message-formatting/good.al`.
+See sample: `use-strsubstno-for-message-formatting.good.al`.
 
 ## Anti Pattern
 
 Building a user-facing string by concatenating record field values with string literals ignores locale rules and allocates more than necessary.
 
-See sample: `samples/performance/use-strsubstno-for-message-formatting/bad.al`.
+See sample: `use-strsubstno-for-message-formatting.bad.al`.
 

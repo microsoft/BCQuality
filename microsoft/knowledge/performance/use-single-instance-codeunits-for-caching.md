@@ -19,7 +19,7 @@ A SingleInstance codeunit lives once per session. Variables on it survive across
 
 Store long-lived, read-often, rarely-changing data on a SingleInstance codeunit, populated lazily on first access. Keep the cached footprint small: a handful of booleans, a setup record, a few derived values. Be explicit about invalidation if the source can change during the session.
 
-See sample: `samples/performance/use-single-instance-codeunits-for-caching/good.al`.
+See sample: `use-single-instance-codeunits-for-caching.good.al`.
 
 ## Anti Pattern
 

@@ -19,11 +19,11 @@ Confirm, StrMenu, Message, and any other user-facing dialog pauses execution whi
 
 Gather every user decision before the writing phase begins. Once the decisions are known, run the transaction end-to-end without prompts.
 
-See sample: `samples/performance/avoid-user-interaction-in-transactions/good.al`.
+See sample: `avoid-user-interaction-in-transactions.good.al`.
 
 ## Anti Pattern
 
 Calling Confirm or StrMenu from inside an OnInsert, OnModify, or OnDelete trigger — or from any code path that has already started modifying records — blocks on user input while holding locks.
 
-See sample: `samples/performance/avoid-user-interaction-in-transactions/bad.al`.
+See sample: `avoid-user-interaction-in-transactions.bad.al`.
 

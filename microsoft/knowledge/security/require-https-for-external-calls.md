@@ -19,11 +19,11 @@ HttpClient can issue requests over plaintext HTTP as easily as over HTTPS. A req
 
 Call external services exclusively over https://. When the destination is configurable, validate at runtime that the scheme is https before issuing the request, and fail closed with a clear (non-disclosing) error otherwise.
 
-See sample: `samples/security/require-https-for-external-calls/good.al`.
+See sample: `require-https-for-external-calls.good.al`.
 
 ## Anti Pattern
 
 Issuing HttpClient.Get('http://...'), or accepting an arbitrary user-supplied URL and passing it straight to HttpClient without scheme validation.
 
-See sample: `samples/security/require-https-for-external-calls/bad.al`.
+See sample: `require-https-for-external-calls.bad.al`.
 

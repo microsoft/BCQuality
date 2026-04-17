@@ -19,11 +19,11 @@ SecretText transit (assignment between SecretText variables, parameters, and ret
 
 Apply [NonDebuggable] to any procedure that reads a response body, parses it, and assigns the extracted secret to a SecretText out-parameter or return. Keep the procedure narrow: it SHOULD do the minimum work required to obtain the SecretText, and nothing else.
 
-See sample: `samples/security/use-nondebuggable-when-parsing-secrets/good.al`.
+See sample: `use-nondebuggable-when-parsing-secrets.good.al`.
 
 ## Anti Pattern
 
 Parsing a token response in a normal (debuggable) procedure. The plaintext token is visible in debug sessions and snapshots taken during the parse.
 
-See sample: `samples/security/use-nondebuggable-when-parsing-secrets/bad.al`.
+See sample: `use-nondebuggable-when-parsing-secrets.bad.al`.
 

@@ -19,11 +19,11 @@ IsolatedStorage is a per-extension, per-tenant key-value store. DataScope::Modul
 
 Use IsolatedStorage.SetEncrypted to write secrets, IsolatedStorage.Contains to probe, and IsolatedStorage.Get into a SecretText destination to read. Choose DataScope::Company for per-company credentials (for example, a tenant-per-company service account) and DataScope::Module for extension-wide configuration.
 
-See sample: `samples/security/use-isolated-storage-for-module-and-company-secrets/good.al`.
+See sample: `use-isolated-storage-for-module-and-company-secrets.good.al`.
 
 ## Anti Pattern
 
 Storing secrets in a Setup table column as plain Text, or using IsolatedStorage.Set (unencrypted) for values that authenticate the extension to an external service. Both shapes leave the secret readable by anyone with read rights on the underlying storage.
 
-See sample: `samples/security/use-isolated-storage-for-module-and-company-secrets/bad.al`.
+See sample: `use-isolated-storage-for-module-and-company-secrets.bad.al`.
 

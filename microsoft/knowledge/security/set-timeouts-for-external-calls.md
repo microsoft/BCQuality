@@ -19,11 +19,11 @@ An HttpClient with no explicit timeout relies on defaults that may be long enoug
 
 Set HttpClient.Timeout to a bounded value (seconds, not minutes) that reflects the SLA of the dependency. Handle the timeout error without leaking endpoint details to end users (see avoid-sensitive-data-in-error-messages).
 
-See sample: `samples/security/set-timeouts-for-external-calls/good.al`.
+See sample: `set-timeouts-for-external-calls.good.al`.
 
 ## Anti Pattern
 
 Issuing HttpClient requests without setting Timeout and without a timeout-handling branch. A slow dependency now has an unbounded blast radius inside the extension.
 
-See sample: `samples/security/set-timeouts-for-external-calls/bad.al`.
+See sample: `set-timeouts-for-external-calls.bad.al`.
 

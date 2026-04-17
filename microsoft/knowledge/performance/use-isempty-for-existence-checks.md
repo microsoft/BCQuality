@@ -19,11 +19,11 @@ IsEmpty is the cheapest way to answer whether at least one row matches the curre
 
 Use `if not Rec.IsEmpty() then ...` for existence checks. Reserve Count for cases where the exact number of rows is needed, and FindFirst for cases where you actually want the row's field values.
 
-See sample: `samples/performance/use-isempty-for-existence-checks/good.al`.
+See sample: `use-isempty-for-existence-checks.good.al`.
 
 ## Anti Pattern
 
 `if Rec.Count() > 0` iterates the whole set just to answer a yes/no question. `if Rec.FindFirst() then` loads an entire row of data the caller never reads.
 
-See sample: `samples/performance/use-isempty-for-existence-checks/bad.al`.
+See sample: `use-isempty-for-existence-checks.bad.al`.
 

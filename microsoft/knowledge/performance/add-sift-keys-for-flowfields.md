@@ -19,7 +19,7 @@ CodeCop rule AA0232 checks that FlowFields backed by CalcSums or aggregation Cal
 
 For each Sum-style FlowField, ensure the source table has a key whose leading fields match the FlowField's CalcFormula WHERE clause and whose SumIndexFields list includes the summed field. Table extensions adding new FlowFields are responsible for adding the supporting key.
 
-See sample: `samples/performance/add-sift-keys-for-flowfields/good.al`.
+See sample: `add-sift-keys-for-flowfields.good.al`.
 
 ## Anti Pattern
 

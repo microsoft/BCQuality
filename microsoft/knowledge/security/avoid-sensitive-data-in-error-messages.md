@@ -19,11 +19,11 @@ Errors surfaced to end users are routinely forwarded to support systems, capture
 
 Raise end-user errors using localized Labels that describe the condition without naming infrastructure. Emit the actual detail (exception text, endpoint, correlation id) through the application's internal logging channel, where audience and retention are controlled.
 
-See sample: `samples/security/avoid-sensitive-data-in-error-messages/good.al`.
+See sample: `avoid-sensitive-data-in-error-messages.good.al`.
 
 ## Anti Pattern
 
 Error('Failed to connect to Server=PROD-SQL01;Database=NAV;User=admin: %1', Ex.Message); — every support ticket now carries the server name, database name, and service account.
 
-See sample: `samples/security/avoid-sensitive-data-in-error-messages/bad.al`.
+See sample: `avoid-sensitive-data-in-error-messages.bad.al`.
 

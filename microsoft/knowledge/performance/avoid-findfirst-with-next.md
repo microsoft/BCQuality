@@ -23,5 +23,5 @@ Choose the Find variant that matches the operation: FindSet for full iteration, 
 
 Writing `if Rec.FindFirst() then repeat ... until Rec.Next() = 0` is the canonical AA0233 offender. The loop wastes bandwidth and obscures the author's intent.
 
-See sample: `samples/performance/avoid-findfirst-with-next/bad.al`.
+See sample: `avoid-findfirst-with-next.bad.al`.
 

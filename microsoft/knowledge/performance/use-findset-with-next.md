@@ -19,11 +19,11 @@ When iterating over a filtered set of records with repeat-until, use FindSet tog
 
 Call FindSet to start the iteration and Next to advance. Guard the loop with the standard `if FindSet() then ... until Next() = 0` idiom so callers can still handle the empty-set case.
 
-See sample: `samples/performance/use-findset-with-next/good.al`.
+See sample: `use-findset-with-next.good.al`.
 
 ## Anti Pattern
 
 Starting a repeat-until loop with FindFirst or FindLast reads only one row and then calls Next on an iterator that was not intended for full-set traversal. The platform pays extra work to fetch the single row and the loop silhouette is misleading to reviewers.
 
-See sample: `samples/performance/use-findset-with-next/bad.al`.
+See sample: `use-findset-with-next.bad.al`.
 

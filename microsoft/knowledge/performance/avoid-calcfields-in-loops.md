@@ -19,11 +19,11 @@ CalcFields evaluates one or more FlowFields for the current record by issuing a 
 
 Move CalcFields out of the iteration. If the total is what you need, use CalcSums on the filtered parent set. If row-by-row FlowField values are needed, reshape the computation so the aggregate runs once — for example by joining against a temporary table populated in a single batched query.
 
-See sample: `samples/performance/avoid-calcfields-in-loops/good.al`.
+See sample: `avoid-calcfields-in-loops.good.al`.
 
 ## Anti Pattern
 
 Calling CalcFields inside `repeat ... until Next() = 0` on a hot parent record is the textbook N+1 pattern. Even a modest parent set size (hundreds of rows) turns into thousands of round-trips.
 
-See sample: `samples/performance/avoid-calcfields-in-loops/bad.al`.
+See sample: `avoid-calcfields-in-loops.bad.al`.
 

@@ -19,7 +19,7 @@ Insert, Modify, and Delete accept a boolean that controls whether the table's On
 
 Call Insert(true), Modify(true), or Delete(true) when the table's trigger logic is part of the operation's semantics. Call Insert(false), Modify(false), or Delete(false) when the operation is bulk data movement or temporary-table manipulation and the trigger would duplicate work or fire invalid side effects.
 
-See sample: `samples/performance/use-insert-false-when-skipping-triggers/good.al`.
+See sample: `use-insert-false-when-skipping-triggers.good.al`.
 
 ## Anti Pattern
 

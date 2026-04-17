@@ -19,7 +19,7 @@ AL chooses a key for a Find call based on the current SetCurrentKey selection. W
 
 Call SetCurrentKey with the fields you filter and sort on, in the order they appear in a table key. If no suitable key exists, add one via a table extension rather than relying on an unsupported filter pattern.
 
-See sample: `samples/performance/set-current-key-to-match-filters/good.al`.
+See sample: `set-current-key-to-match-filters.good.al`.
 
 ## Anti Pattern
 

@@ -19,7 +19,7 @@ Temporary tables live in memory, not in SQL. They are the correct primary data s
 
 Declare the record variable with `temporary` when the data is scratch. Populate it with Insert(false) to avoid firing triggers. Clear the table explicitly with DeleteAll when the variable's scope is long-lived (a SingleInstance codeunit or a reused session variable) and needs to be reset between uses.
 
-See sample: `samples/performance/use-temporary-tables-for-intermediate-data/good.al`.
+See sample: `use-temporary-tables-for-intermediate-data.good.al`.
 
 ## Anti Pattern
 

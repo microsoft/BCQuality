@@ -19,7 +19,7 @@ Reports iterate a dataitem's record automatically; the developer does not contro
 
 In each dataitem's OnPreDataItem trigger, call AddLoadFields for every field used by the layout, by the dataitem's triggers, and by any code that runs in the row-level event hooks. If the layout uses a FlowField, also ensure CalcFields is called and that the underlying key is loaded (see add-sift-keys-for-flowfields).
 
-See sample: `samples/performance/use-addloadfields-in-report-layouts/good.al`.
+See sample: `use-addloadfields-in-report-layouts.good.al`.
 
 ## Anti Pattern
 

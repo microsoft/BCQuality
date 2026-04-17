@@ -19,11 +19,11 @@ Get is a direct primary-key lookup: one index seek, one row, done. FindFirst wit
 
 When the complete primary key is known, call Get. Use FindFirst only for non-primary-key lookups or when the filter is a partial prefix of the key.
 
-See sample: `samples/performance/prefer-get-for-primary-key-lookups/good.al`.
+See sample: `prefer-get-for-primary-key-lookups.good.al`.
 
 ## Anti Pattern
 
 Setting one SetRange per primary-key field and then calling FindFirst reproduces Get with more typing and slightly worse performance.
 
-See sample: `samples/performance/prefer-get-for-primary-key-lookups/bad.al`.
+See sample: `prefer-get-for-primary-key-lookups.bad.al`.
 

@@ -19,11 +19,11 @@ Indirect permissions (ri, ii, mi, di) let a procedure perform an operation again
 
 Where a module exposes a controlled write or delete against a sensitive table, grant the codeunit (or the helper permission set it assumes) the indirect permission (mi, di) it requires, keep direct permissions minimal, and document why the elevation is justified. The helper MUST validate its inputs and the caller's identity before performing the elevated work.
 
-See sample: `samples/security/use-indirect-permissions-for-elevated-access/good.al`.
+See sample: `use-indirect-permissions-for-elevated-access.good.al`.
 
 ## Anti Pattern
 
 Granting direct M or D on a sensitive tabledata to every role that might invoke a helper, because authoring an indirect-permission codeunit was inconvenient. Every caller now has the elevated right for every code path, not just the one the helper implements.
 
-See sample: `samples/security/use-indirect-permissions-for-elevated-access/bad.al`.
+See sample: `use-indirect-permissions-for-elevated-access.bad.al`.
 

@@ -19,11 +19,11 @@ The InherentPermissions attribute attaches a minimum access grant to a procedure
 
 Annotate read-only helper procedures with InherentPermissions specifying only the tables and access letters the body uses (typically 'r'). Callers do not need direct read rights on the underlying extension-owned table, so the calling role can be narrower. This is the narrowest of the elevation options and is appropriate for read-only lookup helpers.
 
-See sample: `samples/security/use-inherent-permissions-to-grant-minimal-access/good.al`.
+See sample: `use-inherent-permissions-to-grant-minimal-access.good.al`.
 
 ## Anti Pattern
 
 A helper that reads a single lookup value but forces every calling role to hold tabledata read rights, because the helper does not declare its own inherent permissions. The broad read right then applies to every other code path that role can reach, not just the helper.
 
-See sample: `samples/security/use-inherent-permissions-to-grant-minimal-access/bad.al`.
+See sample: `use-inherent-permissions-to-grant-minimal-access.bad.al`.
 

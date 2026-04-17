@@ -19,11 +19,11 @@ SecretText is a compile-time-checked AL type for credentials, API keys, tokens, 
 
 Type every credential-carrying variable, procedure parameter, and return as SecretText. Compose values with SecretStrSubstNo (see compose-secrets-with-secretstrsubstno). For HttpClient integration, see use-secrettext-with-httpclient. When a secret must be extracted from a Text source, contain that conversion in a NonDebuggable procedure (see use-nondebuggable-when-parsing-secrets).
 
-See sample: `samples/security/use-secrettext-for-credentials/good.al`.
+See sample: `use-secrettext-for-credentials.good.al`.
 
 ## Anti Pattern
 
 Passing credentials around as Text or Code parameters. Every such variable is visible in the debugger and may be captured by error handlers, logs, and telemetry that treat Text as non-sensitive.
 
-See sample: `samples/security/use-secrettext-for-credentials/bad.al`.
+See sample: `use-secrettext-for-credentials.bad.al`.
 

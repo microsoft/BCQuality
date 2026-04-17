@@ -19,11 +19,11 @@ HttpRequestMessage, HttpHeaders, and HttpContent expose SecretText overloads so 
 
 Use HttpRequestMessage.SetSecretRequestUri when any URI component is sensitive (for example, a per-call API key in the path or query), and send the request with HttpClient.Send. Add Authorization headers as SecretText. Check for the presence of a secret header with ContainsSecret, not Contains.
 
-See sample: `samples/security/use-secrettext-with-httpclient/good.al`.
+See sample: `use-secrettext-with-httpclient.good.al`.
 
 ## Anti Pattern
 
 Materializing a URI or header value as Text to 'just get it to compile' — for example, StrSubstNo into a Text and then HttpClient.Get(FullUrl, Response). The resulting Text is visible in debuggers, and the URL is typically captured by platform-level logging the extension does not control.
 
-See sample: `samples/security/use-secrettext-with-httpclient/bad.al`.
+See sample: `use-secrettext-with-httpclient.bad.al`.
 

@@ -19,11 +19,11 @@ Authentication failures, permission denials, and unexpected error paths in secur
 
 Use TryFunctions to contain errors around security-relevant work, but always log the failure (category, GetLastErrorText, and enough context to identify the operation) before deciding whether to surface a user-facing error. Never discard a caught security error without a trace.
 
-See sample: `samples/security/do-not-swallow-security-errors-silently/good.al`.
+See sample: `do-not-swallow-security-errors-silently.good.al`.
 
 ## Anti Pattern
 
 `if not TryAuthenticate() then exit;` with no logging and no user-facing error. An authentication-bypass attempt, a revoked credential, and a transient network glitch are now indistinguishable.
 
-See sample: `samples/security/do-not-swallow-security-errors-silently/bad.al`.
+See sample: `do-not-swallow-security-errors-silently.bad.al`.
 

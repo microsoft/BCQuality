@@ -23,5 +23,5 @@ If the batch is large enough that a single transaction is untenable, process it 
 
 Placing Commit inside `repeat ... until Next() = 0` is almost always a mistake: it is unusual for the correctness of the operation to depend on per-row commits, and the cost of starting a new transaction on every row dominates the work.
 
-See sample: `samples/performance/avoid-commit-inside-loops/bad.al`.
+See sample: `avoid-commit-inside-loops.bad.al`.
 

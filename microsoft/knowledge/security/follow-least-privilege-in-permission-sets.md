@@ -19,11 +19,11 @@ Permission sets define the tabledata and object rights granted to every user or 
 
 Enumerate the specific tabledata objects a role needs and grant only the letters (R, I, M, D) that role genuinely uses. A sales order-entry role typically needs RIM on Sales Header, RIMD on Sales Line, and R on Customer — not blanket RIMD. Permission sets SHOULD be granular and role-shaped; a single permission set that covers every role in an extension is a design smell.
 
-See sample: `samples/security/follow-least-privilege-in-permission-sets/good.al`.
+See sample: `follow-least-privilege-in-permission-sets.good.al`.
 
 ## Anti Pattern
 
 Granting `tabledata * = RIMD` (or any wildcard with I, M, or D) in a permission set. This bypasses any meaningful separation of duties the extension could enforce and gives unreviewed code paths the ability to insert, modify, and delete on any table.
 
-See sample: `samples/security/follow-least-privilege-in-permission-sets/bad.al`.
+See sample: `follow-least-privilege-in-permission-sets.bad.al`.
 

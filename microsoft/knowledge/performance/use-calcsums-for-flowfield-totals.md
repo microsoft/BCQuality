@@ -19,11 +19,11 @@ When the task is to compute a sum over a filtered set, CalcSums lets the platfor
 
 Set the required filters on the record, then call CalcSums on the field you want aggregated. Ensure the table has a key whose SumIndexFields includes the summed field and whose key prefix matches the filters (see add-sift-keys-for-flowfields).
 
-See sample: `samples/performance/use-calcsums-for-flowfield-totals/good.al`.
+See sample: `use-calcsums-for-flowfield-totals.good.al`.
 
 ## Anti Pattern
 
 Looping a filtered set with FindSet and adding a field to an accumulator on every iteration performs work in AL that SQL already knows how to do in one aggregate query.
 
-See sample: `samples/performance/use-calcsums-for-flowfield-totals/bad.al`.
+See sample: `use-calcsums-for-flowfield-totals.bad.al`.
 

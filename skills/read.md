@@ -18,7 +18,7 @@ A knowledge file is a single markdown file that covers **one concern** in Busine
 - A YAML frontmatter block with the fields below. All fields are required.
 - A `## Description` section. Required.
 - Optional sections — typically `## Best Practice` and `## Anti Pattern`, but any `##` section is permitted.
-- No fenced code blocks. Sample code lives in separate sample files referenced by path.
+- No fenced code blocks. Sample code lives in **sibling files** next to the article (see [Sample files](#sample-files) below).
 
 A file that violates any of these rules is invalid and MUST be skipped by consumers. Do not attempt to partially parse invalid files.
 
@@ -114,6 +114,26 @@ Consumers MUST NOT silently treat missing context as a match.
 ## Citing a knowledge file
 
 A consumer that produces output referencing a knowledge file MUST cite it by its repo-relative path (for example, `microsoft/knowledge/performance/filter-before-find.md`). Line numbers are not stable references; use the file path only. If a commit SHA is available to the consumer, it SHOULD be included alongside the path.
+
+## Sample files
+
+Knowledge files MUST NOT contain fenced code blocks. When an article needs to show code, it ships the code as one or more **sibling files** next to the article, using this naming convention:
+
+```
+<layer>/knowledge/<domain>/<slug>.md         # the article
+<layer>/knowledge/<domain>/<slug>.good.al    # best-practice demonstration
+<layer>/knowledge/<domain>/<slug>.bad.al     # anti-pattern demonstration
+```
+
+Rules:
+
+- A sample file is identified by the article's slug followed by a `.<kind>.<ext>` suffix. The supported kinds are `good` and `bad`. Additional kinds MAY be introduced by a layer; consumers MUST ignore unknown kinds without failing.
+- The extension matches the technology (`al`, `ps1`, `js`, `kql`, …). A single article MAY carry samples in multiple technologies if the article's frontmatter `technologies` lists them.
+- Articles MAY have a `good` sample only, a `bad` sample only, both, or neither. The article text SHOULD reference each sample it ships, using a relative path like `` `<slug>.good.al` ``.
+- Samples are **demonstration-only**. They are not deployed, and they are not derived from the Business Central base application source. Authors use object IDs they own (e.g., 50100–50999 in Microsoft-authored samples) and keep each sample self-contained.
+- Layer precedence applies to sample files the same way it applies to articles: a `/custom/knowledge/<domain>/<slug>.good.al` overrides a `/microsoft/knowledge/<domain>/<slug>.good.al` for the same article in the same layer hierarchy.
+
+Consumers that surface sample code to an end user or agent SHOULD cite the sample file by its repo-relative path, in the same format as article citations.
 
 ## Retrieval workflow
 
