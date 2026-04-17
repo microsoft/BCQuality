@@ -18,7 +18,7 @@ Some articles only have a `good.al` (best practice only) or only a `bad.al` (pur
 
 ## Status
 
-All samples are **demonstration-only**. They are self-contained AL objects with object IDs in the 50100-50199 range and are not meant to be deployed, nor are they derived from Microsoft's Business Central base application source. They exist to make the accompanying knowledge articles concrete for human readers and for agents that benefit from a worked example.
+All samples are **demonstration-only**. They are self-contained AL objects with object IDs in the 50100-50299 range and are not meant to be deployed, nor are they derived from Microsoft's Business Central base application source. They exist to make the accompanying knowledge articles concrete for human readers and for agents that benefit from a worked example.
 
 ## Referencing samples from knowledge articles
 
