@@ -32,7 +32,7 @@ Skills define how agents consume knowledge. They come in two flavors:
 - **Meta-skills** (`/skills/`) — the three globally shared skills that bootstrap every interaction with BCQuality:
   1. **Schema + Use** (READ) — how to read a knowledge file: interpret frontmatter, parse sections, understand layer precedence. This is the consumer's reference — any agent or skill that reads knowledge files depends on it.
   2. **Action Skill** (DO) — the template every action skill follows. Defines the four-step pattern (Source → Relevance → Worklist → Action) and the structured output format that orchestrators expect. This is the skill author's reference.
-  3. **New Knowledge** (WRITE) — how to author a valid knowledge file. References Schema + Use for the format specification and adds authoring rules (atomicity, section guidance, sample references). This is the contributor's reference.
+  3. **New Knowledge** (WRITE) — how to author a valid knowledge file. References Schema + Use for the format specification and adds authoring rules (atomicity, section guidance). This is the contributor's reference.
 
   Schema + Use and New Knowledge are deliberately separate: one is the reader's contract, the other is the writer's guide. New Knowledge depends on Schema + Use but does not duplicate it.
 
@@ -68,7 +68,7 @@ Every knowledge file must contain a `## Description` section. The following sect
 - **`## Best Practice`** — the recommended approach
 - **`## Anti Pattern`** — what to avoid and why
 
-Code examples belong in `/samples/`, not in the knowledge file itself. Knowledge files must not contain fenced code blocks.
+Code examples belong in separate files, not in the knowledge file itself. Knowledge files must not contain fenced code blocks.
 
 ## Scope
 
@@ -114,8 +114,6 @@ The meta-skills in `/skills/` define this pattern. Every concrete action skill f
 ├── /custom/              # Partner/customer-specific overrides (empty; populated in forks)
 │   ├── /knowledge/
 │   └── /skills/
-├── /samples/             # Sample code referenced by knowledge files
-└── /docs/                # Documentation and process artifacts
 ```
 
 ## Contributing
@@ -124,8 +122,7 @@ Contributions are welcome. Before submitting a PR:
 
 1. Read the knowledge file format above — frontmatter and sections are validated by CI.
 2. Keep files atomic: one concern per file, under 100 lines.
-3. Put code examples in `/samples/`, not in the knowledge file.
-4. Target your contribution to the right layer — most community contributions go in `/community/knowledge/`.
+3. Target your contribution to the right layer — most community contributions go in `/community/knowledge/`.
 
 CI runs validation on every PR. If your knowledge file has schema violations, missing sections, code blocks, or exceeds 100 lines, the check will fail with a clear error message.
 
