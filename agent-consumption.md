@@ -55,9 +55,11 @@ Example: a performance review skill sources from `/microsoft/knowledge/performan
 ### 5. Agent emits structured output
 The output contract is defined in the DO meta-skill so that every action skill — today's and next year's — produces the same shape:
 
-- **Findings** — what the skill observed (severity, message, location).
-- **References** — which knowledge files informed each finding.
-- **Confidence** — how sure the skill is.
+- **Outcome** — `completed`, `not-applicable`, `no-knowledge`, `partial`, or `failed`. An orchestrator can distinguish a clean run from a no-op from a failure without guessing.
+- **Findings** — what the skill observed (severity, message, optional location).
+- **References** — structured objects (`path` plus optional commit `sha`) pointing to the knowledge files that informed each finding.
+- **Confidence** — per-finding evidence strength.
+- **Suppressed** — knowledge files that were discarded by layer precedence or configuration, so reviewers can see what was overridden.
 
 The orchestrator parses this **without skill-specific logic**. This is the point of the contract: orchestrators and action skills evolve independently.
 

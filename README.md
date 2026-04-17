@@ -30,9 +30,9 @@ All three layers are enabled by default when an agent consumes BCQuality. Conten
 Skills define how agents consume knowledge. They come in two flavors:
 
 - **Meta-skills** (`/skills/`) — the three globally shared skills that bootstrap every interaction with BCQuality:
-  1. **Schema + Use** (READ) — how to read a knowledge file: interpret frontmatter, parse sections, understand layer precedence. This is the consumer's reference — any agent or skill that reads knowledge files depends on it.
-  2. **Action Skill** (DO) — the template every action skill follows. Defines the four-step pattern (Source → Relevance → Worklist → Action) and the structured output format that orchestrators expect. This is the skill author's reference.
-  3. **New Knowledge** (WRITE) — how to author a valid knowledge file. References Schema + Use for the format specification and adds authoring rules (atomicity, section guidance). This is the contributor's reference.
+  1. **Schema + Use** (READ, [`skills/read.md`](skills/read.md)) — how to read a knowledge file: interpret frontmatter, parse sections, understand layer precedence. This is the consumer's reference — any agent or skill that reads knowledge files depends on it.
+  2. **Action Skill** (DO, [`skills/do.md`](skills/do.md)) — the template every action skill follows. Defines the four-step pattern (Source → Relevance → Worklist → Action) and the structured output format that orchestrators expect. This is the skill author's reference.
+  3. **New Knowledge** (WRITE, [`skills/write.md`](skills/write.md)) — how to author a valid knowledge file. References Schema + Use for the format specification and adds authoring rules (atomicity, section guidance). This is the contributor's reference.
 
   Schema + Use and New Knowledge are deliberately separate: one is the reader's contract, the other is the writer's guide. New Knowledge depends on Schema + Use but does not duplicate it.
 
@@ -94,7 +94,7 @@ Action skills follow a four-step pattern:
 3. **Worklist** — narrow from N candidates to the M that apply to the current task
 4. **Action** — apply the relevant knowledge and produce structured output
 
-Every action skill produces output in a common format that orchestrators can consume without skill-specific parsing. The format includes findings (what the skill observed), references (which knowledge files informed each finding), and confidence signals. This contract is defined in the Action Skill meta-skill so that orchestrators and action skills remain independently evolvable.
+Every action skill produces output in a common format that orchestrators can consume without skill-specific parsing. The format is JSON and includes an `outcome` (so a clean run, a not-applicable skill, and a partial failure are all distinguishable), `findings` (what the skill observed), structured `references` back to the knowledge files that informed each finding, per-finding `confidence`, and a `suppressed` list recording any knowledge files overridden by layer precedence. This contract is defined in the Action Skill meta-skill so that orchestrators and action skills remain independently evolvable.
 
 The meta-skills in `/skills/` define this pattern. Every concrete action skill follows it.
 
