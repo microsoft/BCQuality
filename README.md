@@ -98,6 +98,8 @@ Every action skill produces output in a common format that orchestrators can con
 
 The meta-skills in `/skills/` define this pattern. Every concrete action skill follows it.
 
+For the end-to-end flow — from orchestrator trigger through to how output reaches developers — see [agent-consumption.md](agent-consumption.md).
+
 ## Repository structure
 
 ```
