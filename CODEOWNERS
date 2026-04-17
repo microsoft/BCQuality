@@ -1,0 +1,9 @@
+# Microsoft-endorsed content and skills require maintainer review
+/microsoft/ @jeschulz
+/skills/ @jeschulz
+
+# GitHub Actions and CI
+/.github/ @jeschulz
+
+# Community content — open to broader review
+# /community/ reviewers are added as the contributor base grows
