@@ -3,83 +3,79 @@ kind: action-skill
 id: al-code-review
 version: 1
 title: AL code review
-description: Reviews AL source changes against performance, security, UX, telemetry, and testing guidance from BCQuality.
+description: Reviews AL source changes by composing the AL review leaf skills (performance, security, ...).
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
 bc-version: [26..28]
 technologies: [al]
 countries: [w1]
 application-area: [all]
+sub-skills:
+  - microsoft/skills/al-performance-review.md
+  - microsoft/skills/al-security-review.md
 ---
 
 # AL code review
 
-Reviews AL source changes against applicable BCQuality guidance and emits a findings report. This skill is the canonical reference implementation of the DO contract — skill authors should copy its structure.
+Reviews AL source changes by composing the leaf AL review skills. This is the canonical reference implementation of a **super-skill** — skill authors writing composed reviews should copy its structure.
 
-An orchestrator invokes this skill with either a `pr-diff` (the standard PR-review entry point) or a `file-path` (single-file review, typically from an IDE). The skill produces a single JSON document conforming to the DO output contract.
+`al-code-review` does not evaluate knowledge files directly. It invokes each of its sub-skills against the same task input, collects their findings-reports, and returns a rolled-up findings-report.
+
+An orchestrator invokes this skill with either a `pr-diff` (the standard PR-review entry point) or a `file-path` (single-file review). The skill produces a single JSON document conforming to the DO output contract, extended with `sub-results` and — when applicable — `skipped-sub-skills`.
 
 ## Source
 
-Collect all knowledge files under `*/knowledge/**/*.md`, across every enabled layer (`/microsoft/`, `/community/`, `/custom/`). Files in any domain subfolder are included; the skill does not enumerate domains. Relevance trims the result to the subset that applies.
+The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`:
+
+- `microsoft/skills/al-performance-review.md`
+- `microsoft/skills/al-security-review.md`
+
+Additional leaf skills (for example, UX, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
 
 ## Relevance
 
-Apply the frontmatter matching rules defined in READ (*Frontmatter matching semantics*) against the task context:
+A sub-skill is relevant when both of the following hold:
 
-- `bc-version` — the target BC version from the PR branch's `app.json` or the orchestrator-supplied version. If unavailable, the dimension is `unknown` (see READ's partial-context rule).
-- `technologies` — `[al]`.
-- `countries` — the countries declared in the consuming app's `app.json`. Default to the orchestrator's configured context; if absent, `unknown`.
-- `application-area` — the union of application areas declared by the changed objects. Pass the actual set (e.g., `[finance, jobs]` for a PR touching both); do not substitute `[all]`. If the area cannot be determined from the changes, the dimension is `unknown`.
+- The orchestrator has supplied inputs that satisfy the sub-skill's declared `inputs`.
+- The orchestrator has not disabled the sub-skill via configuration.
 
-Discard files that are not applicable. Retain conditionally applicable files (any dimension `unknown`) only when the orchestrator's configuration permits them; findings derived from those files MUST have `confidence` no higher than `medium`, AND the finding's `message` MUST name the dimension or dimensions that were unknown so reviewers can judge the finding's applicability.
+Per the DO contract, the super-skill MUST NOT filter sub-skills by task content. `al-code-review` does not inspect the PR diff to predict whether, for example, there is anything for `al-security-review` to find. Each leaf is responsible for its own task-level applicability decision; leaves signal non-applicability by returning `outcome: "not-applicable"` or `outcome: "no-knowledge"`.
+
+Sub-skills that fail either check are not invoked and are recorded in `skipped-sub-skills`:
+
+- `reason: "configuration"` when the orchestrator disabled the sub-skill.
+- `reason: "not-applicable"` when the orchestrator's inputs do not satisfy the sub-skill's declared `inputs`.
 
 ## Worklist
 
-Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
-
-- The changed AL object names and types (tables, pages, codeunits, reports, queries, xmlports, enums, permission sets).
-- The changed procedures, triggers, and fields.
-- Tokens extracted from the diff (identifier names, referenced objects, keywords).
-
-A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from filename and Description) matches a changed object type.
-
-Once the candidate worklist is known, resolve layer-precedence conflicts per READ: for any two candidates whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts, keep the file from the higher-precedence layer and drop the other. Every dropped file MUST be recorded in the output `suppressed` array with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration MUST be recorded with `reason: "configuration"`. Files that were never candidates (failed Relevance or did not match task signal) are NOT recorded in `suppressed`.
-
-When the post-conflict worklist is empty because no applicable knowledge exists in the repo, or because configuration suppressed every candidate, emit `outcome: "no-knowledge"`. When the worklist is empty because no applicable knowledge matched the changes, emit `outcome: "completed"` with an empty `findings` array.
+The worklist is the list of sub-skills judged relevant by the previous step. Every sub-skill in the worklist will be invoked in the Action step.
 
 ## Action
 
-For each worklist entry, evaluate the diff against the file's `## Best Practice` and `## Anti Pattern` sections. Emit findings as follows:
+For each sub-skill in the worklist:
 
-- When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, the message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee; when the file does not make that claim, the ceiling is `major`.
-- When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file so the author is nudged to read it. Repository-wide observations MAY omit `location`.
+1. Invoke the sub-skill with the orchestrator's inputs, passing only the subset each sub-skill declares in its `inputs`.
+2. Capture the sub-skill's complete findings-report verbatim and append it to `sub-results`.
+3. If the sub-skill's `outcome` is `failed`, stop here for this sub-skill: its findings are not reliable per the DO contract and MUST NOT be copied into the super-skill's top-level `findings[]` or counted in `summary.counts`.
+4. Otherwise, append each entry from the sub-skill's `findings[]` to the super-skill's top-level `findings[]`, setting `from-sub-skill` to the sub-skill's `skill.id`. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
 
-Set `confidence` to:
+Aggregate `summary.counts` and `summary.coverage` as the sums across invoked sub-skills whose `outcome` is not `failed`.
 
-- `high` when the detection is based on an unambiguous pattern match (identifier, syntax, object type).
-- `medium` when detection relies on heuristics (name similarity, scope inference) or when any frontmatter dimension was `unknown`.
-- `low` when the finding is an advisory derived only from applicability (no detection signal).
+`suppressed[]` at the super-skill level remains empty. Knowledge-file-level suppression is reported by each sub-skill within its own entry in `sub-results`.
 
-The outcome selection:
-
-- `completed` — the skill evaluated every worklist item. Default when the skill finishes normally, including when the resulting `findings` array is empty.
-- `no-knowledge` — no applicable knowledge survived Source, Relevance, configuration filtering, and conflict resolution. `findings` is empty.
-- `not-applicable` — the task context lacks an AL dimension (no AL changes in the diff, or `technologies` filter rejected the task).
-- `partial` — a time or token budget was hit before the worklist was exhausted. `summary.coverage` reflects the evaluated subset; `outcome-reason` explains the cause.
-- `failed` — an unrecoverable error occurred. `outcome-reason` is required.
+Derive `outcome` using the DO rollup rules. `outcome-reason` is populated for `partial` and `failed` and SHOULD summarize per-sub-skill state, for example: *"al-security-review failed (tool timeout); al-performance-review completed."*
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract, extended with `sub-results` and `skipped-sub-skills`. A populated example — both leaves ran, each produced findings:
 
 ```json
 {
   "skill": { "id": "al-code-review", "version": 1 },
   "outcome": "completed",
   "summary": {
-    "counts": { "blocker": 0, "major": 1, "minor": 1, "info": 1 },
-    "coverage": { "worklist-size": 3, "items-evaluated": 3 }
+    "counts": { "blocker": 1, "major": 1, "minor": 1, "info": 1 },
+    "coverage": { "worklist-size": 4, "items-evaluated": 4 }
   },
   "findings": [
     {
@@ -94,7 +90,33 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/performance/filter-before-find.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "from-sub-skill": "al-performance-review"
+    },
+    {
+      "id": "community/knowledge/performance/use-setloadfields.md",
+      "severity": "info",
+      "message": "Posting routine iterates ledger entries; consider whether SetLoadFields applies per the linked guidance.",
+      "references": [
+        { "path": "community/knowledge/performance/use-setloadfields.md" }
+      ],
+      "confidence": "low",
+      "from-sub-skill": "al-performance-review"
+    },
+    {
+      "id": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md",
+      "severity": "blocker",
+      "message": "A bearer token is passed to Session.LogMessage as part of the CustomDimensions payload. The referenced guidance documents this as a platform-level data-protection violation.",
+      "location": {
+        "file": "src/Integration/ApiClient.Codeunit.al",
+        "line": 85,
+        "range": { "start-line": 85, "end-line": 89 }
+      },
+      "references": [
+        { "path": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md" }
+      ],
+      "confidence": "high",
+      "from-sub-skill": "al-security-review"
     },
     {
       "id": "microsoft/knowledge/security/avoid-implicit-commit.md",
@@ -107,28 +129,89 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/security/avoid-implicit-commit.md" }
       ],
-      "confidence": "medium"
-    },
-    {
-      "id": "community/knowledge/telemetry/log-posting-failures.md",
-      "severity": "info",
-      "message": "Posting routine touched; consider whether failure paths emit telemetry per the linked guidance.",
-      "references": [
-        { "path": "community/knowledge/telemetry/log-posting-failures.md" }
-      ],
-      "confidence": "low"
+      "confidence": "medium",
+      "from-sub-skill": "al-security-review"
     }
   ],
-  "suppressed": [
+  "suppressed": [],
+  "sub-results": [
     {
-      "reference": { "path": "community/knowledge/performance/filter-before-find.md" },
-      "reason": "layer-precedence"
+      "skill": { "id": "al-performance-review", "version": 1 },
+      "outcome": "completed",
+      "summary": {
+        "counts": { "blocker": 0, "major": 1, "minor": 0, "info": 1 },
+        "coverage": { "worklist-size": 2, "items-evaluated": 2 }
+      },
+      "findings": [
+        {
+          "id": "microsoft/knowledge/performance/filter-before-find.md",
+          "severity": "major",
+          "message": "FindSet is called on a record variable without any prior SetRange/SetFilter. This forces a full-table scan.",
+          "location": {
+            "file": "src/Sales/PostingRoutines.Codeunit.al",
+            "line": 140,
+            "range": { "start-line": 140, "end-line": 144 }
+          },
+          "references": [
+            { "path": "microsoft/knowledge/performance/filter-before-find.md" }
+          ],
+          "confidence": "high"
+        },
+        {
+          "id": "community/knowledge/performance/use-setloadfields.md",
+          "severity": "info",
+          "message": "Posting routine iterates ledger entries; consider whether SetLoadFields applies per the linked guidance.",
+          "references": [
+            { "path": "community/knowledge/performance/use-setloadfields.md" }
+          ],
+          "confidence": "low"
+        }
+      ],
+      "suppressed": []
+    },
+    {
+      "skill": { "id": "al-security-review", "version": 1 },
+      "outcome": "completed",
+      "summary": {
+        "counts": { "blocker": 1, "major": 0, "minor": 1, "info": 0 },
+        "coverage": { "worklist-size": 2, "items-evaluated": 2 }
+      },
+      "findings": [
+        {
+          "id": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md",
+          "severity": "blocker",
+          "message": "A bearer token is passed to Session.LogMessage as part of the CustomDimensions payload. The referenced guidance documents this as a platform-level data-protection violation.",
+          "location": {
+            "file": "src/Integration/ApiClient.Codeunit.al",
+            "line": 85,
+            "range": { "start-line": 85, "end-line": 89 }
+          },
+          "references": [
+            { "path": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md" }
+          ],
+          "confidence": "high"
+        },
+        {
+          "id": "microsoft/knowledge/security/avoid-implicit-commit.md",
+          "severity": "minor",
+          "message": "An explicit COMMIT inside a posting routine may leave the ledger in an inconsistent state if subsequent steps fail.",
+          "location": {
+            "file": "src/Sales/PostingRoutines.Codeunit.al",
+            "line": 201
+          },
+          "references": [
+            { "path": "microsoft/knowledge/security/avoid-implicit-commit.md" }
+          ],
+          "confidence": "medium"
+        }
+      ],
+      "suppressed": []
     }
   ]
 }
 ```
 
-The empty-corpus case — BCQuality's state until knowledge files land — produces:
+The empty-corpus case — BCQuality's state until knowledge files land — rolls up to `no-knowledge`:
 
 ```json
 {
@@ -139,6 +222,22 @@ The empty-corpus case — BCQuality's state until knowledge files land — produ
     "coverage": { "worklist-size": 0, "items-evaluated": 0 }
   },
   "findings": [],
-  "suppressed": []
+  "suppressed": [],
+  "sub-results": [
+    {
+      "skill": { "id": "al-performance-review", "version": 1 },
+      "outcome": "no-knowledge",
+      "summary": { "counts": { "blocker": 0, "major": 0, "minor": 0, "info": 0 }, "coverage": { "worklist-size": 0, "items-evaluated": 0 } },
+      "findings": [],
+      "suppressed": []
+    },
+    {
+      "skill": { "id": "al-security-review", "version": 1 },
+      "outcome": "no-knowledge",
+      "summary": { "counts": { "blocker": 0, "major": 0, "minor": 0, "info": 0 }, "coverage": { "worklist-size": 0, "items-evaluated": 0 } },
+      "findings": [],
+      "suppressed": []
+    }
+  ]
 }
 ```

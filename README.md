@@ -36,7 +36,7 @@ Skills define how agents consume knowledge. They come in two flavors:
 
   Schema + Use and New Knowledge are deliberately separate: one is the reader's contract, the other is the writer's guide. New Knowledge depends on Schema + Use but does not duplicate it.
 
-- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`). The canonical reference implementation is [`microsoft/skills/al-code-review.md`](microsoft/skills/al-code-review.md) — skill authors should use it as a starting point.
+- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/al-code-review.md`](microsoft/skills/al-code-review.md) (super-skill), which composes [`microsoft/skills/al-performance-review.md`](microsoft/skills/al-performance-review.md) and [`microsoft/skills/al-security-review.md`](microsoft/skills/al-security-review.md) (leaves).
 
 ### Agent bootstrapping
 

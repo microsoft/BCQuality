@@ -45,6 +45,8 @@ application-area: [all]
 
 `inputs` is a list of abstract input types the skill consumes. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`. `outputs` is always a single-element list naming the output kind; today only `findings-report` is defined.
 
+`sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
+
 ## Required sections
 
 Every action skill MUST contain these five sections, in order:
@@ -91,13 +93,23 @@ Every action skill emits a single JSON document that conforms to this schema:
       "references": [
         { "path": "string", "sha": "string" }
       ],
-      "confidence": "high | medium | low"
+      "confidence": "high | medium | low",
+      "from-sub-skill": "string"
     }
   ],
   "suppressed": [
     {
       "reference": { "path": "string", "sha": "string" },
       "reason": "layer-precedence | configuration"
+    }
+  ],
+  "sub-results": [
+    { "...full nested findings-report..." : null }
+  ],
+  "skipped-sub-skills": [
+    {
+      "skill": { "id": "string", "version": 1 },
+      "reason": "configuration | not-applicable"
     }
   ]
 }
@@ -118,6 +130,8 @@ Every action skill emits a single JSON document that conforms to this schema:
 An empty `findings` array with `outcome: completed` means the skill ran and found nothing to flag. Orchestrators MUST NOT conflate this with `not-applicable` or `no-knowledge`.
 
 **`findings[].id`** — a stable identifier for the rule or concern that produced the finding. For citation-based findings (any finding with a non-empty `references`), `id` MUST equal `references[0].path` — the primary knowledge file's repo-relative path. For skills that detect concerns without a direct citation, `id` is a skill-defined slug (kebab-case, stable across versions of the skill). The same `id` produced in two runs MUST refer to the same concern; consumers MAY deduplicate findings by `id`.
+
+When a super-skill rolls up a non-citation finding from a sub-skill (an `id` that is a slug, not a path), the super-skill MUST prefix the `id` with `<from-sub-skill>:` to avoid collisions across sub-skills (for example, a slug `missing-test` from `al-security-review` becomes `al-security-review:missing-test`). Citation-based findings are already globally unique through their repo-relative path and MUST NOT be rewritten.
 
 **`findings[].severity`** — see the taxonomy below.
 
@@ -140,10 +154,16 @@ The first reference is the **primary** reference: the knowledge file the finding
 
 **`findings[].confidence`** — the skill's confidence that the finding is a true positive, given the evidence it evaluated. Not applicability confidence, not severity confidence. Values: `high`, `medium`, `low`.
 
+**`findings[].from-sub-skill`** — optional. Set only by super-skills. The `skill.id` of the sub-skill that produced the finding. Absent on findings produced directly by the emitting skill.
+
 **`suppressed`** — MUST list every knowledge file that was discarded due to layer precedence or consumer configuration, whenever that file would otherwise have contributed to the worklist. Each entry contains:
 
 - `reference` — the suppressed file (same object shape as `findings[].references`).
 - `reason` — `layer-precedence` when another layer won under READ's precedence rules; `configuration` when the consumer disabled the file's layer.
+
+**`sub-results`** — super-skills only. Array of complete findings-reports, one per sub-skill that was invoked (i.e., every sub-skill not listed in `skipped-sub-skills`). Each entry MUST itself conform to this output contract. Leaf skills MUST NOT emit `sub-results`.
+
+**`skipped-sub-skills`** — super-skills only. Array of sub-skills that were declared in frontmatter but not invoked. `reason` is `configuration` when the orchestrator disabled the sub-skill, or `not-applicable` when the super-skill's Relevance step ruled it out.
 
 Severity taxonomy:
 
@@ -151,6 +171,44 @@ Severity taxonomy:
 - `major` — significant defect; should be fixed before merge.
 - `minor` — quality concern; worth flagging but not a gate.
 - `info` — observation or context; not actionable on its own.
+
+## Composition (super-skills)
+
+A **super-skill** is an action skill whose frontmatter declares a non-empty `sub-skills: [...]`. A super-skill does not evaluate knowledge files directly; it invokes other action skills and composes their output.
+
+Composition is flat: a super-skill MAY list only leaf skills (skills without their own `sub-skills`). Nested super-skills are not permitted in v1.
+
+### Section interpretation for super-skills
+
+The five required sections still apply. Their meaning shifts from knowledge files to sub-skills:
+
+- `## Source` — names the sub-skills invoked (mirrors `sub-skills` in frontmatter).
+- `## Relevance` — rules for deciding which sub-skills apply to the current task. A sub-skill is relevant when its declared `inputs` are satisfied by the orchestrator's provided inputs and the orchestrator has not disabled it via configuration. The super-skill MUST NOT filter sub-skills by task content (for example, by inspecting the diff or the file). Task-level applicability is the sub-skill's own responsibility; sub-skills signal non-applicability by returning `outcome: "not-applicable"` or `outcome: "no-knowledge"`.
+- `## Worklist` — the final list of sub-skills to invoke; the rest go to `skipped-sub-skills`.
+- `## Action` — invoke each worklisted sub-skill with the appropriate subset of inputs, collect its findings-report verbatim into `sub-results`, and copy its `findings[]` into the super-skill's top-level `findings[]` with `from-sub-skill` set. Findings from a sub-skill with `outcome: "failed"` MUST NOT be copied into the super-skill's top-level `findings[]` and MUST NOT contribute to the super-skill's `summary.counts` (their report is still preserved in `sub-results` for traceability, consistent with DO's rule that consumers ignore a failed skill's findings).
+- `## Output` — the super-skill's output contract, including `sub-results` and, if any, `skipped-sub-skills`.
+
+### Outcome rollup
+
+A super-skill's `outcome` is derived from its sub-skills' outcomes. Let S be the multiset of sub-skill outcomes for sub-skills in the worklist (skipped sub-skills do not contribute):
+
+- `failed` — every element of S is `failed`.
+- `partial` — S contains at least one `partial`, OR S contains at least one `failed` alongside at least one non-`failed` outcome.
+- `not-applicable` — every element of S is `not-applicable`.
+- `no-knowledge` — every element of S is `no-knowledge` or `not-applicable`, and at least one is `no-knowledge`.
+- `completed` — otherwise (every element of S is `completed`, `no-knowledge`, or `not-applicable`, with at least one `completed`).
+
+When the worklist is empty (every sub-skill was skipped), `outcome` is `not-applicable`; `outcome-reason` SHOULD describe the skip reasons, for example *"all sub-skills disabled by configuration"* or *"no sub-skill accepted the supplied inputs"*.
+
+`outcome-reason` is required for `partial` and `failed` and SHOULD summarize per-sub-skill state.
+
+### Rolled-up summary
+
+`summary.counts` is the sum of sub-skill counts. `summary.coverage.worklist-size` and `items-evaluated` are the sums across invoked sub-skills.
+
+### Suppression scope
+
+A super-skill's top-level `suppressed[]` remains knowledge-file-only and is typically empty. Knowledge-file suppression is reported by the leaf sub-skill inside its own entry in `sub-results`. Sub-skills the super-skill chose not to invoke belong in `skipped-sub-skills`, never in `suppressed`.
 
 ## Worked example
 
