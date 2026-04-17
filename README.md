@@ -27,20 +27,22 @@ All three layers are enabled by default when an agent consumes BCQuality. Conten
 
 ### Skills
 
-Skills define how agents consume knowledge. They come in two flavors:
+Skills define how agents consume knowledge. They come in three flavors:
 
-- **Meta-skills** (`/skills/`) — the three globally shared skills that bootstrap every interaction with BCQuality:
-  1. **Schema + Use** (READ, [`skills/read.md`](skills/read.md)) — how to read a knowledge file: interpret frontmatter, parse sections, understand layer precedence. This is the consumer's reference — any agent or skill that reads knowledge files depends on it.
-  2. **Action Skill** (DO, [`skills/do.md`](skills/do.md)) — the template every action skill follows. Defines the four-step pattern (Source → Relevance → Worklist → Action) and the structured output format that orchestrators expect. This is the skill author's reference.
-  3. **New Knowledge** (WRITE, [`skills/write.md`](skills/write.md)) — how to author a valid knowledge file. References Schema + Use for the format specification and adds authoring rules (atomicity, section guidance). This is the contributor's reference.
+- **The entry-point skill** ([`skills/entry.md`](skills/entry.md)) — the first skill an agent invokes at runtime. Given a task context (goal, available inputs, technologies, BC version, etc.), it returns a **dispatch record** naming the action skill or skills to invoke next. Routing logic lives here, not in the orchestrator.
 
-  Schema + Use and New Knowledge are deliberately separate: one is the reader's contract, the other is the writer's guide. New Knowledge depends on Schema + Use but does not duplicate it.
+- **Meta-skill contracts** (`/skills/`) — three stable references that define the rest of the repo:
+  1. **Schema + Use** (READ, [`skills/read.md`](skills/read.md)) — how to read a knowledge file: interpret frontmatter, parse sections, understand layer precedence. Any agent or skill that reads knowledge files depends on it.
+  2. **Action Skill** (DO, [`skills/do.md`](skills/do.md)) — the template every action skill follows. Defines the four-step pattern (Source → Relevance → Worklist → Action) and the structured output format that orchestrators expect.
+  3. **New Knowledge** (WRITE, [`skills/write.md`](skills/write.md)) — how to author a valid knowledge file. References Schema + Use for the format specification and adds authoring rules (atomicity, section guidance).
 
-- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/al-code-review.md`](microsoft/skills/al-code-review.md) (super-skill), which composes [`microsoft/skills/al-performance-review.md`](microsoft/skills/al-performance-review.md) and [`microsoft/skills/al-security-review.md`](microsoft/skills/al-security-review.md) (leaves).
+  READ and DO are read on demand — typically when the first dispatched action skill runs. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
+
+- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/al-code-review.md`](microsoft/skills/al-code-review.md) (super-skill), which composes [`microsoft/skills/al-performance-review.md`](microsoft/skills/al-performance-review.md) and [`microsoft/skills/al-security-review.md`](microsoft/skills/al-security-review.md) (leaves).
 
 ### Agent bootstrapping
 
-Agents discover BCQuality through `/skills/`. An orchestrator (such as AL-Go) points the agent at the repository, and the agent reads the meta-skills in `/skills/` first to learn how to interpret knowledge files, follow the action-skill pattern, and produce output the orchestrator can consume. The meta-skills are the entry point — no prior knowledge of BCQuality's structure is required.
+An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s) to invoke. The agent then invokes each dispatched skill in turn, reading READ and DO on demand. No prior knowledge of BCQuality's structure is baked into the orchestrator — only the convention *"invoke `/skills/entry.md` first."*
 
 ## Knowledge file format
 
@@ -103,7 +105,7 @@ For the end-to-end flow — from orchestrator trigger through to how output reac
 ## Repository structure
 
 ```
-├── /skills/              # Global meta-skills (Schema+Use, Action Skill, New Knowledge)
+├── /skills/              # Global: entry-point skill + meta-skill contracts (READ, DO, WRITE)
 ├── /.github/             # Actions and workflows
 ├── /microsoft/           # Microsoft-endorsed layer
 │   ├── /knowledge/       # Knowledge files by domain

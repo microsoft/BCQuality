@@ -19,7 +19,7 @@ An action skill is a single markdown file with YAML frontmatter. It lives inside
 - `/community/skills/` — community-contributed action skills.
 - `/custom/skills/` — partner or customer action skills (typically in a consumer repo, not in BCQuality itself).
 
-Action skills do not live at the repo root. The three meta-skills in `/skills/` are the only files that sit outside a layer.
+Action skills do not live at the repo root. The files in `/skills/` — the three meta-skill contracts (READ, DO, WRITE) and the entry-point skill (`entry.md`, `kind: entry-point`) — are the only skills that sit outside a layer. The entry-point skill structurally follows this same four-step pattern but produces a dispatch record rather than a findings-report; see `skills/entry.md` for its contract.
 
 ## Frontmatter schema
 
@@ -43,7 +43,7 @@ application-area: [all]
 
 `bc-version`, `technologies`, `countries`, `application-area` are optional filters that let an orchestrator pre-select applicable skills for a task. They follow the same semantics as in READ.
 
-`inputs` is a list of abstract input types the skill consumes. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`. `outputs` is always a single-element list naming the output kind; today only `findings-report` is defined.
+`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`. `outputs` is always a single-element list naming the output kind; today only `findings-report` is defined.
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
