@@ -52,7 +52,7 @@ Every knowledge file is a markdown file with mandatory YAML frontmatter. Files t
 
 ```yaml
 ---
-bc-version: [26..28]                   # BC versions this applies to; use [1..99] for universal content
+bc-version: [26..28]                   # BC versions this applies to
 domain: performance                     # security | performance | ux | telemetry | ...
 keywords: [query, filtering, partial]   # free-text tags for retrieval
 technologies: [al]                      # al | javascript | powershell | ...
@@ -62,8 +62,6 @@ application-area: [all]                 # finance | manufacturing | jobs | [all]
 ```
 
 All six fields are required. The schema is locked — changes require a PR approved by both maintainers.
-
-**`bc-version` convention.** Content that describes version-specific behaviour (a query optimizer change in BC 26, a security API renamed in BC 27) lists the specific major versions or a tight range. Content that describes canonical BC concepts which are stable across every supported release — domain knowledge like `Codeunit 12 (Gen. Jnl.-Post Line)`, `T15 G/L Account`, VAT posting setup, the dimensions model — uses `bc-version: [1..99]`. This signals "applies to every BC version past, present, and future" without forcing an annual bump of every file when a new release ships.
 
 ### Sections
 
