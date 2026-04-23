@@ -1,15 +1,14 @@
 codeunit 50129 "Perf Sample CommitInLoop Bad"
 {
-    procedure ReleaseAllOrders()
+    procedure NormalizeCustomerNames()
     var
-        SalesHeader: Record "Sales Header";
+        Customer: Record Customer;
     begin
-        SalesHeader.SetRange(Status, SalesHeader.Status::Open);
-        if SalesHeader.FindSet() then
+        if Customer.FindSet(true) then
             repeat
-                SalesHeader.Status := SalesHeader.Status::Released;
-                SalesHeader.Modify();
+                Customer.Name := UpperCase(Customer.Name);
+                Customer.Modify();
                 Commit();
-            until SalesHeader.Next() = 0;
+            until Customer.Next() = 0;
     end;
 }
