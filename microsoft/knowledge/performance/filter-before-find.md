@@ -9,8 +9,6 @@ application-area: [all]
 
 # Filter before you find
 
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 Every call to FindSet, Find, or FindFirst on an unfiltered record variable scans the entire table. On hot tables (ledger entries, value entries, sales invoice lines) a production dataset can easily be millions of rows, so the cost of forgetting a filter is orders of magnitude worse than the cost of applying one.

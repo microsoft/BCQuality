@@ -9,8 +9,6 @@ application-area: [all]
 
 # Classify every field with DataClassification
 
-> **Seed article.** Ported from BC Code Intelligence to seed the community corpus. Community contributors are invited to expand or refine.
-
 ## Description
 
 Every field on every AL table and table extension must carry an explicit `DataClassification` property. The value drives GDPR tooling, data-subject requests, retention policies, and audit reporting — all of which rely on the field metadata to know what data to include, anonymize, or delete. A field with no `DataClassification` defaults to `ToBeClassified`, which is a compliance gap, not a neutral state.

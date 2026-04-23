@@ -9,8 +9,6 @@ application-area: [all]
 
 # Do not call CalcFields inside loops
 
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 CalcFields evaluates one or more FlowFields for the current record by issuing a separate SQL aggregation. Called inside a loop over a record set, it becomes an N+1 problem: one aggregate per row. For any non-trivial set on a ledger-entry-backed FlowField this is orders of magnitude slower than the equivalent batched query.

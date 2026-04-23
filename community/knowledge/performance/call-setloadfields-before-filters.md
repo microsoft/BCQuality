@@ -9,8 +9,6 @@ application-area: [all]
 
 # Call SetLoadFields before filters
 
-> **Seed article.** Ported from BC Code Intelligence to seed the community corpus. Community contributors are invited to expand or refine.
-
 ## Description
 
 `SetLoadFields` is folded into the database query that the subsequent `Find`, `FindSet`, or `FindFirst` executes. When it is called after filters have already been applied, the platform either ignores the specification or is forced into an extra round-trip to reload the narrower column set — negating the optimization. The placement rule is simple and absolute: `SetLoadFields` must come first.

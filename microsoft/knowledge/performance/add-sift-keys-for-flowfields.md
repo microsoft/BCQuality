@@ -9,8 +9,6 @@ application-area: [all]
 
 # Add SIFT keys for FlowField aggregations
 
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 CodeCop rule AA0232 checks that FlowFields backed by CalcSums or aggregation CalcFormula are supported by a key whose SumIndexFields include the summed field and whose key prefix matches the formula's filter fields. Without a SIFT key the platform falls back to a full aggregation on every read — typically invisible in development and catastrophic in production.

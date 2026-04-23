@@ -9,8 +9,6 @@ application-area: [all]
 
 # Use SetLoadFields for partial records
 
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 SetLoadFields instructs the platform to hydrate only the listed fields on a record variable. On wide tables, or tables with BLOB or media fields, the difference is substantial: a Sales Invoice Line has dozens of fields and loading all of them for every row of a large set is wasted bandwidth. Primary key fields, SystemId, and system audit fields are always loaded automatically. SetLoadFields works only with FieldClass = Normal; FlowFields and FlowFilters cannot be partial-loaded.

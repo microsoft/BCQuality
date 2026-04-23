@@ -9,8 +9,6 @@ application-area: [all]
 
 # Use FindSet in read-only mode by default
 
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 FindSet has two modes: FindSet() and FindSet(false) are read-only and take no write lock; FindSet(true) calls LockTable before fetching. Write locks are expensive and hold for the remainder of the transaction, so passing `true` when you do not intend to modify the records increases contention under load.

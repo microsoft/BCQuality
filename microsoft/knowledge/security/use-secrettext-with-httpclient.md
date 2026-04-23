@@ -9,8 +9,6 @@ application-area: [all]
 
 # Use SecretText with HttpClient
 
-> **Seed article.** Converted from an existing security-review prompt to bootstrap the BCQuality security corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 HttpRequestMessage, HttpHeaders, and HttpContent expose SecretText overloads so credentials never have to be converted back to Text to be sent. Key APIs: HttpRequestMessage.SetSecretRequestUri (for URIs containing secrets), HttpHeaders.Add(name, SecretText) for authorization headers, HttpHeaders.ContainsSecret to probe secret-valued headers, HttpContent.WriteFrom(SecretText) for request bodies, and HttpContent.ReadAs(SecretText) to pull response bodies into a secret destination.

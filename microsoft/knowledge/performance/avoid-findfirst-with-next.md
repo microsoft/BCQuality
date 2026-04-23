@@ -9,8 +9,6 @@ application-area: [all]
 
 # Do not pair FindFirst, FindLast, or Get with Next
 
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 CodeCop rule AA0233 flags loops that start with FindFirst, FindLast, or Get and then call Next. FindFirst and FindLast retrieve a single row and reposition the cursor; calling Next after them forces the platform to re-seek and stream the rest of the set, which is slower than the correct FindSet pattern and signals intent incorrectly to reviewers and the optimizer.

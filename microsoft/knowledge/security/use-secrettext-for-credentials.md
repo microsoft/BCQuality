@@ -9,8 +9,6 @@ application-area: [all]
 
 # Use SecretText for credentials
 
-> **Seed article.** Converted from an existing security-review prompt to bootstrap the BCQuality security corpus. Domain stewards should expand, restructure, and refine as needed.
-
 ## Description
 
 SecretText is a compile-time-checked AL type for credentials, API keys, tokens, and similar sensitive values. The compiler rejects literal assignments to SecretText and blocks implicit conversion back to Text or Code, which prevents many accidental disclosures via logs, errors, and the debugger (regular and snapshot). A SecretText value remains opaque throughout its lifetime.
