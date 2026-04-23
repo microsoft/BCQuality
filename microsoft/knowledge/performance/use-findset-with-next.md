@@ -9,7 +9,7 @@ application-area: [all]
 
 # Use FindSet with Next for iteration
 
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
+> Contributions welcome — open a PR to refine or extend this article.
 
 ## Description
 

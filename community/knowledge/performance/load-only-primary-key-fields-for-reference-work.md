@@ -9,7 +9,7 @@ application-area: [all]
 
 # Load only primary key fields for reference work
 
-> **Seed article.** Ported from BC Code Intelligence to seed the community corpus. Community contributors are invited to expand or refine.
+> Contributions welcome — open a PR to refine or extend this article.
 
 ## Description
 

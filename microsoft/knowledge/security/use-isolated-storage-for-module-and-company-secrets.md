@@ -9,7 +9,7 @@ application-area: [all]
 
 # Use IsolatedStorage for module and company secrets
 
-> **Seed article.** Converted from an existing security-review prompt to bootstrap the BCQuality security corpus. Domain stewards should expand, restructure, and refine as needed.
+> Contributions welcome — open a PR to refine or extend this article.
 
 ## Description
 
