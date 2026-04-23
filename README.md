@@ -10,6 +10,20 @@ Quality skills and knowledge for Business Central development.
 
 BCQuality is a curated knowledge base and skills library for Business Central. It provides structured, machine-readable guidance that development agents and tools can consume — establishing a consistent quality bar across tooling and teams.
 
+## What belongs here
+
+BCQuality is a remedial knowledge base. A file exists because a capable LLM **would get something wrong, or miss something, without it** — not because the topic is important. The admission test for a knowledge file is one question:
+
+> If this file did not exist, would a modern LLM reviewing or generating BC code make a mistake this file would have prevented?
+
+If the answer is no — the advice is generic software-engineering guidance, or the LLM already knows the BC mechanic in question — the file does not belong here, regardless of how sound the content is. A file earns its place by encoding something BC-specific that LLMs demonstrably get wrong: a CodeCop rule number, a platform API whose semantics the training data gets backwards, a non-obvious ordering rule, a BC property whose default is a footgun.
+
+Good fit: "`SetLoadFields` must be called before filters, not after" (non-obvious ordering rule). "`FindSet(true)` takes a LockTable and the two-parameter signature is obsolete" (subtle platform behaviour + outdated training data). "CodeCop AA0233 flags `FindFirst … Next` loops" (rule-specific).
+
+Poor fit: "Use HTTPS instead of HTTP." "Don't hardcode secrets." "Keep transactions short." These are true but any capable LLM already applies them without prompting.
+
+The practical consequence: when a code-review agent flags something it shouldn't have, or misses something it should have caught, the remedy is a new knowledge file. When it already behaves correctly on a topic, no file is needed.
+
 ## What's in this repo
 
 BCQuality contains **knowledge** and **skills**. It does not contain agents. Agents that consume BCQuality ship with [AL-Go](https://github.com/microsoft/AL-Go) and other orchestrators.
@@ -58,7 +72,7 @@ Every knowledge file is a markdown file with mandatory YAML frontmatter. Files t
 
 ```yaml
 ---
-bc-version: [26..28]                   # BC versions this applies to
+bc-version: [all]                       # or [26..28] for version-gated guidance
 domain: performance                     # security | performance | ux | telemetry | ...
 keywords: [query, filtering, partial]   # free-text tags for retrieval
 technologies: [al]                      # al | javascript | powershell | ...

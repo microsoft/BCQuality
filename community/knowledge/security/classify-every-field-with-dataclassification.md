@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [dataclassification, gdpr, privacy, euii, compliance]
 technologies: [al]
@@ -8,8 +8,6 @@ application-area: [all]
 ---
 
 # Classify every field with DataClassification
-
-> **Seed article.** Ported from BC Code Intelligence to seed the community corpus. Community contributors are invited to expand or refine.
 
 ## Description
 

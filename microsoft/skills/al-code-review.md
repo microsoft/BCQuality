@@ -6,7 +6,7 @@ title: AL code review
 description: Reviews AL source changes by composing the AL review leaf skills (performance, security, ...).
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
-bc-version: [26..28]
+bc-version: [all]
 technologies: [al]
 countries: [w1]
 application-area: [all]

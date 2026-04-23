@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [setloadfields, placement, filter, setrange, query-plan]
 technologies: [al]
@@ -8,8 +8,6 @@ application-area: [all]
 ---
 
 # Call SetLoadFields before filters
-
-> **Seed article.** Ported from BC Code Intelligence to seed the community corpus. Community contributors are invited to expand or refine.
 
 ## Description
 

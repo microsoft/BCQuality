@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [calcfields, flowfield, loop, n-plus-one]
 technologies: [al]
@@ -8,8 +8,6 @@ application-area: [all]
 ---
 
 # Do not call CalcFields inside loops
-
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
 
 ## Description
 

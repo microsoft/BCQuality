@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [istemporary, deleteall, modifyall, safeguard, precondition]
 technologies: [al]

@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [deleteall, bulk-delete, sql, ondelete, trigger-bypass]
 technologies: [al]

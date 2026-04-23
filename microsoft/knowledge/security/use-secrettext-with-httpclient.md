@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [httpclient, secrettext, headers, uri]
 technologies: [al]
@@ -8,8 +8,6 @@ application-area: [all]
 ---
 
 # Use SecretText with HttpClient
-
-> **Seed article.** Converted from an existing security-review prompt to bootstrap the BCQuality security corpus. Domain stewards should expand, restructure, and refine as needed.
 
 ## Description
 

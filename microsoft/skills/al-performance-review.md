@@ -6,7 +6,7 @@ title: AL performance review
 description: Reviews AL source changes against performance guidance from BCQuality.
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
-bc-version: [26..28]
+bc-version: [all]
 technologies: [al]
 countries: [w1]
 application-area: [all]

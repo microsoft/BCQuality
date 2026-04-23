@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [sift, sumindexfields, flowfield, key, aa0232]
 technologies: [al]
@@ -8,8 +8,6 @@ application-area: [all]
 ---
 
 # Add SIFT keys for FlowField aggregations
-
-> **Seed article.** Converted from an existing performance-review prompt to bootstrap the BCQuality performance corpus. Domain stewards should expand, restructure, and refine as needed.
 
 ## Description
 
