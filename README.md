@@ -58,7 +58,7 @@ Skills define how agents consume knowledge. They come in three flavors:
 
   READ and DO are read on demand — typically when the first dispatched action skill runs. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
 
-- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/al-code-review.md`](microsoft/skills/al-code-review.md) (super-skill), which composes [`microsoft/skills/al-performance-review.md`](microsoft/skills/al-performance-review.md) and [`microsoft/skills/al-security-review.md`](microsoft/skills/al-security-review.md) (leaves).
+- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md) (super-skill), which composes six leaf skills under [`microsoft/skills/review/`](microsoft/skills/review/) — one per knowledge domain (performance, security, privacy, upgrade, style, UI).
 
 ### Agent bootstrapping
 

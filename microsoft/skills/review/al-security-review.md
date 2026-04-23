@@ -83,29 +83,29 @@ Output conforms to the DO output contract. A populated example:
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md",
+      "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
       "severity": "blocker",
-      "message": "A bearer token is passed to Session.LogMessage as part of the CustomDimensions payload. The referenced guidance documents this as a platform-level data-protection violation.",
+      "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
       "location": {
         "file": "src/Integration/ApiClient.Codeunit.al",
         "line": 85,
         "range": { "start-line": 85, "end-line": 89 }
       },
       "references": [
-        { "path": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md" }
+        { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
       ],
       "confidence": "high"
     },
     {
-      "id": "microsoft/knowledge/security/avoid-implicit-commit.md",
+      "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
       "severity": "minor",
-      "message": "An explicit COMMIT inside a posting routine may leave the ledger in an inconsistent state if subsequent steps fail.",
+      "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
       "location": {
-        "file": "src/Sales/PostingRoutines.Codeunit.al",
+        "file": "src/Integration/ApiClient.Codeunit.al",
         "line": 201
       },
       "references": [
-        { "path": "microsoft/knowledge/security/avoid-implicit-commit.md" }
+        { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
       ],
       "confidence": "medium"
     }
