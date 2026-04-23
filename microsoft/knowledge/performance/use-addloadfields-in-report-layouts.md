@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [report, addloadfields, ondatapreitem, layout, partial-record]
 technologies: [al]

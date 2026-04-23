@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [filter, setrange, setfilter, findset, scan]
 technologies: [al]

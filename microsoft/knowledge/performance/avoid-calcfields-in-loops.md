@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [calcfields, flowfield, loop, n-plus-one]
 technologies: [al]

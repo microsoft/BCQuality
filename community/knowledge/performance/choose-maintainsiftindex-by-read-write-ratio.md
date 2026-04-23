@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [maintainsiftindex, sift, calcsums, flowfield, write-cost]
 technologies: [al]

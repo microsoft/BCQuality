@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [httpclient, secrettext, headers, uri]
 technologies: [al]

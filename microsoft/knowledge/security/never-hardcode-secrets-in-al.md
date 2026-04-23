@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [secrets, credentials, hardcoded, label, apikey]
 technologies: [al]

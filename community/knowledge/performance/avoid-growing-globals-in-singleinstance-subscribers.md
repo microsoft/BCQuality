@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [singleinstance, subscriber, event, memory, session]
 technologies: [al]

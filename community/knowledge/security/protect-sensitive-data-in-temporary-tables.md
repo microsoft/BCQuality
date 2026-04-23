@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [temporary-table, data-protection, permission, cleanup]
 technologies: [al]

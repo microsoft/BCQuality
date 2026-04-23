@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [keyvault, azure, secrets, rotation, audit]
 technologies: [al]

@@ -72,7 +72,7 @@ Every knowledge file is a markdown file with mandatory YAML frontmatter. Files t
 
 ```yaml
 ---
-bc-version: [26..28]                   # BC versions this applies to
+bc-version: [all]                       # or [26..28] for version-gated guidance
 domain: performance                     # security | performance | ux | telemetry | ...
 keywords: [query, filtering, partial]   # free-text tags for retrieval
 technologies: [al]                      # al | javascript | powershell | ...

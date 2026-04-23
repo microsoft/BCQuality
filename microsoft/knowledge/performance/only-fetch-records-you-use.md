@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [findset, get, aa0175, wasted-fetch, read]
 technologies: [al]

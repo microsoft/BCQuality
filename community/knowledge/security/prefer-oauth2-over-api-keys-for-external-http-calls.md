@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: security
 keywords: [oauth2, api-key, authentication, httpclient, token-refresh]
 technologies: [al]

@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [findfirst, findlast, get, next, aa0233]
 technologies: [al]

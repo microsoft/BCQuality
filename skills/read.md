@@ -26,7 +26,7 @@ A file that violates any of these rules is invalid and MUST be skipped by consum
 
 ```yaml
 ---
-bc-version: [26, 27, 28]               # or the range shorthand [26..28]
+bc-version: [all]                       # or [26, 27, 28] or the range shorthand [26..28]
 domain: performance
 keywords: [query, filtering, partial]
 technologies: [al]
@@ -39,12 +39,13 @@ All six fields are required. Missing or empty fields invalidate the file.
 
 ### Fields
 
-**`bc-version`** — Array. The Business Central major versions this file applies to. Two forms are accepted:
+**`bc-version`** — Array. The Business Central major versions this file applies to. Three forms are accepted:
 
+- Universal sentinel: `[all]` means the guidance applies to every BC version and matches any target.
 - Explicit list: `[26, 27, 28]`.
 - Range shorthand: `[26..28]` means every integer from 26 through 28 inclusive.
 
-Consumers MUST expand ranges to the full set before comparison.
+`[all]` is mutually exclusive with explicit versions; do not combine. Consumers MUST expand ranges to the full set before comparison.
 
 **`domain`** — String. A single domain tag that places the file within a broader area of concern. Standard values include `performance`, `security`, `ux`, `telemetry`, `testing`, `api`, `pipelines`, `finance`, `supply-chain`, `manufacturing`, `jobs`. New domains may be introduced by contributors; no closed enumeration is enforced at the schema level. Consumers MUST treat unknown domains as valid.
 
@@ -93,7 +94,7 @@ Conflict detection is the consumer's responsibility; BCQuality does not enforce 
 
 When a consumer filters or matches files against a task context, these rules apply:
 
-- **`bc-version`** — the target BC version MUST be an element of the file's expanded `bc-version` set. Range shorthand (`[26..28]`) MUST be expanded before comparison.
+- **`bc-version`** — the file matches if its set is `[all]`, or if the target BC version is an element of the file's expanded `bc-version` set. Range shorthand (`[26..28]`) MUST be expanded before comparison.
 - **`technologies`** — non-empty intersection between the task's technologies and the file's technologies. There is no sentinel for this field.
 - **`countries`** — the file matches if its set contains `w1`, or if there is a non-empty intersection with the task's countries.
 - **`application-area`** — the file matches if its set contains `all`, or if there is a non-empty intersection with the task's application areas.
@@ -104,7 +105,7 @@ A file is **applicable** to a task when all four rules match. Applicability is a
 
 A task context may omit one or more dimensions (for example, a skill invoked against a raw file path with no known target BC version). For any omitted dimension:
 
-- If the file's value for that dimension is a universal sentinel (`w1` for countries, `all` for application-area), the rule matches.
+- If the file's value for that dimension is a universal sentinel (`all` for bc-version, `w1` for countries, `all` for application-area), the rule matches.
 - Otherwise the rule is treated as **unknown**, not as a match and not as a failure.
 
 A file with any `unknown` rule is **conditionally applicable**. A consumer MAY include conditionally applicable files in the worklist; if it does, every finding derived from such a file MUST have `confidence` no higher than `medium` and MUST record the unknown dimensions in the finding's `message`. A consumer MAY be configured to exclude conditionally applicable files entirely.

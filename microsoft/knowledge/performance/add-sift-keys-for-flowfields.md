@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [sift, sumindexfields, flowfield, key, aa0232]
 technologies: [al]

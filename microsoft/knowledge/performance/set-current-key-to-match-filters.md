@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [setcurrentkey, key, index, sort, filter]
 technologies: [al]

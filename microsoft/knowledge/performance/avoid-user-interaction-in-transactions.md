@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [confirm, strmenu, message, transaction, dialog]
 technologies: [al]

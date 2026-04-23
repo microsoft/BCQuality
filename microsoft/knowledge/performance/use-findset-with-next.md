@@ -1,5 +1,5 @@
 ---
-bc-version: [26..28]
+bc-version: [all]
 domain: performance
 keywords: [findset, next, repeat, iteration, aa0181]
 technologies: [al]

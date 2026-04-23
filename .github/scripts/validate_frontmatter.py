@@ -145,10 +145,19 @@ def is_non_empty_list_of_str(value: Any) -> bool:
     return isinstance(value, list) and len(value) > 0 and all(isinstance(v, str) and v for v in value)
 
 
-def expand_bc_version(value: Any) -> tuple[list[int] | None, str | None]:
-    """Return (expanded-list, error-message). One of the two is None."""
+def expand_bc_version(value: Any) -> tuple[list[int] | str | None, str | None]:
+    """Return (expanded, error-message). One of the two is None.
+
+    For the universal sentinel ["all"], `expanded` is the string "all".
+    Otherwise it is the expanded list of version integers.
+    """
     if not isinstance(value, list) or not value:
         return None, "must be a non-empty list"
+    # Case 0: universal sentinel
+    if len(value) == 1 and value[0] == "all":
+        return "all", None
+    if "all" in value:
+        return None, "'all' is mutually exclusive with explicit versions"
     # Case 1: all integers
     if all(isinstance(v, int) and not isinstance(v, bool) for v in value):
         if any(v <= 0 for v in value):
@@ -162,7 +171,7 @@ def expand_bc_version(value: Any) -> tuple[list[int] | None, str | None]:
             if start > end:
                 return None, f"range '{value[0]}' is not ascending"
             return list(range(start, end + 1)), None
-    return None, "must be a list of integers or a single-element range shorthand like [26..28]"
+    return None, "must be [all], a list of integers, or a single-element range shorthand like [26..28]"
 
 
 def headings_in_order(body: str) -> list[tuple[str, int]]:
