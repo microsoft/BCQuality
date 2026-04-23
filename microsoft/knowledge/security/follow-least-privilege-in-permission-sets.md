@@ -9,7 +9,7 @@ application-area: [all]
 
 # Follow least privilege in permission sets
 
-> **Seed article.** Converted from an existing security-review prompt to bootstrap the BCQuality security corpus. Domain stewards should expand, restructure, and refine as needed.
+> Contributions welcome — open a PR to refine or extend this article.
 
 ## Description
 

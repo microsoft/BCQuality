@@ -9,7 +9,7 @@ application-area: [all]
 
 # Do not expose sensitive data in event publishers
 
-> **Seed article.** Converted from an existing security-review prompt to bootstrap the BCQuality security corpus. Domain stewards should expand, restructure, and refine as needed.
+> Contributions welcome — open a PR to refine or extend this article.
 
 ## Description
 
