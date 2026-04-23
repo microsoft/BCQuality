@@ -35,7 +35,7 @@ The agent reads `/skills/entry.md` and runs it against the task context. Entry a
 The dispatch record names one or more action skills and the subset of inputs each should receive. If the outcome is `no-match` or `failed`, the agent returns the record to the orchestrator unchanged.
 
 ### 4. Agent invokes each dispatched action skill
-Action skills live inside the layers — `/microsoft/skills/`, `/community/skills/`, `/custom/skills/` — so their authority is carried by their location. For a PR review, Entry typically dispatches `microsoft/skills/al-code-review.md`. The agent reads the file and executes it.
+Action skills live inside the layers — `/microsoft/skills/`, `/community/skills/`, `/custom/skills/` — so their authority is carried by their location. For a PR review, Entry typically dispatches `microsoft/skills/review/al-code-review.md`. The agent reads the file and executes it.
 
 ### 5. Action skill executes the four-step pattern
 
