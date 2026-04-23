@@ -76,7 +76,7 @@ Emit a single JSON document conforming to the output contract below. Entry does 
       "skill": {
         "id": "al-code-review",
         "version": 1,
-        "path": "microsoft/skills/al-code-review.md"
+        "path": "microsoft/skills/review/al-code-review.md"
       },
       "rationale": "string",
       "inputs": ["pr-diff"]
@@ -141,14 +141,14 @@ Populated example (PR review on a repo where only `al-performance-review` is ena
   "outcome": "routed",
   "dispatch": [
     {
-      "skill": { "id": "al-performance-review", "version": 1, "path": "microsoft/skills/al-performance-review.md" },
+      "skill": { "id": "al-performance-review", "version": 1, "path": "microsoft/skills/review/al-performance-review.md" },
       "rationale": "Goal 'review pull request' matched; inputs-available contains pr-diff.",
       "inputs": ["pr-diff"]
     }
   ],
   "skipped": [
-    { "skill": { "id": "al-code-review", "path": "microsoft/skills/al-code-review.md" }, "reason": "configuration" },
-    { "skill": { "id": "al-security-review", "path": "microsoft/skills/al-security-review.md" }, "reason": "configuration" }
+    { "skill": { "id": "al-code-review", "path": "microsoft/skills/review/al-code-review.md" }, "reason": "configuration" },
+    { "skill": { "id": "al-security-review", "path": "microsoft/skills/review/al-security-review.md" }, "reason": "configuration" }
   ]
 }
 ```

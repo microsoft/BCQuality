@@ -3,7 +3,7 @@ kind: action-skill
 id: al-code-review
 version: 1
 title: AL code review
-description: Reviews AL source changes by composing the AL review leaf skills (performance, security, ...).
+description: Reviews AL source changes by composing the AL review leaf skills (performance, security, privacy, upgrade, style, UI).
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
 bc-version: [all]
@@ -11,8 +11,12 @@ technologies: [al]
 countries: [w1]
 application-area: [all]
 sub-skills:
-  - microsoft/skills/al-performance-review.md
-  - microsoft/skills/al-security-review.md
+  - microsoft/skills/review/al-performance-review.md
+  - microsoft/skills/review/al-security-review.md
+  - microsoft/skills/review/al-privacy-review.md
+  - microsoft/skills/review/al-upgrade-review.md
+  - microsoft/skills/review/al-style-review.md
+  - microsoft/skills/review/al-ui-review.md
 ---
 
 # AL code review
@@ -27,10 +31,14 @@ An orchestrator invokes this skill with either a `pr-diff` (the standard PR-revi
 
 The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`:
 
-- `microsoft/skills/al-performance-review.md`
-- `microsoft/skills/al-security-review.md`
+- `microsoft/skills/review/al-performance-review.md`
+- `microsoft/skills/review/al-security-review.md`
+- `microsoft/skills/review/al-privacy-review.md`
+- `microsoft/skills/review/al-upgrade-review.md`
+- `microsoft/skills/review/al-style-review.md`
+- `microsoft/skills/review/al-ui-review.md`
 
-Additional leaf skills (for example, UX, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
+Additional leaf skills (for example, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
 
 ## Relevance
 
@@ -74,7 +82,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
   "skill": { "id": "al-code-review", "version": 1 },
   "outcome": "completed",
   "summary": {
-    "counts": { "blocker": 1, "major": 1, "minor": 1, "info": 1 },
+    "counts": { "blocker": 1, "major": 1, "minor": 2, "info": 0 },
     "coverage": { "worklist-size": 4, "items-evaluated": 4 }
   },
   "findings": [
@@ -94,40 +102,44 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       "from-sub-skill": "al-performance-review"
     },
     {
-      "id": "community/knowledge/performance/use-setloadfields.md",
-      "severity": "info",
-      "message": "Posting routine iterates ledger entries; consider whether SetLoadFields applies per the linked guidance.",
+      "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
+      "severity": "minor",
+      "message": "SetLoadFields is called after SetRange. Per the referenced guidance the call must come before filters to be folded into the query plan.",
+      "location": {
+        "file": "src/Sales/PostingRoutines.Codeunit.al",
+        "line": 152
+      },
       "references": [
-        { "path": "community/knowledge/performance/use-setloadfields.md" }
+        { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
       ],
-      "confidence": "low",
+      "confidence": "high",
       "from-sub-skill": "al-performance-review"
     },
     {
-      "id": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md",
+      "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
       "severity": "blocker",
-      "message": "A bearer token is passed to Session.LogMessage as part of the CustomDimensions payload. The referenced guidance documents this as a platform-level data-protection violation.",
+      "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
       "location": {
         "file": "src/Integration/ApiClient.Codeunit.al",
         "line": 85,
         "range": { "start-line": 85, "end-line": 89 }
       },
       "references": [
-        { "path": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md" }
+        { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-security-review"
     },
     {
-      "id": "microsoft/knowledge/security/avoid-implicit-commit.md",
+      "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
       "severity": "minor",
-      "message": "An explicit COMMIT inside a posting routine may leave the ledger in an inconsistent state if subsequent steps fail.",
+      "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
       "location": {
-        "file": "src/Sales/PostingRoutines.Codeunit.al",
+        "file": "src/Integration/ApiClient.Codeunit.al",
         "line": 201
       },
       "references": [
-        { "path": "microsoft/knowledge/security/avoid-implicit-commit.md" }
+        { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
       ],
       "confidence": "medium",
       "from-sub-skill": "al-security-review"
@@ -139,7 +151,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       "skill": { "id": "al-performance-review", "version": 1 },
       "outcome": "completed",
       "summary": {
-        "counts": { "blocker": 0, "major": 1, "minor": 0, "info": 1 },
+        "counts": { "blocker": 0, "major": 1, "minor": 1, "info": 0 },
         "coverage": { "worklist-size": 2, "items-evaluated": 2 }
       },
       "findings": [
@@ -158,13 +170,17 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
           "confidence": "high"
         },
         {
-          "id": "community/knowledge/performance/use-setloadfields.md",
-          "severity": "info",
-          "message": "Posting routine iterates ledger entries; consider whether SetLoadFields applies per the linked guidance.",
+          "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
+          "severity": "minor",
+          "message": "SetLoadFields is called after SetRange. Per the referenced guidance the call must come before filters to be folded into the query plan.",
+          "location": {
+            "file": "src/Sales/PostingRoutines.Codeunit.al",
+            "line": 152
+          },
           "references": [
-            { "path": "community/knowledge/performance/use-setloadfields.md" }
+            { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
           ],
-          "confidence": "low"
+          "confidence": "high"
         }
       ],
       "suppressed": []
@@ -178,29 +194,29 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       },
       "findings": [
         {
-          "id": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md",
+          "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
           "severity": "blocker",
-          "message": "A bearer token is passed to Session.LogMessage as part of the CustomDimensions payload. The referenced guidance documents this as a platform-level data-protection violation.",
+          "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
           "location": {
             "file": "src/Integration/ApiClient.Codeunit.al",
             "line": 85,
             "range": { "start-line": 85, "end-line": 89 }
           },
           "references": [
-            { "path": "microsoft/knowledge/security/no-plaintext-secrets-in-telemetry.md" }
+            { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
           ],
           "confidence": "high"
         },
         {
-          "id": "microsoft/knowledge/security/avoid-implicit-commit.md",
+          "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
           "severity": "minor",
-          "message": "An explicit COMMIT inside a posting routine may leave the ledger in an inconsistent state if subsequent steps fail.",
+          "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
           "location": {
-            "file": "src/Sales/PostingRoutines.Codeunit.al",
+            "file": "src/Integration/ApiClient.Codeunit.al",
             "line": 201
           },
           "references": [
-            { "path": "microsoft/knowledge/security/avoid-implicit-commit.md" }
+            { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
           ],
           "confidence": "medium"
         }
