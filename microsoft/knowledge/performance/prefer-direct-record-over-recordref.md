@@ -19,6 +19,8 @@ RecordRef and FieldRef are the platform's reflection API: they work across table
 
 Use Record variables for code paths that target a known table. Reach for RecordRef and FieldRef only when the table is genuinely dynamic (generic export/import, field-agnostic utilities, cross-table integrations).
 
+Only flag RecordRef usage as a performance concern when it appears inside a **hot, unbounded loop** — typically iterating over ledger-entry-scale tables (10,000+ rows) — where a strongly-typed Record alternative exists. RecordRef in bounded contexts, one-off operations, admin tools, setup helpers, or wizard code is not a performance concern and should not be flagged.
+
 See sample: `prefer-direct-record-over-recordref.good.al`.
 
 ## Anti Pattern

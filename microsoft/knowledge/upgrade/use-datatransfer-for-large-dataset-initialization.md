@@ -15,7 +15,9 @@ An upgrade that populates a new field on millions of existing rows with a FindSe
 
 ## Best Practice
 
-Use DataTransfer for field-default initialization on existing tables, especially when the target is a ledger-entry or document-line table. Set tables, add source filters, add constant values, call CopyFields, clear, and repeat for additional slices. When trigger or subscriber behaviour is required, do that work separately against a filtered result set so the bulk update remains set-based.
+Use DataTransfer when initializing a new field on an existing table that **can contain more than 300,000 records**, or whenever a new field is added to an existing table and the initialization must run across all existing rows. Tables in the ledger-entry and document-line category reliably exceed this threshold; treat them as requiring DataTransfer by default.
+
+Set tables, add source filters, add constant values, call CopyFields, clear, and repeat for additional slices. When trigger or subscriber behaviour is required, do that work separately against a filtered result set so the bulk update remains set-based.
 
 See sample: `use-datatransfer-for-large-dataset-initialization.good.al`.
 

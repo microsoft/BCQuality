@@ -15,7 +15,14 @@ AL enums store their ordinal on disk. Inserting a new value in the middle of an 
 
 ## Best Practice
 
-Append new enum values at the end, taking the next free ordinal. When a value must be retired, mark it with `ObsoleteState = Removed`, `ObsoleteReason`, and `ObsoleteTag` so tooling and downstream code can detect the deprecation; do not reclaim the ordinal. Renaming the caption on an existing ordinal is fine.
+Append new enum values at the end, taking the next free ordinal. Renaming the caption on an existing ordinal is fine.
+
+When a value must be retired, follow the two-stage obsoletion workflow:
+
+1. **First release:** Mark the value with `ObsoleteState = Pending`, `ObsoleteReason`, and `ObsoleteTag`. This gives callers at least one release cycle to migrate.
+2. **Later release:** Advance to `ObsoleteState = Removed` once all callers have been updated.
+
+Never skip straight to `ObsoleteState = Removed` without first going through `Pending` — doing so removes the warning cycle that callers depend on. Do not reclaim the ordinal in either stage. See also: `use-obsolete-pending-before-removed.md`.
 
 See sample: `enum-changes-must-be-additive-at-the-end.good.al`.
 
