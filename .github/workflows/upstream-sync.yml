@@ -1,0 +1,184 @@
+# =============================================================================
+# KPS Frontier — BCQuality Fork Upstream Sync
+# =============================================================================
+#
+# Path:    kps-frontier/bcquality-fork/.github/workflows/upstream-sync.yml
+# Purpose: Track upstream microsoft/BCQuality on a non-production branch;
+#          notify maintainer when upstream advances; gate promotion to fork's
+#          `main` behind a human-reviewed PR.
+# Version: v0.1 — corrects v0 upstream owner from JeremyVyska to microsoft
+#          (BCQuality was transferred to the microsoft org around Directions
+#          NA 2026 as part of Microsoft's announcement of BCQuality as the
+#          agentic-quality standard).
+# Classification: Internal — Selective Showcase: Private (note: the fork repo
+#          itself is Public so anonymous clone works from CI, but this
+#          workflow's existence and design rationale are platform-internal).
+#
+# Design pattern (from Day 1+1 BCQuality discussion):
+#   - Upstream tracked on a dedicated branch (`upstream-tracking`).
+#   - `main` of the fork is what Dev Agent reads (via pinned SHA).
+#   - Promotion from upstream-tracking → main is a human-reviewed PR.
+#   - Workload: ~10 min/month of attention when there's something to merge.
+#
+# Trigger:
+#   - schedule: Monday 14:00 UTC (Monday morning US working hours).
+#   - workflow_dispatch: manual invocation for ad-hoc sync checks.
+#
+# Notification:
+#   - When upstream advances, open an Issue tagged `upstream-sync` linking
+#     to the upstream compare URL and explaining reviewer action.
+#   - Skip notification if an open Issue already exists for the same upstream
+#     SHA (dedup against repeated weekly runs catching the same change).
+# =============================================================================
+
+name: upstream-sync
+
+on:
+  schedule:
+    - cron: '0 14 * * 1'  # Monday 14:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    name: Sync upstream-tracking branch
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout fork (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity for push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/microsoft/BCQuality.git
+          git fetch upstream main
+
+      - name: Determine if upstream advanced
+        id: check
+        run: |
+          set -euo pipefail
+          UPSTREAM_SHA=$(git rev-parse upstream/main)
+
+          if git show-ref --verify --quiet refs/remotes/origin/upstream-tracking; then
+            LAST_TRACKED=$(git rev-parse origin/upstream-tracking)
+          else
+            LAST_TRACKED=""
+          fi
+
+          if [[ "$UPSTREAM_SHA" == "$LAST_TRACKED" ]]; then
+            echo "No upstream changes since last sync (still at $UPSTREAM_SHA)."
+            echo "advanced=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Upstream advanced from '${LAST_TRACKED:-<no prior tracking>}' to $UPSTREAM_SHA"
+            {
+              echo "advanced=true"
+              echo "upstream_sha=$UPSTREAM_SHA"
+              echo "previous_sha=${LAST_TRACKED:-}"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push upstream-tracking branch
+        if: steps.check.outputs.advanced == 'true'
+        run: |
+          set -euo pipefail
+          git push origin upstream/main:refs/heads/upstream-tracking --force-with-lease
+
+      - name: Open notification Issue (or skip if duplicate)
+        if: steps.check.outputs.advanced == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_SHA: ${{ steps.check.outputs.upstream_sha }}
+          PREVIOUS_SHA: ${{ steps.check.outputs.previous_sha }}
+        run: |
+          set -euo pipefail
+
+          # Dedup: don't open a new Issue if one is already open for this SHA
+          EXISTING=$(gh issue list \
+            --label upstream-sync \
+            --state open \
+            --search "${UPSTREAM_SHA}" \
+            --json number \
+            --jq 'length')
+
+          if [[ "$EXISTING" -gt 0 ]]; then
+            echo "Open upstream-sync Issue already exists for ${UPSTREAM_SHA}; not duplicating."
+            exit 0
+          fi
+
+          PREV_DISPLAY="${PREVIOUS_SHA:-<no prior tracking>}"
+          COMPARE_URL="https://github.com/microsoft/BCQuality/compare/${PREVIOUS_SHA:-main}...${UPSTREAM_SHA}"
+
+          gh issue create \
+            --label upstream-sync \
+            --title "Upstream BCQuality advanced to ${UPSTREAM_SHA:0:7} — review before merge to main" \
+            --body "$(cat <<EOF
+          Upstream \`microsoft/BCQuality\` has new commits.
+
+          | Field | Value |
+          |---|---|
+          | Previous tracked SHA | \`${PREV_DISPLAY}\` |
+          | New upstream SHA | \`${UPSTREAM_SHA}\` |
+          | Compare diff | ${COMPARE_URL} |
+          | Tracking branch | \`upstream-tracking\` (just updated) |
+
+          ## Reviewer action
+
+          1. Open the compare URL above; review the diff.
+          2. If acceptable, open a PR from \`upstream-tracking\` to \`main\` of this fork:
+             - PR title format: \`Promote upstream BCQuality through ${UPSTREAM_SHA:0:7}\`
+             - PR body: link this Issue + brief acceptance rationale.
+          3. Merge the PR. The fork's \`main\` SHA becomes the new \`bcquality_version\` candidate.
+          4. Update the next Dev Agent dispatch \`bcquality_version\` (or governance default) to the new \`main\` SHA.
+          5. Close this Issue with a reference to the promotion PR.
+
+          ## If rejecting
+
+          If the upstream change shouldn't be promoted (regression, scope creep, license issue, etc.):
+
+          1. Close this Issue with a rationale comment.
+          2. The next weekly sync will re-open a fresh Issue when upstream advances again.
+          3. To pin out a specific upstream version, document the rationale in this repo's \`docs/upstream-rejections.md\` (create if absent).
+
+          ## Design context
+
+          BCQuality fork-with-gatekeeper pattern: see KPS Frontier Day 1+1 design session. Dev Agent reads only \`bcquality_version\`-pinned SHAs on the fork's \`main\`; nothing on \`upstream-tracking\` reaches the agent until a human merges.
+          EOF
+          )"
+
+      - name: Summary
+        if: always()
+        run: |
+          if [[ "${{ steps.check.outputs.advanced }}" == "true" ]]; then
+            echo "::notice::Upstream advanced to ${{ steps.check.outputs.upstream_sha }}. Notification Issue opened (or already existed)."
+          else
+            echo "::notice::No upstream changes."
+          fi
+
+# =============================================================================
+# Known v0 limitations / queued follow-ups
+# =============================================================================
+#
+# - This workflow does not auto-merge upstream into the fork's `main`.
+#   That is the explicit gatekeeper design — humans decide what reaches Dev
+#   Agent. Do not "improve" this by auto-merging.
+#
+# - Schedule is weekly Monday. If upstream advances mid-week, the notification
+#   lags by up to a week. Acceptable; manual `workflow_dispatch` covers urgent
+#   cases.
+#
+# - The `upstream-sync` label must pre-exist in this repo. Substrate setup
+#   runbook §9 covers the one-time label creation.
+#
+# - If `actions/checkout` or `gh` versions in the GitHub-hosted runner change
+#   semantics, the dedup query / Issue body may need adjustment. Re-test on
+#   ubuntu pin bumps.
+# =============================================================================
