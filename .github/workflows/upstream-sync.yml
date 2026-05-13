@@ -6,29 +6,23 @@
 # Purpose: Track upstream microsoft/BCQuality on a non-production branch;
 #          notify maintainer when upstream advances; gate promotion to fork's
 #          `main` behind a human-reviewed PR.
-# Version: v0.1 — corrects v0 upstream owner from JeremyVyska to microsoft
-#          (BCQuality was transferred to the microsoft org around Directions
-#          NA 2026 as part of Microsoft's announcement of BCQuality as the
-#          agentic-quality standard).
-# Classification: Internal — Selective Showcase: Private (note: the fork repo
-#          itself is Public so anonymous clone works from CI, but this
-#          workflow's existence and design rationale are platform-internal).
+# Version: v0.2 — App-identity retrofit per KPS-SignalAgent-v0_1.md.
+#          Changes from v0.1:
+#          - Notification authenticates as kps-signal-agent[bot] via App
+#            installation token, not bare GITHUB_TOKEN.
+#          - Compare URL constructed on monitored fork, not upstream
+#            (fixes 404-when-fork-history-diverges per spec §6).
+#          - Structured event log emission per spec §14 (run.started,
+#            advance.absent, advance.detected, issue.opened, run.completed,
+#            run.failed).
+#          - Environment scope `signal-agent-runtime` for App private key.
+#          - Top-level `permissions: contents: write` retained (git push to
+#            upstream-tracking); `issues: write` dropped (App token covers).
+# Classification: Internal — Selective Showcase: Private.
 #
-# Design pattern (from Day 1+1 BCQuality discussion):
-#   - Upstream tracked on a dedicated branch (`upstream-tracking`).
-#   - `main` of the fork is what Dev Agent reads (via pinned SHA).
-#   - Promotion from upstream-tracking → main is a human-reviewed PR.
-#   - Workload: ~10 min/month of attention when there's something to merge.
-#
-# Trigger:
-#   - schedule: Monday 14:00 UTC (Monday morning US working hours).
-#   - workflow_dispatch: manual invocation for ad-hoc sync checks.
-#
-# Notification:
-#   - When upstream advances, open an Issue tagged `upstream-sync` linking
-#     to the upstream compare URL and explaining reviewer action.
-#   - Skip notification if an open Issue already exists for the same upstream
-#     SHA (dedup against repeated weekly runs catching the same change).
+# Identity contract:
+#   - upstream-tracking branch push: bare GITHUB_TOKEN (workflow contents:write)
+#   - Issue creation:                 kps-signal-agent App installation token
 # =============================================================================
 
 name: upstream-sync
@@ -39,13 +33,19 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  issues: write
+  contents: write   # required for git push to upstream-tracking branch
+  # issues: write removed — App token covers issue creation per ADR-002
 
 jobs:
   sync:
-    name: Sync upstream-tracking branch
+    name: Sync upstream-tracking branch and notify
     runs-on: ubuntu-24.04
+    environment: signal-agent-runtime
+    env:
+      AGENT_NAME: kps-signal-agent
+      AGENT_VERSION: '0.1'
+      MONITORED_REPO: ${{ github.repository }}
+      UPSTREAM_REPO: microsoft/BCQuality
     steps:
       - name: Checkout fork (full history)
         uses: actions/checkout@v4
@@ -59,14 +59,21 @@ jobs:
 
       - name: Fetch upstream
         run: |
-          git remote add upstream https://github.com/microsoft/BCQuality.git
+          git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
           git fetch upstream main
 
-      - name: Determine if upstream advanced
-        id: check
+      - name: Capture run start time
+        id: start_time
+        run: |
+          echo "epoch_ms=$(($(date -u +%s%N)/1000000))" >> "$GITHUB_OUTPUT"
+          echo "rfc3339=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Compute SHA delta and build payload
+        id: delta
         run: |
           set -euo pipefail
           UPSTREAM_SHA=$(git rev-parse upstream/main)
+          FORK_MAIN_SHA=$(git rev-parse origin/main)
 
           if git show-ref --verify --quiet refs/remotes/origin/upstream-tracking; then
             LAST_TRACKED=$(git rev-parse origin/upstream-tracking)
@@ -74,111 +81,250 @@ jobs:
             LAST_TRACKED=""
           fi
 
-          if [[ "$UPSTREAM_SHA" == "$LAST_TRACKED" ]]; then
-            echo "No upstream changes since last sync (still at $UPSTREAM_SHA)."
-            echo "advanced=false" >> "$GITHUB_OUTPUT"
+          COMMITS_AHEAD=$(git rev-list --count origin/main..upstream/main)
+          COMMIT_SUBJECTS=$(git log origin/main..upstream/main --pretty=format:'%s' -n 20 || true)
+
+          UPSTREAM_SHA_SHORT="${UPSTREAM_SHA:0:7}"
+          FORK_MAIN_SHA_SHORT="${FORK_MAIN_SHA:0:7}"
+
+          if [[ "$UPSTREAM_SHA" == "${LAST_TRACKED:-}" ]]; then
+            TRACKING_ADVANCED="false"
           else
-            echo "Upstream advanced from '${LAST_TRACKED:-<no prior tracking>}' to $UPSTREAM_SHA"
-            {
-              echo "advanced=true"
-              echo "upstream_sha=$UPSTREAM_SHA"
-              echo "previous_sha=${LAST_TRACKED:-}"
-            } >> "$GITHUB_OUTPUT"
+            TRACKING_ADVANCED="true"
           fi
 
+          {
+            echo "upstream_sha=$UPSTREAM_SHA"
+            echo "fork_main_sha=$FORK_MAIN_SHA"
+            echo "upstream_sha_short=$UPSTREAM_SHA_SHORT"
+            echo "fork_main_sha_short=$FORK_MAIN_SHA_SHORT"
+            echo "commits_ahead=$COMMITS_AHEAD"
+            echo "tracking_advanced=$TRACKING_ADVANCED"
+            echo 'commit_subjects<<COMMIT_SUBJECTS_EOF'
+            echo "$COMMIT_SUBJECTS"
+            echo 'COMMIT_SUBJECTS_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Delta: upstream=${UPSTREAM_SHA_SHORT}, fork_main=${FORK_MAIN_SHA_SHORT}, commits_ahead=${COMMITS_AHEAD}, tracking_advanced=${TRACKING_ADVANCED}"
+
       - name: Push upstream-tracking branch
-        if: steps.check.outputs.advanced == 'true'
+        if: steps.delta.outputs.tracking_advanced == 'true'
         run: |
           set -euo pipefail
           git push origin upstream/main:refs/heads/upstream-tracking --force-with-lease
 
-      - name: Open notification Issue (or skip if duplicate)
-        if: steps.check.outputs.advanced == 'true'
+      - name: Emit signal_agent.run.started event
+        run: |
+          jq -n -c \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg agent "$AGENT_NAME" \
+            --arg agent_version "$AGENT_VERSION" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg monitored_repo "$MONITORED_REPO" \
+            --arg trigger_type "${{ github.event_name }}" \
+            --arg upstream_repo "$UPSTREAM_REPO" \
+            '{timestamp:$ts, agent:$agent, agent_version:$agent_version, event_type:"signal_agent.run.started", workflow_run_id:$run_id, monitored_repo:$monitored_repo, payload:{trigger_type:$trigger_type, upstream_repo:$upstream_repo}}'
+
+      - name: Emit signal_agent.advance.absent event
+        if: steps.delta.outputs.commits_ahead == '0'
+        run: |
+          jq -n -c \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg agent "$AGENT_NAME" \
+            --arg agent_version "$AGENT_VERSION" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg monitored_repo "$MONITORED_REPO" \
+            --arg upstream_sha "${{ steps.delta.outputs.upstream_sha }}" \
+            --arg fork_main_sha "${{ steps.delta.outputs.fork_main_sha }}" \
+            '{timestamp:$ts, agent:$agent, agent_version:$agent_version, event_type:"signal_agent.advance.absent", workflow_run_id:$run_id, monitored_repo:$monitored_repo, payload:{upstream_sha:$upstream_sha, fork_main_sha:$fork_main_sha}}'
+
+      - name: Mint signal-agent installation token
+        if: steps.delta.outputs.commits_ahead != '0'
+        id: app_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.KPS_SIGNAL_AGENT_APP_ID }}
+          private-key: ${{ secrets.KPS_SIGNAL_AGENT_PRIVATE_KEY }}
+          owner: kps-frontier
+          repositories: bcquality-fork
+
+      - name: Emit signal_agent.advance.detected event
+        if: steps.delta.outputs.commits_ahead != '0'
+        run: |
+          jq -n -c \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg agent "$AGENT_NAME" \
+            --arg agent_version "$AGENT_VERSION" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg monitored_repo "$MONITORED_REPO" \
+            --arg upstream_sha "${{ steps.delta.outputs.upstream_sha }}" \
+            --arg fork_main_sha "${{ steps.delta.outputs.fork_main_sha }}" \
+            --argjson commits_ahead ${{ steps.delta.outputs.commits_ahead }} \
+            '{timestamp:$ts, agent:$agent, agent_version:$agent_version, event_type:"signal_agent.advance.detected", workflow_run_id:$run_id, monitored_repo:$monitored_repo, payload:{upstream_sha:$upstream_sha, fork_main_sha:$fork_main_sha, commits_ahead:$commits_ahead}}'
+
+      - name: Open upstream-sync issue (Signal Agent)
+        if: steps.delta.outputs.commits_ahead != '0'
+        id: issue_create
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPSTREAM_SHA: ${{ steps.check.outputs.upstream_sha }}
-          PREVIOUS_SHA: ${{ steps.check.outputs.previous_sha }}
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
+          UPSTREAM_SHA: ${{ steps.delta.outputs.upstream_sha }}
+          FORK_MAIN_SHA: ${{ steps.delta.outputs.fork_main_sha }}
+          UPSTREAM_SHA_SHORT: ${{ steps.delta.outputs.upstream_sha_short }}
+          FORK_MAIN_SHA_SHORT: ${{ steps.delta.outputs.fork_main_sha_short }}
+          COMMITS_AHEAD: ${{ steps.delta.outputs.commits_ahead }}
+          COMMIT_SUBJECTS: ${{ steps.delta.outputs.commit_subjects }}
+          DETECTED_AT: ${{ steps.start_time.outputs.rfc3339 }}
+          TRIGGER_TYPE: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
 
-          # Dedup: don't open a new Issue if one is already open for this SHA
-          EXISTING=$(gh issue list \
+          DETECTED_AT_DATE="${DETECTED_AT%%T*}"
+
+          # Compare URL constructed on the MONITORED FORK, not upstream.
+          # Per Signal Agent v0.1 §6: fork-side compare is reachable regardless
+          # of fork history; upstream-side compare would 404 if fork main is
+          # not reachable from upstream.
+          COMPARE_URL="https://github.com/${MONITORED_REPO}/compare/${FORK_MAIN_SHA}...${UPSTREAM_SHA}"
+
+          TITLE="BCQuality upstream advance: ${COMMITS_AHEAD} commits ahead (${DETECTED_AT_DATE})"
+
+          if [[ -n "${COMMIT_SUBJECTS:-}" ]]; then
+            COMMITS_RENDERED=$(echo "$COMMIT_SUBJECTS" | sed 's/^/- /')
+          else
+            COMMITS_RENDERED="_(commit subjects not enumerated)_"
+          fi
+
+          BODY=$(cat <<EOF
+          ## Upstream advance detected
+
+          **Upstream:** \`${UPSTREAM_REPO}\`
+          **Monitored fork:** \`${MONITORED_REPO}\`
+          **Branch comparison:** \`upstream-tracking\` vs \`main\`
+          **Commits ahead:** ${COMMITS_AHEAD}
+          **Latest upstream SHA:** \`${UPSTREAM_SHA_SHORT}\`
+          **Fork main SHA:** \`${FORK_MAIN_SHA_SHORT}\`
+          **Diff:** [\`${FORK_MAIN_SHA_SHORT}..${UPSTREAM_SHA_SHORT}\`](${COMPARE_URL}) — ${COMMITS_AHEAD} commits, full file-level diff
+          **Detected:** ${DETECTED_AT}
+          **Trigger:** ${TRIGGER_TYPE}
+          **Workflow run:** [#${RUN_ID}](${RUN_URL})
+
+          ### Commits in delta (most recent first, up to 20)
+
+          ${COMMITS_RENDERED}
+
+          ### Next steps
+
+          A platform admin should review the \`upstream-tracking\` branch on \`${MONITORED_REPO}\` and decide whether to fork-merge to \`main\`. See Approved External Sources Inventory v0.1 §4.1 (BCQuality entry) and Roadmap v0.2 §7.18 for review procedure.
+
+          ---
+
+          *Generated by \`kps-signal-agent[bot]\` via \`upstream-sync.yml\`. This is a deterministic Phase 1 tripwire — no classification or recommendation has been performed. See \`KPS-SignalAgent-v0_1.md\`.*
+          EOF
+          )
+
+          # Dedup: skip if an open upstream-sync issue already exists for this upstream SHA.
+          EXISTING_JSON=$(gh issue list \
+            --repo "${MONITORED_REPO}" \
             --label upstream-sync \
             --state open \
             --search "${UPSTREAM_SHA}" \
-            --json number \
-            --jq 'length')
+            --json number)
 
-          if [[ "$EXISTING" -gt 0 ]]; then
-            echo "Open upstream-sync Issue already exists for ${UPSTREAM_SHA}; not duplicating."
+          EXISTING_COUNT=$(echo "$EXISTING_JSON" | jq 'length')
+
+          if [[ "${EXISTING_COUNT}" -gt 0 ]]; then
+            EXISTING_NUMBER=$(echo "$EXISTING_JSON" | jq '.[0].number')
+            echo "Open upstream-sync Issue #${EXISTING_NUMBER} already exists for ${UPSTREAM_SHA}; not duplicating."
+            {
+              echo "issue_number=${EXISTING_NUMBER}"
+              echo "issue_url="
+              echo "issue_title="
+              echo "deduped=true"
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          PREV_DISPLAY="${PREVIOUS_SHA:-<no prior tracking>}"
-          COMPARE_URL="https://github.com/microsoft/BCQuality/compare/${PREVIOUS_SHA:-main}...${UPSTREAM_SHA}"
-
-          gh issue create \
+          ISSUE_URL=$(gh issue create \
+            --repo "${MONITORED_REPO}" \
             --label upstream-sync \
-            --title "Upstream BCQuality advanced to ${UPSTREAM_SHA:0:7} — review before merge to main" \
-            --body "$(cat <<EOF
-          Upstream \`microsoft/BCQuality\` has new commits.
+            --title "${TITLE}" \
+            --body "${BODY}")
 
-          | Field | Value |
-          |---|---|
-          | Previous tracked SHA | \`${PREV_DISPLAY}\` |
-          | New upstream SHA | \`${UPSTREAM_SHA}\` |
-          | Compare diff | ${COMPARE_URL} |
-          | Tracking branch | \`upstream-tracking\` (just updated) |
+          ISSUE_NUMBER=$(echo "${ISSUE_URL}" | awk -F/ '{print $NF}')
 
-          ## Reviewer action
+          {
+            echo "issue_url=${ISSUE_URL}"
+            echo "issue_number=${ISSUE_NUMBER}"
+            echo "issue_title=${TITLE}"
+            echo "deduped=false"
+          } >> "$GITHUB_OUTPUT"
 
-          1. Open the compare URL above; review the diff.
-          2. If acceptable, open a PR from \`upstream-tracking\` to \`main\` of this fork:
-             - PR title format: \`Promote upstream BCQuality through ${UPSTREAM_SHA:0:7}\`
-             - PR body: link this Issue + brief acceptance rationale.
-          3. Merge the PR. The fork's \`main\` SHA becomes the new \`bcquality_version\` candidate.
-          4. Update the next Dev Agent dispatch \`bcquality_version\` (or governance default) to the new \`main\` SHA.
-          5. Close this Issue with a reference to the promotion PR.
+      - name: Emit signal_agent.issue.opened event
+        if: steps.delta.outputs.commits_ahead != '0' && steps.issue_create.outputs.deduped == 'false'
+        run: |
+          jq -n -c \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg agent "$AGENT_NAME" \
+            --arg agent_version "$AGENT_VERSION" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg monitored_repo "$MONITORED_REPO" \
+            --argjson issue_number ${{ steps.issue_create.outputs.issue_number }} \
+            --arg issue_url "${{ steps.issue_create.outputs.issue_url }}" \
+            --arg title "${{ steps.issue_create.outputs.issue_title }}" \
+            '{timestamp:$ts, agent:$agent, agent_version:$agent_version, event_type:"signal_agent.issue.opened", workflow_run_id:$run_id, monitored_repo:$monitored_repo, payload:{issue_number:$issue_number, issue_url:$issue_url, label:"upstream-sync", title:$title}}'
 
-          ## If rejecting
+      - name: Emit signal_agent.run.completed event
+        if: success()
+        run: |
+          set -euo pipefail
+          END_MS=$(($(date -u +%s%N)/1000000))
+          DURATION_MS=$((END_MS - ${{ steps.start_time.outputs.epoch_ms }}))
 
-          If the upstream change shouldn't be promoted (regression, scope creep, license issue, etc.):
+          if [[ "${{ steps.delta.outputs.commits_ahead }}" == "0" ]]; then
+            jq -n -c \
+              --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --arg agent "$AGENT_NAME" \
+              --arg agent_version "$AGENT_VERSION" \
+              --arg run_id "${{ github.run_id }}" \
+              --arg monitored_repo "$MONITORED_REPO" \
+              --argjson duration_ms $DURATION_MS \
+              '{timestamp:$ts, agent:$agent, agent_version:$agent_version, event_type:"signal_agent.run.completed", workflow_run_id:$run_id, monitored_repo:$monitored_repo, payload:{advance_detected:false, duration_ms:$duration_ms}}'
+          else
+            jq -n -c \
+              --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --arg agent "$AGENT_NAME" \
+              --arg agent_version "$AGENT_VERSION" \
+              --arg run_id "${{ github.run_id }}" \
+              --arg monitored_repo "$MONITORED_REPO" \
+              --argjson issue_number ${{ steps.issue_create.outputs.issue_number }} \
+              --argjson duration_ms $DURATION_MS \
+              '{timestamp:$ts, agent:$agent, agent_version:$agent_version, event_type:"signal_agent.run.completed", workflow_run_id:$run_id, monitored_repo:$monitored_repo, payload:{advance_detected:true, issue_number:$issue_number, duration_ms:$duration_ms}}'
+          fi
 
-          1. Close this Issue with a rationale comment.
-          2. The next weekly sync will re-open a fresh Issue when upstream advances again.
-          3. To pin out a specific upstream version, document the rationale in this repo's \`docs/upstream-rejections.md\` (create if absent).
-
-          ## Design context
-
-          BCQuality fork-with-gatekeeper pattern: see KPS Frontier Day 1+1 design session. Dev Agent reads only \`bcquality_version\`-pinned SHAs on the fork's \`main\`; nothing on \`upstream-tracking\` reaches the agent until a human merges.
-          EOF
-          )"
+      - name: Emit signal_agent.run.failed event
+        if: failure()
+        run: |
+          jq -n -c \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg agent "$AGENT_NAME" \
+            --arg agent_version "$AGENT_VERSION" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg monitored_repo "$MONITORED_REPO" \
+            '{timestamp:$ts, agent:$agent, agent_version:$agent_version, event_type:"signal_agent.run.failed", workflow_run_id:$run_id, monitored_repo:$monitored_repo, payload:{error_kind:"internal_error", error_message:"Workflow step failed; see job log for details.", stage:"unknown"}}'
 
       - name: Summary
         if: always()
         run: |
-          if [[ "${{ steps.check.outputs.advanced }}" == "true" ]]; then
-            echo "::notice::Upstream advanced to ${{ steps.check.outputs.upstream_sha }}. Notification Issue opened (or already existed)."
+          if [[ "${{ job.status }}" == "success" ]]; then
+            if [[ "${{ steps.delta.outputs.commits_ahead }}" == "0" ]]; then
+              echo "::notice::No upstream changes (still at ${{ steps.delta.outputs.upstream_sha_short }})."
+            elif [[ "${{ steps.issue_create.outputs.deduped }}" == "true" ]]; then
+              echo "::notice::Upstream advanced ${{ steps.delta.outputs.commits_ahead }} commits, but Issue #${{ steps.issue_create.outputs.issue_number }} already open for ${{ steps.delta.outputs.upstream_sha_short }}. Skipped duplicate."
+            else
+              echo "::notice::Upstream advanced ${{ steps.delta.outputs.commits_ahead }} commits to ${{ steps.delta.outputs.upstream_sha_short }}. Issue created: ${{ steps.issue_create.outputs.issue_url }}"
+            fi
           else
-            echo "::notice::No upstream changes."
+            echo "::error::Workflow failed; see job log for details."
           fi
-
-# =============================================================================
-# Known v0 limitations / queued follow-ups
-# =============================================================================
-#
-# - This workflow does not auto-merge upstream into the fork's `main`.
-#   That is the explicit gatekeeper design — humans decide what reaches Dev
-#   Agent. Do not "improve" this by auto-merging.
-#
-# - Schedule is weekly Monday. If upstream advances mid-week, the notification
-#   lags by up to a week. Acceptable; manual `workflow_dispatch` covers urgent
-#   cases.
-#
-# - The `upstream-sync` label must pre-exist in this repo. Substrate setup
-#   runbook §9 covers the one-time label creation.
-#
-# - If `actions/checkout` or `gh` versions in the GitHub-hosted runner change
-#   semantics, the dedup query / Issue body may need adjustment. Re-test on
-#   ubuntu pin bumps.
-# =============================================================================
