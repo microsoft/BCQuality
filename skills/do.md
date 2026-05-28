@@ -179,7 +179,18 @@ The first reference is the **primary** reference: the knowledge file the finding
 
 Emit `suggested-code` whenever the fix is small, local, and mechanical: deleting unreachable code; replacing one expression (`Count() > 0` → `not IsEmpty()`); moving a local `Label` to object scope; adding a missing property such as `ToolTip`, `OptionCaption`, or `DataClassification`; replacing a string-concatenated `Error` with a Label-backed call; changing a permission token; or adding a missing `else`/guard branch whose replacement is unambiguous from the surrounding diff. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, prefer adapting the `.good.al` replacement into `suggested-code`.
 
-Omit `suggested-code` only when the appropriate fix depends on context the skill cannot determine, when multiple defensible replacements exist, or when the fix spans non-contiguous code. If a finding is mechanical-looking but `suggested-code` is omitted, set `findings[].suggested-code-omission-reason` to a short explanation (for example, `requires choosing a real event id` or `fix spans multiple non-contiguous locations`). The `suggested-code` payload supplements `message`; it does not replace the explanation in `message`.
+For the following **must-suggest classes**, omission is not allowed when `location` points to the affected line/range and the replacement can be expressed as one contiguous block:
+
+- missing `OptionCaption` on an `Option` field: add `OptionCaption` matching the existing members;
+- missing `ToolTip` on a page field/control: add a concise `ToolTip` property for that control;
+- uppercase reserved keywords or simple formatter-only whitespace/casing defects: emit the formatted line/range;
+- `Count() > 0` or repeated `Count()` used only for existence: replace with `not IsEmpty()` or cache the count in a local variable when the return value is also needed;
+- unreachable/dead code after an unconditional terminator (`exit`, `Error`, `break`, `continue`): remove the unreachable contiguous block;
+- over-broad AL permission tokens where the required token is obvious (`rimd` on read-only access -> `r`): replace the permission token or permission line;
+- missing `DataClassification` where the correct value is explicit in the same knowledge article or obvious from the field (`SystemMetadata` for setup flags/keys, `CustomerContent` for customer-entered content): add the property;
+- local `Label` declaration that can be moved to object scope without renaming or changing text: emit the replacement only when the target range includes both the local declaration and the object-level insertion point; otherwise use `suggested-code-omission-reason`.
+
+Outside the must-suggest classes, omit `suggested-code` only when the appropriate fix depends on context the skill cannot determine, when multiple defensible replacements exist, or when the fix spans non-contiguous code. If a finding is mechanical-looking but `suggested-code` is omitted, set `findings[].suggested-code-omission-reason` to a short explanation (for example, `requires choosing a real event id` or `fix spans multiple non-contiguous locations`). The `suggested-code` payload supplements `message`; it does not replace the explanation in `message`.
 
 **`findings[].suggested-code-omission-reason`** — optional. Required when a finding is mechanical-looking but `suggested-code` is omitted. Short, human-readable reason explaining why no safe one-click replacement was emitted. Consumers MAY use this for telemetry or diagnostics; they do not have to render it in review comments.
 
