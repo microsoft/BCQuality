@@ -33,6 +33,9 @@
 
 .PARAMETER BCQualityRoot
     Path to the BCQuality content root to index (typically a filtered clone).
+    Defaults to the clone root (the parent of this script's `tools/` folder), so
+    the agent can run `pwsh ./tools/Build-KnowledgeIndex.ps1` from the clone root
+    with no arguments.
 
 .PARAMETER IndexPath
     Where to write the index JSON. Defaults to `<BCQualityRoot>/knowledge-index.json`.
@@ -56,7 +59,7 @@
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][string] $BCQualityRoot,
+    [string] $BCQualityRoot,
     [string] $IndexPath,
     [string[]] $EnabledLayers,
     [string[]] $KnowledgeAllow = @(),
@@ -67,6 +70,12 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Default to the clone root (parent of this script's tools/ folder) so the
+# agent's Entry preparation step can invoke this with no arguments from the
+# checkout root. A consumer/orchestrator may still pass -BCQualityRoot.
+if (-not $BCQualityRoot) {
+    $BCQualityRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+}
 if (-not (Test-Path $BCQualityRoot)) {
     throw "BCQuality root not found: $BCQualityRoot"
 }
