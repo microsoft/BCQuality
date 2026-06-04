@@ -33,6 +33,15 @@ task-context:
 
 `goal` and `inputs-available` are required. Filter dimensions (`technologies`, `bc-version`, `countries`, `application-area`) are optional; omitting a dimension is equivalent to "unconstrained" — see Relevance for the exact matching rule. `enabled-layers` defaults to all three. `disabled-skills` defaults to empty.
 
+## Preparation — knowledge index
+
+Before routing, ensure the knowledge index is current for the **live** clone. The dispatched review skills read `knowledge-index.json` (at the clone root) at their Source step instead of opening every knowledge file — see READ's [Retrieval workflow](read.md). Because a consumer prunes its clone to policy *before* the agent runs, the index MUST be built over the clone as it exists now, so it lists exactly the articles that survived pruning and never an article the consumer denied:
+
+- If `knowledge-index.json` is absent — or you cannot confirm it reflects the current knowledge tree — regenerate it by running `tools/Build-KnowledgeIndex.ps1`. It walks the knowledge files present in the clone and writes the index at the clone root in well under a second. When in doubt, rebuild: a sub-second rebuild is always cheaper than a stale or over-listing index, which is a correctness risk.
+- This is a side step. It MUST NOT change Entry's output — the dispatch record below is the only thing Entry emits, and build logs are never part of the dispatch JSON.
+
+Generation is **owned by BCQuality**: the generator ships here next to the skills and knowledge it derives from, and the consuming orchestrator neither builds nor knows about the index.
+
 ## Source
 
 All action skills under `*/skills/**/*.md` across the layers named in `enabled-layers`. Meta-skills in `/skills/` (including this file) are not candidates and MUST be excluded. Entry never dispatches Entry.

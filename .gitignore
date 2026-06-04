@@ -23,3 +23,7 @@ node_modules/
 
 # Build artifacts
 *.log
+
+# Runtime artifact: the knowledge index is rebuilt over each consumer's
+# pruned clone by Entry's preparation step; it is never committed.
+/knowledge-index.json

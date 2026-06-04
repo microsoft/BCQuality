@@ -140,7 +140,7 @@ Consumers that surface sample code to an end user or agent SHOULD cite the sampl
 
 The standard workflow for finding applicable files:
 
-1. Collect candidates from the knowledge index (`knowledge-index.json`) when the consumer provides one: it lists every filtered article with the frontmatter, `keywords`, `title`, and `description` that steps 2-3 need, so candidates are enumerated without opening each file. Absent an index, collect candidates by path (typically by `domain` subfolder, across enabled layers).
+1. Collect candidates from the knowledge index (`knowledge-index.json`). BCQuality maintains it: Entry's preparation step (see [entry.md](entry.md)) regenerates it over the live, already-filtered clone, so it lists exactly the articles that survived the consumer's layer/allow-deny pruning, each with the frontmatter, `keywords`, `title`, and one-line `description` that steps 2-3 need — candidates are enumerated without opening each file. The index is **discovery metadata only**: it tells you *which* files to open, it does not substitute for them. A finding MUST cite only an article that was opened and read in full; an index row whose file is absent from the clone MUST be discarded *before* ranking or worklisting, and its metadata MUST NOT seed a finding. Absent an index, collect candidates by path (typically by `domain` subfolder, across enabled layers).
 2. Filter by frontmatter using the matching rules above. Files that are not applicable are discarded.
 3. Rank or narrow by `keywords` relevance to the task.
 4. Resolve conflicts via layer precedence.

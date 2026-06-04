@@ -1,0 +1,24 @@
+name: Validate knowledge index
+
+# BCQuality owns the knowledge-index generator (tools/Build-KnowledgeIndex.ps1),
+# which the AL review skills' Source step consumes. This guards the generator's
+# health so consumers never have to: the index a consumer uses at runtime is
+# rebuilt over its own pruned clone, but the generator that builds it lives and
+# is validated here.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate knowledge-index generator
+        shell: pwsh
+        run: ./.github/scripts/Test-KnowledgeIndex.ps1 -Root .
