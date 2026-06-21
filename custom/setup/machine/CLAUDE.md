@@ -3,17 +3,33 @@
 
 These instructions apply to every Claude Code session, regardless of project.
 
+## Auto-update BCQuality (runs at every session start)
+
+If the current project has `.github/.agents/bcquality.agent.md`:
+
+1. Fetch the latest commit SHA for `custom/setup/` in BCQuality:
+   `https://api.github.com/repos/Curabis/BCQuality/commits?path=custom/setup&per_page=1`
+2. Read stored SHA from `~/.claude/.bcquality-version` (may not exist yet)
+3. If SHA is different (or file missing):
+   a. Fetch and execute Mode B from:
+      `https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/setup/curabis-standard.agent.md`
+   b. Write new SHA to `~/.claude/.bcquality-version`
+   c. Report: "BCQuality opdateret til [short-sha] — [antal] filer tjekket"
+4. If SHA is unchanged: continue silently
+
+Do this silently and quickly — do not ask for permission, do not explain the process
+unless something actually changed.
+
 ## CURABIS Standard project setup
 
-When working in a repository that has no `CLAUDE.md`, or when the user says
-**"Konfigurer dette projekt til CURABIS Standard"**, fetch and follow the setup agent:
+When the user says either of these commands, fetch and follow the setup agent:
 
 ```
 https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/setup/curabis-standard.agent.md
 ```
 
-This agent configures the repository with BCQuality rules, BC MCP bridge,
-Immanuel (rule guardian), and project memory — from a single command.
+- **"Konfigurer dette projekt til CURABIS Standard"** → fuld setup af nyt repo
+- **"Opdater CURABIS Standard fra BCQuality"** → manuel opdatering
 
 ## Identity
 
