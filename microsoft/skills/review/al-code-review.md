@@ -3,7 +3,7 @@ kind: action-skill
 id: al-code-review
 version: 1
 title: AL code review
-description: Reviews AL source changes by composing the AL review leaf skills (performance, security, privacy, upgrade, style, UI, error handling).
+description: Reviews AL source changes by composing the AL review leaf skills (performance, security, privacy, upgrade, style, UI, error handling, interfaces).
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
 bc-version: [all]
@@ -18,6 +18,7 @@ sub-skills:
   - microsoft/skills/review/al-style-review.md
   - microsoft/skills/review/al-ui-review.md
   - microsoft/skills/review/al-error-handling-review.md
+  - microsoft/skills/review/al-interfaces-review.md
 ---
 
 # AL code review
@@ -39,6 +40,7 @@ The sub-skills invoked by this skill are those listed in frontmatter `sub-skills
 - `microsoft/skills/review/al-style-review.md`
 - `microsoft/skills/review/al-ui-review.md`
 - `microsoft/skills/review/al-error-handling-review.md`
+- `microsoft/skills/review/al-interfaces-review.md`
 
 Additional leaf skills (for example, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
 
