@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 2
+version: 3
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -9,7 +9,7 @@ description: >
   from authoritative templates in BCQuality. Deploys bc-mcp-bridge.js to the
   developer's machine. Also handles updates to an already-configured project.
 inputs: [repo-root]
-outputs: [CLAUDE.md, .mcp.json, .github/.agents/*, cspell.json, projectmemory/]
+outputs: [CLAUDE.md, .mcp.json, .github/.agents/*, cspell.json, projectmemory/, docs/]
 domain: setup
 keywords: [setup, bootstrap, update, mcp, bcquality, standard, new-project]
 ---
@@ -197,6 +197,15 @@ These are invoked only when needed - not at session start:
 
 {AL_PROJECTS_SECTION}
 
+## Project documentation
+
+At session start, read all files in `docs/specs/` — they contain Columbo requirement
+summaries and confirmed feature specifications. These record what has been clarified
+and what scope has been agreed. Do not re-clarify what is already in docs/specs/.
+
+`docs/decisions/` contains architectural decision records.
+`docs/cleanup/` contains cleanup task lists with checkbox status.
+
 ## Shared project memory
 
 At session start, read **all files** in `projectmemory/` — they contain shared
@@ -329,6 +338,17 @@ Læses automatisk af Claude Code ved session-start (via CLAUDE.md).
 (Tilføj observationer her)
 ```
 
+#### 4f. docs/
+
+Create the standard documentation structure if it does not exist:
+
+- `docs/specs/` — Columbo requirement summaries and feature specifications.
+  Read by Claude at session start. One file per feature in kebab-case.
+- `docs/decisions/` — Architectural decision records. Formal, dated, immutable.
+- `docs/cleanup/` — Cleanup task lists with checkbox status.
+
+Create a `.gitkeep` file in each empty subfolder so git tracks them.
+
 ### Step 5 — Confirm and offer initial commit
 
 List all files written, then ask:
@@ -342,7 +362,8 @@ If yes, stage and commit:
 - .github/.agents/ med alle standard-agenter
 - .mcp.json med BC MCP bridge
 - cspell.json
-- projectmemory/ mappe
+- projectmemory/ — delt projekthukommelse
+- docs/specs/, docs/decisions/, docs/cleanup/ — projektdokumentation
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
@@ -354,7 +375,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 Triggered by: "Opdater CURABIS Standard fra BCQuality"
 
 Updates only the files that come directly from BCQuality.
-Never touches `CLAUDE.md`, `projectmemory/`, or `~/.bc-mcp.config.json`.
+Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`.
 
 ### What gets updated
 
@@ -372,11 +393,13 @@ Never touches `CLAUDE.md`, `projectmemory/`, or `~/.bc-mcp.config.json`.
 | `.github/.agents/m365.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `cspell.json` — words from template | Merge new words, keep project words |
 | `.mcp.json` — `al` entry | Add if `find-altool.ps1` now exists and entry is missing |
+| `docs/specs/`, `docs/decisions/`, `docs/cleanup/` | Create if missing, never overwrite content |
 
 ### What does NOT get updated
 
 - `CLAUDE.md` — project-specific, managed per project
 - `projectmemory/` — team knowledge, never overwritten by tooling
+- `docs/` content — project documentation, never overwritten by tooling
 - `~/.bc-mcp.config.json` — contains developer secrets
 
 ### After update
