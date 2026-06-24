@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 1
+version: 2
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -34,7 +34,8 @@ Detect which mode based on the trigger phrase and proceed accordingly.
 ## Source URLs (BCQuality — always fetch fresh)
 
 ```
-BASE = https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/setup
+BASE        = https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/setup
+AGENTS_BASE = https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/agents
 ```
 
 | Artefakt | URL |
@@ -47,6 +48,9 @@ BASE = https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/setup
 | al-triage.agent.md | `{BASE}/templates/al-triage.agent.md` |
 | al-complexity.agent.md | `{BASE}/templates/al-complexity.agent.md` |
 | bc-mcp.agent.md | `{BASE}/templates/bc-mcp.agent.md` |
+| columbo.agent.md | `{AGENTS_BASE}/columbo.agent.md` |
+| florence.agent.md | `{AGENTS_BASE}/florence.agent.md` |
+| m365.agent.md | `{AGENTS_BASE}/m365.agent.md` |
 | cspell.json | `{BASE}/templates/cspell.json` |
 
 CLAUDE.md and .mcp.json are generated dynamically — not fetched as static templates
@@ -155,6 +159,8 @@ At the start of every session, before doing anything else:
    - https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/knowledge/mcp/api-page-least-privilege-write-access.md
    - https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/knowledge/mcp/agent-must-not-write-business-process-status.md
    - https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/knowledge/mcp/bc-mcp-find-active-task-for-branch.md
+   - https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/knowledge/mcp/agent-must-resolve-developer-identity-from-bc.md
+   - https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/knowledge/mcp/ai-eval-scores-must-be-posted-to-bc-table.md
 
 These rules are always active.
 
@@ -162,6 +168,15 @@ These rules are always active.
 
 These are invoked only when needed - not at session start:
 
+- `.github/.agents/columbo.agent.md` - Customer requirement clarifier. Invoke before any
+  new feature is built. Asks one question at a time until the requirement is complete.
+  Always has one more thing. Routes to al-complexity when the picture is clear.
+- `.github/.agents/florence.agent.md` - Heartbeat agent. Walks the wards on a regular
+  schedule, reads HEARTBEAT.md, and lights the lamp only when something deserves attention.
+  Silent when all is well.
+- `.github/.agents/m365.agent.md` - Microsoft 365 MCP usage guide. How to use Outlook,
+  calendar, SharePoint, and Teams tools correctly. Always consult before using any
+  `mcp__claude_ai_Microsoft_365__*` tool.
 - `.github/.agents/francis.agent.md` - BCQuality rule proposer. Invoke at session end
   or when a pattern suggests a rule is missing. Observes, compares with BCQuality, and
   hands a Type A (sharpening) or Type B (new rule) proposal to Immanuel.
@@ -177,6 +192,7 @@ These are invoked only when needed - not at session start:
 - `.github/.agents/bc-mcp.agent.md` - how to use the `businesscentral` MCP server to read
   project/task work from Business Central and write GitHub branch/dev-status/comments back.
   Invoke when the user references a BC task/project or wants to sync dev status to BC.
+
 ## AL projects
 
 {AL_PROJECTS_SECTION}
@@ -279,12 +295,15 @@ If `find-altool.ps1` is missing, note after writing .mcp.json:
 #### 4c. .github/.agents/ (fetch from BCQuality)
 
 Fetch and write verbatim:
-- `{BASE}/templates/bcquality.agent.md` → `.github/.agents/bcquality.agent.md`
-- `{BASE}/templates/immanuel.agent.md`  → `.github/.agents/immanuel.agent.md`
-- `{BASE}/templates/francis.agent.md`   → `.github/.agents/francis.agent.md`
-- `{BASE}/templates/al-triage.agent.md`  → `.github/.agents/al-triage.agent.md`
-- `{BASE}/templates/al-complexity.agent.md` → `.github/.agents/al-complexity.agent.md`
-- `{BASE}/templates/bc-mcp.agent.md`     → `.github/.agents/bc-mcp.agent.md`
+- `{BASE}/templates/bcquality.agent.md`    → `.github/.agents/bcquality.agent.md`
+- `{BASE}/templates/immanuel.agent.md`     → `.github/.agents/immanuel.agent.md`
+- `{BASE}/templates/francis.agent.md`      → `.github/.agents/francis.agent.md`
+- `{BASE}/templates/al-triage.agent.md`    → `.github/.agents/al-triage.agent.md`
+- `{BASE}/templates/al-complexity.agent.md`→ `.github/.agents/al-complexity.agent.md`
+- `{BASE}/templates/bc-mcp.agent.md`       → `.github/.agents/bc-mcp.agent.md`
+- `{AGENTS_BASE}/columbo.agent.md`         → `.github/.agents/columbo.agent.md`
+- `{AGENTS_BASE}/florence.agent.md`        → `.github/.agents/florence.agent.md`
+- `{AGENTS_BASE}/m365.agent.md`            → `.github/.agents/m365.agent.md`
 
 Create `.github/.agents/` if it does not exist.
 
@@ -302,7 +321,7 @@ Create `projectmemory/memoryupdates_<username>.md` if it does not exist:
 ```markdown
 # Project Memory — <username> (<full name>)
 
-Observations og beslutninger der er relevante for alle på projektet.
+Observationer og beslutninger der er relevante for alle på projektet.
 Læses automatisk af Claude Code ved session-start (via CLAUDE.md).
 
 ---
@@ -320,8 +339,8 @@ If yes, stage and commit:
 [SETUP] Konfigurer til CURABIS Standard
 
 - CLAUDE.md med BCQuality knowledge-liste
-- .github/.agents/bcquality.agent.md + immanuel.agent.md + francis.agent.md
-- .mcp.json med BC MMP bridge
+- .github/.agents/ med alle standard-agenter
+- .mcp.json med BC MCP bridge
 - cspell.json
 - projectmemory/ mappe
 
@@ -348,6 +367,9 @@ Never touches `CLAUDE.md`, `projectmemory/`, or `~/.bc-mcp.config.json`.
 | `.github/.agents/al-triage.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `.github/.agents/al-complexity.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `.github/.agents/bc-mcp.agent.md` | Fetch fresh from BCQuality, overwrite |
+| `.github/.agents/columbo.agent.md` | Fetch fresh from BCQuality, overwrite |
+| `.github/.agents/florence.agent.md` | Fetch fresh from BCQuality, overwrite |
+| `.github/.agents/m365.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `cspell.json` — words from template | Merge new words, keep project words |
 | `.mcp.json` — `al` entry | Add if `find-altool.ps1` now exists and entry is missing |
 
