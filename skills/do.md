@@ -117,6 +117,12 @@ Every action skill emits a single JSON document that conforms to this schema:
 }
 ```
 
+### JSON validity
+
+The emitted document MUST be strict, valid JSON per [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259). Inside every string value, all double quotes MUST be escaped as `\"` and all line breaks as `\n`; other control characters MUST use their JSON escapes. This is not optional polish — it is the difference between a parseable report and one a consumer silently drops.
+
+AL source is the common failure case. Quoted identifiers (for example `Rec."No."`) and multi-line snippets routinely appear in `message`, `suggested-code`, and `suggested-code-omission-reason`, and each embedded quote or newline MUST be escaped when placed in a string value. A `suggested-code` payload that spans several lines is a single JSON string with `\n` separators, not a literal multi-line block. Emit the document as one JSON value with no trailing commentary, and do not rely on the consumer to repair unescaped output.
+
 ### Field semantics
 
 **`outcome`** (required) —
