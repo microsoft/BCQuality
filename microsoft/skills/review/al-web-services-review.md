@@ -39,7 +39,7 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 - The changed AL object names and types — especially page objects declared with `PageType = API`, and any procedure on such a page that exposes a bound action.
 - The changed properties and triggers, weighted toward API page metadata (`APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `ODataKeyFields`, `SourceTable`), CRUD guards (`InsertAllowed`, `ModifyAllowed`, `DeleteAllowed`, `Editable`), the `OnOpenPage` trigger, and `OnValidate` triggers on exposed fields.
-- Tokens extracted from the diff that relate to API surface and behaviour (`PageType`, `API`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `ODataKeyFields`, `SystemId`, `DelayedInsert`, `ServiceEnabled`, `WebServiceActionContext`, `SetActionResponse`, `ReadIsolation`, `IsolationLevel`, `ReadCommitted`, `InsertAllowed`, `ModifyAllowed`, `DeleteAllowed`, `Editable`, `SourceTable`).
+- Tokens extracted from the diff that relate to API surface and behaviour (`PageType`, `API`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `ODataKeyFields`, `SystemId`, `ServiceEnabled`, `WebServiceActionContext`, `SetActionResponse`, `ReadIsolation`, `IsolationLevel`, `ReadCommitted`, `InsertAllowed`, `ModifyAllowed`, `DeleteAllowed`, `Editable`, `SourceTable`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -63,7 +63,7 @@ Set `confidence` to:
 
 After evaluating each worklist entry, also consider whether the diff exhibits a web-services defect the agent recognises from its general AL knowledge that no knowledge file in the worklist covers. Such candidates are agent findings within this skill's domain — emit them with `references: []`, an `id` slug prefixed with `agent:`, `confidence` capped at `medium`, `severity` capped at `minor` (agent findings are advisory and non-gating), and a `message` that is self-contained (describing both the issue and a concrete recommendation, since there is no knowledge-file footer for the consumer to fall back on). Hold every candidate to the precision bar in `skills/do.md` (*Agent findings*): emit only a concrete, material web-services defect a knowledgeable BC reviewer would agree is wrong — steelman it first and drop anything stylistic, speculative, dependent on code outside the diff, or merely a valid alternative; when in doubt, omit. The scope is strictly API pages and web-service surfaces; defects outside this domain belong to other leaves and MUST NOT be emitted here. Before emitting, check the worklist for a knowledge file that matches the candidate — if one exists, upgrade the candidate to a knowledge-backed finding instead. See `skills/do.md` for the full contract.
 
-For every emitted finding, decide whether the fix is mechanical. A fix is mechanical when it is small, local, and unambiguous from the diff context (for example: add a missing `DelayedInsert = true`; set `ODataKeyFields = SystemId`; add the three `*Allowed = false` guards to a read-only page). For mechanical findings, emit `findings[].suggested-code` with the literal replacement for the source lines indicated by `location`. The payload must be a verbatim replacement — no diff markers, no fences, no commentary — that the consumer can render as a one-click suggestion. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, adapt the `.good.al` replacement into `suggested-code`.
+For every emitted finding, decide whether the fix is mechanical. A fix is mechanical when it is small, local, and unambiguous from the diff context (for example: set `ODataKeyFields = SystemId`; add the three `*Allowed = false` guards to a read-only page; add the missing `OnOpenPage` isolation assignment). For mechanical findings, emit `findings[].suggested-code` with the literal replacement for the source lines indicated by `location`. The payload must be a verbatim replacement — no diff markers, no fences, no commentary — that the consumer can render as a one-click suggestion. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, adapt the `.good.al` replacement into `suggested-code`.
 
 Omit `suggested-code` only when the appropriate fix depends on context the skill cannot determine, when multiple defensible replacements exist, or when the fix spans non-contiguous code. If a finding is mechanical-looking but you omit `suggested-code`, set `findings[].suggested-code-omission-reason` to a short explanation. See `skills/do.md` for the full contract.
 
@@ -103,15 +103,15 @@ Output conforms to the DO output contract. A populated example:
       "confidence": "high"
     },
     {
-      "id": "microsoft/knowledge/web-services/enable-delayedinsert-on-writable-api-pages.md",
+      "id": "microsoft/knowledge/web-services/expose-systemid-as-the-api-key.md",
       "severity": "minor",
-      "message": "This writable API page omits DelayedInsert = true, so a POST can insert the row before all posted fields are assigned. Add DelayedInsert = true.",
+      "message": "This API page sets ODataKeyFields to a renamable business field instead of SystemId, so stored references break when the business key changes. Set ODataKeyFields = SystemId and expose field(id; Rec.SystemId).",
       "location": {
         "file": "src/Api/CustomerApi.Page.al",
         "line": 9
       },
       "references": [
-        { "path": "microsoft/knowledge/web-services/enable-delayedinsert-on-writable-api-pages.md" }
+        { "path": "microsoft/knowledge/web-services/expose-systemid-as-the-api-key.md" }
       ],
       "confidence": "high"
     }

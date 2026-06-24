@@ -11,11 +11,11 @@ application-area: [all]
 
 ## Description
 
-By default a read can observe uncommitted changes made by other, still-open transactions running concurrently. For most interactive pages that is harmless, but an API whose contract is "return only data that is durably committed" must not leak those dirty reads — a consumer could fetch a row that a concurrent transaction later rolls back, and act on data that never really existed. From runtime 22.0 (BC 2023 release wave 1) AL exposes `Rec.ReadIsolation`, letting a page pin its isolation level. Setting `Rec.ReadIsolation := IsolationLevel::ReadCommitted;` in `OnOpenPage` guarantees the endpoint only returns committed rows. LLMs rarely set isolation explicitly because the platform's default "just works" for ordinary UI; this file is remedial because committed-only API semantics require an explicit opt-in that the model would not add on its own.
+This is about the data-consistency contract of an API endpoint: what a consumer receives when it reads. By default an API read can return in-flight rows that a concurrent, still-open transaction has written but not yet committed. For an endpoint whose contract is "return only data that is durably committed," that is wrong — a consumer could fetch a row that the writing transaction later rolls back, then act on data that never really existed. From runtime 22.0 (BC 2023 release wave 1) an API page can pin the isolation level its reads use: setting `Rec.ReadIsolation := IsolationLevel::ReadCommitted;` in the page's `OnOpenPage` trigger makes the endpoint expose only committed rows. LLMs rarely set this on an API page because the platform default "just works" for ordinary UI; this file is remedial because the committed-only endpoint contract requires an explicit opt-in the model would not add on its own.
 
 ## Best Practice
 
-For an API page that must expose only committed data, set the isolation level once as the page opens: in the `OnOpenPage` trigger write `Rec.ReadIsolation := IsolationLevel::ReadCommitted;`. Every subsequent read on that record variable then ignores uncommitted writes from concurrent transactions, so the endpoint never returns a row that another transaction might still roll back.
+For an API page that must expose only committed data, set the endpoint's read isolation once as the page opens: in the `OnOpenPage` trigger write `Rec.ReadIsolation := IsolationLevel::ReadCommitted;`. Every read the endpoint then serves ignores uncommitted writes from concurrent transactions, so a consumer never receives a row that another transaction might still roll back.
 
 See sample: `expose-only-committed-data-from-api-reads.good.al`.
 
