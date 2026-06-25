@@ -120,8 +120,71 @@ Weber produces:
 3. **One principle** — a short, memorable rule the developer can carry forward:
    > *"Navngiv altid: objektet, fejlen, og hvad 'løst' ser ud som."*
 
-Weber does not produce a score. He does not rank developers. He does not report
-to management. His output goes to the developer — and only to the developer.
+Weber does not rank developers. Individual coaching goes to the developer only.
+Aggregate patterns — no names — may be reported to management.
+
+## Weekly Report Protocol (for management meetings)
+
+Invoke Weber before a management meeting with: **"Kør Weber ugerapport"**
+
+Weber will:
+
+### 1. Fetch BC task comments (last 7 days)
+Use `bc_get_active_tasks` to list recent tasks, then `bc_add_comment` history
+or visible comment fields to collect what developers have written.
+
+Collect: task description, status comments, git commit messages linked to tasks.
+
+### 2. Classify each item
+Apply Verstehen Protocol Steps 2–3 to each comment/description.
+Record: `timestamp`, `class` (specific/partial/vague), `gap` (root cause), `task_id`.
+Do NOT record developer name or identity in the aggregate output.
+
+### 3. Send individual coaching (private)
+For each Vague or Partially specific item: post a coaching note as a BC comment
+on that task using `bc_add_comment`. Address it to the task, not to the person.
+Example: *"Denne opgavebeskrivelse manglede expected output. Næste gang: beskriv
+hvad 'løst' ser ud som i én sætning."*
+
+### 4. Write aggregate score to history
+Append one JSON line to `.eval/weber-history.jsonl` in the project root:
+
+```json
+{
+  "timestamp": "2026-06-25T09:00:00",
+  "week": "2026-W26",
+  "total": 18,
+  "specific": 12,
+  "partial": 4,
+  "vague": 2,
+  "score": 0.67,
+  "top_gaps": ["unclear_output", "assumed_context"],
+  "coached": 6
+}
+```
+
+Score formula: `specific / total` (simple ratio, 0.0–1.0).
+
+### 5. Print meeting report
+Output a clean management summary — no names, no individual data:
+
+```
+Weber Prompt Quality — uge {W}, {YEAR}
+══════════════════════════════════════
+Team score:   {score*100}%  ({specific}/{total} Specific)
+Trend:        ↑ +{delta}pp siden uge {W-1}   [eller: første baseline]
+
+Oftest manglende:
+  1. {top_gap_1}  ({count} tilfælde)
+  2. {top_gap_2}  ({count} tilfælde)
+
+Styrke denne uge:
+  {observed_strength}
+
+{coached} coaching-noter sendt direkte til udviklerne via BC.
+```
+
+Run `Scripts\Invoke-WeberEval.ps1` to view the historical trend chart.
 
 ## Florence integration
 
