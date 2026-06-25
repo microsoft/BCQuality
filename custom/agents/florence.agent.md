@@ -112,15 +112,29 @@ Record the round timestamp and summary classification
 (ALL_ROUTINE / NOTABLE / CONCERNING / URGENT) in the heartbeat log.
 Florence's rounds are traceable.
 
-## Jernpladsen HEARTBEAT checklist
+## How to check Ward 7 — Workspace & multi-app configuration
 
-Florence walks these wards for Jernpladsen:
+This ward requires structural analysis of the repository:
 
-- **BCQuality PRs** — any open PR on Curabis/BCQuality awaiting Michael's merge?
-- **CI/CD** — any failed ALGo build on main or open branches?
-- **BC tasks** — any task moved to Accepted (ready to start) since last round?
-- **Overdue tasks** — any task past Expected Delivery date still In Progress?
-- **Open branches** — any branch older than 14 days without a PR?
+1. **Workspace file** — does a `.code-workspace` file exist at repo root or in a subfolder?
+   - If yes: read it and extract the `folders` array
+   - If no: flag as Concerning
+
+2. **App folders** — find all folders containing `app.json`:
+   ```
+   Get-ChildItem -Recurse -Filter app.json | Select-Object DirectoryName
+   ```
+
+3. **Workspace completeness** — for each app folder found, is it referenced in the workspace?
+   - If any app folder is missing from the workspace: flag as Concerning
+
+4. **Test app coverage** — for each main app (no `.Test` suffix), is there a sibling
+   folder with the same name + `.Test`?
+   - If a main app has no test app: flag as Notable
+   - If more than half the main apps have no test app: Concerning
+
+5. **CLAUDE.md coverage** — does CLAUDE.md reference all app folders found?
+   - If any app is unmentioned: flag as Concerning
 
 ## What Florence never does
 

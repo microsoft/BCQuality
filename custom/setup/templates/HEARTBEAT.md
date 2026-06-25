@@ -78,6 +78,17 @@ Sammenlign filer i `.github/.agents/` med referencer i `CLAUDE.md`.
 
 ---
 
+### 7. Workspace & multi-app konfiguration
+Se `florence.agent.md` for den fulde checkprotokol.
+
+| Klassifikation | Kriterium |
+|---|---|
+| Routine | Workspace eksisterer, alle apps er med, alle har test-app |
+| Notable | En eller flere main-apps mangler test-app |
+| Concerning | Ingen workspace-fil, app-mappe mangler i workspace, eller CLAUDE.md dækker ikke alle apps |
+
+---
+
 ## Hvad Florence aldrig gør
 
 - Vækker Michael for et Notable
