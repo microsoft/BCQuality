@@ -77,7 +77,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Privacy"`. A populated example:
 
 ```json
 {
@@ -100,7 +100,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/privacy/strsubstno-prebuild-breaks-error-telemetry-classification.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Privacy"
     }
   ],
   "suppressed": []

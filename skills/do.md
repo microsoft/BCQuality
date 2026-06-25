@@ -95,6 +95,7 @@ Every action skill emits a single JSON document that conforms to this schema:
       ],
       "confidence": "high | medium | low",
       "from-sub-skill": "string",
+      "domain": "string",
       "suggested-code": "string",
       "suggested-code-omission-reason": "string"
     }
@@ -188,6 +189,8 @@ The first reference is the **primary** reference: the knowledge file the finding
 **`findings[].confidence`** — the skill's confidence that the finding is a true positive, given the evidence it evaluated. Not applicability confidence, not severity confidence. Values: `high`, `medium`, `low`.
 
 **`findings[].from-sub-skill`** — optional. Set only by super-skills. The `skill.id` of the sub-skill that produced the finding, or the literal string `"agent"` for an agent finding the super-skill produced from its own cross-cutting reasoning. Absent on findings emitted directly by a leaf skill — including agent findings the leaf emits within its own domain, which appear in the leaf's own report without this field.
+
+**`findings[].domain`** — optional. A short, human-readable display label for the review domain that produced the finding (for example, `Security`, `Performance`, `Accessibility`). Set by the leaf skill on every finding it emits. The super-skill preserves it verbatim when rolling a sub-skill's finding into its top-level `findings[]`, and sets it to `"Agent"` for the agent findings it emits about cross-cutting concerns. Consumers SHOULD render it verbatim and MUST tolerate its absence (older producers may not emit it).
 
 **`findings[].suggested-code`** — optional in the schema but **expected for mechanical findings**. It is a concrete code-replacement payload for the lines indicated by `location`. When present, the string MUST be a literal replacement for the source lines covered by `location.line` (or `location.range` if set) — i.e., what the file would contain after the fix, with no surrounding diff markers, fences, or commentary. Consumers MAY render it as a one-click suggestion in the delivery surface (for example, a GitHub ```` ```suggestion ```` block).
 

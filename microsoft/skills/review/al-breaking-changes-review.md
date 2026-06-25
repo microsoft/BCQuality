@@ -77,7 +77,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Breaking Changes"`. A populated example:
 
 ```json
 {
@@ -100,7 +100,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/breaking-changes/do-not-change-published-procedure-signatures.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Breaking Changes"
     },
     {
       "id": "microsoft/knowledge/breaking-changes/choose-access-modifiers-deliberately.md",
@@ -113,7 +114,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/breaking-changes/choose-access-modifiers-deliberately.md" }
       ],
-      "confidence": "medium"
+      "confidence": "medium",
+      "domain": "Breaking Changes"
     }
   ],
   "suppressed": []

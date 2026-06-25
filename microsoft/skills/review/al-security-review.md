@@ -77,7 +77,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Security"`. A populated example:
 
 ```json
 {
@@ -100,7 +100,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Security"
     },
     {
       "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
@@ -113,7 +114,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
       ],
-      "confidence": "medium"
+      "confidence": "medium",
+      "domain": "Security"
     }
   ],
   "suppressed": []
