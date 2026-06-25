@@ -1,9 +1,9 @@
 # Microsoft-endorsed content and skills require maintainer review
-/microsoft/ @jeschulz
-/skills/ @jeschulz
+/microsoft/ @jesperschulz
+/skills/ @jesperschulz
 
 # GitHub Actions and CI
-/.github/ @jeschulz
+/.github/ @jesperschulz
 
 # Domain experts — required reviewers for coding rules
 /microsoft/knowledge/events/      @AleksandricMarko @pchriste-microsoft-com
