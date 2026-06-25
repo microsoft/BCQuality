@@ -89,6 +89,20 @@ Se `florence.agent.md` for den fulde checkprotokol.
 
 ---
 
+### 8. Developer AI Interaction Quality
+Invoke Weber (`weber.agent.md`) kun hvis session-transskripter eller BC-opgave-kommentarer
+er tilgængelige for review.
+
+| Klassifikation | Kriterium |
+|---|---|
+| Routine | Alle tilgængelige prompts klassificeret Specific eller Partially specific |
+| Notable | 1 Vague prompt — Weber har coaching-note klar |
+| Concerning | 2+ Vague prompts i samme session, eller samme gap gentager sig |
+
+Weber rapporterer kun til udvikleren — aldrig direkte til ledelsen.
+
+---
+
 ## Hvad Florence aldrig gør
 
 - Vækker Michael for et Notable

@@ -52,6 +52,7 @@ AGENTS_BASE = https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/ag
 | columbo.agent.md | `{AGENTS_BASE}/columbo.agent.md` |
 | florence.agent.md | `{AGENTS_BASE}/florence.agent.md` |
 | m365.agent.md | `{AGENTS_BASE}/m365.agent.md` |
+| weber.agent.md | `{AGENTS_BASE}/weber.agent.md` |
 | cspell.json | `{BASE}/templates/cspell.json` |
 
 CLAUDE.md and .mcp.json are generated dynamically — not fetched as static templates
@@ -180,6 +181,9 @@ These are invoked only when needed - not at session start:
 - `.github/.agents/court.agent.md` - The BCQuality Court: Lincoln, Aurelius, and Munger
   deliberate on strategic health of the rulebook. Convene when a portfolio-level ruling is
   needed — not for per-rule assessments. Requires a case brief with Edison scorecards.
+- `.github/.agents/weber.agent.md` - Developer AI coaching. Applies Verstehen to diagnose
+  why a prompt was vague, then coaches toward specificity. Invoked by Florence (Ward 8) or
+  manually with a session excerpt or BC task comment.
 
 ## Francis — proaktiv regelobservation
 
