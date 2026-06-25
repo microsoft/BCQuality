@@ -6,6 +6,7 @@
 /.github/ @jeschulz
 
 # Domain experts — required reviewers for coding rules
+/microsoft/knowledge/events/      @AleksandricMarko @pchriste-microsoft-com
 /microsoft/knowledge/performance/ @BardurKnudsen @pchriste-microsoft-com
 /microsoft/knowledge/privacy/     @haoranpb @pchriste-microsoft-com
 /microsoft/knowledge/security/    @darjoo @WaelAbuSeada @Aleyenda @pchriste-microsoft-com
