@@ -410,8 +410,30 @@ Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`
 | `.github/.agents/munger.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `cspell.json` — words from template | Merge new words, keep project words |
 | `.mcp.json` — `al` entry | Add if `find-altool.ps1` now exists and entry is missing |
+| `.mcp.json` — `businesscentral` path | Validate and correct if wrong (see below) |
 | `HEARTBEAT.md` | Create from template if missing (substitute tokens), never overwrite |
 | `docs/specs/`, `docs/decisions/`, `docs/cleanup/` | Create if missing, never overwrite content |
+
+### .mcp.json — businesscentral path validation (Mode B)
+
+The `businesscentral` MCP server entry must point to the global bridge file,
+not a project-local path. After any update, validate `.mcp.json`:
+
+1. Read `.mcp.json` and locate the `businesscentral` entry
+2. Check the `args` array — the bridge path must be:
+   `C:\Users\<USERNAME>\.claude\bc-mcp-bridge.js`
+   where `<USERNAME>` is the current Windows username (`$env:USERNAME`)
+3. If the path points anywhere else (e.g. `Scripts/bc-mcp-bridge.js`,
+   a project subfolder, or any path not under `~/.claude/`): **correct it silently**
+4. If `businesscentral` entry is missing entirely: add it with the correct path
+5. Report any correction made:
+   ```
+   ⚠️ .mcp.json: businesscentral-stien var forkert og er rettet.
+   Gammel: <old path>
+   Ny:     C:\Users\<USERNAME>\.claude\bc-mcp-bridge.js
+   ```
+
+This is the most common setup error on projects configured before CURABIS Standard.
 
 ### HEARTBEAT.md token substitution (Mode B)
 
