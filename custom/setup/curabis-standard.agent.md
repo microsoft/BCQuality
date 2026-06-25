@@ -426,8 +426,18 @@ Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`
 | `.github/.agents/munger.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `cspell.json` — words from template | Merge new words, keep project words |
 | `.mcp.json` — `al` entry | Add if `find-altool.ps1` now exists and entry is missing |
-| `HEARTBEAT.md` | Create from template if missing, never overwrite |
+| `HEARTBEAT.md` | Create from template if missing (substitute tokens), never overwrite |
 | `docs/specs/`, `docs/decisions/`, `docs/cleanup/` | Create if missing, never overwrite content |
+
+### HEARTBEAT.md token substitution (Mode B)
+
+When creating HEARTBEAT.md from template in Mode B:
+
+1. Derive `{PROJECT_NAME}` — read the first `# ` heading from `CLAUDE.md`
+   (e.g. `# ProjectManagement — Claude Code Instructions` → `ProjectManagement`).
+   If CLAUDE.md has no heading, use the git remote repo name.
+2. Set `{SETUP_DATE}` to today's ISO date (YYYY-MM-DD)
+3. Substitute both tokens before writing the file
 
 ### What does NOT get updated
 
@@ -439,14 +449,25 @@ Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`
 ### After update — agent-synligheds-check
 
 After updating agent files, compare `.github/.agents/*.agent.md` against CLAUDE.md:
-- For each agent file in the directory, check if its filename is referenced in CLAUDE.md
-- If any are missing, report them:
-  ```
-  ⚠️ Nye agenter installeret men ikke refereret i CLAUDE.md:
-    - <agent-navn>.agent.md
-  Vil du have mig til at tilføje dem?
-  ```
-- Do not add them without the developer's confirmation
+
+1. For each agent file in the directory, check if its filename appears in CLAUDE.md
+2. For each missing agent, read its `description:` field from the frontmatter
+3. If any are missing, propose exact CLAUDE.md text and ask for confirmation:
+
+```
+⚠️ Nye agenter installeret men ikke refereret i CLAUDE.md:
+
+Foreslået tilføjelse til "On-demand agents"-sektionen:
+
+- `.github/.agents/court.agent.md` - <description from frontmatter>
+- `.github/.agents/lincoln.agent.md` - <description from frontmatter>
+
+Vil du have mig til at tilføje dem til CLAUDE.md? (ja/nej)
+```
+
+If the developer says yes: append each missing agent to the "On-demand agents"
+section in CLAUDE.md using the frontmatter description as the text.
+Do not add without confirmation.
 
 ### After update — report and commit
 
