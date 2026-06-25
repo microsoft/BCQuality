@@ -33,4 +33,32 @@ codeunit 50255 "Event Naming Good Sample"
     local procedure OnAfterPostSalesLine(var SalesLine: Record "Sales Line")
     begin
     end;
+
+    // Same position-naming convention applies to events raised from table and
+    // report triggers, not just codeunit procedures.
+
+    // Raised at the end of a table field's OnValidate trigger (for example
+    // Customer."No." OnValidate): the position is "after", so OnAfter<Field>.
+    procedure HandleCustomerNoValidated(var Customer: Record Customer)
+    begin
+        OnAfterValidateCustomerNo(Customer);
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterValidateCustomerNo(var Customer: Record Customer)
+    begin
+    end;
+
+    // Raised before a report prints a line from its processing trigger (for
+    // example a dataitem OnAfterGetRecord): the position is "before", so
+    // OnBefore<Action>.
+    procedure HandleReportLineProcessing(var SalesLine: Record "Sales Line")
+    begin
+        OnBeforeReportPrintLine(SalesLine);
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeReportPrintLine(var SalesLine: Record "Sales Line")
+    begin
+    end;
 }

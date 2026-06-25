@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-Adding a parameter to an existing event publisher changes its signature, and every subscriber must be updated to match. Appending the new parameter at the end of the parameter list keeps the change easy to review and minimizes churn: existing subscribers still bind to the leading parameters, and the diff is a single clean addition. Inserting a parameter in the middle shifts every following argument, makes diffs noisy, and is error-prone to reconcile across many subscribers — a subscriber that compiles can still receive the wrong values because positions moved. New parameters belong after the existing ones.
+Adding a parameter to an existing event publisher changes its signature. Appending the new parameter at the end of the parameter list keeps the change easy to review and track: existing subscribers still bind to the leading parameters, and the diff is a single clean addition. Inserting a parameter in the middle makes diffs noisy and harder to review, and obscures the history of how the signature evolved. New parameters belong after the existing ones.
 
 ## Best Practice
 
