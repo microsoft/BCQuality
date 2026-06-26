@@ -1,0 +1,108 @@
+name: Flag new top-level entries
+
+# BCQuality keeps a deliberately small repository root. New top-level folders
+# or files are almost always unintended — a stray export, a tool's scratch
+# directory, or content that meant to land inside an existing layer (e.g.
+# /community/knowledge/). PR #55 leaked exactly this kind of stray folder.
+#
+# Unlike the custom-layer guard, this workflow does NOT close the PR. It only
+# posts a single advisory comment so a maintainer (and the author) can eyeball
+# the addition. It reads the PR's file LIST via the API and never checks out or
+# runs PR code.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  flag:
+    if: github.repository == 'microsoft/BCQuality'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/new-top-level-flag.md
+          sparse-checkout-cone-mode: false
+
+      - name: Flag unexpected new top-level entries
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Known, intended repository root. Anything else added at the root
+            // is flagged for a human to eyeball.
+            const ALLOWED_DIRS = new Set([
+              '.github', 'community', 'custom', 'microsoft', 'skills', 'tools',
+            ]);
+            const ALLOWED_FILES = new Set([
+              '.gitignore', 'CODEOWNERS', 'LICENSE', 'README.md',
+              'SECURITY.md', 'agent-consumption.md',
+            ]);
+
+            const MARKER = '<!-- guard:new-top-level -->';
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: prNumber, per_page: 100,
+            });
+
+            // Only consider newly-added paths — a new top-level entry can only
+            // appear via an added file.
+            const added = files
+              .filter((f) => f.status === 'added')
+              .map((f) => f.filename);
+
+            const newDirs = new Set();
+            const newFiles = new Set();
+            for (const p of added) {
+              const slash = p.indexOf('/');
+              if (slash === -1) {
+                // Top-level file.
+                if (!ALLOWED_FILES.has(p)) newFiles.add(p);
+              } else {
+                // Top-level directory.
+                const dir = p.slice(0, slash);
+                if (!ALLOWED_DIRS.has(dir)) newDirs.add(dir);
+              }
+            }
+
+            if (newDirs.size === 0 && newFiles.size === 0) {
+              core.info('No unexpected new top-level entries. Nothing to flag.');
+              return;
+            }
+
+            // Idempotency: don't re-flag on every synchronize.
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: prNumber, per_page: 100,
+            });
+            if (comments.some((c) => c.body && c.body.includes(MARKER))) {
+              core.info('Already flagged on this PR. Skipping duplicate comment.');
+              return;
+            }
+
+            const lines = [];
+            for (const d of [...newDirs].sort()) lines.push(`- 📁 \`${d}/\` (new top-level folder)`);
+            for (const f of [...newFiles].sort()) lines.push(`- 📄 \`${f}\` (new top-level file)`);
+            const entries = lines.join('\n');
+
+            core.warning(`Unexpected new top-level entries: ${[...newDirs, ...newFiles].join(', ')}`);
+
+            let body = fs.readFileSync('.github/new-top-level-flag.md', 'utf8');
+            body = body
+              .replace(/{{AUTHOR}}/g, context.payload.pull_request.user.login)
+              .replace(/{{ENTRIES}}/g, entries);
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: prNumber, body,
+            });
+
+            core.info(`Flagged PR #${prNumber}.`);

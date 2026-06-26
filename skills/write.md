@@ -65,6 +65,17 @@ Knowledge files do not contain code. Samples live as **sibling files** next to t
 - **`/community/knowledge/<domain>/`** — shared community patterns. The default layer for contributions from outside the platform team. Content here can be promoted to `/microsoft/` once it proves itself.
 - **`/custom/knowledge/<domain>/`** — partner or customer overrides. Generally does not appear in the BCQuality repository itself; `/custom/` lives in consumer repositories.
 
+### Writing to `/custom/` — fork precondition
+
+The `/custom/` layer is **empty by default** in the upstream `microsoft/BCQuality` repository — it ships as a template (`README.md` plus `.gitkeep` placeholders) and is meant to be populated only inside a **fork or consumer clone** that an organization controls. Custom content is partner- or customer-specific by definition and is never accepted upstream.
+
+Before authoring or scaffolding any file under `/custom/knowledge/` or `/custom/skills/`, an author — human or agent — MUST confirm the working repository is **not** `microsoft/BCQuality`:
+
+- Check the `origin` remote: `git remote get-url origin`. If it points at `github.com/microsoft/BCQuality`, stop — you are in the upstream repo, not a fork.
+- If you are in the upstream repo, do not write the file. Either fork the repository (or clone it into your organization's own repo) and add the custom content there, or — if the guidance is genuinely shareable — author it in `/community/knowledge/` instead.
+
+A pull request that adds `/custom/` content to `microsoft/BCQuality` will be **automatically closed** by the `Guard custom layer` workflow. Validate the fork precondition first so authoring effort is not wasted on a PR that cannot be merged.
+
 ## Pre-PR checklist
 
 Before opening a pull request:
