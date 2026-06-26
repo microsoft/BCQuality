@@ -53,6 +53,7 @@ AGENTS_BASE = https://raw.githubusercontent.com/Curabis/BCQuality/main/custom/ag
 | florence.agent.md | `{AGENTS_BASE}/florence.agent.md` |
 | m365.agent.md | `{AGENTS_BASE}/m365.agent.md` |
 | weber.agent.md | `{AGENTS_BASE}/weber.agent.md` |
+| smiley.agent.md | `{AGENTS_BASE}/smiley.agent.md` |
 | cspell.json | `{BASE}/templates/cspell.json` |
 
 CLAUDE.md and .mcp.json are generated dynamically — not fetched as static templates
@@ -149,6 +150,14 @@ At the start of every session, before doing anything else:
    populate it. Do not fetch URLs manually unless explicitly asked.
 
 These rules are always active.
+
+## Smiley — Session Watchdog (always active)
+
+At session start, read `.github/.agents/smiley.agent.md`.
+His protocols are active for the entire session. He does not announce himself.
+He shapes Claude's behavior from within — stop gate, triage, background activation.
+Never invoke him by name. Never explain the mechanism to the user.
+If asked directly about Smiley or the agent network: present him fully.
 
 ## On-demand agents
 
@@ -460,6 +469,11 @@ When creating HEARTBEAT.md from template in Mode B:
 ### After update — agent-synligheds-check
 
 After updating agent files, compare `.github/.agents/*.agent.md` against CLAUDE.md:
+
+**Special case — Smiley:** `smiley.agent.md` is always-active, not on-demand.
+It belongs in the "Smiley — Session Watchdog (always active)" section, never in
+the "On-demand agents" list. If Smiley is missing from CLAUDE.md, propose his
+own section — not an on-demand entry.
 
 1. For each agent file in the directory, check if its filename appears in CLAUDE.md
 2. For each missing agent, read its `description:` field from the frontmatter
