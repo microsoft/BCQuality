@@ -59,7 +59,7 @@ MAX_KNOWLEDGE_LINES = 100
 
 KEBAB_CASE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 ISO_ALPHA2 = re.compile(r"^[a-z]{2}$")
-RANGE_SHORTHAND = re.compile(r"^(\d+)\.\.(\d+)$")
+RANGE_SHORTHAND = re.compile(r"^(\d+)\.\.(\d+)?$")
 FENCED_CODE_BLOCK = re.compile(r"^```", re.MULTILINE)
 HEADING_H2 = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 
@@ -149,6 +149,8 @@ def expand_bc_version(value: Any) -> tuple[list[int] | str | None, str | None]:
     """Return (expanded, error-message). One of the two is None.
 
     For the universal sentinel ["all"], `expanded` is the string "all".
+    For an open-ended range like ["26.."], `expanded` is the normalized
+    string "26.." (it cannot be enumerated; consumers match target >= 26).
     Otherwise it is the expanded list of version integers.
     """
     if not isinstance(value, list) or not value:
@@ -163,15 +165,19 @@ def expand_bc_version(value: Any) -> tuple[list[int] | str | None, str | None]:
         if any(v <= 0 for v in value):
             return None, "integers must be positive"
         return sorted(set(value)), None
-    # Case 2: single-element range-shorthand like "[26..28]"
+    # Case 2: single-element range shorthand — closed "[26..28]" or open-ended "[26..]"
     if len(value) == 1 and isinstance(value[0], str):
         m = RANGE_SHORTHAND.match(value[0].strip())
         if m:
-            start, end = int(m.group(1)), int(m.group(2))
+            start = int(m.group(1))
+            if m.group(2) is None:
+                # Open-ended: "start.." applies from start onwards, no upper bound.
+                return f"{start}..", None
+            end = int(m.group(2))
             if start > end:
                 return None, f"range '{value[0]}' is not ascending"
             return list(range(start, end + 1)), None
-    return None, "must be [all], a list of integers, or a single-element range shorthand like [26..28]"
+    return None, "must be [all], a list of integers, or a range shorthand like [26..28] or [26..]"
 
 
 def headings_in_order(body: str) -> list[tuple[str, int]]:
@@ -498,9 +504,48 @@ class SkillRecord:
     skill_id: str | None
 
 
+def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
+    """R26: a super-skill's declared `sub-skills` must exactly match the
+    `al-*-review.md` leaf files present in the same directory (set equality,
+    ordering-agnostic). This keeps the registered leaf list the single source
+    of truth and fails CI on a forgotten, stale, or missing registration.
+
+    Only applies to action-skill files declaring a non-empty list-of-str
+    `sub-skills`. Files whose `sub-skills` is malformed are handled by R20.
+    """
+    ss = fm.get("sub-skills")
+    if not is_non_empty_list_of_str(ss):
+        return
+
+    declared = {s.lstrip("./") for s in ss}
+
+    # Sibling leaves on disk, excluding the super-skill file itself.
+    leaves = {
+        p.relative_to(root).as_posix()
+        for p in path.parent.glob("al-*-review.md")
+        if p.resolve() != path.resolve()
+    }
+
+    # Declared entries that are not real sibling leaves on disk (missing/stale).
+    for entry in sorted(declared - leaves):
+        entry_path = root / entry
+        if not entry_path.exists():
+            report.error(path, "R26", f"declared sub-skill does not exist on disk: {entry}", 1)
+        else:
+            report.error(
+                path, "R26",
+                f"sub-skills entry is not a sibling 'al-*-review.md' leaf: {entry}", 1,
+            )
+
+    # Sibling leaves on disk that were never registered ('forgot to wire it up').
+    for leaf in sorted(leaves - declared):
+        report.error(path, "R26", f"leaf not registered in sub-skills: {leaf}", 1)
+
+
 def run(root: Path) -> Report:
     report = Report()
     skill_records: list[SkillRecord] = []
+    action_skill_fms: list[tuple[Path, dict[str, Any]]] = []
 
     # Walk declared top-level folders only; avoid wandering into .git, etc.
     walk_roots = [root / "skills"] + [root / layer for layer in LAYERS]
@@ -527,6 +572,8 @@ def run(root: Path) -> Report:
             validate_knowledge(path, parsed, report)
         elif kind == "action-skill":
             validate_action_skill(path, parsed, report)
+            if parsed.frontmatter:
+                action_skill_fms.append((path, parsed.frontmatter))
             if parsed.frontmatter and isinstance(parsed.frontmatter.get("id"), str):
                 skill_records.append(SkillRecord(path, "action-skill", parsed.frontmatter["id"]))
         elif kind == "meta":
@@ -559,6 +606,10 @@ def run(root: Path) -> Report:
                 for p in paths:
                     others = [q.relative_to(root).as_posix() for q in paths if q != p]
                     report.error(p, "R24", f"skill id '{sid}' ({kind}) is not unique; also defined in: {others}")
+
+    # Fourth pass: R26 sub-skills registry matches leaf files on disk
+    for path, fm in action_skill_fms:
+        validate_sub_skills_registry(path, fm, root, report)
 
     return report
 

@@ -1,9 +1,18 @@
 # Microsoft-endorsed content and skills require maintainer review
-/microsoft/ @jeschulz
-/skills/ @jeschulz
+/microsoft/ @jesperschulz
+/skills/ @jesperschulz
 
 # GitHub Actions and CI
-/.github/ @jeschulz
+/.github/ @jesperschulz
+
+# Domain experts — required reviewers for coding rules
+/microsoft/knowledge/events/      @AleksandricMarko @pchriste-microsoft-com
+/microsoft/knowledge/performance/ @BardurKnudsen @pchriste-microsoft-com
+/microsoft/knowledge/privacy/     @haoranpb @pchriste-microsoft-com
+/microsoft/knowledge/security/    @darjoo @WaelAbuSeada @Aleyenda @pchriste-microsoft-com
+/microsoft/knowledge/style/       @nikolakukrika @jesperschulz @pchriste-microsoft-com
+/microsoft/knowledge/testing/     @nikolakukrika @ventselartur @pchriste-microsoft-com
+/microsoft/knowledge/upgrade/     @nikolakukrika @pchriste-microsoft-com
 
 # Community content — open to broader review
 # /community/ reviewers are added as the contributor base grows

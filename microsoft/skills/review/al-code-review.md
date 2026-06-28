@@ -3,7 +3,7 @@ kind: action-skill
 id: al-code-review
 version: 1
 title: AL code review
-description: Reviews AL source changes by composing the AL review leaf skills (performance, security, privacy, upgrade, style, UI).
+description: Reviews AL source changes by composing the AL review leaf skills, one per knowledge domain.
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
 bc-version: [all]
@@ -17,6 +17,11 @@ sub-skills:
   - microsoft/skills/review/al-upgrade-review.md
   - microsoft/skills/review/al-style-review.md
   - microsoft/skills/review/al-ui-review.md
+  - microsoft/skills/review/al-error-handling-review.md
+  - microsoft/skills/review/al-events-review.md
+  - microsoft/skills/review/al-interfaces-review.md
+  - microsoft/skills/review/al-breaking-changes-review.md
+  - microsoft/skills/review/al-web-services-review.md
 ---
 
 # AL code review
@@ -29,16 +34,7 @@ An orchestrator invokes this skill with either a `pr-diff` (the standard PR-revi
 
 ## Source
 
-The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`:
-
-- `microsoft/skills/review/al-performance-review.md`
-- `microsoft/skills/review/al-security-review.md`
-- `microsoft/skills/review/al-privacy-review.md`
-- `microsoft/skills/review/al-upgrade-review.md`
-- `microsoft/skills/review/al-style-review.md`
-- `microsoft/skills/review/al-ui-review.md`
-
-Additional leaf skills (for example, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
+The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`. Additional leaf skills (for example, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
 
 ## Relevance
 

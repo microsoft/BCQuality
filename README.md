@@ -1,9 +1,3 @@
-# ⚠️ Warning
-This project is under active development.  
-Large and potentially breaking changes are expected.
-
-**Public preview will soon be announced.**
-
 # BCQuality
 
 Quality skills and knowledge for Business Central development.
@@ -58,7 +52,7 @@ Skills define how agents consume knowledge. They come in three flavors:
 
   READ and DO are read on demand — typically when the first dispatched action skill runs. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
 
-- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md) (super-skill), which composes six leaf skills under [`microsoft/skills/review/`](microsoft/skills/review/) — one per knowledge domain (performance, security, privacy, upgrade, style, UI).
+- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md) (super-skill), which composes the AL review leaf skills under [`microsoft/skills/review/`](microsoft/skills/review/) — one per knowledge domain.
 
 ### Agent bootstrapping
 
@@ -72,7 +66,7 @@ Every knowledge file is a markdown file with mandatory YAML frontmatter. Files t
 
 ```yaml
 ---
-bc-version: [all]                       # or [26..28] for version-gated guidance
+bc-version: [all]                       # or [26..28], or [26..] for "26 and later"
 domain: performance                     # security | performance | ux | telemetry | ...
 keywords: [query, filtering, partial]   # free-text tags for retrieval
 technologies: [al]                      # al | javascript | powershell | ...

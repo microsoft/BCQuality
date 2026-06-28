@@ -43,7 +43,7 @@ Knowledge files do not contain code. Samples live as **sibling files** next to t
 
 ## Choosing frontmatter values
 
-**`bc-version`.** Default to `[all]` when the guidance is universal — a BC language pattern, a property on a long-standing platform type, a CodeCop rule, or a platform behaviour that has not changed across versions. Use an explicit list or range (`[26, 27, 28]`, `[26..28]`) only when the guidance is tied to a version-gated API, a deprecation, or platform behaviour that genuinely differs across versions. Most knowledge files should be `[all]`; reach for a range only with a concrete reason.
+**`bc-version`.** Default to `[all]` when the guidance is universal — a BC language pattern, a property on a long-standing platform type, a CodeCop rule, or a platform behaviour that has not changed across versions. Use an explicit list or range (`[26, 27, 28]`, `[26..28]`) only when the guidance is tied to a version-gated API, a deprecation, or platform behaviour that genuinely differs across versions. When guidance applies to a feature introduced in version N and not expected to be removed, prefer the open-ended range `[N..]` over a closed range so the file keeps matching future versions — reserve a closed upper bound for guidance that genuinely stops applying (for example, a behaviour removed or replaced in a later version). Most knowledge files should be `[all]`; reach for a range only with a concrete reason.
 
 **`domain`.** Pick one. If two fit, the file is probably two concerns. If no existing domain fits, introduce a new one — domains are open. Prefer existing domains when they are a reasonable fit, to keep retrieval predictable.
 
@@ -64,6 +64,17 @@ Knowledge files do not contain code. Samples live as **sibling files** next to t
 - **`/microsoft/knowledge/<domain>/`** — platform-endorsed guidance. Authored or approved by the BC platform team. Use this layer only when the guidance reflects a platform guarantee or official recommendation.
 - **`/community/knowledge/<domain>/`** — shared community patterns. The default layer for contributions from outside the platform team. Content here can be promoted to `/microsoft/` once it proves itself.
 - **`/custom/knowledge/<domain>/`** — partner or customer overrides. Generally does not appear in the BCQuality repository itself; `/custom/` lives in consumer repositories.
+
+### Writing to `/custom/` — fork precondition
+
+The `/custom/` layer is **empty by default** in the upstream `microsoft/BCQuality` repository — it ships as a template (`README.md` plus `.gitkeep` placeholders) and is meant to be populated only inside a **fork or consumer clone** that an organization controls. Custom content is partner- or customer-specific by definition and is never accepted upstream.
+
+Before authoring or scaffolding any file under `/custom/knowledge/` or `/custom/skills/`, an author — human or agent — MUST confirm the working repository is **not** `microsoft/BCQuality`:
+
+- Check the `origin` remote: `git remote get-url origin`. If it points at `github.com/microsoft/BCQuality`, stop — you are in the upstream repo, not a fork.
+- If you are in the upstream repo, do not write the file. Either fork the repository (or clone it into your organization's own repo) and add the custom content there, or — if the guidance is genuinely shareable — author it in `/community/knowledge/` instead.
+
+A pull request that adds `/custom/` content to `microsoft/BCQuality` will be **automatically closed** by the `Guard custom layer` workflow. Validate the fork precondition first so authoring effort is not wasted on a PR that cannot be merged.
 
 ## Pre-PR checklist
 
