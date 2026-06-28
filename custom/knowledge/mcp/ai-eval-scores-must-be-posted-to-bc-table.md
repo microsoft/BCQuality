@@ -96,3 +96,49 @@ the BC table.
 ## Applies to
 
 Agent files that implement hill climbing eval loops on BC sub-tasks.
+
+## Eval at task boundaries (hill-climbing baseline and final)
+
+To generate meaningful hill-climbing data, the project's eval script MUST be
+run at two specific moments per task:
+
+| Moment | When | Verdict to post |
+|---|---|---|
+| **Baseline** | Before the first code change for a task | `"Baseline"` |
+| **Final** | After all changes are complete, before merging to track branch | `"Final"` |
+
+The delta `Final.score - Baseline.score` is the quality impact of the task:
+
+- **Positive delta** -- the task improved code quality.
+- **Negative delta** -- technical debt was introduced; note it in the BC task comment.
+- **Zero or negligible delta** -- neutral; no action required.
+
+### Project eval script
+
+Each project declares its eval script in `CLAUDE.md`. That script emits a score
+and appends to the project's eval history. The score posted to `bc_post_ai_score`
+is the score emitted by that project-specific script.
+
+### Non-compliant
+
+```
+# Skipping the baseline "because the task is small"
+# delta cannot be computed; hill-climbing history is incomplete
+```
+
+### Compliant
+
+```
+# Task start: run eval -> post baseline
+bc_post_ai_score(projectNo, subTaskNo, iterationNo, ..., verdict="Baseline")
+
+# ... implement the task ...
+
+# Task end (before merge): run eval -> post final
+bc_post_ai_score(projectNo, subTaskNo, iterationNo, ..., verdict="Final")
+```
+
+### Scope
+
+Applies to all tasks where the project has an eval script declared in `CLAUDE.md`.
+Documentation-only tasks (no code change) are exempt.
