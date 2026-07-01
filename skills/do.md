@@ -43,7 +43,7 @@ application-area: [all]
 
 `bc-version`, `technologies`, `countries`, `application-area` are optional filters that let an orchestrator pre-select applicable skills for a task. They follow the same semantics as in READ.
 
-`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`. `outputs` is always a single-element list naming the output kind; today only `findings-report` is defined.
+`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`, `object-spec`. `object-spec` is an abstract description of the BC object(s) to generate — the target table, the desired entity naming, the fields to expose, the read-only flag, and any other generation parameters — supplied by the orchestrator for authoring tasks (the authoring counterpart to a review skill's `pr-diff`). Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`. `outputs` is always a single-element list naming the output kind; two output kinds are defined: `findings-report` (review skills) and `code-artifact` (authoring skills).
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
@@ -212,6 +212,81 @@ Severity taxonomy:
 - `major` — significant defect; should be fixed before merge.
 - `minor` — quality concern; worth flagging but not a gate.
 - `info` — observation or context; not actionable on its own.
+
+### Code-artifact output (authoring skills)
+
+Review skills consume a diff and emit a `findings-report`. **Authoring skills** do the inverse: they consume an `object-spec` and emit generated code. Their output kind is `code-artifact` — the same single-element `outputs` declaration, naming `code-artifact` instead of `findings-report`. A `code-artifact` document reuses the findings-report envelope (`skill`, `outcome`, `outcome-reason`, `suppressed`, `sub-results`, `skipped-sub-skills`) and replaces the `findings`/`summary.counts` pair with `artifacts`/`open-questions`:
+
+```json
+{
+  "skill": { "id": "string", "version": 1 },
+  "outcome": "completed | not-applicable | no-knowledge | partial | failed",
+  "outcome-reason": "string",
+  "summary": {
+    "counts": { "artifacts": 0, "objects": 0 },
+    "coverage": { "knowledge-applied": 0 }
+  },
+  "artifacts": [
+    {
+      "id": "string",
+      "object-type": "string",
+      "object-name": "string",
+      "path": "string",
+      "content": "string",
+      "references": [
+        { "path": "string", "sha": "string" }
+      ],
+      "confidence": "high | medium | low",
+      "notes": "string"
+    }
+  ],
+  "open-questions": [ "string" ],
+  "suppressed": [
+    {
+      "reference": { "path": "string", "sha": "string" },
+      "reason": "layer-precedence | configuration"
+    }
+  ],
+  "sub-results": [ ],
+  "skipped-sub-skills": [ ]
+}
+```
+
+The same JSON-validity rules apply unchanged: the document MUST be strict, valid JSON, and every string value MUST escape embedded double quotes as `\"`, newlines as `\n`, and other control characters with their JSON escapes (see *JSON validity* above). This matters most for `artifacts[].content`, which carries generated AL source — see its semantics below.
+
+Field semantics specific to `code-artifact`:
+
+**`outcome`** — reuses the findings-report enum with authoring-specific meaning:
+
+- `completed` — the skill ran end-to-end and emitted at least one artifact.
+- `no-knowledge` — the skill ran but no applicable authoring knowledge survived Source, Relevance, configuration filtering, and conflict resolution, AND no artifact was emitted. `artifacts` MUST be empty.
+- `not-applicable` — the skill's frontmatter filters or the supplied `object-spec` rejected the task (for example, the spec is not a request this skill authors); the skill declined to run.
+- `partial` — the skill emitted some but not all of the requested artifacts before a time or token budget was hit. `summary.coverage` reflects the produced subset. Set `outcome-reason`.
+- `failed` — an unrecoverable error occurred and the emitted artifacts are unreliable. Set `outcome-reason`. Consumers SHOULD ignore `artifacts` on a failed outcome.
+
+`outcome-reason` follows the findings-report rule: optional for `completed`, `not-applicable`, and `no-knowledge`; required for `partial` and `failed`.
+
+**`summary.counts`** — `artifacts` is the number of emitted `artifacts[]` entries; `objects` is the number of distinct BC objects across them (an artifact MAY contain more than one object). `summary.coverage.knowledge-applied` is the count of distinct knowledge files cited across all artifacts.
+
+**`artifacts[].id`** — a stable, skill-defined slug (kebab-case) identifying the generated artifact within the run; consumers MAY deduplicate by `id`.
+
+**`artifacts[].object-type` / `artifacts[].object-name`** — the AL object kind (for example `page`, `table`, `codeunit`) and the object name being generated.
+
+**`artifacts[].path`** — the suggested repo-relative path for the generated file, using forward slashes. It is a suggestion the consumer MAY relocate to match the target project's layout.
+
+**`artifacts[].content`** — the **full** generated AL source for the artifact, as a single JSON string. Every embedded double quote (for example a quoted identifier such as `Rec."No."`) MUST be escaped as `\"` and every newline as `\n`; the multi-line source is one JSON string with `\n` separators, never a literal multi-line block. The consumer writes this verbatim to `path`.
+
+**`artifacts[].references`** — array of knowledge-file references that informed the generated source, same shape as `findings[].references` (`path` required, `sha` optional). It SHOULD be non-empty whenever curated BCQuality knowledge was applied — an authored artifact is expected to cite the rules it satisfies. When the agent generates purely from its own competence with no curated knowledge backing the artifact, `references` is `[]` and the artifact's `confidence` is capped at `medium` — the authoring mirror of DO's additive agent-findings principle: without a curated rule behind it there is no authoritative basis for `high` confidence.
+
+**`artifacts[].confidence`** — the skill's confidence that the generated artifact is correct and complete: `high`, `medium`, or `low`. Cap at `medium` when any frontmatter dimension was `unknown`, when the spec was ambiguous, or when the artifact carries no `references`.
+
+**`artifacts[].notes`** — per-artifact caveats: placeholders the consumer must fill in, values the skill could not resolve, or assumptions it baked in. The consumer MUST read `notes` before treating the artifact as final.
+
+**`open-questions`** — task-level spec ambiguities the skill could not resolve (for example a missing object ID, an unspecified field set, or an unknown publisher/group). Unlike `notes`, which is per-artifact, `open-questions` is the run-level list of decisions the orchestrator or author still owes the skill.
+
+`suppressed`, `sub-results`, and `skipped-sub-skills` carry the same meaning as in the findings-report contract above (knowledge-file suppression; nested sub-skill reports for an authoring super-skill; declared-but-not-invoked sub-skills). A leaf authoring skill leaves `sub-results` and `skipped-sub-skills` empty.
+
+When an orchestrator consumes a `code-artifact`, it maps each artifact to **file creation or scaffolding** in the target repository — writing `content` to `path` and surfacing `notes`/`open-questions` to the author — rather than to PR comments and build gates the way it consumes a findings-report.
 
 ## Composition (super-skills)
 
