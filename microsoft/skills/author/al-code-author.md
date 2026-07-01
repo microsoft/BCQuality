@@ -1,9 +1,9 @@
 ---
 kind: action-skill
-id: al-feature-author
+id: al-code-author
 version: 1
-title: AL feature author
-description: Generates a coherent set of BC objects (a whole feature) from a feature-spec by decomposing it into object specs, composing the AL author leaf skills, and reconciling cross-object references.
+title: AL code author
+description: Authors Business Central code by composing the AL author leaf skills - the authoring counterpart to al-code-review. Its current authoring mode greenfields a feature, decomposing a feature-spec into objects, composing the object-type author leaves, and reconciling cross-object references to emit a whole-PR code-artifact.
 inputs: [feature-spec]
 outputs: [code-artifact]
 bc-version: [all]
@@ -15,9 +15,11 @@ sub-skills:
   - microsoft/skills/author/al-table-author.md
 ---
 
-# AL feature author
+# AL code author
 
-Generates a coherent set of Business Central objects - a whole **feature** - from a `feature-spec` by composing the leaf AL author skills. This is a **super-skill** and the feature-level authoring counterpart to `al-code-review`. Where `al-code-review` takes a whole PR and composes the review leaves, rolling up their findings-reports, `al-feature-author` takes a whole feature and composes the author leaves, rolling up their `code-artifact` reports into a single whole-PR `code-artifact`.
+`al-code-author` is the role-level **authoring counterpart to `al-code-review`**: where `al-code-review` takes a whole PR and composes the review leaves, rolling up their findings-reports, `al-code-author` composes the leaf AL author skills to **produce a whole PR of code**, rolling up their `code-artifact` reports into a single whole-PR `code-artifact`. It is a **super-skill** — it composes other author skills rather than reading knowledge files directly.
+
+Its **first and currently only** authoring mode is **greenfield feature authoring**: given a `feature-spec` it decomposes the feature into a set of new objects, composes the object-type author leaves, and reconciles the cross-object references. Other modes — for example fixing a defect from a bug report, which needs a different input and a *locate-and-modify* Action rather than greenfield decomposition — are future extensions of this same entry skill and are out of scope today.
 
 The super-skill's own input (`feature-spec`) is coarser than its leaves' input (`object-spec`), and bridging that gap is this skill's job. Its **Action** decomposes the `feature-spec` into a cross-referenced graph of object specs, feeds each object spec to the worklisted leaves, rolls up the artifacts they produce, and reconciles the references across those objects. It does not evaluate knowledge files directly and performs **no agent self-review pass**: `code-artifact` output has no findings channel, so composition here is *decompose -> invoke leaves -> roll up artifacts -> reconcile*.
 
@@ -36,10 +38,10 @@ This skill composes those leaves; it does not read knowledge files directly. Add
 
 A sub-skill is relevant when both of the following hold:
 
-- Its declared `inputs` will be satisfied. The leaves declare `inputs: [object-spec]`; this super-skill declares `inputs: [feature-spec]`. The inputs differ, and that is expected: the feature author will **supply each leaf an `object-spec` derived from decomposing the `feature-spec`** (see Action). Relevance is judged against those derived inputs, not against the raw `feature-spec`. Because every derived object spec is an `object-spec`, both leaves' inputs are satisfied whenever the orchestrator supplies a `feature-spec`.
+- Its declared `inputs` will be satisfied. The leaves declare `inputs: [object-spec]`; this super-skill declares `inputs: [feature-spec]`. The inputs differ, and that is expected: the code author will **supply each leaf an `object-spec` derived from decomposing the `feature-spec`** (see Action). Relevance is judged against those derived inputs, not against the raw `feature-spec`. Because every derived object spec is an `object-spec`, both leaves' inputs are satisfied whenever the orchestrator supplies a `feature-spec`.
 - The orchestrator has not disabled the sub-skill via configuration.
 
-Per the DO composition contract, the super-skill MUST NOT filter sub-skills by task content. `al-feature-author` does not inspect the `feature-spec` to predict which object types it contains and then pick leaves accordingly. Every worklisted leaf is invoked against every derived object spec; each leaf **self-selects** by returning `outcome: "not-applicable"` when a given object spec is not for its object type (`al-api-page-author` returns `not-applicable` for a table spec; `al-table-author` returns `not-applicable` for an API-page spec), exactly as review leaves signal non-applicability with `not-applicable` / `no-knowledge`. There is no object-type dispatch in the super-skill.
+Per the DO composition contract, the super-skill MUST NOT filter sub-skills by task content. `al-code-author` does not inspect the `feature-spec` to predict which object types it contains and then pick leaves accordingly. Every worklisted leaf is invoked against every derived object spec; each leaf **self-selects** by returning `outcome: "not-applicable"` when a given object spec is not for its object type (`al-api-page-author` returns `not-applicable` for a table spec; `al-table-author` returns `not-applicable` for an API-page spec), exactly as review leaves signal non-applicability with `not-applicable` / `no-knowledge`. There is no object-type dispatch in the super-skill.
 
 Sub-skills that fail either check are not invoked and are recorded in `skipped-sub-skills`:
 
@@ -48,7 +50,7 @@ Sub-skills that fail either check are not invoked and are recorded in `skipped-s
 
 ## Worklist
 
-The worklist is the list of sub-skills judged relevant by the previous step - the leaves whose (derived) `inputs` will be satisfied and that are not disabled by configuration. Every sub-skill in the worklist is invoked in the Action step, once per derived object spec. Because both leaves accept an `object-spec` and the feature author derives object specs from the `feature-spec`, both are on the worklist whenever a `feature-spec` is supplied and neither is disabled by configuration.
+The worklist is the list of sub-skills judged relevant by the previous step - the leaves whose (derived) `inputs` will be satisfied and that are not disabled by configuration. Every sub-skill in the worklist is invoked in the Action step, once per derived object spec. Because both leaves accept an `object-spec` and the code author derives object specs from the `feature-spec`, both are on the worklist whenever a `feature-spec` is supplied and neither is disabled by configuration.
 
 ## Action
 
@@ -97,12 +99,12 @@ Derive `outcome` using the DO *Outcome rollup* rules over the multiset S of all 
 
 Output conforms to the DO `code-artifact` output contract, extended with `sub-results` and `skipped-sub-skills`.
 
-A populated example - a `feature-spec` for a **Membership** feature. The feature author decomposes it into two object specs: a `Membership Member` master table and a `Membership Member` API page bound to it. It reserves the contiguous ID block 50100-50102, feeds each object spec to both leaves, and reconciles the API page's `SourceTable` to the authored master. `al-table-author` authors the master and its setup table (2 artifacts); `al-api-page-author` authors the API page (1 artifact); each leaf returns `not-applicable` for the other's object spec. The three artifacts roll up under `completed`, and the List/Card pages, permission set, and install codeunit the feature still needs - which no current leaf authors - are listed as `open-questions`:
+A populated example - a `feature-spec` for a **Membership** feature. The code author decomposes it into two object specs: a `Membership Member` master table and a `Membership Member` API page bound to it. It reserves the contiguous ID block 50100-50102, feeds each object spec to both leaves, and reconciles the API page's `SourceTable` to the authored master. `al-table-author` authors the master and its setup table (2 artifacts); `al-api-page-author` authors the API page (1 artifact); each leaf returns `not-applicable` for the other's object spec. The three artifacts roll up under `completed`, and the List/Card pages, permission set, and install codeunit the feature still needs - which no current leaf authors - are listed as `open-questions`:
 
 ```json
 {
   "skill": {
-    "id": "al-feature-author",
+    "id": "al-code-author",
     "version": 1
   },
   "outcome": "completed",
@@ -348,7 +350,7 @@ The all-not-applicable case - a `feature-spec` whose objects neither leaf author
 ```json
 {
   "skill": {
-    "id": "al-feature-author",
+    "id": "al-code-author",
     "version": 1
   },
   "outcome": "not-applicable",
