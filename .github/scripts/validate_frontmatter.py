@@ -505,11 +505,21 @@ class SkillRecord:
     skill_id: str | None
 
 
-def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
-    """R26: a super-skill's declared `sub-skills` must exactly match the
-    `al-*-review.md` leaf files present in the same directory (set equality,
-    ordering-agnostic). This keeps the registered leaf list the single source
-    of truth and fails CI on a forgotten, stale, or missing registration.
+def validate_sub_skills_registry(
+    path: Path,
+    fm: dict[str, Any],
+    action_fm_by_resolved: dict[Path, dict[str, Any]],
+    root: Path,
+    report: Report,
+) -> None:
+    """R26: a super-skill's declared `sub-skills` must exactly match the sibling
+    leaf action-skill files present in the same directory (set equality,
+    ordering-agnostic). A sibling leaf is identified *structurally*, not by a
+    filename pattern: it is any action-skill file in the same directory that is
+    not the super-skill itself and does not itself declare a non-empty
+    `sub-skills` list (i.e., an action skill without sub-skills). This keeps the
+    registered leaf list the single source of truth and fails CI on a forgotten,
+    stale, or missing registration.
 
     Only applies to action-skill files declaring a non-empty list-of-str
     `sub-skills`. Files whose `sub-skills` is malformed are handled by R20.
@@ -520,14 +530,20 @@ def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, rep
 
     declared = {s.lstrip("./") for s in ss}
 
-    # Sibling leaves on disk, excluding the super-skill file itself.
+    # Sibling leaves, identified structurally from already-parsed frontmatter:
+    # an action skill in the same directory that is not this super-skill and
+    # does not itself declare sub-skills (a leaf, not a super-skill).
+    this_resolved = path.resolve()
+    parent = this_resolved.parent
     leaves = {
         p.relative_to(root).as_posix()
-        for p in path.parent.glob("al-*-review.md")
-        if p.resolve() != path.resolve()
+        for p, p_fm in action_fm_by_resolved.items()
+        if p.parent == parent
+        and p != this_resolved
+        and not is_non_empty_list_of_str(p_fm.get("sub-skills"))
     }
 
-    # Declared entries that are not real sibling leaves on disk (missing/stale).
+    # Declared entries that are not real sibling leaves (missing or not a leaf).
     for entry in sorted(declared - leaves):
         entry_path = root / entry
         if not entry_path.exists():
@@ -535,10 +551,10 @@ def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, rep
         else:
             report.error(
                 path, "R26",
-                f"sub-skills entry is not a sibling 'al-*-review.md' leaf: {entry}", 1,
+                f"sub-skills entry is not a sibling action-skill leaf: {entry}", 1,
             )
 
-    # Sibling leaves on disk that were never registered ('forgot to wire it up').
+    # Sibling leaves that were never registered ('forgot to wire it up').
     for leaf in sorted(leaves - declared):
         report.error(path, "R26", f"leaf not registered in sub-skills: {leaf}", 1)
 
@@ -608,9 +624,13 @@ def run(root: Path) -> Report:
                     others = [q.relative_to(root).as_posix() for q in paths if q != p]
                     report.error(p, "R24", f"skill id '{sid}' ({kind}) is not unique; also defined in: {others}")
 
-    # Fourth pass: R26 sub-skills registry matches leaf files on disk
+    # Fourth pass: R26 sub-skills registry matches sibling leaf files on disk.
+    # Build a resolved-path -> frontmatter map so leaf detection is structural
+    # (an action skill without sub-skills), reusing already-parsed frontmatter.
+    action_fm_by_resolved = {p.resolve(): fm for p, fm in action_skill_fms}
+    root_resolved = root.resolve()
     for path, fm in action_skill_fms:
-        validate_sub_skills_registry(path, fm, root, report)
+        validate_sub_skills_registry(path, fm, action_fm_by_resolved, root_resolved, report)
 
     return report
 
