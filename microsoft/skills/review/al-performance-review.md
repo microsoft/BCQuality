@@ -77,7 +77,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Performance"`. A populated example:
 
 ```json
 {
@@ -100,7 +100,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/performance/filter-before-find.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Performance"
     },
     {
       "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
@@ -113,7 +114,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Performance"
     }
   ],
   "suppressed": []

@@ -77,7 +77,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Error Handling"`. A populated example:
 
 ```json
 {
@@ -100,7 +100,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/error-handling/prefer-errorinfo-for-actionable-errors.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Error Handling"
     },
     {
       "id": "microsoft/knowledge/error-handling/errortype-internal-vs-client-for-diagnostics.md",
@@ -113,7 +114,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/error-handling/errortype-internal-vs-client-for-diagnostics.md" }
       ],
-      "confidence": "medium"
+      "confidence": "medium",
+      "domain": "Error Handling"
     }
   ],
   "suppressed": []

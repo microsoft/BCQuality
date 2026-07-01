@@ -75,7 +75,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Accessibility"`. A populated example:
 
 ```json
 {
@@ -97,7 +97,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/ui/field-tooltips-start-with-specifies-and-end-with-period.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Accessibility"
     }
   ],
   "suppressed": []
