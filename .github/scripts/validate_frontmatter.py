@@ -45,7 +45,7 @@ ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 
 STANDARD_INPUTS = {
     "pr-diff", "object-list", "file-path", "repository", "telemetry-query",
-    "object-spec",
+    "object-spec", "feature-spec",
 }
 ALLOWED_OUTPUTS = {"findings-report", "code-artifact"}
 VALID_SAMPLE_KINDS = {"good", "bad"}
