@@ -46,8 +46,14 @@ plugin-root environment variable, prefer it.
      goal: "Review the AL changes for quality issues"
      inputs-available: [pr-diff]        # or [file-path] for single-file review
      technologies: [al]
-     enabled-layers: [microsoft, community, custom]
+     enabled-layers: [microsoft, community, custom]   # see "Layer selection" below
    ```
+
+   **Layer selection.** `enabled-layers` defaults to all three layers. A host can
+   narrow it by setting the `BCQUALITY_ENABLED_LAYERS` environment variable to a
+   comma-separated subset (e.g. `microsoft` or `microsoft,community`); when set, pass
+   exactly those layers instead of the default. This is the plugin path's only knob
+   for layer policy — see the limitation in Notes.
 
    Fill `bc-version`, `countries`, and `application-area` only when the caller
    supplies them; omit them otherwise (an omitted dimension is unconstrained).
@@ -72,3 +78,14 @@ caller can log the reason.
   the existing Entry protocol from a plugin host. Knowledge and skill changes belong in
   the layers under `PLUGIN_ROOT/microsoft/`, `PLUGIN_ROOT/community/`, and
   `PLUGIN_ROOT/custom/`, not here.
+- **Layer pruning is coarser than the URL/clone model.** In the clone model a consumer
+  prunes its checkout to policy *before* the agent runs, and the knowledge index is
+  rebuilt over the pruned tree, so a denied layer can never leak into discovery. A
+  plugin install ships the whole tree, so this bridge can only *narrow discovery* via
+  `enabled-layers` (`BCQUALITY_ENABLED_LAYERS`) — the denied layers' files still exist on
+  disk. Treat `enabled-layers` as a selection filter, not a hard security boundary. A
+  future revision could add a genuine deny mechanism (e.g. pruning the installed tree).
+- **Manifest location.** This plugin uses `.claude-plugin/plugin.json`, which both
+  Claude Code and Copilot CLI accept (verified with Copilot CLI: `plugin install`
+  reports the bridge skill loaded). Copilot CLI also accepts a root `plugin.json`; if a
+  future host only reads the root form, dual-home the manifest.
