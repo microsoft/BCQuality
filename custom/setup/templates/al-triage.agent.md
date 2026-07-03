@@ -59,7 +59,7 @@ Layer 1 - Microsoft BCQuality: https://github.com/microsoft/BCQuality
 Layer 2 - CURABIS custom knowledge: read from the machine-local mirror —
 `%USERPROFILE%\.claude\bcquality-knowledge\custom\` (always complete; never a
 hardcoded file list — the rulebook grows). Fallback without a mirror: the
-channel clone at `%USERPROFILE%\.claude\BCQuality\custom\knowledge\`. The
+channel clone at `%USERPROFILE%\.claude\QualityHub\custom\knowledge\`. The
 repo is PRIVATE — raw URLs do not exist.
 
 If a source is unreachable, **degrade gracefully**: fall back to the triage protocol

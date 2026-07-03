@@ -41,7 +41,7 @@ future CI/PR-review integration:
 ## Access model: PRIVATE repo, git-based consumption
 
 BCQuality is a **private** repository. All consumption is git-based through
-the **channel clone** at `%USERPROFILE%\.claude\BCQuality`, pinned to the
+the **channel clone** at `%USERPROFILE%\.claude\QualityHub`, pinned to the
 `stable` branch. Authentication is Git Credential Manager — the developer's
 existing GitHub login; the first git contact opens a browser login, and that
 is the entire token story. `raw.githubusercontent.com` and unauthenticated
@@ -51,8 +51,8 @@ GitHub-API calls are dead and must not appear in any consumer.
 
 Two lines (idempotent — safe to re-run; the clone prompts the GCM login):
 
-    git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
-    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\BCQuality\custom\setup\machine\Install-CurabisMachine.ps1"
+    git clone --branch stable --single-branch https://github.com/Curabis/QualityHub.git "$env:USERPROFILE\.claude\QualityHub"
+    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\QualityHub\custom\setup\machine\Install-CurabisMachine.ps1"
 
 It installs the global CLAUDE.md (identity substituted from git config),
 bc-mcp-bridge.js, the bc-mcp config template (the developer inserts their

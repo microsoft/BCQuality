@@ -4,8 +4,8 @@
 # Onboarding paa en ny maskine er TO linjer (GCM-login i browseren ved
 # foerste git-kontakt ER autentificeringen):
 #
-#   git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
-#   powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\BCQuality\custom\setup\machine\Install-CurabisMachine.ps1"
+#   git clone --branch stable --single-branch https://github.com/Curabis/QualityHub.git "$env:USERPROFILE\.claude\QualityHub"
+#   powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\QualityHub\custom\setup\machine\Install-CurabisMachine.ps1"
 #
 # Alt kopieres fra kanal-klonen (filsystem-kopi = raa bytes; ingen raw-URLs).
 #
@@ -19,7 +19,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $claude = Join-Path $env:USERPROFILE '.claude'
-$clone  = Join-Path $env:USERPROFILE '.claude\BCQuality'
+$clone  = Join-Path $env:USERPROFILE '.claude\QualityHub'
 New-Item -ItemType Directory -Force $claude | Out-Null
 
 # Kilde: scriptet ligger i <klon>\custom\setup\machine → klonrod tre niveauer op
@@ -28,7 +28,7 @@ $src = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 # Sikr kanal-klonen paa den kanoniske placering (scriptet KAN vaere koert fra en anden klon)
 if (-not (Test-Path (Join-Path $clone '.git'))) {
     if ($src -ne $clone) {
-        git clone --branch stable --single-branch 'https://github.com/Curabis/BCQuality.git' $clone
+        git clone --branch stable --single-branch 'https://github.com/Curabis/QualityHub.git' $clone
         if ($LASTEXITCODE -ne 0) { throw 'git clone af kanal-klonen fejlede - tjek adgang/GCM.' }
     }
 }

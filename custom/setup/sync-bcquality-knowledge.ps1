@@ -1,7 +1,7 @@
 # Refresh the MACHINE-LOCAL mirror of the Curabis BCQuality knowledge base.
 #
 # v2 - GIT-BASED (privat repo): al konsumtion sker via en kanal-klon i
-#   %USERPROFILE%\.claude\BCQuality   (pinned til stable-branchen)
+#   %USERPROFILE%\.claude\QualityHub   (pinned til stable-branchen)
 # Autentificering haandteres af Git Credential Manager - ingen raw-URLs,
 # ingen GitHub API, ingen CDN-cache. Foerste koersel udloeser evt. et
 # GCM-login i browseren; det ER onboarding-autentificeringen.
@@ -18,8 +18,8 @@
 
 $ErrorActionPreference = 'Stop'
 
-$repoUrl = 'https://github.com/Curabis/BCQuality.git'
-$clone   = Join-Path $env:USERPROFILE '.claude\BCQuality'
+$repoUrl = 'https://github.com/Curabis/QualityHub.git'
+$clone   = Join-Path $env:USERPROFILE '.claude\QualityHub'
 $dest    = Join-Path $env:USERPROFILE '.claude\bcquality-knowledge'
 $marker  = Join-Path $env:USERPROFILE '.claude\.bcquality-version'
 $staging = "$dest.tmp"

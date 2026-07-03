@@ -30,7 +30,7 @@ param(
 
     # LEGACY: repoet er privat - raw-URLs virker ikke laengere. Brug altid en
     # lokal klon; kanal-klonen findes paa alle onboardede maskiner:
-    #   -BCQualityHome "$env:USERPROFILE\.claude\BCQuality"
+    #   -BCQualityHome "$env:USERPROFILE\.claude\QualityHub"
     [string]$RawBase = '',
 
     [switch]$Quiet

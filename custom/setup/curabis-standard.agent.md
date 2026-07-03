@@ -37,24 +37,24 @@ Detect which mode based on the trigger phrase and proceed accordingly.
 ## Source: the channel clone (BCQuality is PRIVATE — no raw URLs)
 
 All artifacts come from the machine's **channel clone** — a git clone of
-`Curabis/BCQuality` pinned to the `stable` branch. Authentication is Git
+`Curabis/QualityHub` pinned to the `stable` branch. Authentication is Git
 Credential Manager (the developer's existing GitHub login); there are NO
 tokenless raw.githubusercontent fetches anywhere — the repo is private.
 
 ```
-SRC         = %USERPROFILE%\.claude\BCQuality      (kanal-klonen, stable)
+SRC         = %USERPROFILE%\.claude\QualityHub      (kanal-klonen, stable)
 BASE        = {SRC}\custom\setup
 AGENTS_BASE = {SRC}\custom\agents
 ```
 
 **Before ANY Mode A/B work, ensure the channel clone is fresh:**
 
-    git -C "$env:USERPROFILE\.claude\BCQuality" fetch origin stable --quiet
-    git -C "$env:USERPROFILE\.claude\BCQuality" checkout -B stable origin/stable --quiet
+    git -C "$env:USERPROFILE\.claude\QualityHub" fetch origin stable --quiet
+    git -C "$env:USERPROFILE\.claude\QualityHub" checkout -B stable origin/stable --quiet
 
 If the clone is missing entirely:
 
-    git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
+    git clone --branch stable --single-branch https://github.com/Curabis/QualityHub.git "$env:USERPROFILE\.claude\QualityHub"
 
 **Vocabulary:** wherever this document says "fetch", it means **copy the file
 from SRC** — a filesystem copy, which preserves raw bytes by definition (the
@@ -210,10 +210,10 @@ onboarded — `~/.claude/CLAUDE.md` or `~/.claude/bc-mcp-bridge.js` is missing �
 run the full onboarding NOW (idempotent; identity taken from git config; the
 first git contact may open a browser login — that IS the authentication):
 
-    git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
-    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\BCQuality\custom\setup\machine\Install-CurabisMachine.ps1"
+    git clone --branch stable --single-branch https://github.com/Curabis/QualityHub.git "$env:USERPROFILE\.claude\QualityHub"
+    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\QualityHub\custom\setup\machine\Install-CurabisMachine.ps1"
 
-(Skip the clone line if `%USERPROFILE%\.claude\BCQuality` already exists.)
+(Skip the clone line if `%USERPROFILE%\.claude\QualityHub` already exists.)
 Then report the manual leftovers it lists (personal client secret; the AL
 Language extension if VS Code lacks it) and ask the developer to restart
 Claude Code.
@@ -224,7 +224,7 @@ self-heal suffices:
     powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"
 
 (If that sync script itself is missing, copy it from the channel clone:
-`%USERPROFILE%\.claude\BCQuality\custom\setup\sync-bcquality-knowledge.ps1` —
+`%USERPROFILE%\.claude\QualityHub\custom\setup\sync-bcquality-knowledge.ps1` —
 or run the full onboarding above.)
 
 These rules are always active.
@@ -545,7 +545,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 Triggered by: "Opdater CURABIS Standard fra BCQuality"
 
 **Step 0 — freshen the channel clone** (see Source section): fetch + checkout
-`origin/stable` in `%USERPROFILE%\.claude\BCQuality`; create the clone if
+`origin/stable` in `%USERPROFILE%\.claude\QualityHub`; create the clone if
 missing. Every copy below reads from that clone.
 
 Updates only the files that come directly from BCQuality.
@@ -778,7 +778,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ## Invocation note
 
 This agent is read on demand from the machine's channel clone
-(`%USERPROFILE%\.claude\BCQuality\custom\setup\curabis-standard.agent.md`,
+(`%USERPROFILE%\.claude\QualityHub\custom\setup\curabis-standard.agent.md`,
 after freshening — see Source section). Both commands work in any project —
 including one not yet configured — because the machine's `~/.claude/CLAUDE.md`
 (installed by onboarding) knows the clone location. On a machine without the
