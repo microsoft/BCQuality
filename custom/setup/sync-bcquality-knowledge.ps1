@@ -1,36 +1,47 @@
 # Refresh the MACHINE-LOCAL mirror of the Curabis BCQuality knowledge base.
 #
-# Mirrors three layers from https://github.com/Curabis/BCQuality:
+# v2 - GIT-BASED (privat repo): al konsumtion sker via en kanal-klon i
+#   %USERPROFILE%\.claude\BCQuality   (pinned til stable-branchen)
+# Autentificering haandteres af Git Credential Manager - ingen raw-URLs,
+# ingen GitHub API, ingen CDN-cache. Foerste koersel udloeser evt. et
+# GCM-login i browseren; det ER onboarding-autentificeringen.
+#
+# Mirrors three layers into %USERPROFILE%\.claude\bcquality-knowledge:
 #   custom/    - Curabis org-specific rules   (ALWAYS read in full each session)
 #   community/ - BC community patterns         (loaded on relevance via INDEX.md)
 #   microsoft/ - platform guardrails           (loaded on relevance via INDEX.md)
+# ...plus INDEX.md (domain + keywords per fil) og opdaterer versionsmarkoeren.
 #
-# The upstream file list is discovered dynamically from the GitHub tree API, so
-# new/removed upstream files propagate automatically - nothing is hardcoded.
-# After downloading, an INDEX.md is generated (one line per file, with domain +
-# keywords from each file's frontmatter) so an agent can scan and pull only the
-# files relevant to a task instead of loading all ~100 every session.
-#
-# The mirror is per developer machine (~/.claude/bcquality-knowledge/), shared
-# by every CURABIS repo on it. It is NEVER committed to a project repository -
-# see BCQuality rule bcquality-knowledge-must-mirror-to-machine-not-repo.
-# One sync per machine covers every repo. Run periodically:
+# Mirroren committes ALDRIG til et projekt-repo - se BCQuality-reglen
+# bcquality-knowledge-must-mirror-to-machine-not-repo. Koer periodisk:
 #   powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"
 
 $ErrorActionPreference = 'Stop'
 
-$repo    = 'Curabis/BCQuality'
-$branch  = 'stable'
+$repoUrl = 'https://github.com/Curabis/BCQuality.git'
+$clone   = Join-Path $env:USERPROFILE '.claude\BCQuality'
 $dest    = Join-Path $env:USERPROFILE '.claude\bcquality-knowledge'
+$marker  = Join-Path $env:USERPROFILE '.claude\.bcquality-version'
 $staging = "$dest.tmp"
-$rawBase = "https://raw.githubusercontent.com/$repo/$branch"
-$treeUrl = "https://api.github.com/repos/$repo/git/trees/$branch" + '?recursive=1'
 
-# Upstream path prefix -> local layer folder
+# --- 1. Kanal-klon: opret eller opdater (pinned til stable) ---
+if (-not (Test-Path (Join-Path $clone '.git'))) {
+    Write-Host "Kanal-klon mangler - kloner stable fra $repoUrl ..."
+    git clone --branch stable --single-branch $repoUrl $clone
+    if ($LASTEXITCODE -ne 0) { throw "git clone fejlede - er du autentificeret (GCM), og har du adgang til repoet?" }
+} else {
+    git -C $clone fetch origin stable --quiet
+    if ($LASTEXITCODE -ne 0) { throw "git fetch fejlede - tjek netvaerk/adgang." }
+    git -C $clone checkout -B stable origin/stable --quiet
+}
+$sha = (git -C $clone rev-parse HEAD).Trim()
+Write-Host "Kanal-klon paa stable @ $($sha.Substring(0,7))"
+
+# --- 2. Byg mirror fra klonens filer (ingen netvaerk herfra) ---
 $layerMap = [ordered]@{
-    'custom/knowledge/'    = 'custom'
-    'community/knowledge/' = 'community'
-    'microsoft/knowledge/' = 'microsoft'
+    'custom\knowledge'    = 'custom'
+    'community\knowledge' = 'community'
+    'microsoft\knowledge' = 'microsoft'
 }
 
 function Get-Frontmatter {
@@ -47,50 +58,25 @@ function Get-Frontmatter {
     return $fm
 }
 
-Write-Host "Fetching file tree from $repo@$branch ..."
-$headers = @{ 'User-Agent' = 'wareco-bcquality-sync'; 'Accept' = 'application/vnd.github+json' }
-$tree = (Invoke-RestMethod -Uri $treeUrl -Headers $headers).tree
-
-# Build the download worklist from the tree
-$files = @()
-foreach ($node in $tree) {
-    if ($node.type -ne 'blob') { continue }
-    if ($node.path -notlike '*.md') { continue }
-    foreach ($prefix in $layerMap.Keys) {
-        if ($node.path.StartsWith($prefix)) {
-            $relative = $node.path.Substring($prefix.Length)   # e.g. performance/avoid-commit-inside-loops.md
-            $files += [pscustomobject]@{
-                Url       = "$rawBase/$($node.path)"
-                Layer     = $layerMap[$prefix]
-                Relative  = $relative
-                LocalPath = Join-Path $staging (Join-Path $layerMap[$prefix] $relative)
-            }
-            break
-        }
-    }
-}
-
-if ($files.Count -eq 0) { throw 'No knowledge files found in upstream tree - aborting.' }
-
-# Download into a staging folder so a mid-run failure never wipes the live copy
 if (Test-Path $staging) { Remove-Item -Recurse -Force $staging }
 New-Item -ItemType Directory -Force $staging | Out-Null
 
-Write-Host "Downloading $($files.Count) knowledge files ..."
-$rc = 0
-foreach ($f in $files) {
-    New-Item -ItemType Directory -Force (Split-Path $f.LocalPath) | Out-Null
-    try {
-        Invoke-WebRequest -Uri $f.Url -OutFile $f.LocalPath -UseBasicParsing -ErrorAction Stop
-        Write-Host "OK   $($f.Layer)/$($f.Relative)"
-    } catch {
-        Write-Error "FAIL $($f.Layer)/$($f.Relative)"
-        $rc = 1
+$files = @()
+foreach ($prefix in $layerMap.Keys) {
+    $srcDir = Join-Path $clone $prefix
+    if (-not (Test-Path $srcDir)) { continue }
+    $layer = $layerMap[$prefix]
+    Get-ChildItem $srcDir -Recurse -Filter *.md | ForEach-Object {
+        $relative = $_.FullName.Substring($srcDir.Length + 1)
+        $localPath = Join-Path $staging (Join-Path $layer $relative)
+        New-Item -ItemType Directory -Force (Split-Path $localPath) | Out-Null
+        Copy-Item $_.FullName $localPath
+        $files += [pscustomobject]@{ Layer = $layer; Relative = $relative; LocalPath = $localPath }
     }
 }
+if ($files.Count -eq 0) { throw 'Ingen knowledge-filer fundet i kanal-klonen - afbryder.' }
 
-# Generate INDEX.md (relevance index for all layers)
-Write-Host "Generating INDEX.md ..."
+# --- 3. INDEX.md (relevans-indeks for alle lag) ---
 $idx = [System.Collections.Generic.List[string]]::new()
 $idx.Add('# BCQuality Knowledge Index')
 $idx.Add('')
@@ -100,7 +86,6 @@ $idx.Add('Layers: `custom` is ALWAYS read in full each session. For `community` 
 $idx.Add('`microsoft`, scan this index and read only the files whose domain/keywords')
 $idx.Add('match the task at hand.')
 $idx.Add('')
-
 foreach ($layer in @('custom', 'community', 'microsoft')) {
     $layerFiles = $files | Where-Object { $_.Layer -eq $layer } | Sort-Object Relative
     if (-not $layerFiles) { continue }
@@ -111,18 +96,18 @@ foreach ($layer in @('custom', 'community', 'microsoft')) {
         $fm = Get-Frontmatter $f.LocalPath
         $domain = if ($fm.ContainsKey('domain')) { $fm['domain'] } else { '' }
         $keywords = if ($fm.ContainsKey('keywords')) { $fm['keywords'].Trim('[', ']') } else { '' }
-        $rel = $f.Relative -replace '\.md$', ''
+        $rel = ($f.Relative -replace '\.md$', '') -replace '\\', '/'
         $idx.Add("- ``$layer/$rel`` - domain: $domain; keywords: $keywords")
     }
     $idx.Add('')
 }
 Set-Content -Path (Join-Path $staging 'INDEX.md') -Value $idx -Encoding utf8
 
-# Swap staging into place
+# --- 4. Swap + markoer ---
 if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
 Rename-Item -Path $staging -NewName (Split-Path $dest -Leaf)
+Set-Content -Path $marker -Value $sha -Encoding ascii
 
 Write-Host ''
-Write-Host "Done. $($files.Count) files across $($layerMap.Count) layers."
+Write-Host "Done. $($files.Count) filer, 3 lag, stable @ $($sha.Substring(0,7))."
 Write-Host "Machine-local mirror updated: $dest"
-exit $rc

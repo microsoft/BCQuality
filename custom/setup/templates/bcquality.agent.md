@@ -54,10 +54,13 @@ Resolve the current rule set at review time, in this order:
    `~/.claude/bcquality-knowledge/custom/` (Windows:
    `%USERPROFILE%\.claude\bcquality-knowledge\custom\`). The mirror is synced
    from the `stable` release channel and is always the complete custom layer.
-2. **Fallback (no mirror — Copilot, fresh machine, CI):** list the tree via
-   `https://api.github.com/repos/Curabis/BCQuality/git/trees/stable?recursive=1`
-   filtered to `custom/knowledge/**/*.md`, and fetch each file from
-   `https://raw.githubusercontent.com/Curabis/BCQuality/stable/<path>`.
+2. **Fallback (no mirror):** read directly from the machine's channel clone —
+   `%USERPROFILE%\.claude\BCQuality\custom\knowledge\**\*.md` (freshen with
+   `git -C "$env:USERPROFILE\.claude\BCQuality" pull` if stale). The repo is
+   PRIVATE: tree-API/raw-URL fallbacks no longer exist. Consumers without
+   filesystem access outside the workspace (e.g. Copilot) rely on the
+   repo-committed agent files alone — deep custom-layer lookups happen in
+   Claude Code sessions.
 
 Relevance filtering: `custom/` rules are always active in CURABIS repos — read
 them all; use each file's frontmatter `domain`/`keywords` only to prioritize,

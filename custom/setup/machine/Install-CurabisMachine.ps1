@@ -1,16 +1,16 @@
-# CURABIS maskin-onboarding - goer en frisk udviklermaskine klar til
-# CURABIS Standard. Koeres EEN gang pr. maskine; er idempotent (sikker at
-# koere igen). Alt hentes som raa bytes fra stable-kanalen.
+# CURABIS maskin-onboarding v2 (GIT-BASERET, privat repo) - goer en frisk
+# udviklermaskine CURABIS-klar. Idempotent; sikker at koere igen.
 #
-# Torsten (eller enhver ny udvikler) koerer:
-#   powershell -ExecutionPolicy Bypass -File Install-CurabisMachine.ps1
+# Onboarding paa en ny maskine er TO linjer (GCM-login i browseren ved
+# foerste git-kontakt ER autentificeringen):
 #
-# Eller direkte fra BCQuality:
-#   powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup/machine/Install-CurabisMachine.ps1 -OutFile $env:TEMP\icm.ps1; & $env:TEMP\icm.ps1"
+#   git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
+#   powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\BCQuality\custom\setup\machine\Install-CurabisMachine.ps1"
 #
-# Hvad der IKKE haandteres her (personligt/manuel):
-#  - din client secret i ~/.bc-mcp.config.json (scriptet lægger templaten
-#    og siger til)
+# Alt kopieres fra kanal-klonen (filsystem-kopi = raa bytes; ingen raw-URLs).
+#
+# Haandteres IKKE her (personligt/manuelt):
+#  - din client secret i ~/.bc-mcp.config.json (templaten laegges, du udfylder)
 #  - VS Code + AL Language-extensionen (ms-dynamics-smb.al fra Marketplace)
 param(
     [string]$FullName,
@@ -18,11 +18,21 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$raw    = 'https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup'
 $claude = Join-Path $env:USERPROFILE '.claude'
+$clone  = Join-Path $env:USERPROFILE '.claude\BCQuality'
 New-Item -ItemType Directory -Force $claude | Out-Null
 
-# Identitet: default fra git config, ellers spoerg
+# Kilde: scriptet ligger i <klon>\custom\setup\machine → klonrod tre niveauer op
+$src = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
+
+# Sikr kanal-klonen paa den kanoniske placering (scriptet KAN vaere koert fra en anden klon)
+if (-not (Test-Path (Join-Path $clone '.git'))) {
+    if ($src -ne $clone) {
+        git clone --branch stable --single-branch 'https://github.com/Curabis/BCQuality.git' $clone
+        if ($LASTEXITCODE -ne 0) { throw 'git clone af kanal-klonen fejlede - tjek adgang/GCM.' }
+    }
+}
+
 if (-not $FullName) { $FullName = (git config user.name 2>$null) }
 if (-not $UserName) { $UserName = $env:USERNAME }
 if (-not $FullName) { $FullName = Read-Host 'Dit fulde navn' }
@@ -30,12 +40,12 @@ if (-not $FullName) { $FullName = Read-Host 'Dit fulde navn' }
 $done = @()
 $todo = @()
 
-# 1. Global CLAUDE.md (fra template; overskriver ALDRIG en eksisterende)
+# 1. Global CLAUDE.md (fra template i klonen; overskriver ALDRIG en eksisterende)
 $gcm = Join-Path $claude 'CLAUDE.md'
 if (Test-Path $gcm) {
-    $done += "CLAUDE.md fandtes allerede - ikke roert"
+    $done += 'CLAUDE.md fandtes allerede - ikke roert'
 } else {
-    Invoke-WebRequest -UseBasicParsing "$raw/machine/CLAUDE.md" -OutFile $gcm
+    Copy-Item (Join-Path $src 'custom\setup\machine\CLAUDE.md') $gcm
     $t = [System.IO.File]::ReadAllText($gcm)
     $t = $t.Replace('[Your Name]', $FullName).Replace('[your-username]', $UserName)
     $t = $t -replace '<!-- Replace the two lines below with your own details -->\r?\n', ''
@@ -44,29 +54,22 @@ if (Test-Path $gcm) {
 }
 
 # 2. BC MCP bridge (stable er autoritativ - overskriv)
-Invoke-WebRequest -UseBasicParsing "$raw/bc-mcp-bridge.js" -OutFile (Join-Path $claude 'bc-mcp-bridge.js')
-$done += "bc-mcp-bridge.js installeret"
+Copy-Item (Join-Path $src 'custom\setup\bc-mcp-bridge.js') (Join-Path $claude 'bc-mcp-bridge.js') -Force
+$done += 'bc-mcp-bridge.js installeret'
 
 # 3. BC MCP config-template (personlig secret - aldrig overskrive)
 $cfg = Join-Path $env:USERPROFILE '.bc-mcp.config.json'
 if (Test-Path $cfg) {
-    $done += "bc-mcp.config.json fandtes allerede - ikke roert"
+    $done += 'bc-mcp.config.json fandtes allerede - ikke roert'
 } else {
-    Invoke-WebRequest -UseBasicParsing "$raw/machine/bc-mcp.config.template.json" -OutFile $cfg
+    Copy-Item (Join-Path $src 'custom\setup\machine\bc-mcp.config.template.json') $cfg
     $todo += "Aabn $cfg og indsaet din personlige client secret"
 }
 
-# 4. Knowledge-sync-script + mirror
-Invoke-WebRequest -UseBasicParsing "$raw/sync-bcquality-knowledge.ps1" -OutFile (Join-Path $claude 'sync-bcquality-knowledge.ps1')
+# 4. Sync-script til maskinen + koer det (bygger mirror + saetter versionsmarkoer)
+Copy-Item (Join-Path $src 'custom\setup\sync-bcquality-knowledge.ps1') (Join-Path $claude 'sync-bcquality-knowledge.ps1') -Force
 & powershell -ExecutionPolicy Bypass -File (Join-Path $claude 'sync-bcquality-knowledge.ps1')
-$done += "bcquality-knowledge mirror synkroniseret"
-
-# 5. Versionsmarkoer (stable-SHA)
-try {
-    $sha = (Invoke-RestMethod 'https://api.github.com/repos/Curabis/BCQuality/commits?sha=stable&per_page=1')[0].sha
-    Set-Content -Path (Join-Path $claude '.bcquality-version') -Value $sha -Encoding ascii
-    $done += "versionsmarkoer sat ($($sha.Substring(0,7)))"
-} catch { $todo += "Kunne ikke saette versionsmarkoer (GitHub API) - foerste session goer det selv" }
+$done += 'bcquality-knowledge mirror synkroniseret (git-baseret)'
 
 Write-Host ''
 Write-Host '=== CURABIS maskin-onboarding faerdig ===' -ForegroundColor Green
@@ -78,5 +81,4 @@ if ($todo) {
 }
 Write-Host ''
 Write-Host 'Pr. repo herefter: sig "Opdater CURABIS Standard fra BCQuality" i Claude'
-Write-Host 'Code - den deployer selv .vscode/find-altool.ps1 og AL MCP-opsaetningen.'
-Write-Host 'Genstart Claude Code efter foerste onboarding.'
+Write-Host 'Code - den henter alt fra kanal-klonen. Genstart Claude Code foerst.'
