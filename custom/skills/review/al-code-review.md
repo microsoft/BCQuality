@@ -3,7 +3,7 @@ kind: action-skill
 id: al-code-review
 version: 1
 title: AL code review
-description: Reviews AL source changes by composing the AL review leaf skills, using tCOG-specific performance guidance where available.
+description: Reviews AL source changes by composing the AL review leaf skills, using TCOG-specific performance guidance where available.
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
 bc-version: [all]

@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-In tCOG apps, pure reads should set an explicit `ReadIsolation` on the record instance before the read operation. This makes the read semantics intentional instead of inheriting whatever isolation level happens to be active in the surrounding transaction or caller. For display, lookup, and calculation helpers that only read data and do not make decisions that require committed consistency, the default convention is `IsolationLevel::ReadUncommitted`.
+In TCOG apps, pure reads should set an explicit `ReadIsolation` on the record instance before the read operation. This makes the read semantics intentional instead of inheriting whatever isolation level happens to be active in the surrounding transaction or caller. For display, lookup, and calculation helpers that only read data and do not make decisions that require committed consistency, the default convention is `IsolationLevel::ReadUncommitted`.
 
 ## Best Practice
 
