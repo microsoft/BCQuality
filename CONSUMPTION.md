@@ -5,7 +5,24 @@ Microsoft/BCQuality architecture: an orchestrator invokes `/skills/entry.md`,
 Entry dispatches layer action skills, each skill runs Source → Relevance →
 Worklist → Action and emits DO-shaped findings. That document is the
 *architecture*. This document is the *actual state* — which consumption paths
-are live in the CURABIS fork, and which are dormant upstream inheritance.
+are live, and which are dormant upstream inheritance.
+
+## The two-repo architecture
+
+- **`Curabis/BCQuality`** (PUBLIC, fork of microsoft/BCQuality): the intake.
+  Carries only upstream content — `microsoft/`, `community/`, `skills/`,
+  `tools/`. Synced from Microsoft via GitHub's *Sync fork*. It is also the
+  contribution path: community-layer improvements go upstream through it.
+  It NEVER contains the custom layer.
+- **`Curabis/QualityHub`** (PRIVATE, this repo): the product. Custom layer,
+  agents, setup machinery, release channel, governance — everything below.
+  Because QualityHub shares git ancestry with microsoft/BCQuality, upstream
+  updates arrive as a clean merge.
+
+**"Opdater QualityHub fra BCQuality":** fetch the `bcquality` remote → merge
+`bcquality/main` on a branch → PR (CI validates the merged corpus, catching
+upstream schema drift at the gate) → Michael merges → promote. Never merge
+upstream directly into `stable`.
 
 ## Active: the CURABIS Standard session model
 
