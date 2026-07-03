@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 15
+version: 16
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -66,6 +66,7 @@ AGENTS_BASE = https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/
 | ferencz.agent.md | `{AGENTS_BASE}/ferencz.agent.md` |
 | roemer.agent.md | `{AGENTS_BASE}/roemer.agent.md` |
 | cspell.json | `{BASE}/templates/cspell.json` |
+| find-altool.ps1 | `{BASE}/templates/find-altool.ps1` |
 | sync-bcquality-knowledge.ps1 | `{BASE}/sync-bcquality-knowledge.ps1` |
 
 CLAUDE.md and .mcp.json are generated dynamically — not fetched as static templates
@@ -191,8 +192,9 @@ run the full onboarding NOW (idempotent; identity taken from git config):
 
     powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup/machine/Install-CurabisMachine.ps1 -OutFile $env:TEMP\icm.ps1; & $env:TEMP\icm.ps1"
 
-Then report the manual leftovers it lists (personal client secret, AL:
-Configure MCP Server) and ask the developer to restart Claude Code.
+Then report the manual leftovers it lists (personal client secret; the AL
+Language extension if VS Code lacks it) and ask the developer to restart
+Claude Code.
 
 If only `~/.claude/bcquality-knowledge/` is missing or stale, the lighter
 self-heal suffices:
@@ -345,9 +347,17 @@ After creating any new `.al` file, reload the AL extension in VS Code
 (`Ctrl+Shift+P -> AL: Reload Extension`) before trusting diagnostics.
 ```
 
-#### 4b. .mcp.json
+#### 4b. AL MCP + .mcp.json
 
-If `.vscode/find-altool.ps1` exists:
+`find-altool.ps1` is a CURABIS artifact deployed from BCQuality — there is NO
+VS Code command that generates it (the historical instruction "AL: Configure
+MCP Server" referenced a command that does not exist).
+
+1. If `.vscode/find-altool.ps1` is missing: fetch
+   `{BASE}/templates/find-altool.ps1` AS RAW BYTES → `.vscode/find-altool.ps1`
+   (create `.vscode/` if needed) and stage it for commit.
+2. Write `.mcp.json` — ALWAYS with both entries:
+
 ```json
 {
   "mcpServers": {
@@ -368,28 +378,15 @@ If `.vscode/find-altool.ps1` exists:
 }
 ```
 
-If `.vscode/find-altool.ps1` does NOT exist:
-```json
-{
-  "mcpServers": {
-    "businesscentral": {
-      "command": "node",
-      "args": ["${USERPROFILE}\\.claude\\bc-mcp-bridge.js"]
-    }
-  }
-}
-```
-
 Use Claude Code's built-in environment-variable expansion — `${CLAUDE_PROJECT_DIR:-.}`
 and `${USERPROFILE}` — instead of substituting literal detected paths. `.mcp.json` is
 git-committed and shared; a path baked in for one developer's machine or username
 breaks every other developer's clone (see BCQuality rule
 `mcp-config-must-not-hardcode-developer-paths`).
 
-If `find-altool.ps1` is missing, note after writing .mcp.json:
-> "ℹ️ AL MCP er ikke konfigureret endnu. Kør `Ctrl+Shift+P → AL: Configure MCP Server`
->  i VS Code for at generere find-altool.ps1, og kør derefter
->  'Opdater CURABIS Standard fra BCQuality' — AL MCP tilføjes automatisk."
+The only machine prerequisite is the AL Language extension itself
+(`ms-dynamics-smb.al` from the Marketplace, recent version) — find-altool.ps1
+locates its `altool.exe` dynamically and reports clearly if it is missing.
 
 #### 4c. .github/.agents/ (fetch from BCQuality)
 
@@ -546,7 +543,8 @@ Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`
 | `~/.claude/bcquality-knowledge/` | Re-run the sync script (see below) — machine-local, nothing to commit |
 | `.github/.agents/bcquality-knowledge/` + `.github/.agents/sync-bcquality-knowledge.ps1` | v6-era repo-local mirror: propose removal (see below) |
 | `cspell.json` — words from template | Merge new words, keep project words |
-| `.mcp.json` — `al` entry | Add if `find-altool.ps1` now exists and entry is missing |
+| `.vscode/find-altool.ps1` | Fetch from `{BASE}/templates/` (raw bytes), add if missing — CURABIS artifact, no VS Code command generates it |
+| `.mcp.json` — `al` entry | Add if missing (find-altool.ps1 is deployed by the row above) |
 | `.mcp.json` — `businesscentral` path | Validate and correct if wrong (see below) |
 | `.mcp.json` — `al` `-File` path | Validate and correct if wrong (see below) |
 | `.apps/*.code-workspace` — reference layout | Create/complete: app projects + `.AL-Go` + relative `../docs` (rule `al-development-must-use-apps-workspace`) |

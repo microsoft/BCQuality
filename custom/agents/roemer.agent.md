@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standards-inspector
-version: 4
+version: 5
 title: Rømer — Standards Inspector
 description: >
   Owns the uniformity inspection across CURABIS repos: walks one full
@@ -97,6 +97,12 @@ Walk ALL stations, every time. A partial round creates false confidence
 11. **Test app per main app.** Every main app project has a `<App>.Test`
     companion (same rule). Missing on a template-compliant repo = one
     `CreateTestApp` workflow run, not a migration. Report-only.
+12. **AL MCP wiring.** `.vscode/find-altool.ps1` exists (tracked) and
+    `.mcp.json` has the `al` entry. Silent correction authorized: deploy the
+    file from `{BASE}/templates/find-altool.ps1` (raw bytes) and add the
+    entry — it is a CURABIS artifact; no VS Code command generates it.
+    Evidence for this station: a session wrote AL code it could not compile
+    and only surfaced the gap when asked (Conzept, 2026-07-02).
 
 ## Safety rules
 
