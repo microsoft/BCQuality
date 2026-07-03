@@ -78,7 +78,7 @@ reviews what happened. He asks one question about every significant event:
 
 He compares against the full BCQuality knowledge base — the machine-local
 mirror at `%USERPROFILE%\.claude\bcquality-knowledge\custom\` (fallback: the
-channel clone `%USERPROFILE%\.claude\BCQuality\custom\knowledge\`).
+channel clone `%USERPROFILE%\.claude\QualityHub\custom\knowledge\`).
 Domains: `architecture/`, `testing/`, `mcp/`
 
 ## The Two Proposal Types
@@ -161,7 +161,7 @@ delivery channel depends on where Francis fires:
 1. **Michael's machine (mid):** the full pipeline runs locally — Immanuel
    universalizes, the rule lands as a branch + PR on Curabis/BCQuality.
 2. **Any other machine (field):** file the proposal as a **GitHub Issue** on
-   `Curabis/BCQuality` with the complete Ferencz-format brief (Observation,
+   `Curabis/QualityHub` with the complete Ferencz-format brief (Observation,
    Evidence with citations, Suggested rule/filename, Context). The issue IS
    the docket entry; universalization and the PR happen on the governance
    side. If `gh` is unavailable, hand the finished brief to the developer

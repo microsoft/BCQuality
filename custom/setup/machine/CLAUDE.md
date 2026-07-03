@@ -3,7 +3,7 @@
 
 These instructions apply to every Claude Code session, regardless of project.
 BCQuality is a PRIVATE repo: all access is git-based via the channel clone at
-`%USERPROFILE%\.claude\BCQuality` (pinned to `stable`; auth = Git Credential
+`%USERPROFILE%\.claude\QualityHub` (pinned to `stable`; auth = Git Credential
 Manager). No raw.githubusercontent URLs — they do not work and must not be used.
 
 ## Auto-update BCQuality (runs at every session start)
@@ -11,15 +11,15 @@ Manager). No raw.githubusercontent URLs — they do not work and must not be use
 If the current project has `.github/.agents/bcquality.agent.md`:
 
 1. Freshen the channel clone and read its SHA:
-   `git -C "$env:USERPROFILE\.claude\BCQuality" fetch origin stable --quiet`
-   `git -C "$env:USERPROFILE\.claude\BCQuality" rev-parse origin/stable`
+   `git -C "$env:USERPROFILE\.claude\QualityHub" fetch origin stable --quiet`
+   `git -C "$env:USERPROFILE\.claude\QualityHub" rev-parse origin/stable`
    (If the clone is missing: run the machine self-heal from the project
    CLAUDE.md — two lines: git clone + Install-CurabisMachine.ps1.)
 2. Read stored SHA from `~/.claude/.bcquality-version` (may not exist yet)
 3. If SHA is different (or file missing):
-   a. `git -C "$env:USERPROFILE\.claude\BCQuality" checkout -B stable origin/stable --quiet`
+   a. `git -C "$env:USERPROFILE\.claude\QualityHub" checkout -B stable origin/stable --quiet`
    b. Execute Mode B from the clone:
-      `%USERPROFILE%\.claude\BCQuality\custom\setup\curabis-standard.agent.md`
+      `%USERPROFILE%\.claude\QualityHub\custom\setup\curabis-standard.agent.md`
    c. Refresh the local knowledge mirror:
       `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"`
       (git-based; also writes the new SHA to the version marker)
@@ -49,7 +49,7 @@ When the user says either of these commands, freshen the channel clone (see
 Auto-update step 1) and follow the setup agent read from:
 
 ```
-%USERPROFILE%\.claude\BCQuality\custom\setup\curabis-standard.agent.md
+%USERPROFILE%\.claude\QualityHub\custom\setup\curabis-standard.agent.md
 ```
 
 - **"Konfigurer dette projekt til CURABIS Standard"** → fuld setup af nyt repo

@@ -5,7 +5,24 @@ Microsoft/BCQuality architecture: an orchestrator invokes `/skills/entry.md`,
 Entry dispatches layer action skills, each skill runs Source → Relevance →
 Worklist → Action and emits DO-shaped findings. That document is the
 *architecture*. This document is the *actual state* — which consumption paths
-are live in the CURABIS fork, and which are dormant upstream inheritance.
+are live, and which are dormant upstream inheritance.
+
+## The two-repo architecture
+
+- **`Curabis/BCQuality`** (PUBLIC, fork of microsoft/BCQuality): the intake.
+  Carries only upstream content — `microsoft/`, `community/`, `skills/`,
+  `tools/`. Synced from Microsoft via GitHub's *Sync fork*. It is also the
+  contribution path: community-layer improvements go upstream through it.
+  It NEVER contains the custom layer.
+- **`Curabis/QualityHub`** (PRIVATE, this repo): the product. Custom layer,
+  agents, setup machinery, release channel, governance — everything below.
+  Because QualityHub shares git ancestry with microsoft/BCQuality, upstream
+  updates arrive as a clean merge.
+
+**"Opdater QualityHub fra BCQuality":** fetch the `bcquality` remote → merge
+`bcquality/main` on a branch → PR (CI validates the merged corpus, catching
+upstream schema drift at the gate) → Michael merges → promote. Never merge
+upstream directly into `stable`.
 
 ## Active: the CURABIS Standard session model
 
@@ -41,7 +58,7 @@ future CI/PR-review integration:
 ## Access model: PRIVATE repo, git-based consumption
 
 BCQuality is a **private** repository. All consumption is git-based through
-the **channel clone** at `%USERPROFILE%\.claude\BCQuality`, pinned to the
+the **channel clone** at `%USERPROFILE%\.claude\QualityHub`, pinned to the
 `stable` branch. Authentication is Git Credential Manager — the developer's
 existing GitHub login; the first git contact opens a browser login, and that
 is the entire token story. `raw.githubusercontent.com` and unauthenticated
@@ -51,8 +68,8 @@ GitHub-API calls are dead and must not appear in any consumer.
 
 Two lines (idempotent — safe to re-run; the clone prompts the GCM login):
 
-    git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
-    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\BCQuality\custom\setup\machine\Install-CurabisMachine.ps1"
+    git clone --branch stable --single-branch https://github.com/Curabis/QualityHub.git "$env:USERPROFILE\.claude\QualityHub"
+    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\QualityHub\custom\setup\machine\Install-CurabisMachine.ps1"
 
 It installs the global CLAUDE.md (identity substituted from git config),
 bc-mcp-bridge.js, the bc-mcp config template (the developer inserts their

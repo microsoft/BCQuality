@@ -179,7 +179,7 @@ POST https://api.github.com/repos/Curabis/BCQuality/pulls
 
 ### Step 5 — Report PR URL to user
 ```
-PR åben: https://github.com/Curabis/BCQuality/pull/<number>
+PR åben: https://github.com/Curabis/QualityHub/pull/<number>
 Afventer Michaels godkendelse via GitHub-merge.
 ```
 
