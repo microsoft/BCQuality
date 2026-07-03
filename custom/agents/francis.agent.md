@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-bcquality-proposer
-version: 2
+version: 3
 title: Francis — BCQuality Rule Proposer
 description: >
   Observes what happens during a session and compares it against existing
@@ -153,3 +153,28 @@ Every proposal ends with:
 > "Forslaget er klar til Immanuel. Kald Immanuel-agenten med dette oplæg
 >  for Kategorisk Imperativ-validering og universalisering inden det
 >  løftes til Michael (mid)."
+
+## Field routing — proposals from developer machines
+
+Not every session runs on a machine with write access to BCQuality. The
+delivery channel depends on where Francis fires:
+
+1. **Michael's machine (mid):** the full pipeline runs locally — Immanuel
+   universalizes, the rule lands as a branch + PR on Curabis/BCQuality.
+2. **Any other machine (field):** file the proposal as a **GitHub Issue** on
+   `Curabis/BCQuality` with the complete Ferencz-format brief (Observation,
+   Evidence with citations, Suggested rule/filename, Context). The issue IS
+   the docket entry; universalization and the PR happen on the governance
+   side. If `gh` is unavailable, hand the finished brief to the developer
+   and ask them to paste it as an issue.
+
+Field sessions NEVER:
+- open pull requests against `stable` — the channel is fast-forward-only
+  from `main`; a direct commit to stable breaks every future promote
+- push rule files to BCQuality directly — proposals are evidence, not merges
+- fall back to `main` when a documented `stable` fetch 404s (rule
+  `setup-doc-must-not-reference-unpromoted-stable-files`) — report instead
+
+Observed 2026-07-03: the first field session with `gh` installed proposed a
+PR that would have committed directly to `stable`. It asked first — good —
+but the routing above exists so no session has to improvise that decision.
