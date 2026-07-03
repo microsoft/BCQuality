@@ -38,6 +38,19 @@ future CI/PR-review integration:
   currently consumed by nothing. Keep it — but do not mistake it for active
   configuration of the session model.
 
+## Machine onboarding (new developer)
+
+A fresh developer machine is made CURABIS-ready with ONE command
+(idempotent — safe to re-run):
+
+    powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup/machine/Install-CurabisMachine.ps1 -OutFile $env:TEMP\icm.ps1; & $env:TEMP\icm.ps1"
+
+It installs the global CLAUDE.md (identity substituted from git config),
+bc-mcp-bridge.js, the bc-mcp config template (the developer inserts their
+personal client secret), the knowledge sync script, and syncs the machine
+mirror. Per repo afterwards: VS Code → `AL: Configure MCP Server` (generates
+`.vscode/find-altool.ps1`), then "Opdater CURABIS Standard fra BCQuality".
+
 ## Release channel: `stable`
 
 Merging to `main` is **not** a deployment. All consumers — the machine
