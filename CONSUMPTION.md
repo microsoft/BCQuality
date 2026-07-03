@@ -51,6 +51,13 @@ personal client secret), the knowledge sync script, and syncs the machine
 mirror. Per repo afterwards: VS Code → `AL: Configure MCP Server` (generates
 `.vscode/find-altool.ps1`), then "Opdater CURABIS Standard fra BCQuality".
 
+**Auto-trigger:** the command above rarely needs to be run by hand. Every
+project CLAUDE.md (setup v15+) carries a machine self-heal: any Claude Code
+session in any configured CURABIS repo detects an un-onboarded machine
+(missing `~/.claude/CLAUDE.md` or bridge) and runs the onboarding itself —
+cloning a CURABIS repo IS the onboarding. Only the personal client secret
+and the VS Code AL extension remain manual by design.
+
 ## Release channel: `stable`
 
 Merging to `main` is **not** a deployment. All consumers — the machine
