@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 20
+version: 21
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -283,6 +283,14 @@ These are invoked only when needed - not at session start:
 - `.github/.agents/court.agent.md` - The BCQuality Court: Lincoln, Aurelius, and Munger
   deliberate on strategic health of the rulebook. Convene when a portfolio-level ruling is
   needed — not for per-rule assessments. Requires a case brief with Edison scorecards.
+  - `.github/.agents/lincoln.agent.md` - First judge. Cuts to the essential question and
+    anchors rulings in moral clarity. Asks: "What is this case really about?"
+  - `.github/.agents/aurelius.agent.md` - Second judge. Applies Stoic reduction — what is
+    truly necessary? Prunes what no longer serves. Asks: "Is this rule still alive?"
+  - `.github/.agents/munger.agent.md` - Third judge. Applies inversion and mental models.
+    Finds what the others missed. Asks: "What are we getting wrong — and why?"
+- `.github/.agents/algo-settings.agent.md` - AL-Go pipeline settings advisor. Consult when
+  discussing or changing AL-Go CI/CD settings (`AL-Go-Settings.json`).
 - `.github/.agents/edison.agent.md` - BCQuality eval runner. Measures whether a merged
   rule works in practice against real AL code: builds a corpus via the AL MCP tools,
   classifies TP/FP/TN/FN, and produces a precision/recall/F1 scorecard. Low scorers route
