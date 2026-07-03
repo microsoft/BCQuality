@@ -68,7 +68,22 @@ fetch URLs, and the agent templates' knowledge references — read from the
 **`stable`** branch, never from `main`. `main` is where PRs land and CI runs;
 `stable` is what every developer machine actually executes.
 
-Deploying is a deliberate act (Michael only):
+Deploying is a deliberate act (Michael only). Three equivalent ways, safest
+first:
+
+**The button (works from any device):** GitHub → Actions → *Promote to
+stable* → Run workflow. Refuses to run if the channel has diverged; writes a
+summary of the promoted commits.
+
+**The one-liner (from any up-to-date clone, touches no working tree):**
+
+    git fetch origin
+    git push origin origin/main:stable
+
+Git itself refuses a non-fast-forward push — if it is rejected, someone has
+committed directly to stable: that is a finding, never a reason to force.
+
+**The explicit form (for understanding what a promote IS):**
 
     git checkout stable
     git merge --ff-only main
