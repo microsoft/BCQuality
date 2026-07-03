@@ -3,8 +3,9 @@
 #
 # Finder altool.exe dynamisk i den NYESTE installerede AL Language extension,
 # uanset version, og videresender alle argumenter. Bruges af .mcp.json til at
-# starte AL MCP-serveren:
-#   powershell -ExecutionPolicy Bypass -File .vscode/find-altool.ps1 launchmcpserver --transport stdio
+# starte AL MCP-serveren - BEMÆRK: launchmcpserver KRÆVER projektstierne som
+# argumenter, ellers dør serveren straks:
+#   powershell -ExecutionPolicy Bypass -File .vscode/find-altool.ps1 launchmcpserver .apps/MinApp .apps/MinApp.Test --transport stdio
 
 $ext = Get-ChildItem "$env:USERPROFILE\.vscode\extensions" -Filter "ms-dynamics-smb.al-*" -Directory |
        Sort-Object { [version]($_.Name -replace '^ms-dynamics-smb\.al-', '' -replace '-.*$', '') } -Descending |
