@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 14
+version: 15
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -185,14 +185,21 @@ to this repository (BCQuality rule
 `bcquality-knowledge-must-mirror-to-machine-not-repo`) — one sync per machine
 covers every repo, and the repo history stays free of upstream rule churn.
 
-If `~/.claude/bcquality-knowledge/` is missing or empty, self-heal before continuing:
+**Machine self-heal (auto-onboarding):** if this machine is not CURABIS-
+onboarded — `~/.claude/CLAUDE.md` or `~/.claude/bc-mcp-bridge.js` is missing —
+run the full onboarding NOW (idempotent; identity taken from git config):
+
+    powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup/machine/Install-CurabisMachine.ps1 -OutFile $env:TEMP\icm.ps1; & $env:TEMP\icm.ps1"
+
+Then report the manual leftovers it lists (personal client secret, AL:
+Configure MCP Server) and ask the developer to restart Claude Code.
+
+If only `~/.claude/bcquality-knowledge/` is missing or stale, the lighter
+self-heal suffices:
 
     powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"
 
-If the sync script itself is missing, first download it AS RAW BYTES (do not
-decode/re-encode — use `Invoke-WebRequest -OutFile`) from
-`https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup/sync-bcquality-knowledge.ps1`
-to `~/.claude/sync-bcquality-knowledge.ps1`, then run it.
+(If that sync script itself is missing, the full onboarding above installs it.)
 
 These rules are always active.
 
