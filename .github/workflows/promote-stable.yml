@@ -1,0 +1,53 @@
+name: Promote to stable
+
+# Udrulningsknappen: fast-forwarder stable-kanalen til main med eet klik
+# (Actions -> Promote to stable -> Run workflow). Manuel og bevidst -
+# merge til main er IKKE deploy; dette workflow ER deployet.
+#
+# Sikkerhed: kun brugere med write-adgang kan dispatche. Nægter at køre,
+# hvis stable er divergeret fra main (aldrig force). Hvis stable-branchen
+# beskyttes af et ruleset, skal GitHub Actions (eller dette workflow) på
+# rulesettets bypass-liste, for at push'et kan gennemføres.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Fast-forward stable to main
+        run: |
+          git fetch origin stable
+
+          if ! git merge-base --is-ancestor origin/stable origin/main; then
+            echo "::error::stable er ikke en forfader til main - kanalen er divergeret. Promotion afbrudt; undersøg manuelt (aldrig force)."
+            exit 1
+          fi
+
+          OLD=$(git rev-parse origin/stable)
+          NEW=$(git rev-parse origin/main)
+
+          if [ "$OLD" = "$NEW" ]; then
+            echo "## Intet at promovere" >> "$GITHUB_STEP_SUMMARY"
+            echo "stable står allerede på main ($(git rev-parse --short "$NEW"))." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "## Promoveret: $(git rev-parse --short "$OLD") → $(git rev-parse --short "$NEW")"
+            echo ""
+            echo "Commits udrullet til alle maskiner:"
+            git log --format='- `%h` %s' "$OLD".."$NEW"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          git push origin origin/main:stable
