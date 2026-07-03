@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 19
+version: 20
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -205,18 +205,25 @@ to this repository (BCQuality rule
 `bcquality-knowledge-must-mirror-to-machine-not-repo`) — one sync per machine
 covers every repo, and the repo history stays free of upstream rule churn.
 
-**Machine self-heal (auto-onboarding):** if this machine is not CURABIS-
-onboarded — `~/.claude/CLAUDE.md` or `~/.claude/bc-mcp-bridge.js` is missing —
-run the full onboarding NOW (idempotent; identity taken from git config; the
-first git contact may open a browser login — that IS the authentication):
+**Machine self-heal (auto-onboarding + stale-machine repair):** trigger if
+EITHER (a) this machine is not CURABIS-onboarded — `~/.claude/CLAUDE.md` or
+`~/.claude/bc-mcp-bridge.js` is missing — OR (b) the machine is STALE:
+`~/.claude/CLAUDE.md` still references `raw.githubusercontent.com` or the
+legacy `Curabis/BCQuality` repo (a machine that slept through a consumption
+migration — vacation, leave, spare laptop). Run the onboarding NOW
+(idempotent; identity from git config; the first git contact may open a
+browser login — that IS the authentication):
 
     git clone --branch stable --single-branch https://github.com/Curabis/QualityHub.git "$env:USERPROFILE\.claude\QualityHub"
     powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\QualityHub\custom\setup\machine\Install-CurabisMachine.ps1"
 
 (Skip the clone line if `%USERPROFILE%\.claude\QualityHub` already exists.)
-Then report the manual leftovers it lists (personal client secret; the AL
-Language extension if VS Code lacks it) and ask the developer to restart
-Claude Code.
+In the STALE case, additionally refresh the machine's `~/.claude/CLAUDE.md`
+CURABIS sections from `%USERPROFILE%\.claude\QualityHub\custom\setup\machine\CLAUDE.md`
+— show the diff, preserve the Identity section and any personal sections
+verbatim, and ask for confirmation (it is the developer's personal file).
+Then report the manual leftovers (personal client secret; the AL Language
+extension if VS Code lacks it) and ask the developer to restart Claude Code.
 
 If only `~/.claude/bcquality-knowledge/` is missing or stale, the lighter
 self-heal suffices:
