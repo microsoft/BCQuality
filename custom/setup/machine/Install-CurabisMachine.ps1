@@ -11,7 +11,7 @@
 # Hvad der IKKE haandteres her (personligt/manuel):
 #  - din client secret i ~/.bc-mcp.config.json (scriptet lægger templaten
 #    og siger til)
-#  - VS Code + AL-extension + 'AL: Configure MCP Server' pr. repo
+#  - VS Code + AL Language-extensionen (ms-dynamics-smb.al fra Marketplace)
 param(
     [string]$FullName,
     [string]$UserName
@@ -77,6 +77,6 @@ if ($todo) {
     $todo | ForEach-Object { Write-Host "  !!  $_" -ForegroundColor Yellow }
 }
 Write-Host ''
-Write-Host 'Pr. repo herefter: aabn i VS Code -> AL: Configure MCP Server (genererer'
-Write-Host '.vscode/find-altool.ps1), og sig "Opdater CURABIS Standard fra BCQuality"'
-Write-Host 'i Claude Code. Genstart Claude Code efter foerste onboarding.'
+Write-Host 'Pr. repo herefter: sig "Opdater CURABIS Standard fra BCQuality" i Claude'
+Write-Host 'Code - den deployer selv .vscode/find-altool.ps1 og AL MCP-opsaetningen.'
+Write-Host 'Genstart Claude Code efter foerste onboarding.'
