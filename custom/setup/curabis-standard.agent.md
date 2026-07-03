@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 16
+version: 17
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -356,7 +356,10 @@ MCP Server" referenced a command that does not exist).
 1. If `.vscode/find-altool.ps1` is missing: fetch
    `{BASE}/templates/find-altool.ps1` AS RAW BYTES → `.vscode/find-altool.ps1`
    (create `.vscode/` if needed) and stage it for commit.
-2. Write `.mcp.json` — ALWAYS with both entries:
+2. Write `.mcp.json` — ALWAYS with both entries. **`launchmcpserver` REQUIRES
+   the project folders as arguments** (`altool launchmcpserver <projects>`);
+   without them the server exits immediately and `/mcp` shows `al` as Failed.
+   Substitute the actual app folders from Step 2:
 
 ```json
 {
@@ -367,7 +370,10 @@ MCP Server" referenced a command that does not exist).
       "args": [
         "-ExecutionPolicy", "Bypass",
         "-File", "${CLAUDE_PROJECT_DIR:-.}\\.vscode\\find-altool.ps1",
-        "launchmcpserver", "--transport", "stdio"
+        "launchmcpserver",
+        "${CLAUDE_PROJECT_DIR:-.}\\.apps\\{APP_FOLDER}",
+        "${CLAUDE_PROJECT_DIR:-.}\\.apps\\{APP_FOLDER}.Test",
+        "--transport", "stdio"
       ]
     },
     "businesscentral": {
@@ -377,6 +383,9 @@ MCP Server" referenced a command that does not exist).
   }
 }
 ```
+
+(One `${CLAUDE_PROJECT_DIR:-.}\...`-line per app project — a repo with only a
+main app has one; main + test has two.)
 
 Use Claude Code's built-in environment-variable expansion — `${CLAUDE_PROJECT_DIR:-.}`
 and `${USERPROFILE}` — instead of substituting literal detected paths. `.mcp.json` is
@@ -617,6 +626,13 @@ literal username or drive path:
 2. Check the `-File` value is `${CLAUDE_PROJECT_DIR:-.}\.vscode\find-altool.ps1`
 3. If it is a literal absolute path (e.g. `C:\Curabis\ProjectX\.vscode\find-altool.ps1`
    or any drive-letter path): **correct it silently** to use `${CLAUDE_PROJECT_DIR:-.}`
+4. Check that at least one project path stands between `launchmcpserver` and
+   `--transport` — `altool launchmcpserver <projects>` REQUIRES the app
+   folders, or the server exits immediately (`/mcp` shows `al` as Failed).
+   If missing: **correct silently** by inserting one
+   `${CLAUDE_PROJECT_DIR:-.}\<app-folder>`-argument per AL app project in the
+   repo, then report the correction and remind the developer to restart
+   Claude Code.
 
 Report any correction made:
 ```
