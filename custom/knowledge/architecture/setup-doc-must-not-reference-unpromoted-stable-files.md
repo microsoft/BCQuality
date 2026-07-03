@@ -41,6 +41,13 @@ sit merged on `main` without the referenced file being available on
 3. Consumers (sessions, Mode B) that hit a 404 on a documented stable path
    report the gap — they never silently fetch from `main` instead. The
    channel discipline outranks the convenience.
+4. **Channel-state evidence comes from git, never from a CDN.** Verify with
+   `git ls-remote`/a fresh clone — raw-URL caches lag minutes behind, so a
+   404/200 observed right after a promote can be stale. Two true
+   observations can contradict each other when the world moves between
+   them: timestamp every piece of channel evidence before acting on it.
+   (Field-verified 2026-07-03: a session's real 404 was fixed mid-flight;
+   it re-verified by cloning the branch and correctly withdrew its case.)
 
 ## What NOT to do
 
