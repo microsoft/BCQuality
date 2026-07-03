@@ -56,14 +56,11 @@ Loop: **reproduce -> root-cause -> minimal-fix recommendation.**
 
 Layer 1 - Microsoft BCQuality: https://github.com/microsoft/BCQuality
 
-Layer 2 - CURABIS custom knowledge (fetch before citing a finding):
-- https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge/architecture/pages-must-not-contain-business-logic.md
-- https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge/architecture/namespace-must-be-verified-from-source.md
-- https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge/architecture/al-identifiers-must-be-english.md
-- https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge/architecture/clarify-before-building.md
-- https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge/testing/test-setup-must-use-library-codeunit.md
-- https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge/testing/test-data-must-be-random-and-complete.md
-- https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge/testing/tests-must-adapt-to-existing-code.md
+Layer 2 - CURABIS custom knowledge: read from the machine-local mirror —
+`%USERPROFILE%\.claude\bcquality-knowledge\custom\` (always complete; never a
+hardcoded file list — the rulebook grows). Fallback without a mirror: the
+channel clone at `%USERPROFILE%\.claude\BCQuality\custom\knowledge\`. The
+repo is PRIVATE — raw URLs do not exist.
 
 If a source is unreachable, **degrade gracefully**: fall back to the triage protocol
 below plus the CURABIS-ARCH rules in `bcquality.agent.md`, note that BCQuality was

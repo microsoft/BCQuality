@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 18
+version: 19
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -34,14 +34,33 @@ This agent runs when the developer says any of:
 
 Detect which mode based on the trigger phrase and proceed accordingly.
 
-## Source URLs (BCQuality — always fetch fresh)
+## Source: the channel clone (BCQuality is PRIVATE — no raw URLs)
+
+All artifacts come from the machine's **channel clone** — a git clone of
+`Curabis/BCQuality` pinned to the `stable` branch. Authentication is Git
+Credential Manager (the developer's existing GitHub login); there are NO
+tokenless raw.githubusercontent fetches anywhere — the repo is private.
 
 ```
-BASE        = https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup
-AGENTS_BASE = https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/agents
+SRC         = %USERPROFILE%\.claude\BCQuality      (kanal-klonen, stable)
+BASE        = {SRC}\custom\setup
+AGENTS_BASE = {SRC}\custom\agents
 ```
 
-| Artefakt | URL |
+**Before ANY Mode A/B work, ensure the channel clone is fresh:**
+
+    git -C "$env:USERPROFILE\.claude\BCQuality" fetch origin stable --quiet
+    git -C "$env:USERPROFILE\.claude\BCQuality" checkout -B stable origin/stable --quiet
+
+If the clone is missing entirely:
+
+    git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
+
+**Vocabulary:** wherever this document says "fetch", it means **copy the file
+from SRC** — a filesystem copy, which preserves raw bytes by definition (the
+old HTTP-encoding pitfalls do not exist here).
+
+| Artefakt | Placering |
 |---|---|
 | bc-mcp-bridge.js | `{BASE}/bc-mcp-bridge.js` |
 | bc-mcp.config.template.json | `{BASE}/machine/bc-mcp.config.template.json` |
@@ -188,10 +207,13 @@ covers every repo, and the repo history stays free of upstream rule churn.
 
 **Machine self-heal (auto-onboarding):** if this machine is not CURABIS-
 onboarded — `~/.claude/CLAUDE.md` or `~/.claude/bc-mcp-bridge.js` is missing —
-run the full onboarding NOW (idempotent; identity taken from git config):
+run the full onboarding NOW (idempotent; identity taken from git config; the
+first git contact may open a browser login — that IS the authentication):
 
-    powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup/machine/Install-CurabisMachine.ps1 -OutFile $env:TEMP\icm.ps1; & $env:TEMP\icm.ps1"
+    git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
+    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\BCQuality\custom\setup\machine\Install-CurabisMachine.ps1"
 
+(Skip the clone line if `%USERPROFILE%\.claude\BCQuality` already exists.)
 Then report the manual leftovers it lists (personal client secret; the AL
 Language extension if VS Code lacks it) and ask the developer to restart
 Claude Code.
@@ -201,7 +223,9 @@ self-heal suffices:
 
     powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"
 
-(If that sync script itself is missing, the full onboarding above installs it.)
+(If that sync script itself is missing, copy it from the channel clone:
+`%USERPROFILE%\.claude\BCQuality\custom\setup\sync-bcquality-knowledge.ps1` —
+or run the full onboarding above.)
 
 These rules are always active.
 
@@ -520,6 +544,10 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 Triggered by: "Opdater CURABIS Standard fra BCQuality"
 
+**Step 0 — freshen the channel clone** (see Source section): fetch + checkout
+`origin/stable` in `%USERPROFILE%\.claude\BCQuality`; create the clone if
+missing. Every copy below reads from that clone.
+
 Updates only the files that come directly from BCQuality.
 Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`.
 
@@ -600,9 +628,23 @@ Detect and clean up:
    - a reference to `.github/.agents/bcquality-knowledge/` (v6 repo-mirror era)
    - a literal per-developer path such as `C:\Users\<name>\.claude\...` — must be
      `~/.claude/...` / `%USERPROFILE%`, never one developer's username
+   - ANY remaining `raw.githubusercontent.com`-based self-heal or onboarding
+     command (v15-v18 era) — the repo is private; raw URLs are dead. The
+     current form is git-based via the channel clone.
    If any match, propose replacing the section with the current template from
    Step 4a and ask for confirmation before editing CLAUDE.md (same confirmation
    gate as the agent-synligheds-check below).
+
+### Machine CLAUDE.md refresh (Mode B)
+
+The developer's global `~/.claude/CLAUDE.md` carries the CURABIS auto-update
+instructions. After a consumption-model change (like v19's git migration),
+those instructions go stale on every already-onboarded machine. Compare the
+machine file's CURABIS sections against `{BASE}/machine/CLAUDE.md` in the
+channel clone. If they diverge structurally (e.g. still reference raw URLs
+or GitHub-API SHA checks), propose the update — show the diff, preserve the
+Identity section verbatim, and ask for confirmation before editing: it is the
+developer's personal file.
 
 ### .mcp.json — hardcoded developer-path validation (Mode B)
 
@@ -735,6 +777,9 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 ## Invocation note
 
-This agent is fetched on demand from BCQuality. Both commands work in any
-project — including one not yet configured — because Claude reads the URL
-from `~/.claude/CLAUDE.md` (global instructions, present on all CURABIS machines).
+This agent is read on demand from the machine's channel clone
+(`%USERPROFILE%\.claude\BCQuality\custom\setup\curabis-standard.agent.md`,
+after freshening — see Source section). Both commands work in any project —
+including one not yet configured — because the machine's `~/.claude/CLAUDE.md`
+(installed by onboarding) knows the clone location. On a machine without the
+clone, the two-line onboarding in Step 4a's self-heal is the entry point.

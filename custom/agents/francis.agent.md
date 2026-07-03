@@ -76,10 +76,9 @@ reviews what happened. He asks one question about every significant event:
 
 > "Er der en BCQuality-regel der ville have fanget dette? Dækkede den fuldt ud?"
 
-He compares against the full BCQuality knowledge base:
-```
-BASE = https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/knowledge
-```
+He compares against the full BCQuality knowledge base — the machine-local
+mirror at `%USERPROFILE%\.claude\bcquality-knowledge\custom\` (fallback: the
+channel clone `%USERPROFILE%\.claude\BCQuality\custom\knowledge\`).
 Domains: `architecture/`, `testing/`, `mcp/`
 
 ## The Two Proposal Types

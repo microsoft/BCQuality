@@ -38,22 +38,31 @@ future CI/PR-review integration:
   currently consumed by nothing. Keep it — but do not mistake it for active
   configuration of the session model.
 
+## Access model: PRIVATE repo, git-based consumption
+
+BCQuality is a **private** repository. All consumption is git-based through
+the **channel clone** at `%USERPROFILE%\.claude\BCQuality`, pinned to the
+`stable` branch. Authentication is Git Credential Manager — the developer's
+existing GitHub login; the first git contact opens a browser login, and that
+is the entire token story. `raw.githubusercontent.com` and unauthenticated
+GitHub-API calls are dead and must not appear in any consumer.
+
 ## Machine onboarding (new developer)
 
-A fresh developer machine is made CURABIS-ready with ONE command
-(idempotent — safe to re-run):
+Two lines (idempotent — safe to re-run; the clone prompts the GCM login):
 
-    powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Curabis/BCQuality/stable/custom/setup/machine/Install-CurabisMachine.ps1 -OutFile $env:TEMP\icm.ps1; & $env:TEMP\icm.ps1"
+    git clone --branch stable --single-branch https://github.com/Curabis/BCQuality.git "$env:USERPROFILE\.claude\BCQuality"
+    powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\BCQuality\custom\setup\machine\Install-CurabisMachine.ps1"
 
 It installs the global CLAUDE.md (identity substituted from git config),
 bc-mcp-bridge.js, the bc-mcp config template (the developer inserts their
 personal client secret), the knowledge sync script, and syncs the machine
-mirror. Per repo afterwards: "Opdater CURABIS Standard fra BCQuality" — it
-deploys `.vscode/find-altool.ps1` (a CURABIS template; no VS Code command
-generates it) and the AL MCP wiring itself. The AL Language extension from
-the Marketplace is the only per-machine prerequisite for AL MCP.
+mirror from the clone. Per repo afterwards: "Opdater CURABIS Standard fra
+BCQuality" — it deploys `.vscode/find-altool.ps1` and the AL MCP wiring
+itself. The AL Language extension from the Marketplace is the only
+per-machine prerequisite for AL MCP.
 
-**Auto-trigger:** the command above rarely needs to be run by hand. Every
+**Auto-trigger:** the lines above rarely need to be run by hand. Every
 project CLAUDE.md (setup v15+) carries a machine self-heal: any Claude Code
 session in any configured CURABIS repo detects an un-onboarded machine
 (missing `~/.claude/CLAUDE.md` or bridge) and runs the onboarding itself —

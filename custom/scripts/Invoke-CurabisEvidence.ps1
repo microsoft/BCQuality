@@ -28,8 +28,10 @@ param(
     # Lokal BCQuality-klon. Default: proev ..\bcquality og .\.bcquality.
     [string]$BCQualityHome,
 
-    # Bruges naar der ikke er en lokal klon: knowledge-filer HTTP-tjekkes herfra.
-    [string]$RawBase = 'https://raw.githubusercontent.com/Curabis/BCQuality/stable',
+    # LEGACY: repoet er privat - raw-URLs virker ikke laengere. Brug altid en
+    # lokal klon; kanal-klonen findes paa alle onboardede maskiner:
+    #   -BCQualityHome "$env:USERPROFILE\.claude\BCQuality"
+    [string]$RawBase = '',
 
     [switch]$Quiet
 )
