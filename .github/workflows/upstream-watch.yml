@@ -1,0 +1,98 @@
+name: "Florence: upstream-watch"
+
+# Florence gaar sin upstream-runde: tjekker microsoft/BCQuality for nye
+# commits og taender lampen naar der er noget - en faerdigvalideret sync-PR
+# ved rent merge, et Issue naar der kraeves menneskehaender (konflikt eller
+# validator-fejl). Doemmekraften (review/merge/promote) forbliver hos Michael.
+#
+# NB: PRs oprettet med GITHUB_TOKEN trigger ikke pull_request-CI (GitHub-
+# begraensning) - derfor koerer BEGGE validatorer HER, og resultatet staar
+# i PR-beskrivelsen.
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'   # mandag 05:00 UTC - ugens foerste runde
+  workflow_dispatch:        # manuel runde: "Florence, gaa din runde"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  round:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out QualityHub
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Fetch upstream (microsoft/BCQuality)
+        id: probe
+        run: |
+          git remote add upstream https://github.com/microsoft/BCQuality.git
+          git fetch upstream main --quiet
+          BASE=$(git merge-base upstream/main origin/main)
+          COUNT=$(git rev-list --count "$BASE..upstream/main")
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          if [ "$COUNT" = "0" ]; then
+            echo "## Florence: roligt paa gangene" >> "$GITHUB_STEP_SUMMARY"
+            echo "Ingen nye upstream-commits. Lampen forbliver slukket." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Merge upstream on a sync branch
+        id: merge
+        if: steps.probe.outputs.count != '0'
+        run: |
+          git config user.name "Florence (upstream-watch)"
+          git config user.email "florence-bot@curabis.dk"
+          BRANCH="chore/upstream-sync-$(date -u +%Y-%m-%d)"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          git checkout -B "$BRANCH" origin/main
+          if git merge upstream/main --no-edit; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+            git merge --abort
+          fi
+
+      - name: Set up Python + validate merged corpus
+        id: validate
+        if: steps.merge.outputs.clean == 'true'
+        run: |
+          pip install pyyaml --quiet
+          set +e
+          python .github/scripts/validate_frontmatter.py --root . > /tmp/val.txt 2>&1
+          V1=$?
+          pwsh -File .github/scripts/Test-KnowledgeIndex.ps1 -Root "$PWD" > /tmp/idx.txt 2>&1
+          V2=$?
+          set -e
+          echo "ok=$([ $V1 -eq 0 ] && [ $V2 -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          tail -3 /tmp/val.txt; tail -3 /tmp/idx.txt
+
+      - name: Open PR (clean merge, validators green)
+        if: steps.validate.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push -u origin "${{ steps.merge.outputs.branch }}"
+          COMMITS=$(git log --format='- %h %s' "${{ steps.probe.outputs.base }}..upstream/main")
+          gh pr create --base main --head "${{ steps.merge.outputs.branch }}" \
+            --title "Florence: upstream-sync — ${{ steps.probe.outputs.count }} nye Microsoft-commits" \
+            --body "$(printf 'Florence gik sin runde og fandt nyt fra microsoft/BCQuality:\n\n%s\n\n**Valideret i denne workflow** (auto-PRs trigger ikke CI): frontmatter + knowledge-index begge groenne over det mergede korpus.\n\nEfter merge: promote (jf. setup-doc-reglen).\n\nFloerence lyser kun - Michael beslutter.' "$COMMITS")"
+          echo "## Florence taendte lampen: sync-PR oprettet (${{ steps.probe.outputs.count }} commits)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open issue (conflict or validation failure)
+        if: steps.probe.outputs.count != '0' && (steps.merge.outputs.clean != 'true' || steps.validate.outputs.ok != 'true')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REASON=$([ "${{ steps.merge.outputs.clean }}" != "true" ] && echo "Merge-konflikt mod upstream" || echo "Validator-fejl over merget korpus")
+          COMMITS=$(git log --format='- %h %s' "${{ steps.probe.outputs.base }}..upstream/main")
+          gh issue create \
+            --title "Florence: upstream-sync kraever menneskehaender ($REASON)" \
+            --body "$(printf '%s.\n\nVentende upstream-commits:\n%s\n\nManuel procedure: fetch bcquality/upstream, merge paa branch, loes, valider, PR.' "$REASON" "$COMMITS")"
+          echo "## Florence taendte lampen: ISSUE oprettet ($REASON)" >> "$GITHUB_STEP_SUMMARY"
