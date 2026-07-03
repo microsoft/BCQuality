@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standards-inspector
-version: 3
+version: 4
 title: Rømer — Standards Inspector
 description: >
   Owns the uniformity inspection across CURABIS repos: walks one full
@@ -81,10 +81,14 @@ Walk ALL stations, every time. A partial round creates false confidence
    matches the stable SHA; self-heal via the sync script if not.
 8. **Agent visibility.** Every deployed agent is referenced in CLAUDE.md
    (rule `claude-md-must-reference-all-agents`).
-9. **Apps workspace.** `.apps/*.code-workspace` (or `Apps/`) exists and its
-   `folders` include all app projects, `.AL-Go`, and a relative `docs` entry
-   (rule `al-development-must-use-apps-workspace`). The standard authorizes
-   adding a missing docs entry as a silent correction; report it afterwards.
+9. **One workspace, the right one.** Exactly ONE `*.code-workspace` exists in
+   the repo, located in the apps folder, and its `folders` include all app
+   projects, `.AL-Go`, and a relative `docs` entry (rule
+   `al-development-must-use-apps-workspace`). The standard authorizes silent
+   correction in both directions: create/complete the apps workspace to the
+   reference layout, and DELETE every other workspace file (incl. the root
+   `al.code-workspace` — it is noise, and template updates that re-scaffold
+   it get removed again on the next round). Report all corrections afterwards.
 10. **AL-Go template layout.** An apps folder exists containing one project
     subfolder per app (each with `app.json`), plus `.AL-Go/` (rule
     `al-go-template-layout-with-test-app-required`). Flat layout — AL source

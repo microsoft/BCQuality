@@ -24,9 +24,9 @@ git internals) and none of that context.
 
 ## Rule
 
-Daily AL development happens in the workspace under the apps folder —
-`.apps/.apps.code-workspace` (or `Apps/` on repos not yet migrated to the
-`.apps` layout). That workspace file must contain, as folder entries:
+Each repo has **exactly ONE workspace file** — in the apps folder (`.apps/`
+is the reference name; `Apps/`/`apps/` variants are cosmetic and accepted).
+That workspace file must contain, as folder entries:
 
 1. every AL app project folder (main + test)
 2. `.AL-Go`
@@ -35,14 +35,18 @@ Daily AL development happens in the workspace under the apps folder —
 Reference layout (Jernpladsen): folders = Jernpladsen, Jernpladsen.Test,
 .AL-Go, docs (`../docs`), with `powershell.cwd` set to the test app.
 
-The root `al.code-workspace` remains for repo-plumbing work (workflow edits,
-AL-Go settings) — it is not the development workspace.
+**All other `*.code-workspace` files — including the root
+`al.code-workspace` — are deleted.** They are noise: wrong entry points that
+open the repo without the development context. Repo-plumbing work (workflow
+edits, AL-Go settings) is done by opening the repo folder directly, not
+through a dedicated workspace. Note: an AL-Go template update may re-scaffold
+the root workspace file — the inspection round removes it again.
 
 ## What NOT to do
 
-- Do not open the root `al.code-workspace` for feature development — specs
-  and decision records will be out of sight, and out of sight means the work
-  drifts from what was agreed
+- Do not keep the root `al.code-workspace` "for plumbing" — open the repo
+  folder directly for that; a second workspace is a second entry point, and
+  the wrong one will be used
 - Do not add `docs` by copying files into the apps folder — it is ONE folder
   at repo root, referenced relatively, so specs stay single-sourced
 - Do not put machine-absolute paths in the workspace file — it is
@@ -51,14 +55,16 @@ AL-Go settings) — it is not the development workspace.
 
 ## Signal to watch for
 
-Rømer's inspection round: `.apps/*.code-workspace` (or `Apps/*.code-workspace`)
-exists, and its `folders` array includes an entry ending in `docs`. A missing
-workspace file or a missing docs entry is a finding; the standard authorizes
-adding the docs entry as a silent correction (report it afterwards).
+Rømer's inspection round, two checks: (1) the apps folder contains a
+workspace file whose `folders` include all app projects, `.AL-Go` and a
+relative `docs` entry; (2) NO other `*.code-workspace` exists anywhere else
+in the repo. The standard authorizes both corrections silently: create or
+complete the apps workspace to the reference layout, and delete every other
+workspace file — report both afterwards.
 
 ## Message to developer
 
-When a developer is working in the root workspace or the apps workspace lacks
-the docs folder, tell them: daily development belongs in
-`.apps/.apps.code-workspace`, which must include the app projects, `.AL-Go`
-and `../docs` — offer to add the missing docs entry now.
+When the apps workspace is missing/incomplete or extra workspace files exist,
+tell the developer: the standard is exactly one workspace —
+`.apps/.apps.code-workspace` with app projects, `.AL-Go` and `../docs`; the
+extra workspace files are noise and have been removed (list them).
