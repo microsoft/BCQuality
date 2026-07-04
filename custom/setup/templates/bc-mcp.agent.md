@@ -60,10 +60,37 @@ branch / status / a note back to BC.
   so attribute work to a developer yourself (see "Developer identity" below).
 - If the server is not connected, say so and stop. Do not invent task data.
 
+## Session start: pre-load the three MCP tools
+
+Before producing any user-visible output, load the three tool schemas by exact name:
+
+    ToolSearch query: select:mcp__businesscentral__bc_actions_search,mcp__businesscentral__bc_actions_invoke,mcp__businesscentral__bc_actions_describe
+
+Do this first, silently. It must complete before you respond to the user - loading it
+mid-task means the user hits unexpected latency at the moment they expect an action,
+not setup.
+
 ## Tools (BC MCP, Dynamic Tool Mode OFF)
 
-Tool names follow `List<entity>_PAG<id>` (read), `ListUpdate<entity>_PAG<id>` (modify),
-`Create<entity>_PAG<id>` (create). Confirm exact names from the server's tool list.
+The `businesscentral` MCP server exposes exactly **three** callable tools:
+`bc_actions_search`, `bc_actions_describe`, `bc_actions_invoke`. There is no static
+tool list to browse - BC entity/action names (`List_Projects_PAG6102901` and so on)
+are not separate MCP tools; they only exist as results of `bc_actions_search`.
+
+**Do not use the general-purpose `ToolSearch` to look for BC entity/action names.**
+`ToolSearch` only resolves this session's own deferred client-side tools (the three
+above) - it does not search Business Central's action catalog and will return
+irrelevant matches from unrelated servers. To find an action:
+
+1. `bc_actions_search` with `SearchMode: keyword` and a few field/entity keywords
+   (e.g. `"project, repository, gitHubRepository"`), filtered by `ActionType` if known.
+2. `bc_actions_describe` on the exact name it returns, to get the callable schema.
+3. `bc_actions_invoke` with matching `RequestParameters`.
+
+Expected naming convention - **reverify per call with `bc_actions_search`, do not
+assume it holds**: `List_<Entity>_PAG<id>` (read), `Modify_<Entity>_PAG<id>` (update,
+**singular** entity name - e.g. `Modify_ProjectRepository_PAG6102904`, not
+`ModifyProjectRepositories` or `ListUpdate...`), `Create_<Entity>_PAG<id>` (create).
 
 | Entity (page) | Read | Write you MAY do | Never |
 | --- | --- | --- | --- |
@@ -85,7 +112,8 @@ Moving to `Accepted` requires `Starting date`, `Estimated time` and `Expected De
 1. **Find the work.** Read `activeTasks` (filter by `projectNo` or `gitHubRepository`). Use
    `gitHubRepository` on the project to confirm you are in the right repo.
 2. **Claim it.** When you start, set `gitHubBranch` to the working branch and
-   `gitHubDevStatus = In Progress` on the task (`ListUpdate activeTasks`).
+   `gitHubDevStatus = In Progress` on the task (search `bc_actions_search` for the
+   modify action on `activeTasks` - expect `Modify_ActiveTask_PAG6102900`, reverify).
 3. **Record progress.** Post a status note with `Create taskComments`
    (`projectNo` + `subTaskNo` scope it to one task). Keep notes short and factual.
 4. **Finish.** Set `gitHubDevStatus = Done` automatically when branch is merged to main.

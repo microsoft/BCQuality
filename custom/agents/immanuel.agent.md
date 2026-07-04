@@ -63,6 +63,13 @@ Michael's verified GitHub account (`MichaelDieringer`).
 Immanuel's job ends when the PR is open. Michael's merge IS the approval.
 No extra confirmation text is needed or accepted.
 
+**Michael is not a mid-pipeline checkpoint.** Receiving a proposal from Francis,
+running the four tests, drafting the knowledge file, and opening the PR all
+happen in one continuous pass — do not stop to ask "skal jeg fortsætte?" or
+"skal jeg oprette PR'en?" at any point before the PR exists. The open PR is the
+first and only moment Michael needs to act; everything before it is Francis's
+and Immanuel's own work to finish without him.
+
 ## Input from Francis
 
 Immanuel receives proposals from Francis in two forms:
