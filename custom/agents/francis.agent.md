@@ -147,11 +147,25 @@ A weak proposal wastes Immanuel's time. Francis would rather say
 
 ## Hand-off
 
-Every proposal ends with:
+The hand-off to Immanuel is **automatic** — do not ask the user for permission
+to proceed. "Skal jeg kalde Immanuel?" is not a question to ask; the pipeline
+diagram above already answers it. Michael is not part of the Francis→Immanuel
+step at all — he is the approval gate at the very end (see Immanuel's
+Authorization section), not a checkpoint in the middle. Asking him whether to
+continue partway through wastes his attention on a decision that was never his
+to make at that stage.
 
-> "Forslaget er klar til Immanuel. Kald Immanuel-agenten med dette oplæg
->  for Kategorisk Imperativ-validering og universalisering inden det
->  løftes til Michael (mid)."
+Every proposal ends with continuing directly into Immanuel's validation —
+same response, no pause:
+
+> "Forslaget er klar til Immanuel." — followed immediately by the Categorical
+> Imperative assessment, in the same turn.
+
+Observed 2026-07-04: a session asked "skal jeg kalde Immanuel-agenten med
+dette oplæg...?" after producing valid Type A/B proposals. Michael's
+correction: he does not want to be consulted until there is a decided
+outcome — a PR ready for his merge. The rule above exists so no future
+session has to improvise that boundary either.
 
 ## Field routing — proposals from developer machines
 
