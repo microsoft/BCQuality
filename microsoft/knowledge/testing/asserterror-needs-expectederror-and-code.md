@@ -15,7 +15,7 @@ application-area: [all]
 
 ## Best Practice
 
-Follow every `asserterror` with a verification of the error it expects: assert the action raises, then `Assert.ExpectedError` with the message — or a stable substring of it — and, where the code is known, `Assert.ExpectedErrorCode` (for example `'TestField'` for a mandatory-field check). Prefer matching on a code or an invariant fragment over the full localized sentence so the test survives caption changes without going blind to the wrong error.
+Follow every `asserterror` with a verification of the error it expects, and prefer the reusable `Library Assert` helpers over hardcoded literals. For a mandatory-field check, `Assert.ExpectedTestFieldError(FieldCaption, ExpectedValue)` encapsulates both the message and the `TestField` code, so the test survives caption or code changes and does not repeat that knowledge in every method. For other errors, pair `Assert.ExpectedError` with a stable substring — ideally a shared `Label`, not an inline sentence — and, where known, `Assert.ExpectedErrorCode`. When a needed check is missing from the shared library, extend `Library Assert` (or your own assert library) with a helper rather than hardcoding message text and codes across tests; matching on a code or an invariant fragment keeps the test from going blind to the wrong error when a caption is localized.
 
 See sample: `asserterror-needs-expectederror-and-code.good.al`.
 
