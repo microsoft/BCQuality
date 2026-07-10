@@ -19,8 +19,6 @@ Entitlements are license-level caps on what a user can access, derived automatic
 
 When designing a permission set that ships with an extension, consult the entitlement model for the target user population before finalizing the grants. Every object and tabledata right the set expects to grant should be reachable within the intended entitlement tier; if it is not, the set needs to be scoped to licenses that permit it, or the feature needs a different access path.
 
-See sample: `do-not-grant-rights-beyond-a-users-entitlement.good.al`.
-
 ## Anti Pattern
 
 Authoring permission sets in a sandbox with full-license context and shipping them without verifying which entitlement tier customer users actually hold. The sets look complete in test; on a real customer they silently lose rights at runtime and the symptom is "the feature does not work for some users" with no obvious authorization error.

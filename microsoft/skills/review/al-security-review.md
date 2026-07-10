@@ -89,7 +89,7 @@ Output conforms to the DO output contract. A populated example:
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
+      "id": "microsoft/knowledge/security/secrettext-for-credentials.md",
       "severity": "blocker",
       "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
       "location": {
@@ -98,20 +98,20 @@ Output conforms to the DO output contract. A populated example:
         "range": { "start-line": 85, "end-line": 89 }
       },
       "references": [
-        { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
+        { "path": "microsoft/knowledge/security/secrettext-for-credentials.md" }
       ],
       "confidence": "high"
     },
     {
-      "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
+      "id": "community/knowledge/security/secrets-isolated-storage.md",
       "severity": "minor",
-      "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
+      "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
       "location": {
-        "file": "src/Integration/ApiClient.Codeunit.al",
-        "line": 201
+        "file": "src/Integration/ExternalServiceSetup.Table.al",
+        "line": 12
       },
       "references": [
-        { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
+        { "path": "community/knowledge/security/secrets-isolated-storage.md" }
       ],
       "confidence": "medium"
     }
@@ -134,4 +134,3 @@ The empty-corpus case — BCQuality's state until security knowledge files land 
   "suppressed": []
 }
 ```
-

@@ -87,7 +87,7 @@ Output conforms to the DO output contract. A populated example:
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/style/apply-approved-label-suffixes.md",
+      "id": "microsoft/knowledge/style/label-suffix-approved-list.md",
       "severity": "minor",
       "message": "A Label named Text000 has no approved suffix (Msg/Err/Qst/Tok/Lbl/Txt). Per the referenced CodeCop AA0074 guidance, every Label and TextConst carries a suffix indicating its consuming call.",
       "location": {
@@ -95,7 +95,7 @@ Output conforms to the DO output contract. A populated example:
         "line": 42
       },
       "references": [
-        { "path": "microsoft/knowledge/style/apply-approved-label-suffixes.md" }
+        { "path": "microsoft/knowledge/style/label-suffix-approved-list.md" }
       ],
       "confidence": "high"
     }
@@ -103,4 +103,3 @@ Output conforms to the DO output contract. A populated example:
   "suppressed": []
 }
 ```
-

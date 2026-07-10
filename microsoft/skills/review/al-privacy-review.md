@@ -89,16 +89,16 @@ Output conforms to the DO output contract. A populated example:
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/privacy/strsubstno-prebuild-breaks-error-telemetry-classification.md",
+      "id": "microsoft/knowledge/privacy/data-classification-required-on-pii-fields.md",
       "severity": "major",
-      "message": "Error receives a pre-built Text produced by StrSubstNo with customer name and email as arguments. Per the referenced guidance the platform cannot classify or strip PII from an opaque Text and will export the full message to telemetry.",
+      "message": "The new Customer E-Mail table field has no DataClassification property, leaving personal data unclassified.",
       "location": {
-        "file": "src/Sales/CustomerValidation.Codeunit.al",
+        "file": "src/Sales/Customer.TableExt.al",
         "line": 64,
         "range": { "start-line": 60, "end-line": 64 }
       },
       "references": [
-        { "path": "microsoft/knowledge/privacy/strsubstno-prebuild-breaks-error-telemetry-classification.md" }
+        { "path": "microsoft/knowledge/privacy/data-classification-required-on-pii-fields.md" }
       ],
       "confidence": "high"
     }
@@ -106,4 +106,3 @@ Output conforms to the DO output contract. A populated example:
   "suppressed": []
 }
 ```
-

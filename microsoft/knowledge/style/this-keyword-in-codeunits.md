@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [25..]
 domain: style
 keywords: [this, codeunit, self-reference, aa0248, scope]
 technologies: [al]

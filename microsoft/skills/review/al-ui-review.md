@@ -87,15 +87,15 @@ Output conforms to the DO output contract. A populated example:
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/ui/field-tooltips-start-with-specifies-and-end-with-period.md",
+      "id": "microsoft/knowledge/ui/show-caption-on-editable-fields.md",
       "severity": "minor",
-      "message": "Field ToolTip is a fragment ('Customer name') — missing the 'Specifies' opener and the terminating period the house-style guidance requires.",
+      "message": "An editable page field sets ShowCaption = false, removing the visible and accessible label. Leave ShowCaption enabled or use a documented exception pattern.",
       "location": {
         "file": "src/Sales/CustomerCard.Page.al",
         "line": 58
       },
       "references": [
-        { "path": "microsoft/knowledge/ui/field-tooltips-start-with-specifies-and-end-with-period.md" }
+        { "path": "microsoft/knowledge/ui/show-caption-on-editable-fields.md" }
       ],
       "confidence": "high"
     }
@@ -103,4 +103,3 @@ Output conforms to the DO output contract. A populated example:
   "suppressed": []
 }
 ```
-

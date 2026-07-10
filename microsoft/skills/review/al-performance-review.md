@@ -89,29 +89,29 @@ Output conforms to the DO output contract. A populated example:
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/performance/filter-before-find.md",
+      "id": "microsoft/knowledge/performance/apply-filters-before-iterating.md",
       "severity": "major",
-      "message": "FindSet is called on a record variable without any prior SetRange/SetFilter. This forces a full-table scan.",
+      "message": "The Country/Region Code predicate is evaluated inside the loop instead of with SetRange before FindSet, so every row crosses the database boundary.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 140,
         "range": { "start-line": 140, "end-line": 144 }
       },
       "references": [
-        { "path": "microsoft/knowledge/performance/filter-before-find.md" }
+        { "path": "microsoft/knowledge/performance/apply-filters-before-iterating.md" }
       ],
       "confidence": "high"
     },
     {
-      "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
+      "id": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md",
       "severity": "minor",
-      "message": "SetLoadFields is called after SetRange. Per the referenced guidance the call must come before filters to be folded into the query plan.",
+      "message": "The loop reads an unlisted field after SetLoadFields, triggering a hidden JIT load for each record passed by value.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 152
       },
       "references": [
-        { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
+        { "path": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md" }
       ],
       "confidence": "high"
     }
@@ -134,4 +134,3 @@ The empty-corpus case — BCQuality's state until performance knowledge files la
   "suppressed": []
 }
 ```
-

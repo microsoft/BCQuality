@@ -127,36 +127,36 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/performance/filter-before-find.md",
+      "id": "microsoft/knowledge/performance/apply-filters-before-iterating.md",
       "severity": "major",
-      "message": "FindSet is called on a record variable without any prior SetRange/SetFilter. This forces a full-table scan.",
+      "message": "The Country/Region Code predicate is evaluated inside the loop instead of with SetRange before FindSet, so every row crosses the database boundary.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 140,
         "range": { "start-line": 140, "end-line": 144 }
       },
       "references": [
-        { "path": "microsoft/knowledge/performance/filter-before-find.md" }
+        { "path": "microsoft/knowledge/performance/apply-filters-before-iterating.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-performance-review"
     },
     {
-      "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
+      "id": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md",
       "severity": "minor",
-      "message": "SetLoadFields is called after SetRange. Per the referenced guidance the call must come before filters to be folded into the query plan.",
+      "message": "The loop reads an unlisted field after SetLoadFields, triggering a hidden JIT load for each record passed by value.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 152
       },
       "references": [
-        { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
+        { "path": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-performance-review"
     },
     {
-      "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
+      "id": "microsoft/knowledge/security/secrettext-for-credentials.md",
       "severity": "blocker",
       "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
       "location": {
@@ -165,21 +165,21 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
         "range": { "start-line": 85, "end-line": 89 }
       },
       "references": [
-        { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
+        { "path": "microsoft/knowledge/security/secrettext-for-credentials.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-security-review"
     },
     {
-      "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
+      "id": "community/knowledge/security/secrets-isolated-storage.md",
       "severity": "minor",
-      "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
+      "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
       "location": {
-        "file": "src/Integration/ApiClient.Codeunit.al",
-        "line": 201
+        "file": "src/Integration/ExternalServiceSetup.Table.al",
+        "line": 12
       },
       "references": [
-        { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
+        { "path": "community/knowledge/security/secrets-isolated-storage.md" }
       ],
       "confidence": "medium",
       "from-sub-skill": "al-security-review"
@@ -209,29 +209,29 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       },
       "findings": [
         {
-          "id": "microsoft/knowledge/performance/filter-before-find.md",
+          "id": "microsoft/knowledge/performance/apply-filters-before-iterating.md",
           "severity": "major",
-          "message": "FindSet is called on a record variable without any prior SetRange/SetFilter. This forces a full-table scan.",
+          "message": "The Country/Region Code predicate is evaluated inside the loop instead of with SetRange before FindSet, so every row crosses the database boundary.",
           "location": {
             "file": "src/Sales/PostingRoutines.Codeunit.al",
             "line": 140,
             "range": { "start-line": 140, "end-line": 144 }
           },
           "references": [
-            { "path": "microsoft/knowledge/performance/filter-before-find.md" }
+            { "path": "microsoft/knowledge/performance/apply-filters-before-iterating.md" }
           ],
           "confidence": "high"
         },
         {
-          "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
+          "id": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md",
           "severity": "minor",
-          "message": "SetLoadFields is called after SetRange. Per the referenced guidance the call must come before filters to be folded into the query plan.",
+          "message": "The loop reads an unlisted field after SetLoadFields, triggering a hidden JIT load for each record passed by value.",
           "location": {
             "file": "src/Sales/PostingRoutines.Codeunit.al",
             "line": 152
           },
           "references": [
-            { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
+            { "path": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md" }
           ],
           "confidence": "high"
         }
@@ -247,7 +247,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       },
       "findings": [
         {
-          "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
+          "id": "microsoft/knowledge/security/secrettext-for-credentials.md",
           "severity": "blocker",
           "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
           "location": {
@@ -256,20 +256,20 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
             "range": { "start-line": 85, "end-line": 89 }
           },
           "references": [
-            { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
+            { "path": "microsoft/knowledge/security/secrettext-for-credentials.md" }
           ],
           "confidence": "high"
         },
         {
-          "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
+          "id": "community/knowledge/security/secrets-isolated-storage.md",
           "severity": "minor",
-          "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
+          "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
           "location": {
-            "file": "src/Integration/ApiClient.Codeunit.al",
-            "line": 201
+            "file": "src/Integration/ExternalServiceSetup.Table.al",
+            "line": 12
           },
           "references": [
-            { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
+            { "path": "community/knowledge/security/secrets-isolated-storage.md" }
           ],
           "confidence": "medium"
         }
@@ -310,4 +310,3 @@ The empty-corpus case — BCQuality's state until knowledge files land — rolls
   ]
 }
 ```
-

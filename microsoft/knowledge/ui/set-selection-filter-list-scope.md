@@ -7,6 +7,8 @@ countries: [w1]
 application-area: [all]
 ---
 
+# Preserve list scope after `SetSelectionFilter`
+
 ## Description
 
 `CurrPage.SetSelectionFilter(Rec)` behaves differently depending on whether the user explicitly multi-selected rows. When no rows are marked — the cursor is simply positioned on a row — the method writes a primary key filter for that single row and leaves `MarkedOnly` as false. When the user explicitly selected multiple rows, the method marks those records and sets `MarkedOnly` to true. A batch action that calls `SetSelectionFilter` and then passes the record directly to a processing codeunit will therefore silently restrict to one row whenever the user has not made an explicit selection, which is almost never the intended behaviour for an action labelled "Verify All" or "Post All".
