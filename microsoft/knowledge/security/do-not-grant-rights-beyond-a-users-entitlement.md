@@ -9,8 +9,6 @@ application-area: [all]
 
 # Do not grant rights beyond a user's entitlement
 
-> Contributions welcome — open a PR to refine or extend this article.
-
 ## Description
 
 Entitlements are license-level caps on what a user can access, derived automatically from the BC license tier. Permission sets are application-level grants administered on top of the entitlement. A permission set can only grant within the entitlement's boundaries; grants beyond those boundaries are silently clipped at runtime. This means a permission set authored and validated in a developer sandbox (with a broad license) can appear to work correctly there and fail silently in a customer tenant where users hold a narrower entitlement.
