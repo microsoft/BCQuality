@@ -19,9 +19,6 @@ codeunit 50100 "Customer Temp Processor"
         until Customer.Next() = 0;
 
         ProcessCustomerBuffer(TempCustomer);
-
-        // Explicit cleanup on the normal exit path.
-        TempCustomer.DeleteAll();
         exit(true);
     end;
 

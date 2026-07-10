@@ -9,8 +9,6 @@ application-area: [all]
 
 # Prefer OAuth2 over API keys for external HTTP calls
 
-> Contributions welcome — open a PR to refine or extend this article.
-
 ## Description
 
 External HTTP integrations from AL can authenticate using OAuth 2.0 (client-credentials for service-to-service, authorization-code for user-delegated), API keys, basic authentication, or credentials in URLs. The mechanisms differ substantially in the blast radius of a leaked secret and in how cleanly tokens can be rotated. OAuth-issued tokens expire on their own schedule and rotate cleanly; API keys and basic-auth passwords typically have to be rotated manually and usually live unencrypted in a configuration table. When the partner supports OAuth, the difference is a material security improvement, not a stylistic preference.
