@@ -136,6 +136,32 @@ For the end-to-end flow — from orchestrator trigger through to how output reac
 │   └── /skills/
 ```
 
+## Versioning
+
+BCQuality is versioned with **git tags and GitHub Releases** — no separate versioning machinery. Releases follow [semver](https://semver.org/): `vMAJOR.MINOR.PATCH`. The current version is declared in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+
+Rough guidance on what bumps what:
+
+- **MAJOR** — a breaking change to a consumer-facing contract: the frontmatter schema, the DO output contract, the dispatch record, or the `knowledge-index.json` schema.
+- **MINOR** — new knowledge files or skills, or backward-compatible contract additions.
+- **PATCH** — corrections to existing knowledge, wording, or tooling fixes.
+
+### Pinning a version
+
+Orchestrators point at BCQuality by URL. To pin a release instead of tracking `main`, target the tag ref:
+
+```
+refs/tags/v0.1.0
+```
+
+Findings already carry the exact commit `sha` in their `references[]`, so provenance is precise regardless of what a consumer pins.
+
+### Cutting a release
+
+1. Bump `version` in `plugin.json` and `marketplace.json` (keep them in sync).
+2. Tag the commit: `git tag v0.1.0`.
+3. Push the tag and publish a GitHub Release with notes.
+
 ## Contributing
 
 Contributions are welcome. Before submitting a PR:
