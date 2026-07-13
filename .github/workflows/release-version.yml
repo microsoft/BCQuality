@@ -9,8 +9,8 @@
 # reset) for the usual ~monthly content release; bump the major for a breaking
 # change but keep incrementing the minor across it. Because the minor is never
 # reused, it uniquely identifies a release. Downstream, the PR-review engine pins
-# this version in its bcquality.config.yaml and embeds this MINOR as the 3rd
-# segment of its own tag.
+# this version in its bcquality.config.yaml and uses this MINOR as Z in its own
+# X.Y.Z version.
 
 name: Release version
 
