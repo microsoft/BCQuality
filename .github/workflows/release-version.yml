@@ -5,9 +5,12 @@
 # The release version is a `major.minor` value in the repo-root VERSION file.
 # This workflow tags the current commit as `v{VERSION}` and refuses to re-tag an
 # existing version, so bumping VERSION is the deliberate act that starts a new
-# release. Bump the minor for the usual ~monthly content release, the major for a
-# breaking change. Downstream, the PR-review engine pins this version in its
-# bcquality.config.yaml and embeds its MINOR as the 3rd segment of its own tag.
+# release. The minor is a monotonic counter: bump it (only ever increment, never
+# reset) for the usual ~monthly content release; bump the major for a breaking
+# change but keep incrementing the minor across it. Because the minor is never
+# reused, it uniquely identifies a release. Downstream, the PR-review engine pins
+# this version in its bcquality.config.yaml and embeds this MINOR as the 3rd
+# segment of its own tag.
 
 name: Release version
 
