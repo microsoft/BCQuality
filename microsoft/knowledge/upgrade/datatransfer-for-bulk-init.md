@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [21..]
 domain: upgrade
 keywords: [datatransfer, large-dataset, bulk-update, modifyall, copyfields, new-field]
 technologies: [al]

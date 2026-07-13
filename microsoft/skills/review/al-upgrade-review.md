@@ -89,7 +89,7 @@ Output conforms to the DO output contract. A populated example:
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/upgrade/enum-changes-must-be-additive-at-the-end.md",
+      "id": "microsoft/knowledge/upgrade/enum-values-additive-at-end.md",
       "severity": "blocker",
       "message": "A new enum value was inserted at ordinal 1, shifting every subsequent value by one. Rows that store the old ordinal 1 will silently resolve to the new value. Per the referenced guidance, enum values must be appended at the end.",
       "location": {
@@ -97,7 +97,7 @@ Output conforms to the DO output contract. A populated example:
         "line": 7
       },
       "references": [
-        { "path": "microsoft/knowledge/upgrade/enum-changes-must-be-additive-at-the-end.md" }
+        { "path": "microsoft/knowledge/upgrade/enum-values-additive-at-end.md" }
       ],
       "confidence": "high"
     }
@@ -105,4 +105,3 @@ Output conforms to the DO output contract. A populated example:
   "suppressed": []
 }
 ```
-

@@ -1,0 +1,15 @@
+{
+  "name": "bcquality",
+  "owner": {
+    "name": "microsoft/BCQuality",
+    "url": "https://github.com/microsoft/BCQuality"
+  },
+  "plugins": [
+    {
+      "name": "bcquality",
+      "source": "./",
+      "description": "Business Central AL quality knowledge base and review skills, packaged as an installable plugin. Ships the entire BCQuality tree (skills, knowledge, tools) so the Entry routing protocol runs against the installed clone.",
+      "version": "0.1.0"
+    }
+  ]
+}

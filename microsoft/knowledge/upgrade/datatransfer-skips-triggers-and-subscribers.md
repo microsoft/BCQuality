@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [21..]
 domain: upgrade
 keywords: [datatransfer, validate-trigger, event-subscriber, side-effects, business-logic]
 technologies: [al]
