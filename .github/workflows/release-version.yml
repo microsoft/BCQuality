@@ -1,21 +1,26 @@
 # Cuts a BCQuality content release on demand (roughly monthly), NOT on every
-# commit. Run this workflow manually once the `main` content is ready to be
-# consumed by a new engine release.
+# commit. Run this workflow manually once the `main` content is ready, and choose
+# whether to bump the minor (usual periodic content update) or the major
+# (breaking change).
 #
-# The release version is a `major.minor` value in the repo-root VERSION file.
-# This workflow tags the current commit as `v{VERSION}` and refuses to re-tag an
-# existing version, so bumping VERSION is the deliberate act that starts a new
-# release. The minor is a monotonic counter: bump it (only ever increment, never
-# reset) for the usual ~monthly content release; bump the major for a breaking
-# change but keep incrementing the minor across it. Because the minor is never
-# reused, it uniquely identifies a release. Downstream, the PR-review engine pins
-# this version in its bcquality.config.yaml and uses this MINOR as Z in its own
-# X.Y.Z version.
+# The version is a `major.minor` value derived from existing git tags — there is
+# no VERSION file. The minor is a monotonic counter: it only ever increments and
+# never resets, even across a major bump, so it uniquely identifies a release.
+# This workflow computes the next version and tags the current commit as
+# `v{major}.{minor}`.
 
 name: Release version
 
 on:
   workflow_dispatch:
+    inputs:
+      bump:
+        description: Which part to bump
+        type: choice
+        options:
+          - minor
+          - major
+        default: minor
 
 # Only tag creation needs write.
 permissions:
@@ -33,17 +38,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Tag release
+      - name: Compute and tag release
         shell: bash
         run: |
-          version="$(tr -d ' \t\r\n' < VERSION)"
-          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::VERSION must be a 'major.minor' value (got: '$version')"
-            exit 1
+          git fetch --tags --force --quiet
+          tags="$(git tag -l | grep -E '^v[0-9]+\.[0-9]+$' || true)"
+
+          if [[ -z "$tags" ]]; then
+            # First release.
+            major=1
+            minor=0
+          else
+            latest_major="$(printf '%s\n' "$tags" | sed -E 's/^v([0-9]+)\..*/\1/' | sort -n | tail -1)"
+            latest_minor="$(printf '%s\n' "$tags" | sed -E 's/^v[0-9]+\.([0-9]+)$/\1/' | sort -n | tail -1)"
+            minor=$(( latest_minor + 1 ))   # monotonic, never resets
+            if [[ "${{ inputs.bump }}" == "major" ]]; then
+              major=$(( latest_major + 1 ))
+            else
+              major="$latest_major"
+            fi
           fi
-          tag="v${version}"
+
+          tag="v${major}.${minor}"
           if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
-            echo "::error::Tag ${tag} already exists — bump VERSION before releasing"
+            echo "::error::Tag ${tag} already exists"
             exit 1
           fi
           git tag "$tag" "${{ github.sha }}"
