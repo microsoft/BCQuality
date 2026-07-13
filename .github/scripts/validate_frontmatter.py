@@ -34,6 +34,11 @@ KNOWLEDGE_REQUIRED_KEYS = {
     "bc-version", "domain", "keywords", "technologies",
     "countries", "application-area",
 }
+# Optional knowledge keys (do not trigger the R02 closed-key-set error).
+# `signals`: OPTIONAL routing-signal declarations consumed by the routing index
+# (tools/Build-RoutingIndex.ps1). Back-compatible — articles that omit it are
+# routed from the seed catalog + keyword derivation. See tools/routing-index.md.
+KNOWLEDGE_OPTIONAL_KEYS = {"signals"}
 ACTION_SKILL_REQUIRED_KEYS = {
     "kind", "id", "version", "title", "description", "inputs", "outputs",
 }
@@ -202,7 +207,7 @@ def validate_knowledge(path: Path, parsed: Parsed, report: Report) -> None:
 
     # R02 required keys, no extras, none empty
     missing = KNOWLEDGE_REQUIRED_KEYS - fm.keys()
-    extras = fm.keys() - KNOWLEDGE_REQUIRED_KEYS
+    extras = fm.keys() - KNOWLEDGE_REQUIRED_KEYS - KNOWLEDGE_OPTIONAL_KEYS
     if missing:
         report.error(path, "R02", f"missing required frontmatter keys: {sorted(missing)}", 1)
     if extras:
@@ -211,6 +216,31 @@ def validate_knowledge(path: Path, parsed: Parsed, report: Report) -> None:
         v = fm[k]
         if v is None or v == "" or v == []:
             report.error(path, "R02", f"frontmatter key '{k}' must not be empty", 1)
+
+    # R24 optional routing `signals` block. Each entry is either a bare token
+    # string or a mapping with a required 'token' and optional 'pattern'/'domain'
+    # (all non-empty strings). Keeps the routing-index generator's input honest.
+    if "signals" in fm:
+        sigs = fm["signals"]
+        if not isinstance(sigs, list) or not sigs:
+            report.error(path, "R24", "signals must be a non-empty list", 1)
+        else:
+            for entry in sigs:
+                if isinstance(entry, str):
+                    if not entry.strip():
+                        report.error(path, "R24", "signals token string must not be empty", 1)
+                elif isinstance(entry, dict):
+                    tok = entry.get("token")
+                    if not isinstance(tok, str) or not tok.strip():
+                        report.error(path, "R24", "signals entry must have a non-empty 'token'", 1)
+                    for opt in ("pattern", "domain"):
+                        if opt in entry and (not isinstance(entry[opt], str) or not entry[opt].strip()):
+                            report.error(path, "R24", f"signals '{opt}' must be a non-empty string", 1)
+                    unknown = set(entry.keys()) - {"token", "pattern", "domain"}
+                    if unknown:
+                        report.error(path, "R24", f"signals entry has unknown keys: {sorted(unknown)}", 1)
+                else:
+                    report.error(path, "R24", "signals entry must be a string or a mapping", 1)
 
     # R03 bc-version
     if "bc-version" in fm:

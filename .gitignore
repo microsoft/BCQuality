@@ -27,3 +27,7 @@ node_modules/
 # Runtime artifact: the knowledge index is rebuilt over each consumer's
 # pruned clone by Entry's preparation step; it is never committed.
 /knowledge-index.json
+
+# Runtime artifact: the routing index (orchestrator-facing companion) is rebuilt
+# over each consumer's pruned clone by Build-RoutingIndex.ps1; never committed.
+/routing-index.json

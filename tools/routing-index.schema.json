@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/microsoft/BCQuality/tools/routing-index.schema.json",
+  "title": "BCQuality routing index",
+  "description": "Orchestrator-facing companion to knowledge-index.json. Maps deterministic PR-diff detection signals (AL tokens / regex) to their owning review domain and the knowledge articles that back them. Consumed by the PR-review orchestrator's manifest builder (Build-ReviewManifest, gated behind BCQ_INDEX_V2) to compute per-domain suspicion scores and shortlist candidate articles WITHOUT reading the hardcoded regex catalog that used to live in orchestrator code. Regenerated deterministically at authoring/CI time by tools/Build-RoutingIndex.ps1; never built in the token-paid path. This is NOT the lean agent-replayed knowledge index — it is not fed into the CLI prompt.",
+  "type": "object",
+  "required": ["version", "generatedAt", "generator", "articleCount", "signalCount", "domainNormalization", "objectKindDomain", "signals", "domains"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema-note": { "type": "string" },
+    "version": { "type": "integer", "const": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "generator": { "type": "string" },
+    "enabledLayers": { "type": "array", "items": { "type": "string" } },
+    "articleCount": { "type": "integer", "minimum": 0 },
+    "signalCount": { "type": "integer", "minimum": 0 },
+    "domainNormalization": {
+      "description": "Front-matter domain (lowercase-hyphen) -> orchestrator domain label (TitleCase). Resolves the vocabulary mismatch between article front-matter (ui, error-handling), orchestrator $DomainMap (Accessibility, Error Handling), and feedback byDomain (lowercase).",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "objectKindDomain": {
+      "description": "AL object kind -> weak domain hint (applied once per changed object). Content-owned successor to the orchestrator's $BcqObjectKindDomain.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "signals": {
+      "description": "Compiled detection signals. Each maps a regex over ADDED diff lines to a domain and the backing articles.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["token", "pattern", "domain", "source", "weight", "articles"],
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "description": "Stable signal identifier (e.g. FindSet). Not necessarily an AL token verbatim.",
+            "type": "string"
+          },
+          "pattern": {
+            "description": "Regex matched (case-sensitively, as authored) against each added diff line. Escaped for JSON.",
+            "type": "string"
+          },
+          "domain": {
+            "description": "Owning review domain in the orchestrator's TitleCase taxonomy (post-normalization).",
+            "type": "string"
+          },
+          "source": {
+            "description": "Where the signal came from: 'seed' (legacy catalog migration), 'frontmatter-signal' (article-declared signals: block), or 'keyword' (soft keyword-derived, weight < 1).",
+            "type": "string",
+            "enum": ["seed", "frontmatter-signal", "keyword"]
+          },
+          "weight": {
+            "description": "Tier-1 confidence multiplier applied to signal hit counts in the domain-suspicion score. 1.0 for authored/seed signals; < 1 for soft keyword-derived signals. Tier-2 feedback weights (later) multiply on top of this.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "articles": {
+            "description": "Repo-relative paths of the knowledge articles this signal routes to. Complete-by-construction: every article whose domain (and, for keyword signals, keyword) matches is attached, so recall is not limited by a hand-maintained catalog.",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "domains": {
+      "description": "Per-domain aggregates for quick orchestrator lookups.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["articleCount", "signalCount"],
+        "additionalProperties": true,
+        "properties": {
+          "articleCount": { "type": "integer", "minimum": 0 },
+          "signalCount": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

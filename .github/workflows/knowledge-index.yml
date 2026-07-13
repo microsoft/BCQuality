@@ -1,10 +1,14 @@
-name: Validate knowledge index
+name: Validate knowledge & routing indexes
 
-# BCQuality owns the knowledge-index generator (tools/Build-KnowledgeIndex.ps1),
-# which the AL review skills' Source step consumes. This guards the generator's
-# health so consumers never have to: the index a consumer uses at runtime is
-# rebuilt over its own pruned clone, but the generator that builds it lives and
-# is validated here.
+# BCQuality owns two index generators consumed by the AL review pipeline:
+#   - tools/Build-KnowledgeIndex.ps1 -> knowledge-index.json (lean, agent-replayed
+#     in the CLI run via the review skills' Source step)
+#   - tools/Build-RoutingIndex.ps1   -> routing-index.json  (orchestrator-facing;
+#     maps PR-diff signals to domains + backing articles; consumed by the manifest
+#     builder behind BCQ_INDEX_V2)
+# This workflow guards both generators' health so consumers never have to: each
+# index a consumer uses at runtime is rebuilt over its own pruned clone, but the
+# generators that build them live and are validated here.
 
 on:
   pull_request:
@@ -22,3 +26,7 @@ jobs:
       - name: Validate knowledge-index generator
         shell: pwsh
         run: ./.github/scripts/Test-KnowledgeIndex.ps1 -Root .
+
+      - name: Validate routing-index generator
+        shell: pwsh
+        run: ./.github/scripts/Test-RoutingIndex.ps1 -Root .
