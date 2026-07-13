@@ -2,11 +2,12 @@
 # commit. Run this workflow manually once the `main` content is ready to be
 # consumed by a new engine release.
 #
-# The release version is a single monotonic integer in the repo-root VERSION
-# file. This workflow tags the current commit as `v{VERSION}` and refuses to
-# re-tag an existing version, so bumping VERSION is the deliberate act that
-# starts a new release. Downstream, the PR-review engine pins this version in
-# its bcquality.config.yaml and embeds it in its own tag.
+# The release version is a `major.minor` value in the repo-root VERSION file.
+# This workflow tags the current commit as `v{VERSION}` and refuses to re-tag an
+# existing version, so bumping VERSION is the deliberate act that starts a new
+# release. Bump the minor for the usual ~monthly content release, the major for a
+# breaking change. Downstream, the PR-review engine pins this version in its
+# bcquality.config.yaml and embeds its MINOR as the 3rd segment of its own tag.
 
 name: Release version
 
@@ -33,8 +34,8 @@ jobs:
         shell: bash
         run: |
           version="$(tr -d ' \t\r\n' < VERSION)"
-          if [[ ! "$version" =~ ^[0-9]+$ ]]; then
-            echo "::error::VERSION must be a single integer (got: '$version')"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::VERSION must be a 'major.minor' value (got: '$version')"
             exit 1
           fi
           tag="v${version}"
