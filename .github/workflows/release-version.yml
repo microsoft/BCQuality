@@ -1,0 +1,47 @@
+# Cuts a BCQuality content release on demand (roughly monthly), NOT on every
+# commit. Run this workflow manually once the `main` content is ready to be
+# consumed by a new engine release.
+#
+# The release version is a single monotonic integer in the repo-root VERSION
+# file. This workflow tags the current commit as `v{VERSION}` and refuses to
+# re-tag an existing version, so bumping VERSION is the deliberate act that
+# starts a new release. Downstream, the PR-review engine pins this version in
+# its bcquality.config.yaml and embeds it in its own tag.
+
+name: Release version
+
+on:
+  workflow_dispatch:
+
+# Only tag creation needs write.
+permissions:
+  contents: write
+
+concurrency:
+  group: release-version
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tag release
+        shell: bash
+        run: |
+          version="$(tr -d ' \t\r\n' < VERSION)"
+          if [[ ! "$version" =~ ^[0-9]+$ ]]; then
+            echo "::error::VERSION must be a single integer (got: '$version')"
+            exit 1
+          fi
+          tag="v${version}"
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "::error::Tag ${tag} already exists — bump VERSION before releasing"
+            exit 1
+          fi
+          git tag "$tag" "${{ github.sha }}"
+          git push origin "$tag"
+          echo "Released BCQuality ${tag} at ${{ github.sha }}"
