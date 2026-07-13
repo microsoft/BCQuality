@@ -136,6 +136,21 @@ For the end-to-end flow — from orchestrator trigger through to how output reac
 │   └── /skills/
 ```
 
+## Versioning
+
+BCQuality content is released on demand — roughly monthly, not on every commit. A
+release is a `major.minor` value in [`VERSION`](VERSION), cut manually via the
+`Release version` workflow, which tags the current `main` as `v{VERSION}`.
+
+- Bump the **minor** for the usual periodic content update; bump the **major**
+  only for a breaking change.
+- The minor is a **monotonic counter** — it only ever increments and never
+  resets, even across a major bump — so it uniquely identifies a release.
+
+The PRReviewAgent orchestrator ([microsoft/BC-ALAgents](https://github.com/microsoft/BC-ALAgents))
+pins a BCQuality release and composes it into its own `X.Y.Z` version, where
+**Z** is this release's minor. See that repo for the full cross-repo scheme.
+
 ## Contributing
 
 Contributions are welcome. Before submitting a PR:
