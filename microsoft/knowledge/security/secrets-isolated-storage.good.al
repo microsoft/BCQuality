@@ -4,7 +4,7 @@ codeunit 50134 "Api Credential Good Sample"
     begin
         // Credentials live in IsolatedStorage, invisible to record reads, API
         // pages, RapidStart packages, and Excel export.
-        IsolatedStorage.Set('ExternalApiKey', ApiKey, DataScope::Module);
+        IsolatedStorage.SetEncrypted('ExternalApiKey', ApiKey, DataScope::Module);
     end;
 
     procedure GetApiKey() ApiKey: SecretText

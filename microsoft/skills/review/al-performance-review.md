@@ -111,15 +111,15 @@ Output conforms to the DO output contract. A populated example:
       "confidence": "high"
     },
     {
-      "id": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md",
+      "id": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md",
       "severity": "minor",
-      "message": "The loop reads an unlisted field after SetLoadFields, triggering a hidden JIT load for each record passed by value.",
+      "message": "The loop reads only a small subset of fields from a wide table without SetLoadFields, transferring every column for each row.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 152
       },
       "references": [
-        { "path": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md" }
+        { "path": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md" }
       ],
       "confidence": "high"
     }

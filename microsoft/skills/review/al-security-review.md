@@ -103,7 +103,7 @@ Output conforms to the DO output contract. A populated example:
       "confidence": "high"
     },
     {
-      "id": "community/knowledge/security/secrets-isolated-storage.md",
+      "id": "microsoft/knowledge/security/secrets-isolated-storage.md",
       "severity": "minor",
       "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
       "location": {
@@ -111,7 +111,7 @@ Output conforms to the DO output contract. A populated example:
         "line": 12
       },
       "references": [
-        { "path": "community/knowledge/security/secrets-isolated-storage.md" }
+        { "path": "microsoft/knowledge/security/secrets-isolated-storage.md" }
       ],
       "confidence": "medium"
     }

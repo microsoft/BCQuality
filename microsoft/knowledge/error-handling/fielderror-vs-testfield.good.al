@@ -9,8 +9,8 @@ table 50122 "FieldError vs TestField Good"
 
     procedure PostDocument()
     begin
-        // Simple presence gate: TestField performs the check itself and raises
-        // only when the field is empty. Self-documenting prerequisite.
+        // TestField performs this simple presence check and raises only when
+        // the field is empty. Self-documenting prerequisite.
         TestField("Posting Date");
 
         // Business logic has already determined the value is invalid;

@@ -9,7 +9,7 @@ table 50120 "FieldError Default Bad"
 
     procedure ValidateForRelease()
     begin
-        // Re-testing a field and handing FieldError a fully-formed sentence.
+        // This re-tests a field and gives FieldError a fully formed sentence.
         // The framework already prepends the caption and appends the value,
         // so this renders as "Currency Code The Currency Code field must have
         // a value. in ..." — caption repeated, capital letter mid-sentence,

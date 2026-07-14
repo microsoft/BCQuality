@@ -146,15 +146,15 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       "from-sub-skill": "al-performance-review"
     },
     {
-      "id": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md",
+      "id": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md",
       "severity": "minor",
-      "message": "The loop reads an unlisted field after SetLoadFields, triggering a hidden JIT load for each record passed by value.",
+      "message": "The loop reads only a small subset of fields from a wide table without SetLoadFields, transferring every column for each row.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 152
       },
       "references": [
-        { "path": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md" }
+        { "path": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-performance-review"
@@ -175,7 +175,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       "from-sub-skill": "al-security-review"
     },
     {
-      "id": "community/knowledge/security/secrets-isolated-storage.md",
+      "id": "microsoft/knowledge/security/secrets-isolated-storage.md",
       "severity": "minor",
       "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
       "location": {
@@ -183,7 +183,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
         "line": 12
       },
       "references": [
-        { "path": "community/knowledge/security/secrets-isolated-storage.md" }
+        { "path": "microsoft/knowledge/security/secrets-isolated-storage.md" }
       ],
       "confidence": "medium",
       "from-sub-skill": "al-security-review"
@@ -227,15 +227,15 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
           "confidence": "high"
         },
         {
-          "id": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md",
+          "id": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md",
           "severity": "minor",
-          "message": "The loop reads an unlisted field after SetLoadFields, triggering a hidden JIT load for each record passed by value.",
+          "message": "The loop reads only a small subset of fields from a wide table without SetLoadFields, transferring every column for each row.",
           "location": {
             "file": "src/Sales/PostingRoutines.Codeunit.al",
             "line": 152
           },
           "references": [
-            { "path": "community/knowledge/performance/setloadfields-unlisted-field-triggers-jit-load.md" }
+            { "path": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md" }
           ],
           "confidence": "high"
         }
@@ -265,7 +265,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
           "confidence": "high"
         },
         {
-          "id": "community/knowledge/security/secrets-isolated-storage.md",
+          "id": "microsoft/knowledge/security/secrets-isolated-storage.md",
           "severity": "minor",
           "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
           "location": {
@@ -273,7 +273,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
             "line": 12
           },
           "references": [
-            { "path": "community/knowledge/security/secrets-isolated-storage.md" }
+            { "path": "microsoft/knowledge/security/secrets-isolated-storage.md" }
           ],
           "confidence": "medium"
         }

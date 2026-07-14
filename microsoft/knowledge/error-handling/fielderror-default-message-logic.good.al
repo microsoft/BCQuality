@@ -9,9 +9,8 @@ table 50120 "FieldError Default Good"
 
     procedure ValidateForRelease()
     begin
-        // Plain required-field gate: TestField checks the condition and raises
-        // the error in one call, with caption and record context supplied by
-        // the framework.
+        // TestField checks this required-field condition and raises the error
+        // with caption and record context supplied by the framework.
         TestField("Currency Code");
 
         // Condition already evaluated: pass only a lowercase predicate so it

@@ -46,7 +46,7 @@ A file enters the candidate worklist when its `keywords` intersect the extracted
 The following targeted checks cover every current `appsource` article across the Microsoft and community layers. Treat each as a candidate-selection cue: when the signal appears in changed code, add the named article to the worklist and evaluate it in Action.
 
 - A new or renamed object lacks the reserved prefix/suffix, or a tableextension/pageextension/reportextension adds an unaffixed field, key, control, or action to a base object despite `mandatoryAffixes`/`mandatoryPrefix` and AS0011 — `object-affixes-prevent-collisions`.
-- For BC v24 or later, `app.json` adds or changes the `help` URL to a path deeper than two levels, or a changed Copilot/context-sensitive help arrangement would ground the app under an overly broad truncated parent — `keep-copilot-help-url-to-two-path-levels`.
+- For BC v27 or later, `app.json` adds or changes the `help` URL to a path deeper than two levels, or a changed Copilot/context-sensitive help arrangement would ground the app under an overly broad truncated parent — `keep-copilot-help-url-to-two-path-levels`.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 

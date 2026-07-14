@@ -9,7 +9,7 @@ table 50122 "FieldError vs TestField Bad"
 
     procedure PostDocument()
     begin
-        // FieldError performs no comparison and always raises the moment it is
+        // FieldError performs no comparison and raises as soon as it is
         // reached, so this "check" terminates PostDocument every time — the
         // Posting Date is never actually tested, and the amount rule below is
         // dead code.

@@ -43,10 +43,6 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone. When the diff contains no telemetry-related changes by any of the above signals, return `outcome: "not-applicable"` without evaluating files.
 
-The following targeted check covers every current `telemetry` article across the Microsoft and community layers. Treat it as a candidate-selection cue: when the signal appears in changed code, add the named article to the worklist and evaluate it in Action.
-
-- `Session.LogMessage` or `Session.LogError` uses `TelemetryScope::All` for publisher-only diagnostics, a telemetry wrapper defaults its scope to `All`, or a `FeatureTelemetry`/custom logging change routes signals to customer environment telemetry without a customer-actionable reason — `default-telemetryscope-to-extensionpublisher`.
-
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
 When the post-conflict worklist is empty because no applicable telemetry knowledge exists, or because configuration suppressed every candidate, emit `outcome: "no-knowledge"`. When the worklist is empty because no applicable telemetry knowledge matched the changes, emit `outcome: "completed"` with an empty `findings` array.
@@ -81,37 +77,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
-
-```json
-{
-  "skill": { "id": "al-telemetry-review", "version": 1 },
-  "outcome": "completed",
-  "summary": {
-    "counts": { "blocker": 0, "major": 1, "minor": 0, "info": 0 },
-    "coverage": { "worklist-size": 1, "items-evaluated": 1 }
-  },
-  "findings": [
-    {
-      "id": "community/knowledge/telemetry/default-telemetryscope-to-extensionpublisher.md",
-      "severity": "major",
-      "message": "This publisher-only diagnostic uses TelemetryScope::All, which also sends it to each customer's environment telemetry and adds avoidable ingestion cost.",
-      "location": {
-        "file": "src/Telemetry/Diagnostics.Codeunit.al",
-        "line": 31
-      },
-      "references": [
-        { "path": "community/knowledge/telemetry/default-telemetryscope-to-extensionpublisher.md" }
-      ],
-      "confidence": "high",
-      "suggested-code": "TelemetryScope::ExtensionPublisher"
-    }
-  ],
-  "suppressed": []
-}
-```
-
-The empty-corpus case produces:
+Output conforms to the DO output contract. The empty-corpus case produces:
 
 ```json
 {

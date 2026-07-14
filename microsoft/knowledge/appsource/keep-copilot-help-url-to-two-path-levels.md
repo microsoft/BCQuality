@@ -1,5 +1,5 @@
 ---
-bc-version: [24..]
+bc-version: [27..]
 domain: appsource
 keywords: [app-json, help-url, copilot, grounding, documentation, url-depth, contexturl]
 technologies: [al]
@@ -8,8 +8,6 @@ application-area: [all]
 ---
 
 # Keep the Copilot help URL to two path levels
-
-> Contributions welcome — open a PR to refine or extend this article.
 
 ## Description
 
