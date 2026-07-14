@@ -21,6 +21,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
+from generation_contracts import (
+    load_bounded_json,
+    load_schema,
+    schema_errors,
+    validate_report_semantics,
+    validate_requirement_semantics,
+)
+
 try:
     import yaml
 except ImportError:
@@ -39,14 +47,16 @@ ACTION_SKILL_REQUIRED_KEYS = {
 }
 ACTION_SKILL_OPTIONAL_KEYS = {
     "bc-version", "technologies", "countries", "application-area", "sub-skills",
+    "output-version",
 }
 META_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 
 STANDARD_INPUTS = {
     "pr-diff", "object-list", "file-path", "repository", "telemetry-query",
+    "requirement-spec",
 }
-ALLOWED_OUTPUTS = {"findings-report"}
+ALLOWED_OUTPUTS = {"findings-report", "generated-files-report"}
 VALID_SAMPLE_KINDS = {"good", "bad"}
 
 ACTION_SKILL_SECTIONS = ["Source", "Relevance", "Worklist", "Action", "Output"]
@@ -331,9 +341,30 @@ def validate_action_skill(path: Path, parsed: Parsed, report: Report) -> None:
         if not is_non_empty_list_of_str(out):
             report.error(path, "R18", "outputs must be a non-empty list of strings", 1)
         else:
+            if len(out) != 1:
+                report.error(path, "R18", "outputs must contain exactly one output kind", 1)
             bad = [x for x in out if x not in ALLOWED_OUTPUTS]
             if bad:
-                report.error(path, "R18", f"outputs contains non-allowed values {bad}; currently only {sorted(ALLOWED_OUTPUTS)} is defined", 1)
+                report.error(path, "R18", f"outputs contains non-allowed values {bad}; allowed values are {sorted(ALLOWED_OUTPUTS)}", 1)
+    if "output-version" in fm:
+        output_version = fm["output-version"]
+        if not isinstance(output_version, int) or isinstance(output_version, bool) or output_version <= 0:
+            report.error(path, "R18", "output-version must be a positive integer", 1)
+
+    # R27 generation skills have one stable, non-composed contract shape.
+    if fm.get("outputs") == ["generated-files-report"]:
+        rel = path.as_posix()
+        expected_suffix = "microsoft/skills/generate/al-code-generation.md"
+        if not rel.endswith(expected_suffix):
+            report.error(path, "R27", f"generated-files-report is reserved for {expected_suffix}", 1)
+        if fm.get("id") != "al-code-generation" or fm.get("version") != 1:
+            report.error(path, "R27", "generation skill must have id al-code-generation and version 1", 1)
+        if fm.get("inputs") != ["requirement-spec"]:
+            report.error(path, "R27", "generation skill must accept only [requirement-spec]", 1)
+        if fm.get("output-version") != 1:
+            report.error(path, "R27", "generation skill must declare output-version: 1", 1)
+        if "sub-skills" in fm:
+            report.error(path, "R27", "generation skill must be a leaf without sub-skills", 1)
 
     # R19 optional filter dimensions, if present
     if "bc-version" in fm:
@@ -610,6 +641,37 @@ def run(root: Path) -> Report:
     # Fourth pass: R26 sub-skills registry matches leaf files on disk
     for path, fm in action_skill_fms:
         validate_sub_skills_registry(path, fm, root, report)
+
+    # Fifth pass: R28 published generation schemas and examples are strict and coherent.
+    requirement_schema_path = root / "schemas" / "requirement-spec-v1.schema.json"
+    report_schema_path = root / "schemas" / "generated-files-report-v1.schema.json"
+    requirement_example_path = root / "schemas" / "examples" / "requirement-spec-v1.example.json"
+    report_example_path = root / "schemas" / "examples" / "generated-files-report-v1.example.json"
+    contract_paths = (
+        requirement_schema_path,
+        report_schema_path,
+        requirement_example_path,
+        report_example_path,
+    )
+    missing_contracts = [path for path in contract_paths if not path.is_file()]
+    for path in missing_contracts:
+        report.error(path, "R28", "required generation contract file is missing")
+    if not missing_contracts:
+        try:
+            requirement_schema = load_schema(requirement_schema_path)
+            generated_report_schema = load_schema(report_schema_path)
+            requirement_example = load_bounded_json(requirement_example_path)
+            generated_report_example = load_bounded_json(report_example_path)
+            for message in schema_errors(requirement_schema, requirement_example):
+                report.error(requirement_example_path, "R28", message)
+            for message in validate_requirement_semantics(requirement_example):
+                report.error(requirement_example_path, "R28", message)
+            for message in schema_errors(generated_report_schema, generated_report_example):
+                report.error(report_example_path, "R28", message)
+            for message in validate_report_semantics(generated_report_example, requirement=requirement_example):
+                report.error(report_example_path, "R28", message)
+        except (OSError, ValueError) as exc:
+            report.error(requirement_schema_path, "R28", f"generation contract validation failed: {exc}")
 
     return report
 

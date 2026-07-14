@@ -32,6 +32,7 @@ title: AL code review
 description: Reviews AL source changes against performance and security guidance.
 inputs: [pr-diff, object-list]
 outputs: [findings-report]
+output-version: 1
 bc-version: [26..28]
 technologies: [al]
 countries: [w1]
@@ -39,11 +40,20 @@ application-area: [all]
 ---
 ```
 
-`kind`, `id`, `version`, `title`, `description`, `inputs`, `outputs` are required and specific to action skills.
+`kind`, `id`, `version`, `title`, `description`, `inputs`, `outputs` are required and specific to action skills. `output-version` is optional for backward compatibility and defaults to 1; new output kinds MUST declare it explicitly.
 
 `bc-version`, `technologies`, `countries`, `application-area` are optional filters that let an orchestrator pre-select applicable skills for a task. They follow the same semantics as in READ.
 
-`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`. `outputs` is always a single-element list naming the output kind; today only `findings-report` is defined.
+`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`, `requirement-spec`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`.
+
+`requirement-spec` is a path-valued input: its value is only a path to a bounded UTF-8 JSON file conforming to the published requirement contract. It is never inline requirement JSON and is never interpolated into prompt or goal text.
+
+`outputs` MUST be a single-element list naming the output kind. Defined kinds are:
+
+- `findings-report` version 1 for review and audit skills; and
+- `generated-files-report` version 1 for create-only generation skills, defined by [`schemas/generated-files-report-v1.schema.json`](../schemas/generated-files-report-v1.schema.json).
+
+Entry negotiates the exact kind/version and includes it in every dispatch record. An action skill emits one JSON document of only that negotiated kind.
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
@@ -67,9 +77,9 @@ Every action skill MUST contain these five sections, in order:
 
 **Action.** Execute the skill's work against the worklist. Evaluate each item in the worklist against the task input and emit findings. The action step is where skill behavior differs; the preceding three steps are uniform.
 
-## Output contract
+## Findings-report output contract
 
-Every action skill emits a single JSON document that conforms to this schema:
+Every action skill with `outputs: [findings-report]` emits a single JSON document that conforms to this schema:
 
 ```json
 {
@@ -219,6 +229,8 @@ A **super-skill** is an action skill whose frontmatter declares a non-empty `sub
 
 Composition is flat: a super-skill MAY list only leaf skills (skills without their own `sub-skills`). Nested super-skills are not permitted in v1.
 
+Generation skills are leaves. They MUST NOT declare `sub-skills` or compose other generation skills.
+
 ### Section interpretation for super-skills
 
 The five required sections still apply. Their meaning shifts from knowledge files to sub-skills:
@@ -285,8 +297,13 @@ For each worklist entry, emit one finding with severity `info`, a message naming
 Conforms to the DO output contract.
 ```
 
+## Generated-files-report output contract
+
+The `generated-files-report` v1 contract is published as JSON Schema at [`schemas/generated-files-report-v1.schema.json`](../schemas/generated-files-report-v1.schema.json). Its path-valued input contract is [`schemas/requirement-spec-v1.schema.json`](../schemas/requirement-spec-v1.schema.json). The stable generation action skill is [`microsoft/skills/generate/al-code-generation.md`](../microsoft/skills/generate/al-code-generation.md).
+
+Unlike a findings report, a generated-files report has no `findings` field. It carries create-only UTF-8 AL artifacts, detailed retrieval coverage, immutable revision-scoped guidance references, omissions, and suppression. Consumers MUST validate the complete JSON document atomically and fail closed before materialization, then independently enforce filesystem symlink, destination non-existence, byte-size, and normalized ID-range policy.
+
 ## How orchestrators consume output
 
-An orchestrator invokes an action skill with an input appropriate to the skill's declared `inputs`, receives the JSON output, and maps findings to its delivery surface (PR comments, build gates, IDE diagnostics). The orchestrator MUST NOT interpret skill-specific fields beyond the schema above. Skills that need richer semantics MUST encode them within the schema (for example, by adding structured `message` text) rather than extending the output shape.
-
+An orchestrator invokes an action skill with an input appropriate to the skill's declared `inputs`, receives the negotiated JSON output kind/version, and validates that published contract without inferring shape from the skill ID. Findings reports map to review delivery surfaces. Generated-files reports are create-only proposals and require consumer-owned validation and staging before any workspace change. Skills that need richer semantics MUST evolve a versioned shared output contract rather than add unversioned skill-specific fields.
 

@@ -52,11 +52,11 @@ Skills define how agents consume knowledge. They come in three flavors:
 
   READ and DO are read on demand — typically when the first dispatched action skill runs. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
 
-- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md) (super-skill), which composes the AL review leaf skills under [`microsoft/skills/review/`](microsoft/skills/review/) — one per knowledge domain.
+- **Action skills** — concrete skills that follow the Action Skill template to do real work. Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). Review skills emit `findings-report` v1; the cross-domain generation leaf [`microsoft/skills/generate/al-code-generation.md`](microsoft/skills/generate/al-code-generation.md) emits create-only `generated-files-report` v1. The canonical review super-skill remains [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md), which composes the AL review leaves without generation behavior.
 
 ### Agent bootstrapping
 
-An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s) to invoke. The agent then invokes each dispatched skill in turn, reading READ and DO on demand. No prior knowledge of BCQuality's structure is baked into the orchestrator — only the convention *"invoke `/skills/entry.md` first."*
+An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s), input subset, and declared output kind/version. Generation requires explicit `action: generate`, a path-valued `requirement-spec`, and acceptance of `generated-files-report` v1; legacy review contexts remain backward compatible.
 
 ## Knowledge file format
 
@@ -110,11 +110,13 @@ Action skills follow a four-step pattern:
 3. **Worklist** — narrow from N candidates to the M that apply to the current task
 4. **Action** — apply the relevant knowledge and produce structured output
 
-Every action skill produces output in a common format that orchestrators can consume without skill-specific parsing. The format is JSON and includes an `outcome` (so a clean run, a not-applicable skill, and a partial failure are all distinguishable), `findings` (what the skill observed), structured `references` back to the knowledge files that informed each finding, per-finding `confidence`, and a `suppressed` list recording any knowledge files overridden by layer precedence. This contract is defined in the Action Skill meta-skill so that orchestrators and action skills remain independently evolvable.
+Every action skill produces one negotiated, versioned JSON output. Review skills use `findings-report` v1. AL generation emits no findings: [`generated-files-report` v1](schemas/generated-files-report-v1.schema.json) contains create-only artifact content, immutable references, assumptions, applied and omitted guidance, suppression, and detailed coverage. Its path-valued input is [`requirement-spec` v1](schemas/requirement-spec-v1.schema.json).
 
 BCQuality is an **additive** knowledge layer: it augments the agent's review judgement, it does not replace it. Super-skills (such as `al-code-review`) run a self-review pass alongside their sub-skills and surface concerns the agent identified on its own, marked with `from-sub-skill: "agent"` and an empty `references: []` so consumers can render them distinctly from knowledge-backed findings. See [agent-consumption.md](agent-consumption.md) and [`skills/do.md`](skills/do.md) for the full contract.
 
 The meta-skills in `/skills/` define this pattern. Every concrete action skill follows it.
+
+BCQuality owns generation contracts, routing, retrieval, ranking, and report production. Consumers own requirement acquisition and every side effect: atomic validation, staging, compilation, analysis, tests, delivery, approval, and publishing. The staged consumer rollout after this contract PR is strict parser fixtures, a dry-run patch artifact, isolated validation, and finally an environment-approved draft PR. Until a consumer advertises the required action/input/output capabilities, it remains generation-ineligible.
 
 For the end-to-end flow — from orchestrator trigger through to how output reaches developers — see [agent-consumption.md](agent-consumption.md).
 
@@ -122,6 +124,7 @@ For the end-to-end flow — from orchestrator trigger through to how output reac
 
 ```
 ├── /skills/              # Global: entry-point skill + meta-skill contracts (READ, DO, WRITE)
+├── /schemas/             # Versioned generation input/output JSON Schemas and examples
 ├── /.github/             # Actions and workflows
 ├── /microsoft/           # Microsoft-endorsed layer
 │   ├── /knowledge/       # Knowledge files by domain
@@ -156,7 +159,7 @@ Contributions are welcome. Before submitting a PR:
 2. Keep files atomic: one concern per file, under 100 lines.
 3. Target your contribution to the right layer — most community contributions go in `/community/knowledge/`.
 
-CI runs validation on every PR. If your knowledge file has schema violations, missing sections, code blocks, or exceeds 100 lines, the check will fail with a clear error message.
+CI runs validation on every PR. If a knowledge file, action skill, or published generation contract violates its schema or structural invariants, the check fails with a clear error message.
 
 ## License
 

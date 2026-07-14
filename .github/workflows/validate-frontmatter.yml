@@ -19,7 +19,10 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml jsonschema
 
       - name: Run validator
         run: python .github/scripts/validate_frontmatter.py --root .
+
+      - name: Test generation contracts and routing
+        run: python .github/scripts/test_generation_contracts.py

@@ -1,0 +1,348 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/microsoft/BCQuality/blob/main/schemas/requirement-spec-v1.schema.json",
+  "title": "BCQuality AL code generation requirement specification v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema-version",
+    "project-root",
+    "app-root",
+    "requested-artifacts",
+    "related-file-allowlist",
+    "context",
+    "target"
+  ],
+  "properties": {
+    "schema-version": {
+      "const": 1
+    },
+    "project-root": {
+      "const": ".",
+      "description": "Canonical root of the bounded project view."
+    },
+    "app-root": {
+      "anyOf": [
+        {
+          "const": "."
+        },
+        {
+          "$ref": "#/$defs/canonicalRelativePath"
+        }
+      ]
+    },
+    "requested-artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/requestedArtifact"
+      }
+    },
+    "related-file-allowlist": {
+      "type": "array",
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/canonicalRelativePath"
+      },
+      "description": "Complete set of existing project-relative files that generation may read."
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "countries",
+        "application-areas"
+      ],
+      "properties": {
+        "countries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(w1|[a-z]{2})$"
+          },
+          "allOf": [
+            {
+              "if": {
+                "contains": {
+                  "const": "w1"
+                }
+              },
+              "then": {
+                "maxItems": 1
+              }
+            }
+          ]
+        },
+        "application-areas": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(all|[a-z0-9]+(?:-[a-z0-9]+)*)$"
+          },
+          "allOf": [
+            {
+              "if": {
+                "contains": {
+                  "const": "all"
+                }
+              },
+              "then": {
+                "maxItems": 1
+              }
+            }
+          ]
+        }
+      },
+      "description": "Explicit applicability context used with normalized BC/runtime metadata."
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "generation-settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "context-budget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 24
+        }
+      }
+    },
+    "app-json-provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/canonicalRelativePath"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "description": "Optional provenance only. It never substitutes for normalized target metadata."
+    }
+  },
+  "$defs": {
+    "canonicalRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.(?:/|$))(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*(?:^|/)\\.git(?:/|$))[^/\\u0000]+(?:/[^/\\u0000]+)*$"
+    },
+    "canonicalAlPath": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 512,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.(?:/|$))(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*(?:^|/)\\.git(?:/|$))[^/\\u0000]+(?:/[^/\\u0000]+)*\\.al$"
+    },
+    "requestedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "path",
+        "object-type",
+        "object-name",
+        "intent"
+      ],
+      "properties": {
+        "operation": {
+          "const": "create"
+        },
+        "path": {
+          "$ref": "#/$defs/canonicalAlPath"
+        },
+        "object-type": {
+          "enum": [
+            "codeunit",
+            "controladdin",
+            "enum",
+            "enumextension",
+            "interface",
+            "page",
+            "pagecustomization",
+            "pageextension",
+            "permissionset",
+            "permissionsetextension",
+            "profile",
+            "query",
+            "report",
+            "reportextension",
+            "table",
+            "tableextension",
+            "xmlport"
+          ]
+        },
+        "object-id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999999999
+        },
+        "object-name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "intent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+$"
+    },
+    "runtime": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "publisher",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 250
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 250
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        }
+      }
+    },
+    "idRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999999999
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999999999
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effective-bc-major",
+        "runtime",
+        "app"
+      ],
+      "properties": {
+        "effective-bc-major": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "app": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name",
+            "publisher",
+            "version",
+            "platform",
+            "application",
+            "target",
+            "dependencies",
+            "id-ranges"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 250
+            },
+            "publisher": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 250
+            },
+            "version": {
+              "$ref": "#/$defs/version"
+            },
+            "platform": {
+              "$ref": "#/$defs/version"
+            },
+            "application": {
+              "$ref": "#/$defs/version"
+            },
+            "target": {
+              "enum": [
+                "Cloud",
+                "OnPrem"
+              ]
+            },
+            "dependencies": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/dependency"
+              }
+            },
+            "id-ranges": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/idRange"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

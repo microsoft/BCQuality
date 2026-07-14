@@ -1,0 +1,67 @@
+{
+  "output-kind": "generated-files-report",
+  "contract-version": 1,
+  "skill": {
+    "id": "al-code-generation",
+    "version": 1
+  },
+  "outcome": "completed",
+  "outcome-reason": "Generated the requested create-only AL object from the complete worklist.",
+  "summary": {
+    "artifact-count": 1,
+    "total-content-bytes": 217,
+    "coverage": {
+      "candidate-count": 3,
+      "relevant-count": 1,
+      "worklist-count": 1,
+      "opened-article-count": 1,
+      "opened-good-sample-count": 1,
+      "opened-bad-sample-count": 0,
+      "omitted-count": 0
+    }
+  },
+  "knowledge-revision": {
+    "repository": "https://github.com/microsoft/BCQuality",
+    "commit-sha": "1111111111111111111111111111111111111111"
+  },
+  "assumptions": [
+    "The requested table is a new object and the consumer will verify the destination does not exist."
+  ],
+  "artifacts": [
+    {
+      "path": "src/SampleApp/Setup/CQSampleSetup.Table.al",
+      "encoding": "utf-8",
+      "object-type": "table",
+      "object-id": 70000,
+      "object-name": "CQ Sample Setup",
+      "content": "table 70000 \"CQ Sample Setup\"\n{\n    Caption = 'Sample Setup';\n    DataClassification = CustomerContent;\n\n    fields\n    {\n        field(1; Enabled; Boolean)\n        {\n            Caption = 'Enabled';\n        }\n    }\n}",
+      "rationale": "Creates the requested bounded setup table with a reserved CQ affix and explicit classification.",
+      "article-references": [
+        {
+          "path": "microsoft/knowledge/appsource/object-affixes-prevent-collisions.md",
+          "sha": "1111111111111111111111111111111111111111"
+        }
+      ],
+      "good-sample-references": [
+        {
+          "path": "microsoft/knowledge/appsource/object-affixes-prevent-collisions.good.al",
+          "sha": "1111111111111111111111111111111111111111"
+        }
+      ]
+    }
+  ],
+  "applied-guidance": [
+    {
+      "reference": {
+        "path": "microsoft/knowledge/appsource/object-affixes-prevent-collisions.md",
+        "sha": "1111111111111111111111111111111111111111"
+      },
+      "artifact-paths": [
+        "src/SampleApp/Setup/CQSampleSetup.Table.al"
+      ],
+      "application": "Applied the CQ object-name affix without copying demonstration object IDs or names."
+    }
+  ],
+  "omitted-guidance": [],
+  "suppressed": []
+}

@@ -1,0 +1,509 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/microsoft/BCQuality/blob/main/schemas/generated-files-report-v1.schema.json",
+  "title": "BCQuality generated files report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output-kind",
+    "contract-version",
+    "skill",
+    "outcome",
+    "outcome-reason",
+    "summary",
+    "knowledge-revision",
+    "assumptions",
+    "artifacts",
+    "applied-guidance",
+    "omitted-guidance",
+    "suppressed"
+  ],
+  "properties": {
+    "output-kind": {
+      "const": "generated-files-report"
+    },
+    "contract-version": {
+      "const": 1
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "const": "al-code-generation"
+        },
+        "version": {
+          "const": 1
+        }
+      }
+    },
+    "outcome": {
+      "enum": [
+        "completed",
+        "not-applicable",
+        "no-knowledge",
+        "partial",
+        "failed"
+      ]
+    },
+    "outcome-reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "knowledge-revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commit-sha"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "description": "Immutable-revision repository containing every cited enabled layer, including a fork's custom layer."
+        },
+        "commit-sha": {
+          "$ref": "#/$defs/commitSha"
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "applied-guidance": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/appliedGuidance"
+      }
+    },
+    "omitted-guidance": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/omittedGuidance"
+      }
+    },
+    "suppressed": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/suppression"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "completed"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "minItems": 1
+          },
+          "omitted-guidance": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "partial"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "minItems": 1
+          },
+          "omitted-guidance": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "omitted-guidance": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "omitted-guidance"
+        ]
+      },
+      "then": {
+        "properties": {
+          "outcome": {
+            "const": "partial"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "not-applicable",
+              "no-knowledge",
+              "failed"
+            ]
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "commitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "canonicalAlPath": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 512,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.(?:/|$))(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*(?:^|/)\\.git(?:/|$))[^/\\u0000]+(?:/[^/\\u0000]+)*\\.al$"
+    },
+    "knowledgePath": {
+      "type": "string",
+      "pattern": "^(microsoft|community|custom)/knowledge/[a-z0-9-]+/[a-z0-9-]+\\.md$"
+    },
+    "goodSamplePath": {
+      "type": "string",
+      "pattern": "^(microsoft|community|custom)/knowledge/[a-z0-9-]+/[a-z0-9-]+\\.good\\.al$"
+    },
+    "objectType": {
+      "enum": [
+        "codeunit",
+        "controladdin",
+        "enum",
+        "enumextension",
+        "interface",
+        "page",
+        "pagecustomization",
+        "pageextension",
+        "permissionset",
+        "permissionsetextension",
+        "profile",
+        "query",
+        "report",
+        "reportextension",
+        "table",
+        "tableextension",
+        "xmlport"
+      ]
+    },
+    "revisionScopedArticleReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/knowledgePath"
+        },
+        "sha": {
+          "$ref": "#/$defs/commitSha"
+        }
+      }
+    },
+    "revisionScopedGoodSampleReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/goodSamplePath"
+        },
+        "sha": {
+          "$ref": "#/$defs/commitSha"
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate-count",
+        "relevant-count",
+        "worklist-count",
+        "opened-article-count",
+        "opened-good-sample-count",
+        "opened-bad-sample-count",
+        "omitted-count"
+      ],
+      "properties": {
+        "candidate-count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "relevant-count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "worklist-count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "opened-article-count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "opened-good-sample-count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "opened-bad-sample-count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "omitted-count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact-count",
+        "total-content-bytes",
+        "coverage"
+      ],
+      "properties": {
+        "artifact-count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "total-content-bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4194304
+        },
+        "coverage": {
+          "$ref": "#/$defs/coverage"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "encoding",
+        "object-type",
+        "object-id",
+        "object-name",
+        "content",
+        "rationale",
+        "article-references",
+        "good-sample-references"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/canonicalAlPath"
+        },
+        "encoding": {
+          "const": "utf-8"
+        },
+        "object-type": {
+          "$ref": "#/$defs/objectType"
+        },
+        "object-id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999999999
+        },
+        "object-name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 262144
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "article-references": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/revisionScopedArticleReference"
+          }
+        },
+        "good-sample-references": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/revisionScopedGoodSampleReference"
+          }
+        }
+      }
+    },
+    "appliedGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "artifact-paths",
+        "application"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/revisionScopedArticleReference"
+        },
+        "artifact-paths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/canonicalAlPath"
+          }
+        },
+        "application": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "omittedGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "reason",
+        "detail"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/revisionScopedArticleReference"
+        },
+        "reason": {
+          "enum": [
+            "context-budget",
+            "article-unavailable",
+            "article-invalid",
+            "sample-unavailable",
+            "allowlist-boundary"
+          ]
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "suppression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "reason"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/revisionScopedArticleReference"
+        },
+        "reason": {
+          "const": "layer-precedence"
+        },
+        "superseded-by": {
+          "$ref": "#/$defs/revisionScopedArticleReference"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reason": {
+                "const": "layer-precedence"
+              }
+            },
+            "required": [
+              "reason"
+            ]
+          },
+          "then": {
+            "required": [
+              "superseded-by"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
