@@ -26,36 +26,33 @@ codeunit 50128 "Perf Sample CommitInLoop Good"
     local procedure NormalizeNextChunk(var LastCustomerNo: Code[20]): Boolean
     var
         Customer: Record Customer;
+        TempCustomer: Record Customer temporary;
         CustomerChunk: Query "Perf Customer Chunk";
-        FirstCustomerNo: Code[20];
         LastChunkCustomerNo: Code[20];
     begin
         CustomerChunk.TopNumberOfRows(500);
         if LastCustomerNo <> '' then
             CustomerChunk.SetFilter(CustomerNo, '>%1', LastCustomerNo);
         CustomerChunk.Open();
-        if not CustomerChunk.Read() then begin
-            CustomerChunk.Close();
-            exit(false);
-        end;
-
-        FirstCustomerNo := CustomerChunk.CustomerNo;
-        repeat
+        while CustomerChunk.Read() do begin
+            TempCustomer.Init();
+            TempCustomer."No." := CustomerChunk.CustomerNo;
+            TempCustomer.Insert();
             LastChunkCustomerNo := CustomerChunk.CustomerNo;
-        until not CustomerChunk.Read();
+        end;
         CustomerChunk.Close();
 
-        Customer.SetCurrentKey("No.");
-        Customer.SetRange("No.", FirstCustomerNo, LastChunkCustomerNo);
-        if not Customer.FindSet(true) then begin
-            LastCustomerNo := LastChunkCustomerNo;
-            exit(true);
-        end;
+        if TempCustomer.IsEmpty() then
+            exit(false);
 
-        repeat
-            Customer.Name := UpperCase(Customer.Name);
-            Customer.Modify();
-        until Customer.Next() = 0;
+        Customer.LockTable();
+        if TempCustomer.FindSet() then
+            repeat
+                if Customer.Get(TempCustomer."No.") then begin
+                    Customer.Name := UpperCase(Customer.Name);
+                    Customer.Modify();
+                end;
+            until TempCustomer.Next() = 0;
 
         LastCustomerNo := LastChunkCustomerNo;
         exit(true);

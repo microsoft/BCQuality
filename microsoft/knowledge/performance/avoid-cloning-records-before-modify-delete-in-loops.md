@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: performance
-keywords: [clone, copy, recordref, gettable, by-value, modify, delete, loop]
+keywords: [clone, clone-before-write, copy, gettable, by-value, copied-record, writing-helper]
 technologies: [al]
 countries: [w1]
 application-area: [all]
