@@ -38,9 +38,10 @@ Discard files that are not applicable. Retain conditionally applicable files (an
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
 - The changed AL object names and types — especially codeunits with `Subtype = Upgrade` or `Subtype = Install`, tables and tableextensions adding or changing fields, enums and enumextensions, and objects under `Hybrid*`/`Migration`/`Upgrade` namespaces.
-- The changed triggers and procedures, weighted toward `OnCheckPreconditionsPerCompany`/`PerDatabase`, `OnUpgradePerCompany`/`PerDatabase`, `OnValidateUpgradePerCompany`/`PerDatabase`, `OnInstallAppPerCompany`/`PerDatabase`, and the `OnGetPerCompanyUpgradeTags`/`OnGetPerDatabaseUpgradeTags` subscribers.
+- The changed triggers and procedures, weighted toward `OnCheckPreconditionsPerCompany`/`PerDatabase`, `OnUpgradePerCompany`/`PerDatabase`, `OnValidateUpgradePerCompany`/`PerDatabase`, `OnInstallAppPerCompany`/`PerDatabase`, the `OnGetPerCompanyUpgradeTags`/`OnGetPerDatabaseUpgradeTags` subscribers, and helper procedures transitively reachable from those entry points.
 - Tokens extracted from the diff that relate to upgrade concerns (`Subtype = Upgrade`, `Subtype = Install`, `Upgrade Tag`, `HasUpgradeTag`, `SetUpgradeTag`, `OnCheckPreconditions`, `OnUpgrade`, `OnValidateUpgrade`, `OnInstallApp`, `DataTransfer`, `CopyFields`, `Insert`, `Modify`, `Delete`, `Rename`, `InitValue`, `ObsoleteState`, `ObsoleteReason`, `ObsoleteTag`, `DataVersion`, `ExecutionContext`, `PrimaryKey`, `key(`, `field(`, `value(`, `enum`, `enumextension`, `HybridSL`, `HybridGP`, `HybridBC`, `HybridBaseDeployment`).
-- Worklist the check-only rule when precondition or validation triggers contain writes, and the install-versus-upgrade rule when migration helpers are reachable only from an install codeunit.
+- Build the best available call graph from each precondition and validation trigger, following helper calls transitively through the surrounding unchanged source as well as changed hunks. Worklist the check-only rule when a write occurs directly in one of those triggers or in a reachable helper. Also worklist it when a PR changes the body of such a helper even if the calling trigger is unchanged. Worklist the install-versus-upgrade rule when migration helpers are reachable only from an install codeunit.
+- If repository boundaries, dynamic dispatch, missing source, or analysis limits prevent complete call-graph reachability, use the available call sites and type information but cap any reachability-dependent finding at `medium` confidence and state the incomplete reachability in the finding message.
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone. When the diff contains no upgrade-related changes by any of the above signals, return `outcome: "not-applicable"` without evaluating files.
 
@@ -58,7 +59,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 Set `confidence` to:
 
-- `high` when the detection is based on an unambiguous pattern match.
+- `high` when the detection is based on an unambiguous pattern match and any required helper reachability is fully established.
 - `medium` when detection relies on heuristics or when any frontmatter dimension was `unknown`.
 - `low` when the finding is an advisory derived only from applicability.
 
