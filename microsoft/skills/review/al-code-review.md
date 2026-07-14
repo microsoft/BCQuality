@@ -22,6 +22,10 @@ sub-skills:
   - microsoft/skills/review/al-interfaces-review.md
   - microsoft/skills/review/al-breaking-changes-review.md
   - microsoft/skills/review/al-web-services-review.md
+  - microsoft/skills/review/al-testing-review.md
+  - microsoft/skills/review/al-data-modeling-review.md
+  - microsoft/skills/review/al-appsource-review.md
+  - microsoft/skills/review/al-telemetry-review.md
 ---
 
 # AL code review
@@ -34,7 +38,7 @@ An orchestrator invokes this skill with either a `pr-diff` (the standard PR-revi
 
 ## Source
 
-The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`. Additional leaf skills (for example, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
+The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`. Additional leaf skills are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
 
 ## Relevance
 
