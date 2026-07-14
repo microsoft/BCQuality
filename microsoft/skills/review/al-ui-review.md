@@ -16,7 +16,7 @@ application-area: [all]
 
 Reviews AL page source and control add-in UI files against the `ui` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-UI findings apply to page files — files that declare `PageType = ...`, including `*.Page.al` under the standard file-naming convention — and to JavaScript/CSS/HTML files that render Business Central control add-ins. The skill returns `not-applicable` when the diff contains no page or control add-in UI changes.
+UI findings apply to page files — files that declare `PageType = ...`, including `*.Page.al` under the standard file-naming convention — and to JavaScript/CSS/HTML files that implement Business Central control add-ins, including their client-service communication. The skill returns `not-applicable` when the diff contains no page or control add-in changes.
 
 An orchestrator invokes this skill with either a `pr-diff` or a `file-path`. The skill produces a single JSON document conforming to the DO output contract.
 
@@ -39,9 +39,9 @@ Discard files that are not applicable. Retain conditionally applicable files onl
 
 Narrow the relevant files to the subset that applies to the changes under review.
 
-- **UI-file filter.** UI review applies to files declaring `page`, `pageextension`, or `pagecustomization`, and to control add-in JavaScript/CSS/HTML that changes rendered UI. When the diff contains no such files, return `outcome: "not-applicable"` without evaluating knowledge files.
-- For each relevant knowledge file, compute overlap against changed page declarations and control add-in UI files, weighted toward `Caption`, `ToolTip`, `AboutTitle`, `AboutText`, `OptionCaption`, `ShowCaption`, `InstructionalText`, `GridLayout`, `Style`, `StyleExpr`, action definitions, field-level properties, DOM creation, ARIA attributes, and keyboard/focus handlers.
-- Tokens extracted from the diff (`Caption`, `ToolTip`, `AboutTitle`, `AboutText`, `PageType`, `ShowCaption`, `InstructionalText`, `grid`, `fixed`, `GridLayout`, `Style`, `StyleExpr`, `Favorable`, `Unfavorable`, `Ambiguous`, `cuegroup`, `controladdin`, `usercontrol`, `aria-`, `tabindex`, `keydown`, `focus`, `innerHTML`, `createElement`, `&`, `Specifies`, `Message(`, `Confirm(`, `Error(` in a page context, `Disabled`, `Invalid`, `Whitelist`, `Blacklist`, trailing punctuation patterns on captions).
+- **UI-file filter.** UI review applies to files declaring `page`, `pageextension`, or `pagecustomization`, and to JavaScript/CSS/HTML that implements a control add-in's rendering or Business Central communication. When the diff contains no such files, return `outcome: "not-applicable"` without evaluating knowledge files.
+- For each relevant knowledge file, compute overlap against changed page declarations and control add-in files, weighted toward `Caption`, `ToolTip`, `AboutTitle`, `AboutText`, `OptionCaption`, `ShowCaption`, `InstructionalText`, `GridLayout`, `Style`, `StyleExpr`, action definitions, field-level properties, DOM creation, ARIA attributes, keyboard/focus handlers, packaged-resource AJAX, and calls from JavaScript into AL.
+- Tokens extracted from the diff (`Caption`, `ToolTip`, `AboutTitle`, `AboutText`, `PageType`, `ShowCaption`, `InstructionalText`, `grid`, `fixed`, `GridLayout`, `Style`, `StyleExpr`, `Favorable`, `Unfavorable`, `Ambiguous`, `cuegroup`, `controladdin`, `control-add-in`, `usercontrol`, `aria-`, `tabindex`, `keydown`, `focus`, `innerHTML`, `createElement`, `packaged-resource`, `ajax`, `$.get`, `$.ajax`, `XMLHttpRequest`, `xhrFields`, `withCredentials`, `withcredentials`, `InvokeExtensibilityMethod`, `invokeextensibilitymethod`, `skipIfBusy`, `successCallback`, `success-callback`, `errorCallback`, `setInterval`, `JSON.stringify`, `payload`, `throttling`, `reduced-functionality`, `ClientServicesMaxUploadSize`, `&`, `Specifies`, `Message(`, `Confirm(`, `Error(` in a page context, `Disabled`, `Invalid`, `Whitelist`, `Blacklist`, trailing punctuation patterns on captions).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed page element. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -52,6 +52,8 @@ When the post-conflict worklist is empty because no applicable UI knowledge exis
 ## Action
 
 For each worklist entry, evaluate the diff against the file's `## Best Practice` and `## Anti Pattern` sections. UI text findings are generally `minor` — they affect localization and polish rather than correctness. Accessibility findings for missing labels, broken grid semantics, semantic color without text meaning, or UI-rendering control add-in changes can be `major`; use `minor` for low-risk manual-review reminders and polish issues.
+
+For packaged-resource requests, flag `$.get` or AJAX/XHR that omits `withCredentials` only when the URL is identifiable as a resource in the control add-in package; do not generalize the rule to external endpoints. For `InvokeExtensibilityMethod`, flag repeated or timer-driven calls that can overlap because they do not wait for the success/error callbacks, and unbounded serialized payloads sent in one call. Prefer bounded chunks serialized through completion callbacks. Do not emit generic browser or JavaScript performance advice.
 
 Set `confidence` to:
 
@@ -69,7 +71,7 @@ Outcome selection:
 
 - `completed` — the skill evaluated every worklist item.
 - `no-knowledge` — no applicable UI knowledge survived filtering.
-- `not-applicable` — the diff contains no page, pageextension, pagecustomization, or control add-in UI files.
+- `not-applicable` — the diff contains no page, pageextension, pagecustomization, or control add-in implementation files.
 - `partial` — a budget was hit before the worklist was exhausted.
 - `failed` — an unrecoverable error occurred.
 

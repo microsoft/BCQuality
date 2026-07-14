@@ -3,11 +3,11 @@ kind: action-skill
 id: al-web-services-review
 version: 1
 title: AL web services review
-description: Reviews AL source changes against web-services (API page) guidance from BCQuality.
+description: Reviews AL API surfaces and webhook integration handlers against web-services guidance from BCQuality.
 inputs: [pr-diff, file-path]
 outputs: [findings-report]
 bc-version: [all]
-technologies: [al]
+technologies: [al, javascript]
 countries: [w1]
 application-area: [all]
 ---
@@ -27,7 +27,7 @@ Read the BCQuality knowledge index once — the `knowledge-index.json` BCQuality
 Apply the frontmatter matching rules defined in READ (*Frontmatter matching semantics*) against the task context:
 
 - `bc-version` — the target BC version from the PR branch's `app.json` or the orchestrator-supplied version. If unavailable, the dimension is `unknown`.
-- `technologies` — `[al]`.
+- `technologies` — `[al]` or `[javascript]`.
 - `countries` — the countries declared in the consuming app's `app.json`. Default to the orchestrator's configured context; if absent, `unknown`.
 - `application-area` — the union of application areas declared by the changed objects. Pass the actual set; do not substitute `[all]`. If the area cannot be determined from the changes, the dimension is `unknown`.
 
@@ -37,9 +37,10 @@ Discard files that are not applicable. Retain conditionally applicable files (an
 
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
-- The changed AL object names and types — especially page objects declared with `PageType = API`, and any procedure on such a page that exposes a bound action.
-- The changed properties and triggers, weighted toward API page metadata (`APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `ODataKeyFields`, `SourceTable`), CRUD guards (`InsertAllowed`, `ModifyAllowed`, `DeleteAllowed`, `Editable`), the `OnOpenPage` trigger, and `OnValidate` triggers on exposed fields.
-- Tokens extracted from the diff that relate to API surface and behaviour (`PageType`, `API`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `ODataKeyFields`, `SystemId`, `ServiceEnabled`, `WebServiceActionContext`, `SetActionResponse`, `ReadIsolation`, `IsolationLevel`, `ReadCommitted`, `InsertAllowed`, `ModifyAllowed`, `DeleteAllowed`, `Editable`, `SourceTable`).
+- The changed AL object names and types — especially pages declared with `PageType = API`, API page `part` controls, queries declared with `QueryType = API`, and procedures that expose bound actions.
+- The changed properties and triggers, weighted toward API page metadata (`APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `ODataKeyFields`, `SourceTable`, `SourceTableTemporary`), navigation metadata (`SubPageLink`, `Multiplicity`), CRUD guards (`InsertAllowed`, `ModifyAllowed`, `DeleteAllowed`, `Editable`), the `OnOpenPage` trigger, and `OnValidate` triggers on exposed fields.
+- Webhook subscriber handlers and subscription lifecycle code, especially code that creates or renews subscriptions, handles `validationToken`, schedules from `expirationDateTime`, or targets resources whose eligibility is visible in the diff.
+- Tokens extracted from the diff that relate to API surface and behaviour (`PageType`, `QueryType`, `API`, `api-page`, `page-part`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `ODataKeyFields`, `SystemId`, `SubPageLink`, `subpagelink`, `Multiplicity`, `multiplicity`, `Many`, `ZeroOrOne`, `SourceTableTemporary`, `Job Queue Entry`, `webhook`, `webhookSupportedResources`, `webhook-supported-resources`, `subscriptions`, `notificationUrl`, `validationToken`, `validationtoken`, `expirationDateTime`, `expirationdatetime`, `ServiceEnabled`, `WebServiceActionContext`, `SetActionResponse`, `ReadIsolation`, `IsolationLevel`, `ReadCommitted`, `InsertAllowed`, `ModifyAllowed`, `DeleteAllowed`, `Editable`, `SourceTable`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -54,6 +55,8 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee. When the file does not make such a claim, the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
 - When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file. Repository-wide observations MAY omit `location`.
+
+For API parts whose parent declares `ODataKeyFields = SystemId`, detect a child foreign key linked to a parent business field instead of `Field(SystemId)`, and an omitted `Multiplicity` where the diff defines the navigation contract. Do not apply the SystemId-link rule to APIs intentionally keyed by another field. For webhook eligibility, detect `QueryType = API`, `SourceTableTemporary = true`, composite `ODataKeyFields` (including an omitted property when a visible source primary key is composite), Job Queue Entry, and visible system-table sources; do not infer an unknown table number. For lifecycle code, require both create and renew paths to use a handler that returns the query-string `validationToken` verbatim with `200 OK`, and flag renewal scheduling that assumes subscriptions are permanent instead of using `expirationDateTime`. Do not emit generic HTTP or REST advice.
 
 Set `confidence` to:
 
@@ -71,7 +74,7 @@ Outcome selection:
 
 - `completed` — the skill evaluated every worklist item; default when the skill finishes normally, including when the resulting `findings` array is empty.
 - `no-knowledge` — no applicable web-services knowledge survived Source, Relevance, configuration filtering, and conflict resolution. `findings` is empty.
-- `not-applicable` — the task context lacks an AL dimension (no AL changes in the diff, or `technologies` filter rejected the task).
+- `not-applicable` — the task context contains no AL API surface, JavaScript webhook subscription lifecycle code, or JavaScript notification handler, or the `technologies` filter rejected the task.
 - `partial` — a time or token budget was hit before the worklist was exhausted. `summary.coverage` reflects the evaluated subset; `outcome-reason` explains the cause.
 - `failed` — an unrecoverable error occurred. `outcome-reason` is required.
 
