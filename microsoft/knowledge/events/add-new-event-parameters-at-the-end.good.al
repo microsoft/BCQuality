@@ -6,13 +6,13 @@ codeunit 50250 "Param Append Good Sample"
         IsHandled: Boolean;
     begin
         IsHandled := false;
-        // The new 'CalledFromBatch' parameter was appended at the end of the
-        // existing signature, so existing subscribers needed no re-mapping.
+        // This local event can gain an optional trailing subscriber parameter.
         OnBeforePostDocument(SalesHeader, IsHandled, CalledFromBatch);
         if IsHandled then
             exit;
     end;
 
+    // Public events cannot use this evolution: dependent apps may raise them.
     [IntegrationEvent(false, false)]
     local procedure OnBeforePostDocument(var SalesHeader: Record "Sales Header"; var IsHandled: Boolean; CalledFromBatch: Boolean)
     begin

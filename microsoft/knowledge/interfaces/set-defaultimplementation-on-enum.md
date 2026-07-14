@@ -11,11 +11,11 @@ application-area: [all]
 
 ## Description
 
-An `enum` that `implements` an interface maps each value to a codeunit through the `Implementation` property. But an extensible enum can carry values that set no `Implementation` — values added later by an extension, or a value left intentionally blank. Assigning such a value to an interface variable and calling a method on it fails at runtime unless the enum provides a fallback. The enum-level `DefaultImplementation` property names the codeunit used whenever a value has no explicit `Implementation`, so resolution always yields a usable object. LLMs are generally unaware this property exists and leave the gap open.
+An `enum` that `implements` an interface maps each declared value to a codeunit through the `Implementation` property. A declared value, including one supplied by an enum extension, can omit that mapping. Assigning that value to an interface variable then fails at runtime unless the enum provides `DefaultImplementation`. This property is for declared but unmapped values; an ordinal that is no longer declared is a different case covered by `handle-unknown-enum-ordinals-with-unknownvalueimplementation`.
 
 ## Best Practice
 
-On any extensible enum that implements an interface, set `DefaultImplementation = <Interface> = <Codeunit>;` at the enum level, pointing at a safe implementation that does nothing harmful. Values with their own `Implementation` keep using it; declared values without one resolve to the default. For an ordinal that matches no currently declared value — for example persisted data left after an enum extension is uninstalled — runtime 7.0 and later can use `UnknownValueImplementation` as a distinct fallback. Do not recommend that property to apps targeting an earlier runtime.
+On any extensible enum that implements an interface, set `DefaultImplementation = <Interface> = <Codeunit>;` at the enum level, pointing at a safe implementation. Values with their own `Implementation` keep using it; declared values without one resolve to the default. Do not rely on this property for persisted ordinals that match no declared enum value.
 
 See sample: `set-defaultimplementation-on-enum.good.al`.
 

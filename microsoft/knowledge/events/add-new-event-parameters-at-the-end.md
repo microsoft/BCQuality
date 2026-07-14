@@ -11,16 +11,16 @@ application-area: [all]
 
 ## Description
 
-Adding a parameter to an existing event publisher changes its signature. Appending the new parameter at the end of the parameter list keeps the change easy to review and track: existing subscribers still bind to the leading parameters, and the diff is a single clean addition. Inserting a parameter in the middle makes diffs noisy and harder to review, and obscures the history of how the signature evolved. New parameters belong after the existing ones.
+Adding a parameter to an existing event publisher changes its signature. For a `local` or `internal` Business or Integration event, subscribers may omit parameters, so a new parameter can be compatible when appended at the end. A public event is also a public procedure that dependent extensions can raise; adding a parameter to it is breaking and requires a new event. Existing parameters must never be renamed, removed, reordered, or have their type changed.
 
 ## Best Practice
 
-When extending an existing publisher, append the new parameter after all existing ones, including after a trailing `var IsHandled: Boolean` when present. Subscribers that already match keep working against the leading parameters, and the change stays a one-line addition that is trivial to review.
+When extending an existing `local` or `internal` Business or Integration event, append the new parameter after all existing ones, including after a trailing `var IsHandled: Boolean` when present. Existing subscribers can continue omitting the new trailing parameter. Create a new event instead when the publisher procedure is public.
 
 See sample: `add-new-event-parameters-at-the-end.good.al`.
 
 ## Anti Pattern
 
-Inserting a new parameter in the middle of an existing event's signature, shifting every subsequent parameter and making the change noisy and harder to review. Detection: a changed event signature where an added parameter appears before existing parameters rather than at the tail of the list.
+Inserting a new parameter before an existing parameter of a `local` or `internal` event, or adding any parameter to a public event. Detection: a changed event signature where a new parameter is not a compatible trailing addition.
 
 See sample: `add-new-event-parameters-at-the-end.bad.al`.
