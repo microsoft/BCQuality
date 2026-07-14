@@ -1,23 +1,30 @@
 codeunit 50100 "Sales Document Processor"
 {
-    procedure ProcessDocument(var SalesHeader: Record "Sales Header")
+    procedure DescribeDocument(DocumentType: Enum "Sales Document Type"; DocumentNo: Code[20]): Text
+    var
+        SalesHeader: Record "Sales Header";
     begin
-        // Single top-level load pulls every field any branch might touch.
-        // Order records pay for Posting Date and Amount Including VAT that
-        // only the Invoice branch reads, and vice versa.
         SalesHeader.SetLoadFields(
-            "Document Type", "No.", "Sell-to Customer No.",
+            "Sell-to Customer No.",
             "Order Date", "Shipment Date", "Completely Shipped",
-            "Posting Date", "Amount Including VAT");
+            "Posting Date", "Due Date", "Payment Terms Code");
+        SalesHeader.Get(DocumentType, DocumentNo);
 
-        case SalesHeader."Document Type" of
-            SalesHeader."Document Type"::Order:
-                ProcessOrder(SalesHeader);
-            SalesHeader."Document Type"::Invoice:
-                ProcessInvoice(SalesHeader);
+        case DocumentType of
+            DocumentType::Order:
+                exit(DescribeOrder(SalesHeader));
+            DocumentType::Invoice:
+                exit(DescribeInvoice(SalesHeader));
         end;
     end;
 
-    local procedure ProcessOrder(var SalesHeader: Record "Sales Header") begin end;
-    local procedure ProcessInvoice(var SalesHeader: Record "Sales Header") begin end;
+    local procedure DescribeOrder(SalesHeader: Record "Sales Header"): Text
+    begin
+        exit(StrSubstNo('%1|%2|%3|%4', SalesHeader."Sell-to Customer No.", SalesHeader."Order Date", SalesHeader."Shipment Date", SalesHeader."Completely Shipped"));
+    end;
+
+    local procedure DescribeInvoice(SalesHeader: Record "Sales Header"): Text
+    begin
+        exit(StrSubstNo('%1|%2|%3|%4', SalesHeader."Sell-to Customer No.", SalesHeader."Posting Date", SalesHeader."Due Date", SalesHeader."Payment Terms Code"));
+    end;
 }

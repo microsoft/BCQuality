@@ -1,17 +1,28 @@
-codeunit 50100 "Stale Quote Cleanup"
+table 50100 "Perf Import Buffer"
 {
-    procedure ClearExpiredQuotes(CutoffDate: Date)
-    var
-        SalesHeader: Record "Sales Header";
-    begin
-        // OnDelete on Sales Header carries no logic this call depends on:
-        // expired quotes have no ledger entries, shipments, or downstream state.
-        SalesHeader.SetRange("Document Type", SalesHeader."Document Type"::Quote);
-        SalesHeader.SetFilter("Document Date", '<%1', CutoffDate);
-        SalesHeader.SetRange(Status, SalesHeader.Status::Open);
+    fields
+    {
+        field(1; "Entry No."; Integer) { }
+        field(2; "Batch ID"; Guid) { }
+        field(3; Payload; Blob) { }
+    }
 
-        // Single SQL DELETE. Orders of magnitude faster than FindSet + Delete
-        // once the filtered set exceeds a handful of rows.
-        SalesHeader.DeleteAll();
+    keys
+    {
+        key(PK; "Entry No.") { Clustered = true; }
+        key(ByBatch; "Batch ID") { }
+    }
+}
+
+codeunit 50100 "Perf Import Buffer Cleanup"
+{
+    procedure ClearBatch(BatchId: Guid)
+    var
+        ImportBuffer: Record "Perf Import Buffer";
+    begin
+        ImportBuffer.SetRange("Batch ID", BatchId);
+        // This staging table has no base delete trigger. Installed extensions and
+        // subscribers must also be checked before assuming the set-based fast path.
+        ImportBuffer.DeleteAll(false);
     end;
 }

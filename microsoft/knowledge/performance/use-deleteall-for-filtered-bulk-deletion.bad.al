@@ -1,19 +1,29 @@
-codeunit 50100 "Stale Quote Cleanup"
+table 50100 "Perf Import Buffer"
 {
-    procedure ClearExpiredQuotes(CutoffDate: Date)
-    var
-        SalesHeader: Record "Sales Header";
-    begin
-        SalesHeader.SetRange("Document Type", SalesHeader."Document Type"::Quote);
-        SalesHeader.SetFilter("Document Date", '<%1', CutoffDate);
-        SalesHeader.SetRange(Status, SalesHeader.Status::Open);
+    fields
+    {
+        field(1; "Entry No."; Integer) { }
+        field(2; "Batch ID"; Guid) { }
+        field(3; Payload; Blob) { }
+    }
 
-        // One SQL DELETE per row. On a 10k-row cleanup, minutes instead of
-        // under a second - and the OnDelete trigger has no logic this call
-        // needs to run.
-        if SalesHeader.FindSet() then
+    keys
+    {
+        key(PK; "Entry No.") { Clustered = true; }
+        key(ByBatch; "Batch ID") { }
+    }
+}
+
+codeunit 50100 "Perf Import Buffer Cleanup"
+{
+    procedure ClearBatch(BatchId: Guid)
+    var
+        ImportBuffer: Record "Perf Import Buffer";
+    begin
+        ImportBuffer.SetRange("Batch ID", BatchId);
+        if ImportBuffer.FindSet() then
             repeat
-                SalesHeader.Delete();
-            until SalesHeader.Next() = 0;
+                ImportBuffer.Delete(false);
+            until ImportBuffer.Next() = 0;
     end;
 }

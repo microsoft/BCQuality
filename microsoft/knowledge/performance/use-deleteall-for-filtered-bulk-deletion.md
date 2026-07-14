@@ -13,16 +13,16 @@ application-area: [all]
 
 ## Description
 
-`DeleteAll` translates to a single SQL `DELETE` with the record variable's current filters applied as the WHERE clause. A loop of `FindSet` + `Delete` instead issues one SQL statement per row. On any dataset larger than a handful of records, the gap is an order of magnitude or more. The tradeoff is that `DeleteAll` bypasses the `OnDelete` table trigger, so the decision hinges on whether that trigger's logic is required for this specific deletion.
+`DeleteAll(false)` is eligible for a set-based SQL delete with the record variable's filters applied. It is not guaranteed to stay one statement. The base table `OnDelete` trigger is skipped, but table-extension `OnBeforeDelete` and `OnAfterDelete` triggers still run. Extension event subscribers, global delete triggers, and media fields can also require row processing. `DeleteAll(true)` runs the base table `OnDelete` trigger as well and has no performance advantage over `Delete(true)` in a loop.
 
 ## Best Practice
 
-After narrowing the record set with `SetRange`/`SetFilter`, use `DeleteAll` whenever the `OnDelete` trigger has no logic that this call depends on — typically the case for housekeeping routines, staging-table cleanup, and deletions already validated upstream. When the trigger IS required, either keep the explicit loop-plus-`Delete` pattern and comment why, or pre-run the trigger logic against a temporary buffer and then `DeleteAll` the primary table.
+Use filtered `DeleteAll(false)` for purpose-built staging or cleanup tables only after verifying that base-table `OnDelete` logic is unnecessary and installed extensions, subscribers, global triggers, and media fields do not add required per-row behavior or regress the bulk path. If deletion requires per-row business logic, keep an explicit triggered operation instead of simulating trigger execution separately.
 
 See sample: `use-deleteall-for-filtered-bulk-deletion.good.al`.
 
 ## Anti Pattern
 
-Iterating with `FindSet` + `Delete` to clear a filtered set of records that carry no meaningful `OnDelete` logic. Every row pays a full AL round-trip; on a ten-thousand-row cleanup the loop can take minutes where `DeleteAll` takes under a second.
+Iterating with `FindSet` + `Delete(false)` to clear a filtered staging batch that has no delete logic. The reverse mistake is assuming `DeleteAll` is always one SQL statement without checking table extensions and subscribers.
 
 See sample: `use-deleteall-for-filtered-bulk-deletion.bad.al`.

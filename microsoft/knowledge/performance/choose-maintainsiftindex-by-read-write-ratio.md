@@ -13,11 +13,11 @@ application-area: [all]
 
 ## Description
 
-`MaintainSIFTIndex` on a key decides whether the SIFT aggregate structure is updated on every `INSERT`, `MODIFY`, and `DELETE` that touches the key's fields. With `Yes`, `CalcSums` and FlowField reads are immediate — but every write pays the cost of updating the aggregate. With `No`, writes are cheaper but the first aggregate read after a change has to rebuild. Neither value is universally correct; the right choice depends on how often the aggregate is read versus how often the underlying rows are written.
+`MaintainSIFTIndex` on a key decides whether SQL Server maintains the SIFT indexed view as underlying rows change. With `Yes`, writes that affect the key or sum fields also maintain the indexed aggregate. With `No`, that SIFT indexed view is not maintained, so a compatible `CalcSums` or FlowField calculation is computed from the base table instead and may require scanning many rows. There is no deferred "first read rebuild" of the SIFT structure.
 
 ## Best Practice
 
-Measure read-to-write ratios for the key's SIFT fields under realistic workloads. Set `MaintainSIFTIndex = Yes` only on keys whose aggregates are read far more often than the rows are written (reporting keys on reference tables, dashboards). Set `No` on keys whose rows are written heavily and whose aggregates are read rarely (transactional ledger entries, import-staging tables).
+Measure aggregate-read latency and write cost under realistic filters and volumes. Keep `MaintainSIFTIndex = true` when the maintained aggregate materially benefits frequent `CalcSums` or FlowField reads. Consider `false` when writes dominate and the less-frequent aggregate reads can tolerate calculation from the base table.
 
 See sample: `choose-maintainsiftindex-by-read-write-ratio.good.al`.
 

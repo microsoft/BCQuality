@@ -17,7 +17,7 @@ Commit ends the current write transaction. Calling it inside a per-row loop prod
 
 ## Best Practice
 
-If the batch is large enough that a single transaction is untenable, process it in checkpoints driven by an outer loop that each time picks up the next N rows. Commit once per checkpoint at a clearly defined safe boundary, not inside the per-row loop. Wrapping each chunk in `Codeunit.Run` gives the same effect with native rollback on failure — see `codeunit-run-as-atomic-sub-operation.md`.
+If the batch is large enough that a single transaction is untenable, use an outer loop that selects and finishes the next N rows. Commit only after the inner row loop has returned and the checkpoint state identifies where the next chunk starts. A `Codeunit.Run` boundary can also own a chunk when its implicit commit and error behavior fit the caller — see `codeunit-run-as-atomic-sub-operation.md`.
 
 See sample: `avoid-commit-inside-loops.good.al`.
 
@@ -26,4 +26,3 @@ See sample: `avoid-commit-inside-loops.good.al`.
 Placing Commit inside `repeat ... until Next() = 0` is almost always a mistake: it is unusual for the correctness of the operation to depend on per-row commits, and the cost of starting a new transaction on every row dominates the work.
 
 See sample: `avoid-commit-inside-loops.bad.al`.
-

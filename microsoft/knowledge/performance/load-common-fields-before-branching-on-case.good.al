@@ -1,25 +1,34 @@
 codeunit 50100 "Sales Document Processor"
 {
-    procedure ProcessDocument(var SalesHeader: Record "Sales Header")
+    procedure DescribeDocument(DocumentType: Enum "Sales Document Type"; DocumentNo: Code[20]): Text
+    var
+        SalesHeader: Record "Sales Header";
     begin
-        // Tier 1: the discriminator and any fields every branch reads.
-        SalesHeader.SetLoadFields("Document Type", "No.", "Sell-to Customer No.");
+        SalesHeader.SetLoadFields("Sell-to Customer No.");
 
-        case SalesHeader."Document Type" of
-            SalesHeader."Document Type"::Order:
+        case DocumentType of
+            DocumentType::Order:
                 begin
-                    // Tier 2: extend the load only on the branch that needs these fields.
-                    SalesHeader.SetLoadFields("Order Date", "Shipment Date", "Completely Shipped");
-                    ProcessOrder(SalesHeader);
+                    SalesHeader.AddLoadFields("Order Date", "Shipment Date", "Completely Shipped");
+                    SalesHeader.Get(DocumentType, DocumentNo);
+                    exit(DescribeOrder(SalesHeader));
                 end;
-            SalesHeader."Document Type"::Invoice:
+            DocumentType::Invoice:
                 begin
-                    SalesHeader.SetLoadFields("Posting Date", "Amount Including VAT");
-                    ProcessInvoice(SalesHeader);
+                    SalesHeader.AddLoadFields("Posting Date", "Due Date", "Payment Terms Code");
+                    SalesHeader.Get(DocumentType, DocumentNo);
+                    exit(DescribeInvoice(SalesHeader));
                 end;
         end;
     end;
 
-    local procedure ProcessOrder(var SalesHeader: Record "Sales Header") begin end;
-    local procedure ProcessInvoice(var SalesHeader: Record "Sales Header") begin end;
+    local procedure DescribeOrder(SalesHeader: Record "Sales Header"): Text
+    begin
+        exit(StrSubstNo('%1|%2|%3|%4', SalesHeader."Sell-to Customer No.", SalesHeader."Order Date", SalesHeader."Shipment Date", SalesHeader."Completely Shipped"));
+    end;
+
+    local procedure DescribeInvoice(SalesHeader: Record "Sales Header"): Text
+    begin
+        exit(StrSubstNo('%1|%2|%3|%4', SalesHeader."Sell-to Customer No.", SalesHeader."Posting Date", SalesHeader."Due Date", SalesHeader."Payment Terms Code"));
+    end;
 }

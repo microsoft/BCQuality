@@ -1,15 +1,29 @@
+table 50243 "Perf Import Staging Entry"
+{
+    fields
+    {
+        field(1; "Entry No."; Integer) { }
+        field(2; "Batch ID"; Guid) { }
+        field(3; Processed; Boolean) { }
+    }
+
+    keys
+    {
+        key(PK; "Entry No.") { Clustered = true; }
+    }
+}
+
 codeunit 50243 "Perf Sample ModifyAll Bad"
 {
-    procedure ApplyPriceUpdate(NewPrice: Decimal)
+    procedure MarkBatchProcessed(BatchId: Guid)
     var
-        SalesLine: Record "Sales Line";
+        StagingEntry: Record "Perf Import Staging Entry";
     begin
-        SalesLine.SetRange(Type, SalesLine.Type::Item);
-        // N writes when one ModifyAll would do.
-        if SalesLine.FindSet() then
+        StagingEntry.SetRange("Batch ID", BatchId);
+        if StagingEntry.FindSet(true) then
             repeat
-                SalesLine.Validate("Unit Price", NewPrice);
-                SalesLine.Modify(true);
-            until SalesLine.Next() = 0;
+                StagingEntry.Processed := true;
+                StagingEntry.Modify(false);
+            until StagingEntry.Next() = 0;
     end;
 }

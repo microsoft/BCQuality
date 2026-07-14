@@ -13,16 +13,16 @@ application-area: [all]
 
 ## Description
 
-When record processing branches on state, different branches typically read different fields. A single `SetLoadFields` at the top listing every field any branch might touch pulls more data than any individual execution path needs — on the hot path, the rest is loaded for nothing. A two-tier approach matches loading to actual usage: load the fields the `case` expression evaluates plus any fields every branch uses, then add a branch-local `SetLoadFields` inside each branch for that branch's extra fields.
+When a known input determines which fields a subsequent record read will use, a single `SetLoadFields` containing every branch's fields loads unnecessary columns. Build the selection before `Get`, `FindFirst`, or `FindSet`: use `SetLoadFields` for fields common to every branch, then `AddLoadFields` for the selected branch. `SetLoadFields` replaces the current selection, while `AddLoadFields` preserves it.
 
 ## Best Practice
 
-Before the `case`, call `SetLoadFields` with the minimal set — the discriminator field and fields common to every branch. Inside each branch, before the first access to a branch-specific field, add a second `SetLoadFields` covering those fields. The platform honors the in-branch call for the next record operation, so the extra data is fetched only when the branch runs.
+Call `SetLoadFields` with the common fields. In each branch, call `AddLoadFields` with that branch's normal fields and then perform the record read. This applies only when the discriminator is known before the read; branching on a field from an already-loaded row is too late to tailor that row's initial SQL projection.
 
 See sample: `load-common-fields-before-branching-on-case.good.al`.
 
 ## Anti Pattern
 
-A single top-level `SetLoadFields` enumerating every field any branch might read. On records whose state routes them to the fast common branch, the rarely-needed fields are still loaded — the optimization becomes a net-neutral or net-negative change on the hot path.
+A single top-level `SetLoadFields` enumerating every branch's fields, or a branch-local `SetLoadFields` that accidentally discards the common selection. Both make the declared load plan differ from the fields the selected path actually uses.
 
 See sample: `load-common-fields-before-branching-on-case.bad.al`.
