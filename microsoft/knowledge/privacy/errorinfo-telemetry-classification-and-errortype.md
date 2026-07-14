@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-From BC 14, `ErrorInfo.Message` is sent to telemetry; with `ErrorType::Client` it is also the primary client message, while `ErrorType::Internal` replaces it in the client with a generic message but still sends the specified text to telemetry. `DataClassification` classifies the content in `Message`; it does not make incorrectly classified personal data safe. Starting in BC 19, `DetailedMessage` is omitted from the primary message but is included in the error dialog's **Copy details** content.
+Runtime 3.0 (BC 14) provides `ErrorInfo.Message`, `DataClassification`, and `ErrorType`. `Message` is sent to telemetry; with `ErrorType::Client` it is also the primary client message, while `ErrorType::Internal` replaces it in the client with a generic message but still sends the specified text to telemetry. `DataClassification` classifies the content in `Message`; it does not make incorrectly classified personal data safe. Runtime 8.0 (BC 19) adds `DetailedMessage`, which is omitted from the primary message but included in the error dialog's **Copy details** content.
 
 ## Best Practice
 
