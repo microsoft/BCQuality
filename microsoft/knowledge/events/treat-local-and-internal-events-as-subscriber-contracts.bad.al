@@ -1,4 +1,4 @@
-// Demonstration-only AL. Version 1 exposed Score as an Integer named Score.
+// Demonstration-only AL. Version 1 exposed var Score as an Integer.
 codeunit 50521 "Customer Scoring Events Bad"
 {
     procedure ScoreCustomer(CustomerNo: Code[20]; ScoreText: Text)
@@ -6,8 +6,8 @@ codeunit 50521 "Customer Scoring Events Bad"
         OnCustomerScored(CustomerNo, ScoreText);
     end;
 
-    // 'local' limits raising, not subscription. This type/name change breaks
-    // subscribers compiled against the shipped event.
+    // 'local' limits raising, not subscription. Renaming Score to ScoreText,
+    // changing its type, and removing var all break existing subscribers.
     [IntegrationEvent(false, false)]
     local procedure OnCustomerScored(CustomerNo: Code[20]; ScoreText: Text)
     begin

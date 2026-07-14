@@ -8,7 +8,7 @@ codeunit 50530 "Shipment Events"
     end;
 
     // Preserve the shipped attribute contract.
-    [IntegrationEvent(true, false, false)]
+    [IntegrationEvent(true, true, false)]
     local procedure OnShipmentCreated(ShipmentNo: Code[20])
     begin
     end;

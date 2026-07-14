@@ -53,9 +53,9 @@ The following targeted checks map diff signals to specific `events` articles. Tr
 
 - `IsHandled` raised without an immediately preceding `IsHandled := false;`, or one `IsHandled` variable reused across several raises with no reset between them — `initialize-ishandled-to-false-before-publishing`.
 - `if IsHandled then exit;` in a routine that also raises a paired `OnAfter…` event later, so the after-event is skipped whenever the call is handled — `preserve-onafter-execution-when-ishandled-skips-the-body`.
-- A parameter added before existing parameters on a changed `local` or `internal` Business/Integration event, or any parameter added to a public event — `add-new-event-parameters-at-the-end`.
-- A shipped Business/Integration event renamed or removed, or one of its existing parameters renamed, removed, reordered, or changed, based on the mistaken assumption that `local` or `internal` prevents dependent subscription — `treat-local-and-internal-events-as-subscriber-contracts`.
-- Any change to `IncludeSender`, `GlobalVarAccess`, or `Isolated` on a shipped event, including a change intended to modernize the publisher — `do-not-change-shipped-event-attribute-flags`.
+- Any parameter added to a public Business/Integration event procedure, regardless of position; do not flag additions or reordering on `local`/`internal` publishers merely because a new parameter was not appended — `add-new-event-parameters-at-the-end`.
+- A shipped Business/Integration event renamed or removed, or an existing parameter renamed, removed, retyped, or changed to/from `var`, based on the mistaken assumption that `local` or `internal` prevents dependent subscription; parameter order alone is not a subscriber-contract violation — `treat-local-and-internal-events-as-subscriber-contracts`.
+- Any change to `IncludeSender` or `GlobalVarAccess` on a shipped event at any target version, or to `Isolated` on BC20/runtime 9.0 or later, including a change intended to modernize the publisher — `do-not-change-shipped-event-attribute-flags`.
 - Publisher names that do not encode firing position (`OnBefore`/`OnAfter<Routine>` at the boundaries, `On<Routine>OnBefore`/`OnAfter<Context>` mid-routine) — `name-events-by-publisher-position`.
 - Two consecutive `OnBefore`/`OnAfter` raises with no logic between them, or a near-duplicate event differing only by an extra parameter — `prefer-reusing-or-extending-existing-events`.
 - An event raised between `repeat` and `until` inside a record loop — `do-not-publish-events-inside-loops`.
