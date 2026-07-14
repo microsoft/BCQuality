@@ -1,7 +1,7 @@
 ---
-bc-version: [19..]
+bc-version: [14..]
 domain: privacy
-keywords: [errorinfo, message, dataclassification, errortype, detailedmessage, copy-details, telemetry]
+keywords: [errorinfo, errorinfo-message, errorinfo-dataclassification, errorinfo-errortype, errorinfo-detailedmessage, copy-details, telemetry]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -11,16 +11,16 @@ application-area: [all]
 
 ## Description
 
-`ErrorInfo.Message` is sent to telemetry; with `ErrorType::Client` it is also the primary client message, while `ErrorType::Internal` replaces it in the client with a generic message but still sends the specified text to telemetry. `DataClassification` classifies the content in `Message`; it does not make incorrectly classified personal data safe. `DetailedMessage`, available from BC 19, is omitted from the primary message but is included in the error dialog's **Copy details** content.
+From BC 14, `ErrorInfo.Message` is sent to telemetry; with `ErrorType::Client` it is also the primary client message, while `ErrorType::Internal` replaces it in the client with a generic message but still sends the specified text to telemetry. `DataClassification` classifies the content in `Message`; it does not make incorrectly classified personal data safe. Starting in BC 19, `DetailedMessage` is omitted from the primary message but is included in the error dialog's **Copy details** content.
 
 ## Best Practice
 
-Keep `Message` stable and classify its actual content. Choose `ErrorType` for client usability, not as a telemetry privacy boundary. Put only support-safe technical context in `DetailedMessage`, because a user can copy it from the dialog.
+Keep `Message` stable and classify its actual content. Choose `ErrorType` for client usability, not as a telemetry privacy boundary. On BC 19 and later, put only support-safe technical context in `DetailedMessage`, because a user can copy it from the dialog.
 
 See sample: `errorinfo-telemetry-classification-and-errortype.good.al`.
 
 ## Anti Pattern
 
-Marking a dynamic customer-bearing `Message` as `SystemMetadata`, assuming `ErrorType::Internal` keeps it out of telemetry, or placing secrets and personal data in `DetailedMessage` because it is not the primary dialog text.
+Marking a dynamic customer-bearing `Message` as `SystemMetadata`, or assuming `ErrorType::Internal` keeps it out of telemetry. On BC 19 and later, the same anti-pattern includes placing secrets or personal data in `DetailedMessage` because it is not the primary dialog text.
 
 See sample: `errorinfo-telemetry-classification-and-errortype.bad.al`.
