@@ -1,7 +1,7 @@
 codeunit 50228 "Old Method Holder"
 {
-    // ObsoleteState set without ObsoleteReason or ObsoleteTag.
-    [Obsolete('')]
+    // Methods use the attribute, but empty reason and tag give no migration path.
+    [Obsolete('', '')]
     procedure OldMethod()
     begin
     end;

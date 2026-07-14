@@ -1,12 +1,13 @@
-// Malformed API endpoint: APIPublisher and APIGroup are missing, and there is
-// no SourceTable. The page compiles but the route cannot be composed, so the
-// entity is never published where an integration expects it.
+// APIVersion is omitted. This is valid, but the endpoint defaults to beta
+// instead of publishing the intended explicit stable contract.
 page 50341 "WS Required Props Bad"
 {
     PageType = API;
-    APIVersion = 'v1.0';
+    APIPublisher = 'contoso';
+    APIGroup = 'sales';
     EntityName = 'customer';
     EntitySetName = 'customers';
+    SourceTable = Customer;
 
     layout
     {

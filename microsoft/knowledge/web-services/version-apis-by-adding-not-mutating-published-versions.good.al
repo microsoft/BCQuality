@@ -1,13 +1,11 @@
-// Additive versioning: v2.0 carries the new shape while v1.0 stays published and
-// unchanged. APIVersion accepts a list, so both contracts are served and
-// existing clients keep working while new clients adopt v2.0.
-page 50354 "WS API Versioning Good"
+// The original page remains the unchanged v1.0 contract.
+page 50354 "Customer API v1"
 {
     PageType = API;
     Caption = 'customer';
     APIPublisher = 'contoso';
     APIGroup = 'sales';
-    APIVersion = 'v2.0', 'v1.0';
+    APIVersion = 'v1.0';
     EntityName = 'customer';
     EntitySetName = 'customers';
     ODataKeyFields = SystemId;
@@ -32,6 +30,44 @@ page 50354 "WS API Versioning Good"
                 field(displayName; Rec.Name)
                 {
                     Caption = 'displayName';
+                }
+            }
+        }
+    }
+}
+
+// A separate object carries the changed v2.0 shape.
+page 50356 "Customer API v2"
+{
+    PageType = API;
+    Caption = 'customer';
+    APIPublisher = 'contoso';
+    APIGroup = 'sales';
+    APIVersion = 'v2.0';
+    EntityName = 'customer';
+    EntitySetName = 'customers';
+    ODataKeyFields = SystemId;
+    SourceTable = Customer;
+    DelayedInsert = true;
+
+    layout
+    {
+        area(content)
+        {
+            repeater(records)
+            {
+                field(id; Rec.SystemId)
+                {
+                    Caption = 'id';
+                    Editable = false;
+                }
+                field(number; Rec."No.")
+                {
+                    Caption = 'number';
+                }
+                field(legalName; Rec.Name)
+                {
+                    Caption = 'legalName';
                 }
             }
         }

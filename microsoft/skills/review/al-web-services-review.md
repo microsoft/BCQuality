@@ -84,14 +84,14 @@ Output conforms to the DO output contract. A populated example:
   "skill": { "id": "al-web-services-review", "version": 1 },
   "outcome": "completed",
   "summary": {
-    "counts": { "blocker": 0, "major": 1, "minor": 1, "info": 0 },
+    "counts": { "blocker": 0, "major": 0, "minor": 2, "info": 0 },
     "coverage": { "worklist-size": 2, "items-evaluated": 2 }
   },
   "findings": [
     {
       "id": "microsoft/knowledge/web-services/set-required-api-page-properties.md",
-      "severity": "major",
-      "message": "This PageType = API page declares a SourceTable but omits APIPublisher and APIGroup, so the endpoint route cannot be composed and the entity is never published. Declare all six required API page properties.",
+      "severity": "minor",
+      "message": "This PageType = API page omits APIVersion, so it is exposed under beta by default rather than an explicit stable contract. Declare the intended version, such as APIVersion = 'v1.0'.",
       "location": {
         "file": "src/Api/CustomerApi.Page.al",
         "line": 3,

@@ -7,20 +7,20 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Version APIs by adding a new APIVersion, not by mutating a published one
+# Version changed API shapes with a new page object
 
 ## Description
 
-Once an API version is published, external clients depend on its exact shape — the entity name, the set of exposed fields, the key — as a frozen contract. Changing any of that on the already-published version is a breaking change delivered silently: integrations that worked yesterday fail today with no warning. The platform gives you a clean way to evolve without breaking anyone, because `APIVersion` accepts a *list* of versions on one page. The correct way to change a published API is to add the new version (`'v2.0'`) alongside the existing one (`'v1.0'`) — or publish a new API page for it — so both contracts are served side by side and clients migrate on their own schedule. LLMs tend to "fix" an API by editing the live version in place, because in ordinary code you just change what's wrong; this file is remedial because a published API version is an immutable contract in a way ordinary internal code is not.
+Once an API version is published, external clients depend on its exact shape — entity names, fields, keys, and behavior — as a stable contract. `APIVersion` can list several versions on one API page, but every listed route is generated from that same page object and therefore exposes the same shape. Adding `'v2.0'` to a page and then changing its fields changes what both `v1.0` and `v2.0` serve. To preserve the v1 shape while introducing a different v2 shape, keep the v1 page unchanged and create a separate page object for v2.
 
 ## Best Practice
 
-When a published API must change shape, keep the old version's contract intact and add the new one to the `APIVersion` list — `APIVersion = 'v2.0', 'v1.0';`. The page now serves both `v1.0` (unchanged) and `v2.0` (carrying the new shape), so existing clients keep working while new clients adopt `v2.0`. Retire the old version only after consumers have migrated.
+Keep the existing page object and its `APIVersion = 'v1.0'` contract unchanged. Copy the page to a new object ID, set that object's `APIVersion = 'v2.0'`, and make the v2-only shape changes there. A multi-value `APIVersion` list is appropriate only when the exact same page shape is supported under each listed version.
 
 See sample: `version-apis-by-adding-not-mutating-published-versions.good.al`.
 
 ## Anti Pattern
 
-Editing the published `v1.0` page in place — renaming its `EntityName` or removing an exposed field — so the single declared version now serves a different contract than the one clients integrated against. Every consumer of the old shape breaks without notice. The detection signal: a change that renames the entity or removes a field on an existing published `APIVersion` instead of adding a new version to the list.
+Editing the published `v1.0` page in place breaks its clients. So does adding `v2.0` to that same page and assuming subsequent field changes apply only to v2: both routes use one object shape. The detection signal is a breaking shape change without a separate API page object retaining the old version.
 
 See sample: `version-apis-by-adding-not-mutating-published-versions.bad.al`.

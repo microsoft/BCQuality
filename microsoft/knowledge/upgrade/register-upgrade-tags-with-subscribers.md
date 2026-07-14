@@ -7,22 +7,22 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Register every upgrade tag with the platform via an event subscriber
+# Register upgrade tags that must be seeded for new companies
 
 ## Description
 
-The `Upgrade Tag` codeunit only recognizes a tag if the tag was published to the platform through one of two events on that codeunit: `OnGetPerCompanyUpgradeTags` for tags set inside `OnUpgradePerCompany`, and `OnGetPerDatabaseUpgradeTags` for tags set inside `OnUpgradePerDatabase`. A tag that is `Set` and `Has`-checked in code but never added to one of these lists is unknown to the platform — its semantics around skip-on-reinstall, telemetry, and operator queries do not apply.
+`SetUpgradeTag(Tag)` directly records a completed per-company upgrade step; `HasUpgradeTag(Tag)` can then guard that step on later upgrades. The `OnGetPerCompanyUpgradeTags` subscriber serves a different path: it contributes tags to the list used by `SetAllUpgradeTags()` when a new company is initialized, marking historical upgrade steps complete so they do not run against a company that starts on the current schema.
 
-The registration scope must match where the tag is set: a tag used from `OnUpgradePerCompany` registers in `OnGetPerCompanyUpgradeTags`; a tag used from `OnUpgradePerDatabase` registers in `OnGetPerDatabaseUpgradeTags`. Crossing the scopes silently breaks the tag.
+Registration is not install-time seeding. When an extension is installed into an existing company and a tag must start as complete, the install code must call `SetUpgradeTag` explicitly. For new-company initialization, codeunit `Company Initialize` calls `SetAllUpgradeTags`, which obtains subscriber-provided per-company tags and inserts missing ones. Database-scoped upgrade steps use `HasDatabaseUpgradeTag`/`SetDatabaseUpgradeTag` and the corresponding per-database list.
 
 ## Best Practice
 
-For every new upgrade tag, add one line to the matching subscriber: `PerCompanyUpgradeTags.Add(MyUpgradeTag());` or `PerDatabaseUpgradeTags.Add(MyUpgradeTag());`. Place the subscribers in the same codeunit (or a dedicated "Upgrade Tag Definitions" codeunit) so the tag string and its registration stay together.
+In the upgrade codeunit, guard work with `HasUpgradeTag` and call `SetUpgradeTag` only after successful completion. Seed the same tag explicitly from `OnInstallAppPerCompany` when first-install logic should not run as a later upgrade. Also add historical per-company tags to `OnGetPerCompanyUpgradeTags` so `SetAllUpgradeTags` marks them complete for newly created companies. Keep the tag definition shared so all paths use the exact same value.
 
 See sample: `register-upgrade-tags-with-subscribers.good.al`.
 
 ## Anti Pattern
 
-Calling `UpgradeTag.SetUpgradeTag(MyUpgradeTag())` without ever adding `MyUpgradeTag()` to the corresponding `OnGetPerCompany...` / `OnGetPerDatabase...` subscriber.
+Assuming an `OnGetPerCompanyUpgradeTags` subscriber sets tags during extension installation, or omitting the subscriber and allowing old upgrade steps to run when `SetAllUpgradeTags` initializes a new company. The subscriber supplies a list; only `SetAllUpgradeTags` or an explicit `SetUpgradeTag` call persists it.
 
 See sample: `register-upgrade-tags-with-subscribers.bad.al`.

@@ -15,7 +15,7 @@ application-area: [all]
 
 ## Best Practice
 
-Default to `AutoRollback`: it opens a write transaction at the start of the test, runs the test body, and rolls back at the end, leaving the database in its original state. Pick `AutoCommit` only when the code under test genuinely calls `Commit` — posting routines, job-queue handlers, integration flows — and pair that test's codeunit with a `TestIsolation`-enabled test runner so committed changes are reverted at a higher scope. Pick `None` only for read-only tests or tests that drive UI code without writing from the test method itself, for example tests that validate calculation formulas or read-only projections.
+Default to `AutoRollback`: it opens a write transaction at the start of the test, runs the test body, and rolls back at the end, leaving the database in its original state. Pick `AutoCommit` only when the code under test genuinely calls `Commit` — posting routines, job-queue handlers, integration flows — and make the test exercise that commit path. Pair the test codeunit with a `TestIsolation`-enabled test runner so committed changes are reverted at a higher scope. Pick `None` only for read-only tests or tests that drive UI code without writing from the test method itself.
 
 See sample: `transactionmodel-attribute-governs-test-transactions.good.al`.
 

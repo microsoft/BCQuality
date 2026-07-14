@@ -15,7 +15,7 @@ An `enum` that `implements` an interface maps each value to a codeunit through t
 
 ## Best Practice
 
-On any extensible enum that implements an interface, set `DefaultImplementation = <Interface> = <Codeunit>;` at the enum level, pointing at a safe implementation that does nothing harmful. Values with their own `Implementation` keep using it; every other value — including ones added later by extensions — resolves to the default instead of failing. For the distinct case of an out-of-range integer that matches no declared value, pair it with `UnknownValueImplementation`. The result is that a consumer can assign any enum value to the interface variable and call through it without a runtime guard.
+On any extensible enum that implements an interface, set `DefaultImplementation = <Interface> = <Codeunit>;` at the enum level, pointing at a safe implementation that does nothing harmful. Values with their own `Implementation` keep using it; declared values without one resolve to the default. For an ordinal that matches no currently declared value — for example persisted data left after an enum extension is uninstalled — runtime 7.0 and later can use `UnknownValueImplementation` as a distinct fallback. Do not recommend that property to apps targeting an earlier runtime.
 
 See sample: `set-defaultimplementation-on-enum.good.al`.
 

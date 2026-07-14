@@ -1,16 +1,17 @@
-codeunit 50220 "Upgrade New Field Init"
+codeunit 50220 "Upgrade Trigger Aware"
 {
     Subtype = Upgrade;
 
-    local procedure InitializeNewFlagOnMyTable()
+    local procedure UpdateCustomerCreditLimit()
     var
-        MyTable: Record "My Table";
-        DT: DataTransfer;
+        Customer: Record Customer;
     begin
-        // "New Flag" is added in the same change as this upgrade procedure.
-        // No existing validation logic depends on it, so DataTransfer is safe.
-        DT.SetTables(Database::"My Table", Database::"My Table");
-        DT.AddConstantValue(true, MyTable.FieldNo("New Flag"));
-        DT.CopyFields();
+        if Customer.FindSet(true) then
+            repeat
+                // Validate runs the field OnValidate logic; Modify(true) separately
+                // runs the table OnModify trigger and its row-based events.
+                Customer.Validate("Credit Limit (LCY)", 50000);
+                Customer.Modify(true);
+            until Customer.Next() = 0;
     end;
 }

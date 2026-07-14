@@ -7,27 +7,26 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Mark obsolete elements with `ObsoleteState`, `ObsoleteReason`, and `ObsoleteTag`
+# Give every obsolete element a reason and tag
 
 ## Description
 
-When a procedure, field, table, page, or enum value is being retired, AL requires three pieces of metadata to declare the deprecation:
+AL has two obsoletion mechanisms, depending on the symbol:
 
-- `ObsoleteState` — `Pending` while the element still exists but is being phased out, `Removed` once it should no longer be used.
-- `ObsoleteReason` — a short human-readable string explaining what to use instead. Tooling and downstream consumers surface this when warning callers.
-- `ObsoleteTag` — a stable version-like marker (typically the release version in which the deprecation was introduced, e.g. `'22.0'`).
+- Objects, fields, enum types, and enum values use the `ObsoleteState`, `ObsoleteReason`, and `ObsoleteTag` properties. `Pending` warns while the element remains available; `Removed` blocks references.
+- Methods, variables, events, and other symbols use `[Obsolete('reason', 'tag')]`. They do not have an `ObsoleteState` property.
 
-Omitting `ObsoleteReason` or `ObsoleteTag` leaves consumers with `ObsoleteState = Pending` but no guidance and no traceability. Declaring `ObsoleteState = Removed` without a reason or tag is the same failure with a stronger blast radius.
+In both forms, the reason should name the replacement and the tag should identify when the element became obsolete. Empty or missing guidance leaves consumers without an actionable migration path.
 
 ## Best Practice
 
-Every obsoleted element carries all three properties together. The reason names the replacement explicitly; the tag is the version in which the deprecation was introduced and stays stable for the life of the deprecation.
+For an object or field, set all three properties together. For a method, variable, or event, provide both `[Obsolete]` arguments. Keep the original tag stable through the lifecycle rather than changing it to a planned removal version.
 
 See sample: `obsoletion-requires-reason-and-tag.good.al`.
 
 ## Anti Pattern
 
-Setting only `ObsoleteState = Pending;` (or `Removed`) without `ObsoleteReason` and `ObsoleteTag`. Callers see a warning with no explanation, and the deprecation cannot be tracked by version.
+Setting only `ObsoleteState = Pending`/`Removed` on an object or field, or using `[Obsolete('', '')]` on a method, variable, or event. Both forms produce deprecation metadata without useful replacement guidance or traceability.
 
 See sample: `obsoletion-requires-reason-and-tag.bad.al`.
 
