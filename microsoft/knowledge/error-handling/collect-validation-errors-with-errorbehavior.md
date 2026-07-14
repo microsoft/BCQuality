@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [19..]
 domain: error-handling
 keywords: [collectible-errors, errorbehavior, collect, getcollectederrors, hascollectederrors, validation, batch]
 technologies: [al]
@@ -11,16 +11,16 @@ application-area: [all]
 
 ## Description
 
-By default a procedure stops on the first `Error`, so a user fixing ten bad rows must rerun the operation ten times. The collectible-errors feature postpones error handling to the end of the call: a procedure attributed `[ErrorBehavior(ErrorBehavior::Collect)]` keeps running as errors occur and gathers them, so all failures can be presented together. The collected errors are read with `HasCollectedErrors()` and `GetCollectedErrors()` (which returns a `List of [ErrorInfo]`); `ClearCollectedErrors()` empties the buffer. This is a platform mechanism most LLMs are unaware of — they reach for a manually concatenated `Text` buffer or a temporary error table instead.
+By default a procedure stops on the first `Error`, so a user fixing ten bad rows must rerun the operation ten times. The collectible-errors feature postpones error handling to the end of the call: a procedure attributed `[ErrorBehavior(ErrorBehavior::Collect)]` keeps running as collectible errors occur and gathers them, so all failures can be presented together. `GetCollectedErrors()` returns a `List of [ErrorInfo]` for the handler to inspect, but does not clear the collection by default; pass `true` to retrieve and clear in one call, or call `ClearCollectedErrors()` explicitly after retrieving. A handler can copy record information into a custom error page as Microsoft Learn demonstrates, or deliberately format only the messages into a final blocking error as this article's sample does.
 
 ## Best Practice
 
-Mark the orchestrating procedure `[ErrorBehavior(ErrorBehavior::Collect)]` and run each item's validation so one failure doesn't abandon the rest — typically by calling the per-item routine through `Codeunit.Run`. When the run finishes, inspect `HasCollectedErrors()` and surface `GetCollectedErrors()` to the user as a single list. Always handle the collected errors yourself: the platform's own guidance is that any errors still in the collected list when the procedure ends are concatenated into one dialog, which is hard for users to read.
+Mark the orchestrating procedure `[ErrorBehavior(ErrorBehavior::Collect)]` and run each item's validation so one failure doesn't abandon the rest — typically by calling the per-item routine through `Codeunit.Run`. When the run finishes, inspect `HasCollectedErrors()`, retrieve and clear the list with `GetCollectedErrors(true)`, and fail the operation with the collected messages. The sample intentionally produces a text aggregate and does not claim to retain record/field metadata in the final error. If that metadata is needed, map each `ErrorInfo` to a custom error UI before clearing, following the Microsoft Learn pattern. Do not replace validation failure with `Message`: clearing collected errors suppresses the platform failure, so the custom handler must still block the invalid operation.
 
 See sample: `collect-validation-errors-with-errorbehavior.good.al`.
 
 ## Anti Pattern
 
-Two shapes signal trouble. The first is hand-rolled accumulation — appending messages to a `Text` variable and showing them at the end — which reimplements the platform feature, loses each error's `ErrorInfo` structure, and skips telemetry classification. The second is applying `[ErrorBehavior(ErrorBehavior::Collect)]` but never calling `HasCollectedErrors`/`GetCollectedErrors`, so every collected error spills into the platform's concatenated end-of-procedure dialog. Detection: a `Collect` attribute with no matching `GetCollectedErrors` call, or a per-row loop that builds an error string by concatenation.
+Three shapes signal trouble. Hand-rolled accumulation reimplements collection and prevents the handler from receiving individual `ErrorInfo` values. A `Collect` procedure that never handles the collection falls back to the concatenated platform dialog. Finally, code that calls parameterless `GetCollectedErrors()`, assumes it cleared the list, and only shows a `Message` can both leave the errors collected and allow invalid processing to continue.
 
 See sample: `collect-validation-errors-with-errorbehavior.bad.al`.

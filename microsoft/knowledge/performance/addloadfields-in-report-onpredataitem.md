@@ -7,20 +7,20 @@ countries: [w1]
 application-area: [all]
 ---
 
-# In reports, declare the fields the layout needs with AddLoadFields
+# Add trigger-only report fields in OnPreDataItem
 
 ## Description
 
-Reports iterate dataitems on potentially large source tables and pipe rows into a layout. The partial-record optimization is the same idea as `use-setloadfields-for-partial-records.md`, but the API is different: per the upstream guidance, "for reports, use `AddLoadFields()` in `OnPreDataItem` trigger to add fields needed by the layout." `AddLoadFields` is additive — call it for each field the layout consumes — and runs once per dataitem before iteration begins.
+Report dataitem field selection is calculated at compile time and once per dataitem type during execution. Fields referenced by dataset columns are selected automatically; fields used only in triggers are not. Use `AddLoadFields` in `OnPreDataItem` to supplement the automatic selection with normal fields that trigger code needs.
 
 ## Best Practice
 
-In each dataitem's `OnPreDataItem` trigger, list the columns the layout binds to via `AddLoadFields(<field>, <field>, ...)`. The platform then materializes only those columns per row. Treat the layout column list as the spec: every column the layout uses must be added; columns the layout does not use should not be added.
+When a dataitem trigger needs an extra field, add that field in `OnPreDataItem` before iteration starts. This supplements the compiler-selected fields and avoids the first just-in-time load and enumerator update when the trigger reads the extra field.
 
 See sample: `addloadfields-in-report-onpredataitem.good.al`.
 
 ## Anti Pattern
 
-Relying on the dataitem's default to load every field. On a report bound to a ledger-scale table this transfers an entire row per iteration, of which the layout reads a fraction.
+Listing every dataset column in `AddLoadFields`, or omitting a known trigger-only field because the dataset already uses other fields. The former is redundant; the latter causes a just-in-time load on first access and can cause repeated loads when the record is copied or passed by value.
 
 See sample: `addloadfields-in-report-onpredataitem.bad.al`.

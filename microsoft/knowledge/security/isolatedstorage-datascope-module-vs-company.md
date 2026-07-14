@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [24..]
 domain: security
 keywords: [isolatedstorage, datascope, module, company, user, scope]
 technologies: [al]

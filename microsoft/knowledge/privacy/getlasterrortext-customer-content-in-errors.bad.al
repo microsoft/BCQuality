@@ -2,12 +2,18 @@ codeunit 50209 "Privacy Sample GetLastError Bad"
 {
     procedure AddAttachment()
     var
-        ErrorMsg: Text;
+        AttachmentFailedErr: Label 'Attachment failed: %1', Comment = '%1 = underlying error';
     begin
-        if not TryAddAttachment() then begin
-            ErrorMsg := StrSubstNo('Attachment failed: %1', GetLastErrorText(true));
-            Error(ErrorMsg);
-        end;
+        if not TryAddAttachment() then
+            Error(StrSubstNo(AttachmentFailedErr, GetLastErrorText()));
+    end;
+
+    procedure AddAttachmentWithConcatenation()
+    var
+        AttachmentFailedErr: Label 'Attachment failed: ';
+    begin
+        if not TryAddAttachment() then
+            Error(AttachmentFailedErr + GetLastErrorText());
     end;
 
     [TryFunction]

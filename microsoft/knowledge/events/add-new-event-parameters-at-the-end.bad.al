@@ -1,21 +1,14 @@
-// Demonstration-only AL. Not compiled by CI; illustrates the article.
+// Demonstration-only AL. Version 1 exposed PostDocument(SalesHeader).
 codeunit 50251 "Param Append Bad Sample"
 {
-    procedure PostDocument(var SalesHeader: Record "Sales Header"; CalledFromBatch: Boolean)
-    var
-        IsHandled: Boolean;
+    procedure PostDocument(var SalesHeader: Record "Sales Header")
     begin
-        IsHandled := false;
-        // Anti-pattern: 'CalledFromBatch' was inserted before the existing
-        // IsHandled parameter, shifting it and breaking the argument positions
-        // every existing subscriber relied on.
-        OnBeforePostDocument(SalesHeader, CalledFromBatch, IsHandled);
-        if IsHandled then
-            exit;
+        // Existing callers cannot supply the newly required argument.
+        OnBeforePostDocument(SalesHeader);
     end;
 
     [IntegrationEvent(false, false)]
-    local procedure OnBeforePostDocument(var SalesHeader: Record "Sales Header"; CalledFromBatch: Boolean; var IsHandled: Boolean)
+    procedure OnBeforePostDocument(var SalesHeader: Record "Sales Header"; CalledFromBatch: Boolean)
     begin
     end;
 }

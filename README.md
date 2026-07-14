@@ -136,6 +136,18 @@ For the end-to-end flow — from orchestrator trigger through to how output reac
 │   └── /skills/
 ```
 
+## Versioning
+
+BCQuality content is released on demand — roughly monthly, not on every commit. A
+release is a `major.minor` value derived from git tags, cut manually via the
+`Release version` workflow: pick whether to bump the minor or the major, and it
+computes the next version and tags the current `main` as `v{major}.{minor}`.
+
+- Bump the **minor** for the usual periodic content update; bump the **major**
+  only for a breaking change.
+- The minor is a **monotonic counter** — it only ever increments and never
+  resets, even across a major bump — so it uniquely identifies a release.
+
 ## Contributing
 
 Contributions are welcome. Before submitting a PR:

@@ -22,6 +22,10 @@ sub-skills:
   - microsoft/skills/review/al-interfaces-review.md
   - microsoft/skills/review/al-breaking-changes-review.md
   - microsoft/skills/review/al-web-services-review.md
+  - microsoft/skills/review/al-testing-review.md
+  - microsoft/skills/review/al-data-modeling-review.md
+  - microsoft/skills/review/al-appsource-review.md
+  - microsoft/skills/review/al-telemetry-review.md
 ---
 
 # AL code review
@@ -34,7 +38,7 @@ An orchestrator invokes this skill with either a `pr-diff` (the standard PR-revi
 
 ## Source
 
-The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`. Additional leaf skills (for example, telemetry, testing) are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
+The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`. Additional leaf skills are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
 
 ## Relevance
 
@@ -72,7 +76,7 @@ For each sub-skill in the worklist, executed one at a time per the discipline ab
 1. Invoke the sub-skill with the orchestrator's inputs, passing only the subset each sub-skill declares in its `inputs`.
 2. Capture the sub-skill's complete findings-report verbatim and append it to `sub-results`.
 3. If the sub-skill's `outcome` is `failed`, stop here for this sub-skill: its findings are not reliable per the DO contract and MUST NOT be copied into the super-skill's top-level `findings[]` or counted in `summary.counts`.
-4. Otherwise, append each entry from the sub-skill's `findings[]` to the super-skill's top-level `findings[]`, setting `from-sub-skill` to the sub-skill's `skill.id` and copying each finding's `domain` field verbatim (preserve it unchanged). For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
+4. Otherwise, append each entry from the sub-skill's `findings[]` to the super-skill's top-level `findings[]`, setting `from-sub-skill` to the sub-skill's `skill.id` and preserving each finding's optional `domain` field verbatim, including its absence. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
 
 ### Agent self-review pass
 
@@ -85,7 +89,7 @@ Frame the pass by cross-cutting concerns — architecture, error handling, resou
 For every candidate the agent identifies in this pass:
 
 1. **Validate against BCQuality knowledge.** Check the candidate against the knowledge files the sub-skills have already loaded for this task (visible via their `references` and `suppressed` lists in `sub-results`).
-   - If a BCQuality knowledge file matches the candidate, upgrade it to a knowledge-backed finding: cite the file in `references`, set `id` to the file's path, set `from-sub-skill` to the sub-skill that owns that knowledge domain, and merge with or deduplicate against any sub-skill finding that already covers the same concern at the same location.
+   - If a BCQuality knowledge file matches the candidate, upgrade it to a knowledge-backed finding: cite the file in `references`, set `id` to the file's path, set `from-sub-skill` to the sub-skill that owns that knowledge domain, set `domain` to the human-readable label required by that sub-skill's Output contract, and merge with or deduplicate against any sub-skill finding that already covers the same concern at the same location.
    - If a BCQuality knowledge file **explicitly contradicts** the candidate (its `## Best Practice` or `## Anti Pattern` says the opposite of what the agent flagged), suppress the candidate and do not surface it.
    - Otherwise the candidate has no BCQuality coverage; emit it as a super-skill agent finding.
 2. **Emit agent finding.** Per DO's *Agent findings* rules:
@@ -128,38 +132,38 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/performance/filter-before-find.md",
+      "id": "microsoft/knowledge/performance/apply-filters-before-iterating.md",
       "severity": "major",
-      "message": "FindSet is called on a record variable without any prior SetRange/SetFilter. This forces a full-table scan.",
+      "message": "The Country/Region Code predicate is evaluated inside the loop instead of with SetRange before FindSet, so every row crosses the database boundary.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 140,
         "range": { "start-line": 140, "end-line": 144 }
       },
       "references": [
-        { "path": "microsoft/knowledge/performance/filter-before-find.md" }
+        { "path": "microsoft/knowledge/performance/apply-filters-before-iterating.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-performance-review",
       "domain": "Performance"
     },
     {
-      "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
+      "id": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md",
       "severity": "minor",
-      "message": "SetLoadFields is called after SetRange. Per the referenced guidance the call must come before filters to be folded into the query plan.",
+      "message": "The loop reads only a small subset of fields from a wide table without SetLoadFields, transferring every column for each row.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 152
       },
       "references": [
-        { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
+        { "path": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-performance-review",
       "domain": "Performance"
     },
     {
-      "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
+      "id": "microsoft/knowledge/security/secrettext-for-credentials.md",
       "severity": "blocker",
       "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
       "location": {
@@ -168,22 +172,22 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
         "range": { "start-line": 85, "end-line": 89 }
       },
       "references": [
-        { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
+        { "path": "microsoft/knowledge/security/secrettext-for-credentials.md" }
       ],
       "confidence": "high",
       "from-sub-skill": "al-security-review",
       "domain": "Security"
     },
     {
-      "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
+      "id": "microsoft/knowledge/security/secrets-isolated-storage.md",
       "severity": "minor",
-      "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
+      "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
       "location": {
-        "file": "src/Integration/ApiClient.Codeunit.al",
-        "line": 201
+        "file": "src/Integration/ExternalServiceSetup.Table.al",
+        "line": 12
       },
       "references": [
-        { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
+        { "path": "microsoft/knowledge/security/secrets-isolated-storage.md" }
       ],
       "confidence": "medium",
       "from-sub-skill": "al-security-review",
@@ -215,30 +219,30 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       },
       "findings": [
         {
-          "id": "microsoft/knowledge/performance/filter-before-find.md",
+          "id": "microsoft/knowledge/performance/apply-filters-before-iterating.md",
           "severity": "major",
-          "message": "FindSet is called on a record variable without any prior SetRange/SetFilter. This forces a full-table scan.",
+          "message": "The Country/Region Code predicate is evaluated inside the loop instead of with SetRange before FindSet, so every row crosses the database boundary.",
           "location": {
             "file": "src/Sales/PostingRoutines.Codeunit.al",
             "line": 140,
             "range": { "start-line": 140, "end-line": 144 }
           },
           "references": [
-            { "path": "microsoft/knowledge/performance/filter-before-find.md" }
+            { "path": "microsoft/knowledge/performance/apply-filters-before-iterating.md" }
           ],
           "confidence": "high",
           "domain": "Performance"
         },
         {
-          "id": "community/knowledge/performance/call-setloadfields-before-filters.md",
+          "id": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md",
           "severity": "minor",
-          "message": "SetLoadFields is called after SetRange. Per the referenced guidance the call must come before filters to be folded into the query plan.",
+          "message": "The loop reads only a small subset of fields from a wide table without SetLoadFields, transferring every column for each row.",
           "location": {
             "file": "src/Sales/PostingRoutines.Codeunit.al",
             "line": 152
           },
           "references": [
-            { "path": "community/knowledge/performance/call-setloadfields-before-filters.md" }
+            { "path": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md" }
           ],
           "confidence": "high",
           "domain": "Performance"
@@ -255,7 +259,7 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       },
       "findings": [
         {
-          "id": "microsoft/knowledge/security/use-secrettext-for-credentials.md",
+          "id": "microsoft/knowledge/security/secrettext-for-credentials.md",
           "severity": "blocker",
           "message": "A bearer token is declared as a Text parameter and passed through the HTTP request path as plain text. The referenced guidance requires credentials to flow as SecretText end-to-end.",
           "location": {
@@ -264,21 +268,21 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
             "range": { "start-line": 85, "end-line": 89 }
           },
           "references": [
-            { "path": "microsoft/knowledge/security/use-secrettext-for-credentials.md" }
+            { "path": "microsoft/knowledge/security/secrettext-for-credentials.md" }
           ],
           "confidence": "high",
           "domain": "Security"
         },
         {
-          "id": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md",
+          "id": "microsoft/knowledge/security/secrets-isolated-storage.md",
           "severity": "minor",
-          "message": "An API key is assigned from a string literal rather than retrieved from IsolatedStorage or Key Vault at runtime.",
+          "message": "A setup table stores an API key in an ordinary Text field, exposing it through table reads and exports. Persist it in IsolatedStorage instead.",
           "location": {
-            "file": "src/Integration/ApiClient.Codeunit.al",
-            "line": 201
+            "file": "src/Integration/ExternalServiceSetup.Table.al",
+            "line": 12
           },
           "references": [
-            { "path": "microsoft/knowledge/security/never-hardcode-secrets-in-al.md" }
+            { "path": "microsoft/knowledge/security/secrets-isolated-storage.md" }
           ],
           "confidence": "medium",
           "domain": "Security"
@@ -320,4 +324,3 @@ The empty-corpus case — BCQuality's state until knowledge files land — rolls
   ]
 }
 ```
-

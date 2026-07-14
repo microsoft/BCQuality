@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [24..]
 domain: security
 keywords: [isolatedstorage, local, internal, public, getter, setter, encapsulation]
 technologies: [al]

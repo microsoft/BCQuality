@@ -1,26 +1,26 @@
 ---
 bc-version: [all]
 domain: upgrade
-keywords: [on-validate-upgrade-per-company, performance-impact, skip-logic, justification, upgrade-tag]
+keywords: [on-validate-upgrade-per-company, performance-impact, bounded-query, justification, read-only-check]
 technologies: [al]
 countries: [w1]
 application-area: [all]
 ---
 
-# Performance-impacting upgrade triggers need justification and skip logic
+# Keep upgrade validation checks bounded
 
 ## Description
 
-Triggers such as `OnValidateUpgradePerCompany` run on every upgrade pass. When their body performs non-trivial work — full-table scans, cross-table validations — the cost is paid on every upgrade of every tenant, even when there is nothing to validate. That cost is acceptable only when the validation is critical (regulatory compliance, data-integrity guarantees the platform depends on) AND the trigger short-circuits once it has done its work.
+Triggers such as `OnValidateUpgradePerCompany` run on every upgrade pass. A full-table scan or cross-table validation therefore adds cost to every upgrade of every tenant. Validation is a read-only lifecycle check, so it cannot make itself one-time by writing an upgrade tag.
 
 ## Best Practice
 
-A performance-impacting upgrade trigger carries two things: a written comment that names the reason the work has to happen on every upgrade pass, and an early-exit guard backed by an upgrade tag so the work runs at most once per tenant. The `HasUpgradeTag` check at the top exits when the validation has already been recorded; the `SetUpgradeTag` call at the bottom records completion.
+Filter directly to invalid rows and use `IsEmpty` or another bounded existence check where possible. If a broad validation is unavoidable, document the invariant that requires it and keep all data changes in `OnUpgrade...`.
 
 See sample: `minimize-onvalidate-upgrade-triggers.good.al`.
 
 ## Anti Pattern
 
-Doing real work in `OnValidateUpgradePerCompany` with no upgrade-tag guard. The same scan runs every upgrade, multiplying upgrade time by the number of releases the customer takes.
+Reading every record in `OnValidateUpgradePerCompany` when a filtered existence check can prove the same invariant. The scan repeats on every upgrade.
 
 See sample: `minimize-onvalidate-upgrade-triggers.bad.al`.

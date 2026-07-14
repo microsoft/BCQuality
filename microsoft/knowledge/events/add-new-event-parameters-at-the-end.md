@@ -1,26 +1,26 @@
 ---
 bc-version: [all]
 domain: events
-keywords: [event-parameters, signature, backward-compatibility, append, onbefore, integration-event, versioning]
+keywords: [event-parameters, signature, backward-compatibility, public-event, local-event, internal-event, appsourcecop, as0024, as0025]
 technologies: [al]
 countries: [w1]
 application-area: [all]
 ---
 
-# Add new event parameters at the end
+# Event parameter additions depend on publisher access, not position
 
 ## Description
 
-Adding a parameter to an existing event publisher changes its signature. Appending the new parameter at the end of the parameter list keeps the change easy to review and track: existing subscribers still bind to the leading parameters, and the diff is a single clean addition. Inserting a parameter in the middle makes diffs noisy and harder to review, and obscures the history of how the signature evolved. New parameters belong after the existing ones.
+Event subscribers bind publisher parameters by name and can omit parameters they do not use. A `local` or `internal` Business or Integration event can therefore gain a parameter at any position without breaking subscriber-only consumers; appending is not a compatibility requirement. A public event is also a public procedure that dependent extensions can raise, so adding a required parameter anywhere breaks callers under AppSourceCop AS0024.
 
 ## Best Practice
 
-When extending an existing publisher, append the new parameter after all existing ones, including after a trailing `var IsHandled: Boolean` when present. Subscribers that already match keep working against the leading parameters, and the change stays a one-line addition that is trivial to review.
+Add a parameter directly only when the shipped event publisher is `local` or `internal`. Place it where the signature is clearest; existing subscribers continue binding the parameters they name. For a public event, keep the original publisher unchanged and introduce a new event with the expanded contract.
 
 See sample: `add-new-event-parameters-at-the-end.good.al`.
 
 ## Anti Pattern
 
-Inserting a new parameter in the middle of an existing event's signature, shifting every subsequent parameter and making the change noisy and harder to review. Detection: a changed event signature where an added parameter appears before existing parameters rather than at the tail of the list.
+Appending a parameter to a public event and assuming its position makes the change compatible. Existing external callers still lack the new required argument. Conversely, do not flag a parameter inserted among existing parameters on a `local` or `internal` Business or Integration event merely because it was not appended.
 
 See sample: `add-new-event-parameters-at-the-end.bad.al`.

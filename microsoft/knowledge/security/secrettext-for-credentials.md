@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [23..]
 domain: security
 keywords: [secrettext, credentials, api-key, token, debugger, unwrap]
 technologies: [al]
@@ -15,7 +15,7 @@ application-area: [all]
 
 ## Best Practice
 
-Declare credential-carrying parameters and variables as `SecretText` from the call site that retrieves the secret all the way to the call site that consumes it (typically an `HttpClient` header or URI). Never round-trip through `Text` — every conversion is a potential exposure point. Retrieve secrets from `IsolatedStorage` with the `SecretText` overload of `Get` rather than the `Text` overload. See sample: `secrettext-for-credentials.good.al`.
+Declare credential-carrying parameters and variables as `SecretText` from the call site that retrieves the secret all the way to the call site that consumes it (typically an HTTP header or URI). Never round-trip through `Text`. On BC 24 and later, use the `SecretText` overload of `IsolatedStorage.Get` when retrieving stored secrets. See sample: `secrettext-for-credentials.good.al`.
 
 ## Anti Pattern
 

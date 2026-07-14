@@ -1,12 +1,17 @@
 codeunit 50212 "Sec Sample SecretSubst Bad"
 {
-    procedure BuildAuthHeader(Token: SecretText): Text
+    procedure BuildAuthHeader(Token: Text): Text
     begin
-        exit(StrSubstNo('Bearer %1', Token.Unwrap()));
+        exit(StrSubstNo('Token %1', Token));
     end;
 
-    procedure BuildSecretUri(BaseUrl: Text; ApiKey: SecretText): Text
+    procedure BuildSecretUri(ApiKey: Text): Text
     begin
-        exit(BaseUrl + '?key=' + ApiKey.Unwrap());
+        exit(StrSubstNo('https://api.example.com/data?key=%1', ApiKey));
+    end;
+
+    procedure BuildBrokenAuthHeader(Token: SecretText): SecretText
+    begin
+        exit(SecretStrSubstNo('Token', Token));
     end;
 }

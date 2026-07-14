@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [20..]
 domain: privacy
 keywords: [error, message, confirm, notification, telemetry, logging, ui-dialog]
 technologies: [al]
@@ -7,16 +7,16 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Only `Error()` is logged to telemetry — `Message`, `Confirm`, `Notification` are not
+# Error dialogs emit Error method trace telemetry
 
 ## Description
 
-The privacy concern with dialog APIs is not what the signed-in user sees on the screen — it is what the platform writes to telemetry. The BC platform automatically captures `Error()` invocations in the telemetry stream; it does not capture `Message()`, `Confirm()` or `Notification` calls. That asymmetry is the reason privacy review focuses on `Error()` text and ignores the other dialog APIs: a `Message` that shows a customer's email to the signed-in user reveals nothing they were not already entitled to see, while an `Error` carrying the same email leaks it to a separate, longer-lived telemetry destination.
+When `Error` displays a dialog, Business Central emits the RT0030 Error method trace telemetry signal. `Message`, `Confirm`, and `Notification` do not emit that Error method trace signal. For RT0030, the actual AL error string is included only when the first `Error` argument is a `Label` or `TextConst`; other first-argument types produce generic guidance instead of the dynamic string.
 
 ## Best Practice
 
-Treat `Error()` as a telemetry surface, not just a UI surface — review the message text and parameters with the same scrutiny you apply to `Session.LogMessage`. Treat `Message()`, `Confirm()`, and `Notification` as pure UI: showing business data the user is permissioned for is normal functionality.
+Use a `Label` or `TextConst` as the direct first argument to `Error` so telemetry contains a stable, classified message. Review user-facing substitution values for UI appropriateness. Do not treat `Message`, `Confirm`, or `Notification` content as though it were automatically copied into RT0030.
 
 ## Anti Pattern
 
-Flagging `Message`/`Confirm`/`Notification` calls for "showing PII" — they are not logged to telemetry, and the user already has permission to the underlying data. The inverse anti-pattern is treating `Error()` as harmless because the user sees only a dialog: the message is also written verbatim to telemetry.
+Claiming that every rendered `Error` string is written verbatim to telemetry, or that `Message`, `Confirm`, and `Notification` automatically feed the Error method trace. Both overstate the platform behavior.

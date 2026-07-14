@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [20..]
 domain: privacy
 keywords: [getlasterrortext, error, strsubstno, telemetry, customer-data, attachment]
 technologies: [al]
@@ -11,16 +11,16 @@ application-area: [all]
 
 ## Description
 
-`GetLastErrorText()` returns the text of the last error that occurred in the context where it is called. That text routinely contains customer content — field values that triggered the validation, record keys, customer names, file names from upload failures, and similar fragments lifted from the failing operation. Re-emitting it through `StrSubstNo` into `Error()` bakes that customer data into a single plain-text parameter that the platform can no longer classify, so it is logged verbatim to telemetry (the same problem as any other `StrSubstNo`-pre-built error — see `avoid-strsubstno-prebuild-before-error.md`).
+Parameterless `GetLastErrorText()` can contain customer content such as field values, record keys, and file names. The Boolean overload names its parameter `ExcludeCustomerContent`; passing `true` requests scrubbed text and is not the customer-content scenario covered here. When unsanitized error text is passed as a substitution value to an `Error` whose first argument is a `Label` or `TextConst`, the label supplies the Error method trace telemetry message.
 
 ## Best Practice
 
-When the goal is to surface a recoverable failure to the user, raise a generic message that does not embed `GetLastErrorText()` content, and log technical detail separately via `Session.LogMessage` with the correct `DataClassification`. If you must propagate the inner error verbatim, re-raise it as a direct parameter of `Error()` (e.g., `Error('%1', GetLastErrorText())`) rather than concatenating with `StrSubstNo` so the platform can apply its own handling.
+Use a generic label when the user does not need the underlying detail. If showing unsanitized detail is appropriate, put `%1` in a label and pass parameterless `GetLastErrorText()` as a separate argument. This preserves a useful static telemetry message while keeping the dynamic value out of the telemetry message field.
 
 See sample: `getlasterrortext-customer-content-in-errors.good.al`.
 
 ## Anti Pattern
 
-`ErrorMsg := StrSubstNo('Attachment failed: %1', GetLastErrorText(true)); Error(ErrorMsg);` — the inner error text may carry filenames or record values, and `StrSubstNo` strips the platform's ability to filter them before they hit telemetry.
+`Error(StrSubstNo(AttachmentFailedErr, GetLastErrorText()))` or `Error(AttachmentPrefixErr + GetLastErrorText())`. Both lose the static first argument and trigger AA0231; neither causes the composed text to be logged verbatim as the Error telemetry message.
 
 See sample: `getlasterrortext-customer-content-in-errors.bad.al`.

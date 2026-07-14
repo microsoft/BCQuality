@@ -11,16 +11,16 @@ application-area: [all]
 
 ## Description
 
-`LockTable` and `ReadIsolation` solve different problems with different blast radii. Per the upstream guidance, "`LockTable` ensures that all READS against that table will happen with UPDLOCK for the remainder of the transaction." `ReadIsolation` "only pertains to the current record instance, while `LockTable` affects the lockstate of the entire transaction." `ReadIsolation` is also more expressive: it can heighten or lower the isolation level inside an already-established transaction. Reaching for `LockTable` when only a single read needs guarding therefore poisons every later read on that table — including reads in other code paths that share the transaction.
+Without read scale-out, `LockTable` causes subsequent reads of that table in the transaction to use `UPDLOCK`. With read scale-out, those reads use `REPEATABLEREAD` on the replica instead. `ReadIsolation` selects an isolation level for one record instance. A helper that only reads should not broaden locking for the table merely to request committed data.
 
 ## Best Practice
 
-For a read-only operation, or a single read that needs a higher isolation level than the surrounding transaction, set `Rec.ReadIsolation := IsolationLevel::ReadCommitted;` (or the level the call requires) immediately before the read. The hint applies only to that record instance. Save `LockTable` for code that genuinely needs every subsequent read on the table to acquire an update lock (see `findset-true-applies-updlock-on-read.md` for the alternative narrower mechanism on iterated reads).
+For a read-only operation that specifically requires committed data, set `Rec.ReadIsolation := IsolationLevel::ReadCommitted` immediately before the read. If the default isolation is sufficient, set neither property. `ReadCommitted` can still block behind writers and does not guarantee that repeated reads stay unchanged; use the isolation level required by the operation. Reserve update locks for read-before-write logic, not read-only helpers.
 
 See sample: `prefer-readisolation-over-locktable-for-reads.good.al`.
 
 ## Anti Pattern
 
-`Rec.LockTable();` at the top of a helper that only reads, perhaps to "make sure the read is consistent". Every subsequent read on that table for the rest of the transaction acquires `UPDLOCK`, including reads from unrelated code paths fused into the same transaction. The contention surfaces in unrelated user sessions, not in the helper that introduced it.
+`Rec.LockTable();` at the top of a helper that only reads, perhaps to "make sure the read is consistent". It takes stronger isolation than the helper needs and changes later reads of that table in the surrounding transaction or read-scale-out session.
 
 See sample: `prefer-readisolation-over-locktable-for-reads.bad.al`.

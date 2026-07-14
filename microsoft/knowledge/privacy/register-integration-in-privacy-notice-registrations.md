@@ -1,24 +1,24 @@
 ---
 bc-version: [all]
 domain: privacy
-keywords: [privacy-notice-registrations, integration, register, exchange, onedrive, teams, notice-id]
+keywords: [privacy-notice, integration, register, onregisterprivacynotices, notice-id]
 technologies: [al]
 countries: [w1]
 application-area: [all]
 ---
 
-# Register every new external integration with `Privacy Notice Registrations`
+# Register custom integrations with Codeunit Privacy Notice
 
 ## Description
 
-`Codeunit "Privacy Notice Registrations"` is the registry of integrations whose consent state the platform tracks. Built-in integrations such as Exchange, OneDrive and Teams already have notice IDs exposed via accessor methods on this codeunit (`GetExchangePrivacyNoticeId`, etc.); a new integration introduced by an extension must add itself to the registry so that the admin can grant or withhold consent on the **Privacy Notices Status** page. Without registration, there is nothing for `Codeunit "Privacy Notice"` to return an approval state for — the call cannot meaningfully gate the outbound request.
+The current extension point is `Codeunit "Privacy Notice"`. Extensions can subscribe to its `OnRegisterPrivacyNotices` event and add a dedicated notice ID, integration name, and link to the temporary `Privacy Notice` record. For explicit creation outside the default-registration flow, the same codeunit exposes `CreatePrivacyNotice`. `Codeunit "Privacy Notice Registrations"` contains IDs for built-in integrations and is not the registration API for a custom service.
 
 ## Best Practice
 
-When introducing a new outbound integration: pick a stable notice ID, register it via `Privacy Notice Registrations`, and then gate every outbound call with `PrivacyNotice.GetPrivacyNoticeApprovalState(<that id>)` as described in `privacy-notice-consent-for-external-data-transfer.md`.
+Choose a stable ID owned by the extension. Register it through `OnRegisterPrivacyNotices`, or call `PrivacyNotice.CreatePrivacyNotice` during an intentional setup or upgrade path. Use that same ID for consent checks described in `privacy-notice-consent-for-external-data-transfer.md`.
 
 See sample: `register-integration-in-privacy-notice-registrations.good.al`.
 
 ## Anti Pattern
 
-Shipping a new outbound integration without registering it. Even if the code calls `GetPrivacyNoticeApprovalState`, the admin has no surface to express consent — the integration is effectively unmanaged from a privacy-notice standpoint.
+Reusing the Exchange or another built-in notice ID for a custom integration, subscribing to `Privacy Notice Registrations`, or calling the nonexistent `CreatePrivacyNoticeForIntegration` method. These shapes attach consent to the wrong service or do not compile.

@@ -7,7 +7,6 @@ codeunit 50190 "Error Type Good Sample"
         if not BucketInitialized(BucketId) then begin
             InternalErr.ErrorType := ErrorType::Internal;
             InternalErr.Message := StrSubstNo('Ledger bucket %1 was not initialized before posting.', BucketId);
-            InternalErr.DetailedMessage := 'Internal invariant violated. Inspect the call stack captured in telemetry.';
             Error(InternalErr);
         end;
     end;

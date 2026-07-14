@@ -7,20 +7,20 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Prefer this over IncludeSender in codeunit events
+# Prefer this over IncludeSender in new codeunit events
 
 ## Description
 
-Some publishers set `IncludeSender` to `true` on `[IntegrationEvent]` or `[BusinessEvent]` so subscribers receive the publishing object as an implicit sender parameter. From Business Central 2024 release wave 2, a codeunit can instead pass itself explicitly with the `this` keyword as a normal, strongly-typed `Sender` parameter. Explicit passing is clearer at both the publisher and the subscriber: the sender appears in the signature, it is concretely typed to the publishing codeunit, and it avoids the implicit-parameter mechanics of `IncludeSender`. Reserve `IncludeSender = true` for cases where the sender genuinely cannot be passed explicitly. This guidance applies to code targeting Business Central 2024 release wave 2 or later, where the `this` keyword is available.
+When designing a new publisher, setting `IncludeSender` to `true` on `[IntegrationEvent]` or `[BusinessEvent]` gives subscribers the publishing object as an implicit sender parameter. From Business Central 2024 release wave 2, a codeunit can instead pass itself explicitly with the `this` keyword as a normal, strongly-typed `Sender` parameter. Explicit passing makes the sender visible and typed in the signature. This is new-event design guidance only: never change `IncludeSender` on an event that has already shipped.
 
 ## Best Practice
 
-Declare the publisher `[IntegrationEvent(false, false)]` with an explicit `Sender: Codeunit "…"` parameter and raise it with `this`, for example `OnBeforeProcessOrder(OrderNo, this);`. Subscribers then receive a typed sender they can call directly.
+For a new event, declare the publisher `[IntegrationEvent(false, false)]` with an explicit `Sender: Codeunit "…"` parameter and raise it with `this`, for example `OnBeforeProcessOrder(OrderNo, this);`. Subscribers then receive a typed sender they can call directly.
 
 See sample: `prefer-this-over-includesender-in-codeunit-events.good.al`.
 
 ## Anti Pattern
 
-Relying on `[IntegrationEvent(true, …)]` solely to hand subscribers the publisher instance, where a codeunit could pass `this` explicitly as a typed parameter. Detection: `IncludeSender = true` on a codeunit event whose only purpose is to expose the sender, in code targeting Business Central 2024 release wave 2 or later.
+Designing a new codeunit event with `[IntegrationEvent(true, …)]` solely to hand subscribers the publisher instance, where `this` could be passed explicitly as a typed parameter. Do not apply this rule by mutating a shipped event's attribute flags.
 
 See sample: `prefer-this-over-includesender-in-codeunit-events.bad.al`.

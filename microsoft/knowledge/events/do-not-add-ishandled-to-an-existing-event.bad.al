@@ -8,9 +8,9 @@ codeunit 50291 "New OnBefore Bad Sample"
     begin
         Total := 100;
 
-        // Anti-pattern: IsHandled was bolted onto the existing
-        // OnAfterCalculateTotal, changing its contract and breaking every
-        // subscriber that matched the original signature.
+        // Anti-pattern: IsHandled was bolted onto the existing OnAfter event.
+        // Regardless of compiler compatibility, this changes a notification
+        // into an override contract that existing subscribers did not expect.
         OnAfterCalculateTotal(SalesHeader, Total, IsHandled);
     end;
 

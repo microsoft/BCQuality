@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [14..]
 domain: error-handling
 keywords: [errorinfo, errortype, internal, client, telemetry, diagnostics, generic-message]
 technologies: [al]
@@ -15,7 +15,7 @@ application-area: [all]
 
 ## Best Practice
 
-Reserve `ErrorType::Internal` for errors the user cannot act on: corrupted internal state, an unreachable branch, a contract a caller violated. Set a precise, detail-rich `Message` and `DetailedMessage` for telemetry, raise it via `Error(ErrorInfo)`, and let the platform show the user a generic dialog. Keep `ErrorType::Client` (or a plain `Error`) for failures the user is expected to read and resolve — validation messages, missing setup, business-rule violations. The test is simple: if the message only makes sense to a developer, mark it `Internal`.
+Reserve `ErrorType::Internal` for errors the user cannot act on: corrupted internal state, an unreachable branch, a contract a caller violated. Set a precise, detail-rich `Message` for telemetry, raise it via `Error(ErrorInfo)`, and let the platform show the user a generic dialog. Keep `ErrorType::Client` (or a plain `Error`) for failures the user is expected to read and resolve — validation messages, missing setup, business-rule violations. The test is simple: if the message only makes sense to a developer, mark it `Internal`.
 
 See sample: `errortype-internal-vs-client-for-diagnostics.good.al`.
 

@@ -1,11 +1,11 @@
 codeunit 50219 "Sec Sample DataScope Good"
 {
-    internal procedure StoreTenantApiKey(ApiKey: Text)
+    internal procedure StoreTenantApiKey(ApiKey: SecretText)
     begin
         IsolatedStorage.SetEncrypted('TenantApiKey', ApiKey, DataScope::Module);
     end;
 
-    internal procedure StoreCompanyWebhook(WebhookUrl: Text)
+    internal procedure StoreCompanyWebhook(WebhookUrl: SecretText)
     begin
         IsolatedStorage.SetEncrypted('WebhookUrl', WebhookUrl, DataScope::Company);
     end;

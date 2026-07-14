@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [21..]
 domain: style
 keywords: [abouttitle, abouttext, teaching-tip, onboarding, page]
 technologies: [al]

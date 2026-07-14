@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-A codeunit only participates in the upgrade pipeline when it sets `Subtype = Upgrade`. The platform then dispatches the `OnUpgradePerCompany` and `OnUpgradePerDatabase` triggers on that codeunit during upgrade. A codeunit without `Subtype = Upgrade` — even one that declares an `OnUpgradePerCompany` trigger — is not an upgrade codeunit, and reviewers ignore it for upgrade concerns. Conversely, any procedure invoked transitively from an `OnUpgrade...` trigger of an upgrade codeunit IS upgrade code regardless of where it lives, and the upgrade rules apply to it.
+A codeunit only participates in the upgrade pipeline when it sets `Subtype = Upgrade`. The platform then permits and dispatches the `OnUpgradePerCompany` and `OnUpgradePerDatabase` triggers on that codeunit during upgrade. A normal codeunit can contain an upgrade-like `RunUpgrade` procedure, but the platform does not discover or invoke it automatically. Conversely, any procedure invoked transitively from an `OnUpgrade...` trigger of an upgrade codeunit is upgrade code regardless of where the helper lives, and the upgrade rules apply to it.
 
 ## Best Practice
 

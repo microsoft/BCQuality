@@ -11,16 +11,16 @@ application-area: [all]
 
 ## Description
 
-A `Get` or `FindFirst` against a different record inside a loop body produces one database round-trip per iteration — the classic N+1 pattern. Per the upstream guidance, "Flag when a `Get()`/`FindFirst()` is called inside a loop for each record — this creates N+1 database round-trips." The cost only matters when the inner table is meaningful: lookups against temporary tables, singleton setup tables, enum-mapping tables, permission objects, or Role IDs are bounded and safe. The pattern to catch is the inner lookup that hits a production-scale table for every outer row.
+A `Get` or `FindFirst` against another persistent table inside a loop can produce an N+1 access pattern: one outer query followed by repeated inner lookups. Server and primary-key caches can satisfy some `Get` calls, so a source-level `Get` is not proof of one SQL round-trip. The concern is an unbounded loop whose lookup keys are not known to repeat or remain cached.
 
 ## Best Practice
 
-When the loop needs values from another record, lift the lookup out of the loop if the rows can be collected up front, or apply `SetLoadFields` so each inner read transfers only the columns the loop actually uses (see `use-setloadfields-for-partial-records.md`). When the inner record is small or bounded, leave the call site alone — the rule targets large-table inner lookups specifically.
+Use a query object to join the outer and inner tables when the relationship and filters can be expressed as one query. If keys repeat, a dictionary cache can reduce lookups to one per distinct key. `SetLoadFields` can reduce the columns transferred by unavoidable inner reads, but it does not eliminate the N+1 shape and must not be presented as doing so.
 
 See sample: `avoid-get-inside-loop-on-large-table.good.al`.
 
 ## Anti Pattern
 
-Iterating BOM lines and calling `Item.Get(BOMLine."No.")` per row to read a costing method, with no `SetLoadFields` on `Item`. Each iteration issues one query against Item (~800k rows) and pulls the entire row to read two fields. The fix is `Item.SetLoadFields("Costing Method", "Standard Cost");` ahead of the loop — still N reads, but each one transfers only the needed columns.
+Iterating production BOM lines and calling `Item.Get(BOMLine."No.")` for each line when the same result can be produced by a query joining Production BOM Line to Item. Partial loading alone is only a payload mitigation for this pattern.
 
 See sample: `avoid-get-inside-loop-on-large-table.bad.al`.

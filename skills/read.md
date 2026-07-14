@@ -115,7 +115,7 @@ Consumers MUST NOT silently treat missing context as a match.
 
 ## Citing a knowledge file
 
-A consumer that produces output referencing a knowledge file MUST cite it by its repo-relative path (for example, `microsoft/knowledge/performance/filter-before-find.md`). Line numbers are not stable references; use the file path only. If a commit SHA is available to the consumer, it SHOULD be included alongside the path.
+A consumer that produces output referencing a knowledge file MUST cite it by its repo-relative path (for example, `microsoft/knowledge/performance/apply-filters-before-iterating.md`). Line numbers are not stable references; use the file path only. If a commit SHA is available to the consumer, it SHOULD be included alongside the path.
 
 ## Sample files
 
