@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -692,7 +693,12 @@ def main(argv: list[str] | None = None) -> int:
     n_err = len(report.errors)
     n_warn = len(report.warnings)
     print(f"\nValidator: {n_err} error(s), {n_warn} warning(s)")
-    return 1 if n_err else 0
+    if n_err:
+        return 1
+
+    contract_tests = root / ".github" / "scripts" / "test_generation_contracts.py"
+    result = subprocess.run([sys.executable, str(contract_tests)], cwd=root, check=False)
+    return result.returncode
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ import yaml
 
 from generation_contracts import (
     MAX_ARTIFACT_BYTES,
+    _fallback_schema_errors,
     load_bounded_json,
     load_schema,
     schema_errors,
@@ -93,6 +94,8 @@ class GenerationContractTests(unittest.TestCase):
         self.assertEqual([], validate_requirement_semantics(VALID_REQUIREMENT))
         self.assertEqual([], schema_errors(REPORT_SCHEMA, VALID_REPORT))
         self.assertEqual([], validate_report_semantics(VALID_REPORT, requirement=VALID_REQUIREMENT))
+        self.assertEqual([], _fallback_schema_errors(REQUIREMENT_SCHEMA, VALID_REQUIREMENT))
+        self.assertEqual([], _fallback_schema_errors(REPORT_SCHEMA, VALID_REPORT))
 
     def test_malformed_and_duplicate_key_json_fail(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

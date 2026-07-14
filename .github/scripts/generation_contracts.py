@@ -2,10 +2,17 @@
 from __future__ import annotations
 
 import json
+import re
+import uuid
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
-from jsonschema import Draft202012Validator, FormatChecker
+try:
+    from jsonschema import Draft202012Validator, FormatChecker
+except ImportError:  # Existing CI installs only PyYAML; use the contract-focused fallback.
+    Draft202012Validator = None
+    FormatChecker = None
 
 
 MAX_REQUIREMENT_BYTES = 1_048_576
@@ -44,13 +51,158 @@ def load_schema(path: Path) -> dict[str, Any]:
     schema = load_bounded_json(path, max_bytes=2_097_152)
     if not isinstance(schema, dict):
         raise ValueError(f"schema must be a JSON object: {path}")
-    Draft202012Validator.check_schema(schema)
+    if Draft202012Validator is not None:
+        Draft202012Validator.check_schema(schema)
+    else:
+        _check_schema_structure(schema, schema)
     return schema
 
 
 def schema_errors(schema: dict[str, Any], instance: Any) -> list[str]:
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
-    return [error.message for error in sorted(validator.iter_errors(instance), key=lambda e: list(e.path))]
+    if Draft202012Validator is not None:
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+        return [error.message for error in sorted(validator.iter_errors(instance), key=lambda e: list(e.path))]
+    return _fallback_schema_errors(schema, instance)
+
+
+def _resolve_ref(root: dict[str, Any], reference: str) -> dict[str, Any]:
+    if not reference.startswith("#/"):
+        raise ValueError(f"fallback validator supports only local references: {reference}")
+    value: Any = root
+    for token in reference[2:].split("/"):
+        token = token.replace("~1", "/").replace("~0", "~")
+        if not isinstance(value, dict) or token not in value:
+            raise ValueError(f"unresolvable schema reference: {reference}")
+        value = value[token]
+    if not isinstance(value, dict):
+        raise ValueError(f"schema reference is not an object: {reference}")
+    return value
+
+
+def _check_schema_structure(schema: dict[str, Any], root: dict[str, Any]) -> None:
+    if "$ref" in schema:
+        _resolve_ref(root, schema["$ref"])
+    if "pattern" in schema:
+        re.compile(schema["pattern"])
+    for key in ("properties", "$defs"):
+        for child in schema.get(key, {}).values():
+            _check_schema_structure(child, root)
+    for key in ("items", "contains", "if", "then", "else"):
+        child = schema.get(key)
+        if isinstance(child, dict):
+            _check_schema_structure(child, root)
+    for key in ("allOf", "anyOf"):
+        for child in schema.get(key, []):
+            _check_schema_structure(child, root)
+
+
+def _type_matches(expected: str, value: Any) -> bool:
+    return {
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "integer": isinstance(value, int) and not isinstance(value, bool),
+        "number": isinstance(value, (int, float)) and not isinstance(value, bool),
+        "boolean": isinstance(value, bool),
+        "null": value is None,
+    }.get(expected, False)
+
+
+def _fallback_schema_errors(
+    schema: dict[str, Any],
+    instance: Any,
+    *,
+    root: dict[str, Any] | None = None,
+    path: str = "$",
+) -> list[str]:
+    root = root or schema
+    if "$ref" in schema:
+        return _fallback_schema_errors(_resolve_ref(root, schema["$ref"]), instance, root=root, path=path)
+
+    errors: list[str] = []
+    if "anyOf" in schema:
+        branch_errors = [
+            _fallback_schema_errors(child, instance, root=root, path=path)
+            for child in schema["anyOf"]
+        ]
+        if all(branch_errors):
+            errors.append(f"{path}: does not match any allowed schema")
+            return errors
+    for child in schema.get("allOf", []):
+        errors.extend(_fallback_schema_errors(child, instance, root=root, path=path))
+
+    condition = schema.get("if")
+    if condition is not None:
+        matches = not _fallback_schema_errors(condition, instance, root=root, path=path)
+        selected = schema.get("then") if matches else schema.get("else")
+        if selected is not None:
+            errors.extend(_fallback_schema_errors(selected, instance, root=root, path=path))
+
+    expected_type = schema.get("type")
+    if expected_type and not _type_matches(expected_type, instance):
+        errors.append(f"{path}: expected {expected_type}")
+        return errors
+    if "const" in schema and instance != schema["const"]:
+        errors.append(f"{path}: expected constant {schema['const']!r}")
+    if "enum" in schema and instance not in schema["enum"]:
+        errors.append(f"{path}: value is not in the allowed enum")
+
+    if isinstance(instance, dict):
+        required = schema.get("required", [])
+        for key in required:
+            if key not in instance:
+                errors.append(f"{path}: missing required property {key!r}")
+        properties = schema.get("properties", {})
+        for key, value in instance.items():
+            if key in properties:
+                errors.extend(_fallback_schema_errors(properties[key], value, root=root, path=f"{path}.{key}"))
+            elif schema.get("additionalProperties") is False:
+                errors.append(f"{path}: unexpected property {key!r}")
+
+    if isinstance(instance, list):
+        if len(instance) < schema.get("minItems", 0):
+            errors.append(f"{path}: too few items")
+        if "maxItems" in schema and len(instance) > schema["maxItems"]:
+            errors.append(f"{path}: too many items")
+        if schema.get("uniqueItems"):
+            encoded = [json.dumps(item, sort_keys=True, separators=(",", ":")) for item in instance]
+            if len(encoded) != len(set(encoded)):
+                errors.append(f"{path}: items must be unique")
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, value in enumerate(instance):
+                errors.extend(_fallback_schema_errors(item_schema, value, root=root, path=f"{path}[{index}]"))
+        contains = schema.get("contains")
+        if isinstance(contains, dict) and not any(
+            not _fallback_schema_errors(contains, value, root=root, path=f"{path}[{index}]")
+            for index, value in enumerate(instance)
+        ):
+            errors.append(f"{path}: no item matches contains")
+
+    if isinstance(instance, str):
+        if len(instance) < schema.get("minLength", 0):
+            errors.append(f"{path}: string is too short")
+        if "maxLength" in schema and len(instance) > schema["maxLength"]:
+            errors.append(f"{path}: string is too long")
+        if "pattern" in schema and re.search(schema["pattern"], instance) is None:
+            errors.append(f"{path}: string does not match required pattern")
+        if schema.get("format") == "uuid":
+            try:
+                uuid.UUID(instance)
+            except ValueError:
+                errors.append(f"{path}: invalid UUID")
+        if schema.get("format") == "uri":
+            parsed = urlparse(instance)
+            if not parsed.scheme or not parsed.netloc:
+                errors.append(f"{path}: invalid URI")
+
+    if isinstance(instance, (int, float)) and not isinstance(instance, bool):
+        if "minimum" in schema and instance < schema["minimum"]:
+            errors.append(f"{path}: value is below minimum")
+        if "maximum" in schema and instance > schema["maximum"]:
+            errors.append(f"{path}: value exceeds maximum")
+
+    return errors
 
 
 def _canonical_path_error(value: Any, *, allow_dot: bool = False, require_al: bool = False) -> str | None:
