@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [23..]
 domain: breaking-changes
 keywords: [sensitive-data, secrettext, token, credential, public-api, access-boundary]
 technologies: [al]
