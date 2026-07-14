@@ -23,7 +23,6 @@ page 50350 "WS Order API"
                 {
                     EntityName = 'orderLine';
                     EntitySetName = 'orderLines';
-                    Multiplicity = Many;
                     SubPageLink = "Order Id" = Field(SystemId);
                 }
                 part(summary; "WS Order Summary API")

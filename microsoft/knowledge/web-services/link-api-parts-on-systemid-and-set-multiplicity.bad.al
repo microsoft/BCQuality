@@ -19,6 +19,7 @@ page 50353 "WS Order API Bad"
                 {
                     EntityName = 'orderLine';
                     EntitySetName = 'orderLines';
+                    Multiplicity = ZeroOrOne;
                     SubPageLink = "Order No." = Field("No.");
                 }
             }
