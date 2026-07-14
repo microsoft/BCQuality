@@ -84,7 +84,7 @@ BCQuality is an **additive** knowledge layer. The agent surfaces two kinds of fi
 
 Before a skill emits an agent finding, it validates the candidate against the BCQuality knowledge already loaded for the task: a matching file upgrades the candidate to a knowledge-backed finding (and merges or deduplicates against relevant existing output); a contradicting file suppresses the candidate. Only candidates with no BCQuality coverage become agent findings.
 
-Orchestrators SHOULD render a non-empty `domain` value verbatim and MUST tolerate its absence for reports from older producers. They MAY render knowledge-backed and agent findings differently and MAY apply independent severity floors; `references: []` and the `agent:` id prefix distinguish agent findings, while `from-sub-skill: "agent"` identifies those emitted by the super-skill itself.
+Orchestrators MUST tolerate an absent `domain` in reports from older producers. When it is present, treat it as display text rather than an identifier: preserve the full string and its case, whitespace, punctuation, and non-ASCII characters, escaping only for the target rendering format. Do not tokenize it on spaces or use a lowercased or slugified form as the sole metadata or deduplication key, because distinct labels can collapse to the same slug. Retain the exact string, use a lossless encoding, or use a collision-resistant digest instead. Orchestrators MAY render knowledge-backed and agent findings differently and MAY apply independent severity floors; `references: []` and the `agent:` id prefix distinguish agent findings, while `from-sub-skill: "agent"` identifies those emitted by the super-skill itself.
 
 ## Why this architecture
 
