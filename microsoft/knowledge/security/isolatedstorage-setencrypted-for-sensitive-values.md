@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [24..]
 domain: security
 keywords: [isolatedstorage, setencrypted, encryption, secret, storage]
 technologies: [al]
@@ -15,7 +15,7 @@ application-area: [all]
 
 ## Best Practice
 
-Use `IsolatedStorage.SetEncrypted` for every value that meets the definition of a secret. Pair it with the matching retrieval pattern: `IsolatedStorage.Contains` to test for presence and `IsolatedStorage.Get` (preferably with a `SecretText` destination) to read. Constrain the input length before storing — long values can exceed the encrypted-storage size limit and the write will fail at runtime. See sample: `isolatedstorage-setencrypted-for-sensitive-values.good.al`.
+Use the `SecretText` overloads of `IsolatedStorage.SetEncrypted` and `IsolatedStorage.Get` for values that meet the definition of a secret. Check the optional Boolean result when storage failure needs a controlled error; encrypted values are subject to the documented storage-size limit. See sample: `isolatedstorage-setencrypted-for-sensitive-values.good.al`.
 
 ## Anti Pattern
 

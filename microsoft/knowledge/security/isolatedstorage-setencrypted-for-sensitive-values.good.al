@@ -1,10 +1,11 @@
 codeunit 50217 "Sec Sample SetEncrypted Good"
 {
-    internal procedure StoreApiKey(ApiKeyValue: Text)
+    internal procedure StoreApiKey(ApiKeyValue: SecretText)
+    var
+        StoreApiKeyFailedErr: Label 'The API key could not be stored.';
     begin
-        if StrLen(ApiKeyValue) > 200 then
-            Error('API key too long for encrypted storage');
-        IsolatedStorage.SetEncrypted('ApiKey', ApiKeyValue, DataScope::Module);
+        if not IsolatedStorage.SetEncrypted('ApiKey', ApiKeyValue, DataScope::Module) then
+            Error(StoreApiKeyFailedErr);
     end;
 
     local procedure ReadApiKey(var ApiKey: SecretText): Boolean

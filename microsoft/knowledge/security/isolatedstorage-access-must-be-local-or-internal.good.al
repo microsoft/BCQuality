@@ -8,7 +8,7 @@ codeunit 50215 "Sec Sample IsoStorage Good"
         exit(true);
     end;
 
-    internal procedure SetApiKey(NewKey: Text)
+    internal procedure SetApiKey(NewKey: SecretText)
     begin
         IsolatedStorage.SetEncrypted('ApiKey', NewKey, DataScope::Module);
     end;

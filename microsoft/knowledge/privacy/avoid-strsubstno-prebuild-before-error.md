@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [20..]
 domain: privacy
 keywords: [strsubstno, error, telemetry, pii, prebuild, text-variable]
 technologies: [al]
@@ -7,20 +7,20 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Do not pre-build an error string with `StrSubstNo` before calling `Error()`
+# Pass a Label directly as the first Error argument
 
 ## Description
 
-`StrSubstNo` returns a plain `Text` value with the substitutions already performed. When that result is then passed to `Error()`, the platform sees a single plain-text parameter with no field references left to inspect, so it cannot apply `DataClassification` to anything inside it. Whatever PII the `StrSubstNo` call interpolated — customer name, e-mail, address, error text — is logged verbatim to telemetry. This is the canonical way to accidentally leak customer data through error telemetry, and it is the only `Error()` shape that needs to be flagged.
+Error method trace telemetry includes the AL error string only when the first `Error` argument is a `Label` or `TextConst`. Wrapping a label in `StrSubstNo`, or concatenating labels or text, produces a dynamic `Text` first argument. In that case the actual string is not emitted as the telemetry message; the platform emits its generic guidance instead. CodeCop AA0231 flags both shapes because the label identity and data-classification context are lost.
 
 ## Best Practice
 
-Call `Error()` directly with the format string and the substitution parameters. The platform classifies each parameter individually and handles telemetry correctly even when the parameters are PII fields (see `error-direct-substitution-safe-for-telemetry.md`). If the message text needs to be a `Label`, pass the `Label` and the parameters to `Error()` — do not pre-render via `StrSubstNo`.
+Declare the complete message as a `Label` or `TextConst` and pass it directly to `Error`, followed by substitution values. The client receives the formatted message while telemetry can retain the static message template without using the dynamic values as its message. See `error-direct-substitution-safe-for-telemetry.md`.
 
 See sample: `avoid-strsubstno-prebuild-before-error.good.al`.
 
 ## Anti Pattern
 
-Assigning `StrSubstNo('Customer %1 (%2) ...', Customer.Name, Customer."E-Mail")` to a `Text` variable and then calling `Error(ErrorMsg)`. The platform has nothing to classify by the time `Error` runs — the PII is baked into the string and goes straight to telemetry. Detection signal for a reviewer: any `Text` variable assigned from `StrSubstNo` and later passed as the *only* parameter to `Error()`.
+`Error(StrSubstNo(CustomerInvalidErr, Customer."No."))` and `Error(HeaderErr + DetailErr)` both make the first argument dynamic. They reduce error telemetry quality; they do not cause that composed string to be logged verbatim as the telemetry message.
 
 See sample: `avoid-strsubstno-prebuild-before-error.bad.al`.

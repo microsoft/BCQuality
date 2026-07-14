@@ -2,10 +2,16 @@ codeunit 50207 "Privacy Sample StrSubstNo Bad"
 {
     procedure ReportFailure(var Customer: Record Customer)
     var
-        ErrorMsg: Text;
+        CustomerInvalidErr: Label 'Customer %1 has invalid data.', Comment = '%1 = Customer No.';
     begin
-        ErrorMsg := StrSubstNo('Customer %1 (%2) at %3 has invalid data',
-            Customer.Name, Customer."E-Mail", Customer.Address);
-        Error(ErrorMsg);
+        Error(StrSubstNo(CustomerInvalidErr, Customer."No."));
+    end;
+
+    procedure ReportCombinedFailure()
+    var
+        HeaderErr: Label 'Customer validation failed. ';
+        DetailErr: Label 'Correct the customer card and try again.';
+    begin
+        Error(HeaderErr + DetailErr);
     end;
 }
