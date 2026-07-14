@@ -45,7 +45,7 @@ A file enters the candidate worklist when its `keywords` intersect the extracted
 
 The following targeted checks cover every current `testing` article. Treat each as a candidate-selection cue: when the signal appears in changed code, add the named article to the worklist and evaluate it in Action.
 
-- A method in a `Subtype = Test` codeunit adds or changes `[TransactionModel(...)]`, exercises code that calls `Commit`, defaults broadly to `AutoCommit`, or is run without a `TestIsolation`-enabled runner — `transactionmodel-attribute-governs-test-transactions`.
+- A method in a `Subtype = Test` codeunit adds or changes `[TransactionModel(...)]`, exercises code that calls `Commit`, defaults broadly to `AutoCommit`, or uses `AutoCommit` (or exercises a path that calls `Commit`) without a `TestIsolation`-enabled runner — `transactionmodel-attribute-governs-test-transactions`. Do not worklist this article solely because an ordinary `AutoRollback` or read-only test has no `TestIsolation` runner.
 - Test fixture code manually calls `Init`/`Insert`, invents keys or prerequisite records, or bypasses available `LibrarySales`, `LibraryPurchase`, `LibraryERM`, `LibraryInventory`, `LibraryRandom`, or equivalent library codeunits — `use-library-codeunits-for-test-fixtures`.
 - `asserterror` is added or changed without a following `Assert.ExpectedError`, `Assert.ExpectedErrorCode`, or a purpose-built assertion such as `ExpectedTestFieldError` — `asserterror-needs-expectederror-and-code`.
 - A test path raises UI, `[HandlerFunctions(...)]` does not exactly match the invoked handlers, a handler hardcodes replies instead of using enqueue/dequeue expectations, or `LibraryVariableStorage.Clear`/`AssertEmpty` is missing — `ui-handlers-in-tests`.
