@@ -5,7 +5,7 @@ codeunit 50209 "Privacy Sample GetLastError Bad"
         AttachmentFailedErr: Label 'Attachment failed: %1', Comment = '%1 = underlying error';
     begin
         if not TryAddAttachment() then
-            Error(StrSubstNo(AttachmentFailedErr, GetLastErrorText(true)));
+            Error(StrSubstNo(AttachmentFailedErr, GetLastErrorText()));
     end;
 
     procedure AddAttachmentWithConcatenation()
@@ -13,7 +13,7 @@ codeunit 50209 "Privacy Sample GetLastError Bad"
         AttachmentFailedErr: Label 'Attachment failed: ';
     begin
         if not TryAddAttachment() then
-            Error(AttachmentFailedErr + GetLastErrorText(true));
+            Error(AttachmentFailedErr + GetLastErrorText());
     end;
 
     [TryFunction]

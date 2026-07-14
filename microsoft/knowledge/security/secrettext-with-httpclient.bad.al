@@ -10,14 +10,14 @@ codeunit 50210 "Sec Sample SecretHttp Bad"
         HttpClient.Get(RequestUri, Response);
     end;
 
-    procedure CallApiWithBearer(BearerToken: Text)
+    procedure CallApiWithAccessToken(AccessToken: Text)
     var
         HttpClient: HttpClient;
         Response: HttpResponseMessage;
         Headers: HttpHeaders;
     begin
         Headers := HttpClient.DefaultRequestHeaders();
-        Headers.Add('Authorization', StrSubstNo('Bearer %1', BearerToken));
+        Headers.Add('Authorization', StrSubstNo('Token %1', AccessToken));
         HttpClient.Get('https://api.example.com/data', Response);
     end;
 }

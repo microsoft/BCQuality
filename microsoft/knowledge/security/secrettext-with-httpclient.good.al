@@ -13,7 +13,7 @@ codeunit 50209 "Sec Sample SecretHttp Good"
         HttpClient.Send(Request, Response);
     end;
 
-    procedure CallApiWithBearer(BearerToken: SecretText)
+    procedure CallApiWithAccessToken(AccessToken: SecretText)
     var
         HttpClient: HttpClient;
         Request: HttpRequestMessage;
@@ -25,7 +25,7 @@ codeunit 50209 "Sec Sample SecretHttp Good"
         Request.Method := 'GET';
         Request.SetRequestUri('https://api.example.com/data');
         Request.GetHeaders(Headers);
-        AuthHeader := SecretStrSubstNo('Bearer %1', BearerToken);
+        AuthHeader := SecretStrSubstNo('Token %1', AccessToken);
         Headers.Add('Authorization', AuthHeader);
         if not Headers.ContainsSecret('Authorization') then
             Error(AuthorizationHeaderMissingErr);

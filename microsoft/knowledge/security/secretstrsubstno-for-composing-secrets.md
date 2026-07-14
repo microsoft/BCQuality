@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-`SecretStrSubstNo` is the secret-preserving counterpart of `StrSubstNo`. It inserts `SecretText` arguments into `%1`, `%2`, and similar placeholders and returns `SecretText` without materializing the result as plain text. It is the right tool for values such as a `Bearer %1` authorization header or a URI with an API key placeholder.
+`SecretStrSubstNo` is the secret-preserving counterpart of `StrSubstNo`. It inserts `SecretText` arguments into `%1`, `%2`, and similar placeholders and returns `SecretText` without materializing the result as plain text. It is the right tool for values such as a `Token %1` authorization header or a URI with an API key placeholder.
 
 ## Best Practice
 

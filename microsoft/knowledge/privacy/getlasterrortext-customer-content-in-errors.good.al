@@ -5,7 +5,7 @@ codeunit 50208 "Privacy Sample GetLastError Good"
         AttachmentFailedErr: Label 'Failed to add the attachment: %1', Comment = '%1 = underlying error shown to the user';
     begin
         if not TryAddAttachment() then
-            Error(AttachmentFailedErr, GetLastErrorText(true));
+            Error(AttachmentFailedErr, GetLastErrorText());
     end;
 
     [TryFunction]

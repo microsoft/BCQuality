@@ -2,7 +2,7 @@ codeunit 50211 "Sec Sample SecretSubst Good"
 {
     procedure BuildAuthHeader(Token: SecretText): SecretText
     begin
-        exit(SecretStrSubstNo('Bearer %1', Token));
+        exit(SecretStrSubstNo('Token %1', Token));
     end;
 
     procedure BuildSecretUri(ApiKey: SecretText): SecretText
