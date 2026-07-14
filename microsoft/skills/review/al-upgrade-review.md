@@ -38,9 +38,9 @@ Discard files that are not applicable. Retain conditionally applicable files (an
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
 - The changed AL object names and types — especially codeunits with `Subtype = Upgrade` or `Subtype = Install`, tables and tableextensions adding or changing fields, enums and enumextensions, and objects under `Hybrid*`/`Migration`/`Upgrade` namespaces.
-- The changed triggers and procedures, weighted toward `OnCheckPreconditionsPerCompany`/`PerDatabase`, `OnUpgradePerCompany`/`PerDatabase`, `OnValidateUpgradePerCompany`/`PerDatabase`, `OnInstallAppPerCompany`/`PerDatabase`, and the `OnGetPerCompanyUpgradeTags`/`OnGetPerDatabaseUpgradeTags` subscribers.
+- The changed triggers and procedures, weighted toward `OnCheckPreconditionsPerCompany`/`PerDatabase`, `OnUpgradePerCompany`/`PerDatabase`, `OnValidateUpgradePerCompany`/`PerDatabase`, `OnInstallAppPerCompany`/`PerDatabase`, the `OnGetPerCompanyUpgradeTags`/`OnGetPerDatabaseUpgradeTags` subscribers, and helper procedures transitively reachable from those entry points.
 - Tokens extracted from the diff that relate to upgrade concerns (`Subtype = Upgrade`, `Subtype = Install`, `Upgrade Tag`, `HasUpgradeTag`, `SetUpgradeTag`, `OnCheckPreconditions`, `OnUpgrade`, `OnValidateUpgrade`, `OnInstallApp`, `DataTransfer`, `CopyFields`, `Insert`, `Modify`, `Delete`, `Rename`, `InitValue`, `ObsoleteState`, `ObsoleteReason`, `ObsoleteTag`, `DataVersion`, `ExecutionContext`, `PrimaryKey`, `key(`, `field(`, `value(`, `enum`, `enumextension`, `HybridSL`, `HybridGP`, `HybridBC`, `HybridBaseDeployment`).
-- For each `OnCheckPreconditions...` and `OnValidateUpgrade...` trigger, trace resolved calls through reachable local or internal helpers. Worklist the check-only rule when the trigger or any transitive callee performs `Insert`, `Modify`, `ModifyAll`, `Delete`, `DeleteAll`, `Rename`, `DataTransfer`, or another database write. Also perform the reverse check when a PR changes a writing helper body: worklist the rule when an unchanged check or validation trigger can reach that helper.
+- For each `OnCheckPreconditions...` and `OnValidateUpgrade...` trigger, build the best available call graph from surrounding unchanged source as well as changed hunks, tracing resolved calls through reachable local or internal helpers. Worklist the check-only rule when the trigger or any transitive callee performs `Insert`, `Modify`, `ModifyAll`, `Delete`, `DeleteAll`, `Rename`, `DataTransfer`, or another database write. Also perform the reverse check when a PR changes a writing helper body: worklist the rule when an unchanged check or validation trigger can reach that helper.
 - Treat a direct write or a fully resolved call chain as high-confidence evidence. When cross-object dispatch, unavailable declarations, or an incomplete call graph prevents proving the complete chain, cap confidence at `medium`, name the unresolved edge in the finding, and do not claim a violation without a resolved path from a check or validation trigger to a write.
 - Worklist the install-versus-upgrade rule when migration helpers are reachable only from an install codeunit.
 
@@ -60,7 +60,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 Set `confidence` to:
 
-- `high` when the detection is based on an unambiguous pattern match.
+- `high` when the detection is based on an unambiguous pattern match and any required helper reachability is fully established.
 - `medium` when detection relies on heuristics or when any frontmatter dimension was `unknown`.
 - `low` when the finding is an advisory derived only from applicability.
 

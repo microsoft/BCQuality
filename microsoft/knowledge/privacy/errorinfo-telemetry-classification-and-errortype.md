@@ -15,7 +15,7 @@ From BC 14, `ErrorInfo.Message` is sent to telemetry; with `ErrorType::Client` i
 
 ## Best Practice
 
-Keep `Message` stable and classify its actual content. Choose `ErrorType` for client usability, not as a telemetry privacy boundary. On BC 19 and later, put only support-safe technical context in `DetailedMessage`, because a user can copy it from the dialog.
+Keep `Message` stable and classify its actual content. Choose `ErrorType` for client usability, not as a telemetry privacy boundary. On BC 19 and later, put only support-safe technical context in `DetailedMessage`, because a user can copy it from the dialog. The samples use only members available at the BC 14 article floor.
 
 See sample: `errorinfo-telemetry-classification-and-errortype.good.al`.
 
