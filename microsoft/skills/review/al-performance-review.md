@@ -38,10 +38,15 @@ Discard files that are not applicable. Retain conditionally applicable files (an
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
 - The changed AL object names and types — especially tables, pages with SourceTable bindings, reports, queries, and codeunits performing record iteration.
-- The changed procedures and triggers, weighted toward those that perform loops, Find/FindSet/FindFirst calls, CalcFields, CalcSums, FlowField access, or cross-table navigation.
-- Tokens extracted from the diff that relate to data access and hot-path costs (`SetRange`, `SetFilter`, `SetLoadFields`, `SetCurrentKey`, `FindSet`, `ReadIsolation`, `LockTable`, `ModifyAll`, `DeleteAll`, `TextBuilder`, `Dictionary`, `temporary`, `repeat`, `until`, `CalcFields`, `CalcSums`).
+- The changed procedures and triggers, weighted toward those that perform loops, Find/FindSet/FindFirst calls, CalcFields, SetAutoCalcFields, CalcSums, FlowField access, record copying, RecordRef conversion, Modify/Delete calls, or cross-table navigation.
+- Tokens extracted from the diff that relate to data access and hot-path costs (`SetRange`, `SetFilter`, `SetLoadFields`, `SetCurrentKey`, `FindSet`, `ReadIsolation`, `LockTable`, `ModifyAll`, `DeleteAll`, `Modify`, `Delete`, `Copy`, `RecordRef`, `GetTable`, `TextBuilder`, `Dictionary`, `temporary`, `repeat`, `until`, `CalcFields`, `SetAutoCalcFields`, `CalcSums`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
+
+Apply these targeted cues even when simple token overlap would rank the article below the worklist cutoff:
+
+- Worklist `use-setautocalcfields-for-per-row-flowfields.md` when a record loop calls `CalcFields`, or when every row reads the same FlowField for a comparison, branch, or per-record action. Worklist `calcsums-instead-of-calcfields-in-loop.md` instead when the loop only accumulates one set total.
+- Worklist `avoid-cloning-records-before-modify-delete-in-loops.md` when an iteration calls `Copy` or `RecordRef.GetTable` before `Modify`/`Delete`, or passes the iterated record without `var` to a helper that writes that record. Do not match a read-only copy, a temporary record, a different target table, or a `RecordRef` opened and iterated directly.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
