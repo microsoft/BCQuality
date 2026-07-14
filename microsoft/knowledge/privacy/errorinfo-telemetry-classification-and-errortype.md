@@ -1,0 +1,26 @@
+---
+bc-version: [19..]
+domain: privacy
+keywords: [errorinfo, message, dataclassification, errortype, detailedmessage, copy-details, telemetry]
+technologies: [al]
+countries: [w1]
+application-area: [all]
+---
+
+# Review each ErrorInfo text surface by its actual exposure
+
+## Description
+
+`ErrorInfo.Message` is sent to telemetry; with `ErrorType::Client` it is also the primary client message, while `ErrorType::Internal` replaces it in the client with a generic message but still sends the specified text to telemetry. `DataClassification` classifies the content in `Message`; it does not make incorrectly classified personal data safe. `DetailedMessage`, available from BC 19, is omitted from the primary message but is included in the error dialog's **Copy details** content.
+
+## Best Practice
+
+Keep `Message` stable and classify its actual content. Choose `ErrorType` for client usability, not as a telemetry privacy boundary. Put only support-safe technical context in `DetailedMessage`, because a user can copy it from the dialog.
+
+See sample: `errorinfo-telemetry-classification-and-errortype.good.al`.
+
+## Anti Pattern
+
+Marking a dynamic customer-bearing `Message` as `SystemMetadata`, assuming `ErrorType::Internal` keeps it out of telemetry, or placing secrets and personal data in `DetailedMessage` because it is not the primary dialog text.
+
+See sample: `errorinfo-telemetry-classification-and-errortype.bad.al`.

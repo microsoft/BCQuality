@@ -4,8 +4,7 @@ codeunit 50211 "Install My Extension"
 
     trigger OnInstallAppPerCompany()
     begin
-        // No DataVersion() guard — this runs on every reinstall and upgrade
-        // path, duplicating seed rows.
+        // No DataVersion() guard: a reinstall duplicates seed rows.
         SeedDefaultRows();
     end;
 
