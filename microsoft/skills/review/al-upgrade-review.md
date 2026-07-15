@@ -52,6 +52,8 @@ When the post-conflict worklist is empty because no applicable upgrade knowledge
 
 ## Action
 
+**Released-baseline precondition.** Upgrade and migration findings protect data and schema that have already shipped to customers. Before emitting any finding — knowledge-backed or agent — establish that the affected table, field, key, or enum existed in a released version. A schema element that is new in this app, or was added and then changed within the same still-unreleased development cycle, needs no upgrade code or migration path and is not an obsoletion, data-loss, or breaking-migration defect. When release status cannot be established from the diff, `app.json`, or a released baseline, do not assert an upgrade defect; omit the finding rather than flag it.
+
 For each worklist entry, evaluate the diff against the file's `## Best Practice` and `## Anti Pattern` sections. Emit findings as follows:
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` for irreversible data corruption (enum-ordinal shift, unguarded reads that abort the upgrade) and for changes that would ship to customers without a migration path (new InitValue on an existing table without upgrade code).

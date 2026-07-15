@@ -61,6 +61,8 @@ When the post-conflict worklist is empty because no applicable breaking-changes 
 
 ## Action
 
+**Released-baseline precondition.** Breaking-change rules protect contracts that have already shipped to customers or are exposed to external extensions. Before emitting any finding — knowledge-backed or agent — establish that the affected object, field, key, enum value, or procedure was present in a released baseline. A symbol that is new in this app, was introduced and then changed within the same still-unreleased development cycle, or belongs to an app that has no released version yet can be renamed, renumbered, or removed freely and is not a breaking change. When release status cannot be established from the diff, `app.json`, or a released baseline, do not assert a break; omit the finding rather than flag it.
+
 For each worklist entry, evaluate the diff against the file's `## Best Practice` and `## Anti Pattern` sections. Emit findings as follows:
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee. When the file does not make such a claim, the ceiling is `major`.
