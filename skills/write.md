@@ -89,6 +89,6 @@ Before opening a pull request:
 - File is in the correct layer and domain folder.
 - Name is kebab-case and descriptive.
 - Every companion sample is referenced by filename from the article, and every referenced sample exists.
-- A changed review domain has a positive and clean control in `evaluation/review-fixtures.json`.
+- Every review-leaf domain has at least one article with both `.good.al` and `.bad.al` companions; the evaluation harness derives positive and clean controls from that convention automatically.
 
 Agents scaffolding new files SHOULD run this checklist programmatically before emitting the file.

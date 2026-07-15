@@ -36,7 +36,6 @@ if (-not (Test-Path -LiteralPath $ManifestPath)) {
 }
 
 $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
-$cases = @($manifest.cases)
 $problems = [System.Collections.Generic.List[string]]::new()
 
 function Get-ModelCaseId {
@@ -97,11 +96,11 @@ function Get-RankedArticles {
     )
 }
 
-if ($manifest.version -ne 1) {
+if ($manifest.version -ne 2) {
     $problems.Add("Unsupported manifest version: $($manifest.version)") | Out-Null
 }
-if (-not $cases.Count) {
-    $problems.Add('Manifest has no cases.') | Out-Null
+if ($manifest.selection -ne 'first-paired-al-article') {
+    $problems.Add("Unsupported selection strategy: $($manifest.selection)") | Out-Null
 }
 if (([double]$manifest.minimumExpectedRecall -lt 0) -or ([double]$manifest.minimumExpectedRecall -gt 1)) {
     $problems.Add('minimumExpectedRecall must be between 0 and 1.') | Out-Null
@@ -117,13 +116,80 @@ $leafDomains = @(
         Sort-Object -Unique
 )
 
+$overrides = @{}
+if ($manifest.PSObject.Properties.Name -contains 'overrides') {
+    foreach ($property in $manifest.overrides.PSObject.Properties) {
+        $overrides[$property.Name] = $property.Value
+    }
+}
+foreach ($overrideDomain in $overrides.Keys) {
+    if ($leafDomains -notcontains $overrideDomain) {
+        $problems.Add("Override domain '$overrideDomain' has no registered al-$overrideDomain-review leaf.") | Out-Null
+    }
+}
+
+$caseList = [System.Collections.Generic.List[object]]::new()
+foreach ($domain in $leafDomains) {
+    $knowledgeDirectory = Join-Path $Root "microsoft/knowledge/$domain"
+    if (-not (Test-Path -LiteralPath $knowledgeDirectory -PathType Container)) {
+        $problems.Add("${domain}: no Microsoft knowledge directory exists.") | Out-Null
+        continue
+    }
+
+    $override = if ($overrides.ContainsKey($domain)) { $overrides[$domain] } else { $null }
+    $selectedArticle = $null
+    if ($override -and ($override.PSObject.Properties.Name -contains 'article')) {
+        $articleName = [string]$override.article
+        if ($articleName.EndsWith('.md')) {
+            $articleName = [System.IO.Path]::GetFileNameWithoutExtension($articleName)
+        }
+        $candidate = Join-Path $knowledgeDirectory "$articleName.md"
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            $selectedArticle = Get-Item -LiteralPath $candidate
+        } else {
+            $problems.Add("${domain}: override article does not exist: $articleName.md") | Out-Null
+        }
+    } else {
+        $selectedArticle = Get-ChildItem -LiteralPath $knowledgeDirectory -File -Filter '*.md' |
+            Sort-Object Name |
+            Where-Object {
+                (Test-Path -LiteralPath (Join-Path $knowledgeDirectory "$($_.BaseName).good.al") -PathType Leaf) -and
+                (Test-Path -LiteralPath (Join-Path $knowledgeDirectory "$($_.BaseName).bad.al") -PathType Leaf)
+            } |
+            Select-Object -First 1
+    }
+    if (-not $selectedArticle) {
+        $problems.Add("${domain}: no article has both .good.al and .bad.al companion samples.") | Out-Null
+        continue
+    }
+
+    $articlePath = "microsoft/knowledge/$domain/$($selectedArticle.Name)"
+    $context = if ($override -and ($override.PSObject.Properties.Name -contains 'context')) {
+        [string]$override.context
+    } else {
+        $null
+    }
+    foreach ($kind in 'bad', 'good') {
+        $case = [pscustomobject]@{
+            id = "$domain-$kind"
+            domain = $domain
+            input = "microsoft/knowledge/$domain/$($selectedArticle.BaseName).$kind.al"
+            expected = if ($kind -eq 'bad') { @($articlePath) } else { @() }
+        }
+        if ($context) {
+            $case | Add-Member -NotePropertyName context -NotePropertyValue $context
+        }
+        $caseList.Add($case) | Out-Null
+    }
+}
+$cases = @($caseList)
+
 $seenIds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 foreach ($case in $cases) {
     $id = [string]$case.id
     $domain = [string]$case.domain
     $input = [string]$case.input
     $expected = @($case.expected)
-    $allowed = @($case.allowedAdditional)
 
     if ([string]::IsNullOrWhiteSpace($id)) {
         $problems.Add('Case with empty id.') | Out-Null
@@ -145,7 +211,7 @@ foreach ($case in $cases) {
         $problems.Add("${id}: clean case must use a .good sample: $input") | Out-Null
     }
 
-    foreach ($reference in @($expected + $allowed)) {
+    foreach ($reference in $expected) {
         $referencePath = Join-Path $Root ([string]$reference)
         if (-not (Test-Path -LiteralPath $referencePath -PathType Leaf)) {
             $problems.Add("${id}: referenced article does not exist: $reference") | Out-Null
@@ -275,13 +341,13 @@ if ($PrepareDirectory) {
             }
             $rankedArticles = @(Get-RankedArticles -Articles $domainArticles -CaseText $caseText)
             $manifestCase = $manifestCaseByModelId[[string]$requestCase.id]
-            $expectedPaths = @($manifestCase.expected | ForEach-Object { [string]$_ })
-            if ($expectedPaths.Count) {
-                $rankedPaths = @($rankedArticles | ForEach-Object { [string]$_.path })
-                if ($rankedPaths -notcontains $expectedPaths[0]) {
-                    throw "$($manifestCase.id): deterministic ranking omitted expected primary article '$($expectedPaths[0])'."
-                }
+            $selectedArticlePath = ([string]$manifestCase.input) -replace '\.(?:good|bad)\.al$', '.md'
+            $rankedPaths = @($rankedArticles | ForEach-Object { [string]$_.path })
+            if ($rankedPaths -notcontains $selectedArticlePath) {
+                throw "$($manifestCase.id): deterministic ranking omitted selected article '$selectedArticlePath'. Improve its retrieval metadata or choose an exceptional override article."
             }
+            # Candidate order must not reveal which article owns the fixture.
+            $rankedArticles = @($rankedArticles | Sort-Object path)
             [pscustomobject]@{
                 protocol = "Run only $leafPath over this case. Follow leafInstructions exactly, evaluate the ranked candidate article rows, open matching articles in full, and copy every finding id verbatim from candidateArticles[].path."
                 skill = $leafPath
@@ -377,12 +443,11 @@ foreach ($case in $cases) {
         } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -Unique
     )
     $expected = @($case.expected | ForEach-Object { [string]$_ })
-    $allowed = @($case.allowedAdditional | ForEach-Object { [string]$_ })
 
     if ($expected.Count) {
         $positiveTotal++
         $missing = @($expected | Where-Object { $findingIds -notcontains $_ })
-        $unexpected = @($findingIds | Where-Object { ($expected + $allowed) -notcontains $_ })
+        $unexpected = @($findingIds | Where-Object { $expected -notcontains $_ })
         if (-not $missing.Count -and -not $unexpected.Count) {
             $positivePassed++
         } else {
