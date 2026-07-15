@@ -170,6 +170,8 @@ Consumers that render output MAY treat agent findings differently from knowledge
 
 **`findings[].message`** — human-readable explanation of the finding. Single short paragraph. No markdown formatting assumptions.
 
+**Applicability is not a finding.** Loading an article into the worklist only means its rule must be evaluated. If the changed code does not violate the article's normative guidance, emit nothing for that article. An `info` finding still requires a concrete observation defined by the article; skills MUST NOT use `info` to list guidance that merely happened to be relevant.
+
 **`findings[].location`** — optional. When present:
 
 - `file` MUST be a repo-relative path using forward slashes.
@@ -184,6 +186,15 @@ Findings without a `location` are permitted (for example, repository-wide observ
 - `sha` (optional) — commit SHA the skill read when producing the finding. Consumers SHOULD include `sha` when the skill was invoked with a specific repo state.
 
 The first reference is the **primary** reference: the knowledge file the finding most directly cites. Additional references provide supporting context and are not ranked. `references` MAY be empty only for **agent findings** (see the `findings[].id` section above for the full encoding); any other finding MUST have at least one reference.
+
+**Reference-integrity gate (mandatory).** A knowledge-backed finding may cite only a path copied verbatim from the current knowledge index or from a file discovered by the index fallback, and the skill must have opened that exact file in full before citing it. Never construct a plausible slug or infer a path from a topic name. Immediately before emitting the JSON document:
+
+1. Verify every non-empty `references[].path` exists in the live checkout and was opened during this skill run.
+2. Verify every citation-based `findings[].id` exactly equals `references[0].path`.
+3. Remove any candidate that cannot satisfy both checks; it is not a knowledge-backed finding. Do not convert it into an agent finding merely to preserve it.
+4. If reference integrity cannot be checked reliably, return `outcome: "failed"` rather than emitting fabricated or unverified citations.
+
+This gate applies independently to every leaf result and again to a super-skill's rolled-up result.
 
 **`findings[].confidence`** — the skill's confidence that the finding is a true positive, given the evidence it evaluated. Not applicability confidence, not severity confidence. Values: `high`, `medium`, `low`.
 
@@ -288,5 +299,3 @@ Conforms to the DO output contract.
 ## How orchestrators consume output
 
 An orchestrator invokes an action skill with an input appropriate to the skill's declared `inputs`, receives the JSON output, and maps findings to its delivery surface (PR comments, build gates, IDE diagnostics). The orchestrator MUST NOT interpret skill-specific fields beyond the schema above. Skills that need richer semantics MUST encode them within the schema (for example, by adding structured `message` text) rather than extending the output shape.
-
-

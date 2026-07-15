@@ -14,5 +14,9 @@ application-area: [all]
 ## Best Practice
 Use `TestField` when the condition is a simple presence-or-equality check on a single field — mandatory-field gates and prerequisite checks at the top of a procedure read clearly and self-document intent. Use `FieldError` inside an `OnValidate` trigger or a validation procedure where surrounding business logic has already determined the value is invalid and you want a specific, custom message. Rely on the built-in field-and-record context both methods add rather than re-stating the field name in the text.
 
+See sample: `fielderror-vs-testfield.good.al`.
+
 ## Anti Pattern
 Calling `FieldError` to "test" a field — placing it on a path that is reached unconditionally and expecting it to validate — terminates execution every time because `FieldError` never evaluates a condition. The inverse smell is reaching for `TestField` when the rule needs a tailored message, then bolting a vague generic string onto a check that cannot express the real business reason. A reviewer can spot the first by a `FieldError` that is not guarded by a preceding `if`, and the second by a `TestField` whose intent comment describes a condition more complex than presence or equality.
+
+See sample: `fielderror-vs-testfield.bad.al`.

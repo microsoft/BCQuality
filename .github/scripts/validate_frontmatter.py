@@ -62,6 +62,7 @@ ISO_ALPHA2 = re.compile(r"^[a-z]{2}$")
 RANGE_SHORTHAND = re.compile(r"^(\d+)\.\.(\d+)?$")
 FENCED_CODE_BLOCK = re.compile(r"^```", re.MULTILINE)
 HEADING_H2 = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+SAMPLE_REFERENCE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*\.(?:good|bad)\.[a-z0-9]+)`")
 
 
 # --- Diagnostics ------------------------------------------------------------
@@ -222,6 +223,13 @@ def validate_knowledge(path: Path, parsed: Parsed, report: Report) -> None:
     if "domain" in fm:
         if not isinstance(fm["domain"], str) or not fm["domain"].strip():
             report.error(path, "R04", "domain must be a non-empty string", 1)
+        elif fm["domain"] != path.parent.name:
+            report.error(
+                path,
+                "R27",
+                f"frontmatter domain '{fm['domain']}' must match directory '{path.parent.name}'",
+                1,
+            )
 
     # R05 keywords
     if "keywords" in fm:
@@ -477,7 +485,16 @@ def validate_samples_in_domain(domain_dir: Path, root: Path, report: Report) -> 
     """R14: every non-.md file must match <slug>.<kind>.<ext> with <slug>.md present."""
     if not domain_dir.is_dir():
         return
-    article_slugs = {p.stem for p in domain_dir.glob("*.md")}
+    articles = {p.stem: p for p in domain_dir.glob("*.md")}
+    article_slugs = set(articles)
+    article_texts: dict[str, str] = {}
+    for slug, article in articles.items():
+        try:
+            article_texts[slug] = article.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            # R01 reports this during the article pass.
+            continue
+
     for entry in domain_dir.iterdir():
         if not entry.is_file() or entry.suffix == ".md":
             continue
@@ -491,8 +508,23 @@ def validate_samples_in_domain(domain_dir: Path, root: Path, report: Report) -> 
         kind = m.group("kind")
         if slug not in article_slugs:
             report.error(entry, "R14", f"orphan sample: no matching article '{slug}.md' in {domain_dir.relative_to(root).as_posix()}")
+        elif entry.name not in article_texts.get(slug, ""):
+            report.error(
+                entry,
+                "R28",
+                f"sample is not referenced by its article '{slug}.md'",
+            )
         if kind not in VALID_SAMPLE_KINDS:
             report.warn(entry, "R14", f"non-standard sample kind '{kind}'; standard kinds are {sorted(VALID_SAMPLE_KINDS)}")
+
+    for slug, article in articles.items():
+        for sample_name in SAMPLE_REFERENCE.findall(article_texts.get(slug, "")):
+            if not (domain_dir / sample_name).is_file():
+                report.error(
+                    article,
+                    "R28",
+                    f"referenced sample does not exist: '{sample_name}'",
+                )
 
 
 # --- Orchestration ----------------------------------------------------------

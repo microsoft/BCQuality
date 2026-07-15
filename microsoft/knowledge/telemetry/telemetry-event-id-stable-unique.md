@@ -1,6 +1,6 @@
 ---
-bc-version: [all]
-domain: style
+bc-version: [17..]
+domain: telemetry
 keywords: [telemetry, logmessage, event-id, sessionlogmessage, observability]
 technologies: [al]
 countries: [w1]

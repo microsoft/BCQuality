@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "minimumExpectedRecall": 1.0,
+  "minimumCleanRate": 1.0,
+  "cases": [
+    {
+      "id": "appsource-bad",
+      "domain": "appsource",
+      "input": "microsoft/knowledge/appsource/object-affixes-prevent-collisions.bad.al",
+      "context": "AppSourceCop mandatoryAffixes is configured to ABC.",
+      "expected": ["microsoft/knowledge/appsource/object-affixes-prevent-collisions.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "appsource-good",
+      "domain": "appsource",
+      "input": "microsoft/knowledge/appsource/object-affixes-prevent-collisions.good.al",
+      "context": "AppSourceCop mandatoryAffixes is configured to ABC.",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "breaking-changes-bad",
+      "domain": "breaking-changes",
+      "input": "microsoft/knowledge/breaking-changes/obsolete-table-fields-instead-of-deleting-them.bad.al",
+      "context": "Baseline version: field ID 2 was named Email. Review the provided changed version.",
+      "expected": ["microsoft/knowledge/breaking-changes/obsolete-table-fields-instead-of-deleting-them.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "breaking-changes-good",
+      "domain": "breaking-changes",
+      "input": "microsoft/knowledge/breaking-changes/obsolete-table-fields-instead-of-deleting-them.good.al",
+      "context": "Baseline version: field ID 2 was named Email. Review the provided changed version.",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "data-modeling-bad",
+      "domain": "data-modeling",
+      "input": "microsoft/knowledge/data-modeling/setup-table-is-a-singleton.bad.al",
+      "expected": ["microsoft/knowledge/data-modeling/setup-table-is-a-singleton.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "data-modeling-good",
+      "domain": "data-modeling",
+      "input": "microsoft/knowledge/data-modeling/setup-table-is-a-singleton.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "error-handling-bad",
+      "domain": "error-handling",
+      "input": "microsoft/knowledge/error-handling/ignored-tryfunction-return-disables-try-semantics.bad.al",
+      "expected": ["microsoft/knowledge/error-handling/ignored-tryfunction-return-disables-try-semantics.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "error-handling-good",
+      "domain": "error-handling",
+      "input": "microsoft/knowledge/error-handling/ignored-tryfunction-return-disables-try-semantics.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "events-bad",
+      "domain": "events",
+      "input": "microsoft/knowledge/events/initialize-ishandled-to-false-before-publishing.bad.al",
+      "expected": ["microsoft/knowledge/events/initialize-ishandled-to-false-before-publishing.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "events-good",
+      "domain": "events",
+      "input": "microsoft/knowledge/events/initialize-ishandled-to-false-before-publishing.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "interfaces-bad",
+      "domain": "interfaces",
+      "input": "microsoft/knowledge/interfaces/set-defaultimplementation-on-enum.bad.al",
+      "expected": ["microsoft/knowledge/interfaces/set-defaultimplementation-on-enum.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "interfaces-good",
+      "domain": "interfaces",
+      "input": "microsoft/knowledge/interfaces/set-defaultimplementation-on-enum.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "performance-bad",
+      "domain": "performance",
+      "input": "microsoft/knowledge/performance/use-isempty-for-existence-check.bad.al",
+      "expected": ["microsoft/knowledge/performance/use-isempty-for-existence-check.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "performance-good",
+      "domain": "performance",
+      "input": "microsoft/knowledge/performance/use-isempty-for-existence-check.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "privacy-bad",
+      "domain": "privacy",
+      "input": "microsoft/knowledge/privacy/no-pii-in-telemetry-message-string.bad.al",
+      "expected": ["microsoft/knowledge/privacy/no-pii-in-telemetry-message-string.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "privacy-good",
+      "domain": "privacy",
+      "input": "microsoft/knowledge/privacy/no-pii-in-telemetry-message-string.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "query-bad",
+      "domain": "query",
+      "input": "microsoft/knowledge/query/set-query-filters-before-open.bad.al",
+      "expected": ["microsoft/knowledge/query/set-query-filters-before-open.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "query-good",
+      "domain": "query",
+      "input": "microsoft/knowledge/query/set-query-filters-before-open.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "security-bad",
+      "domain": "security",
+      "input": "microsoft/knowledge/security/secrettext-with-httpclient.bad.al",
+      "expected": ["microsoft/knowledge/security/secrettext-with-httpclient.md"],
+      "allowedAdditional": ["microsoft/knowledge/security/secrettext-for-credentials.md"]
+    },
+    {
+      "id": "security-good",
+      "domain": "security",
+      "input": "microsoft/knowledge/security/secrettext-with-httpclient.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "style-bad",
+      "domain": "style",
+      "input": "microsoft/knowledge/style/label-comment-explains-placeholders.bad.al",
+      "expected": ["microsoft/knowledge/style/label-comment-explains-placeholders.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "style-good",
+      "domain": "style",
+      "input": "microsoft/knowledge/style/label-comment-explains-placeholders.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "telemetry-bad",
+      "domain": "telemetry",
+      "input": "microsoft/knowledge/telemetry/telemetry-event-id-stable-unique.bad.al",
+      "expected": ["microsoft/knowledge/telemetry/telemetry-event-id-stable-unique.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "telemetry-good",
+      "domain": "telemetry",
+      "input": "microsoft/knowledge/telemetry/telemetry-event-id-stable-unique.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "testing-bad",
+      "domain": "testing",
+      "input": "microsoft/knowledge/testing/asserterror-needs-expectederror-and-code.bad.al",
+      "expected": ["microsoft/knowledge/testing/asserterror-needs-expectederror-and-code.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "testing-good",
+      "domain": "testing",
+      "input": "microsoft/knowledge/testing/asserterror-needs-expectederror-and-code.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "ui-bad",
+      "domain": "ui",
+      "input": "microsoft/knowledge/ui/show-caption-on-editable-fields.bad.al",
+      "expected": ["microsoft/knowledge/ui/show-caption-on-editable-fields.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "ui-good",
+      "domain": "ui",
+      "input": "microsoft/knowledge/ui/show-caption-on-editable-fields.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "upgrade-bad",
+      "domain": "upgrade",
+      "input": "microsoft/knowledge/upgrade/initvalue-does-not-update-existing-rows.bad.al",
+      "context": "The extended table existed in the previous app version and already contains rows.",
+      "expected": ["microsoft/knowledge/upgrade/initvalue-does-not-update-existing-rows.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "upgrade-good",
+      "domain": "upgrade",
+      "input": "microsoft/knowledge/upgrade/initvalue-does-not-update-existing-rows.good.al",
+      "context": "The extended table existed in the previous app version and already contains rows.",
+      "expected": [],
+      "allowedAdditional": []
+    },
+    {
+      "id": "web-services-bad",
+      "domain": "web-services",
+      "input": "microsoft/knowledge/web-services/expose-systemid-as-the-api-key.bad.al",
+      "expected": ["microsoft/knowledge/web-services/expose-systemid-as-the-api-key.md"],
+      "allowedAdditional": []
+    },
+    {
+      "id": "web-services-good",
+      "domain": "web-services",
+      "input": "microsoft/knowledge/web-services/expose-systemid-as-the-api-key.good.al",
+      "expected": [],
+      "allowedAdditional": []
+    }
+  ]
+}

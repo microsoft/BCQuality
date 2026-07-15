@@ -1,13 +1,24 @@
-table 50253 "Sample Caption Bad"
+page 50253 "Sample Caption Bad"
 {
-    fields
+    PageType = Card;
+    SourceTable = Customer;
+
+    layout
     {
-        field(1; "Customer No."; Code[20])
+        area(Content)
         {
-        }
-        field(2; "Is Active"; Boolean)
-        {
-            Caption = '';
+            group(General)
+            {
+                field("Customer No."; Rec."No.")
+                {
+                    ApplicationArea = All;
+                }
+                field("Customer Name"; Rec.Name)
+                {
+                    ApplicationArea = All;
+                    Caption = '';
+                }
+            }
         }
     }
 }

@@ -63,11 +63,18 @@ plugin-root environment variable, prefer it.
    `microsoft/skills/review/al-code-review.md`. For each dispatched skill, read the
    file and execute its Source → Relevance → Worklist → Action steps, reading
    `PLUGIN_ROOT/skills/read.md` and `PLUGIN_ROOT/skills/do.md` on demand.
+   When `al-code-review` composes its leaves and the host supports child contexts or
+   separate model calls, run each leaf in an isolated context and roll up the returned
+   JSON. Pass each call the exact index rows for that leaf's domain so references can
+   be copied verbatim. This is the preferred execution profile for fast/small models;
+   do not force one generation to retain all domain knowledge at once.
 
 4. **Emit findings.** Produce the rolled-up findings report in the DO output contract
    (`outcome`, `findings`, `references`, `confidence`, `suppressed`). Do not invent a
    different shape; downstream consumers parse the DO contract without skill-specific
-   logic.
+   logic. Apply DO's reference-integrity gate before returning: every knowledge-backed
+   path must exist in the installed tree, must have been opened in full, and must be
+   copied verbatim. Never synthesize a plausible article slug.
 
 If Entry returns `no-match` or `failed`, return the dispatch record unchanged so the
 caller can log the reason.

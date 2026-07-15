@@ -1,17 +1,28 @@
-table 50252 "Sample Caption Good"
+page 50252 "Sample Caption Good"
 {
-    fields
+    PageType = Card;
+    SourceTable = Customer;
+
+    layout
     {
-        field(1; "Customer No."; Code[20])
+        area(Content)
         {
-            Caption = 'Customer No.';
-        }
-        field(2; "Enabled"; Boolean)
-        {
-        }
-        field(3; Amount; Decimal)
-        {
-            CaptionClass = '3,5,' + 'USD';
+            group(General)
+            {
+                Caption = 'General';
+                field("Customer No."; Rec."No.")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Customer No.';
+                    ToolTip = 'Specifies the customer number.';
+                }
+                field("Customer Name"; Rec.Name)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Customer Name';
+                    ToolTip = 'Specifies the customer name.';
+                }
+            }
         }
     }
 }

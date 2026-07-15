@@ -24,6 +24,7 @@ sub-skills:
   - microsoft/skills/review/al-web-services-review.md
   - microsoft/skills/review/al-testing-review.md
   - microsoft/skills/review/al-data-modeling-review.md
+  - microsoft/skills/review/al-query-review.md
   - microsoft/skills/review/al-appsource-review.md
   - microsoft/skills/review/al-telemetry-review.md
 ---
@@ -64,10 +65,12 @@ The worklist is the list of sub-skills judged relevant by the previous step. Eve
 
 The Action step is a sequence of **discrete iterations**, not one combined generation. The contract requires the super-skill to invoke each sub-skill in turn and then perform a self-review pass. Concretely this means:
 
+- **Isolate leaf invocations when the host supports it.** For fast/small models, each sub-skill SHOULD run in a fresh model call or child context containing only the task input, READ/DO contracts, the leaf instructions, a domain-filtered slice of the current knowledge index, and articles that leaf worklists. Preserve each index row's exact `path`; the leaf must copy references from that slice. The coordinator then collects the resulting JSON. This is the preferred fast-model profile: it bounds context, prevents later leaves from being skipped as attention is exhausted, and removes any reason to synthesize article paths.
 - Treat each sub-skill in the worklist as its own pass: read the sub-skill's instructions, apply its Source → Relevance → Worklist → Action steps to the orchestrator-supplied inputs, and produce that sub-skill's complete findings-report before moving on.
 - Do not collapse multiple sub-skills into one shared reasoning step. Each sub-skill has a distinct knowledge subset and a distinct evaluation procedure; sharing one rolled-up scan dilutes per-skill attention and causes leaves to silently underreport (this has been observed in production: leaf skills returned empty `findings[]` while their standalone runs against the same diff produced multiple matches).
 - The agent self-review pass is its own final iteration. Begin it only after every sub-skill in the worklist has completed and its sub-result is recorded.
 - Sub-skills are independent: re-walking the diff once per sub-skill is correct and expected. The output schema accommodates this — `sub-results` carries one entry per sub-skill, each a complete findings-report.
+- When isolated calls are unavailable and the current model cannot finish every leaf within its budget, return `partial` with completed `sub-results` and name the first unevaluated sub-skill in `outcome-reason`. Never silently mark the remaining leaves clean.
 
 ### Roll up sub-skill findings
 
@@ -76,7 +79,8 @@ For each sub-skill in the worklist, executed one at a time per the discipline ab
 1. Invoke the sub-skill with the orchestrator's inputs, passing only the subset each sub-skill declares in its `inputs`.
 2. Capture the sub-skill's complete findings-report verbatim and append it to `sub-results`.
 3. If the sub-skill's `outcome` is `failed`, stop here for this sub-skill: its findings are not reliable per the DO contract and MUST NOT be copied into the super-skill's top-level `findings[]` or counted in `summary.counts`.
-4. Otherwise, append each entry from the sub-skill's `findings[]` to the super-skill's top-level `findings[]`, setting `from-sub-skill` to the sub-skill's `skill.id`. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
+4. Otherwise, compare each entry from the sub-skill's `findings[]` with findings already rolled up. Two findings are duplicates when they point to the same file and overlapping line/range and prescribe materially the same correction, even when their knowledge-file IDs differ. Merge duplicates instead of appending both: keep the more specific domain owner, use its reference as `references[0]` and therefore as `id`, append the other references as supporting references, keep the highest severity and confidence justified by either report, and preserve one self-contained message. Article and leaf ownership notes decide specificity; do not choose by execution order.
+5. Append each non-duplicate finding, setting `from-sub-skill` to the sub-skill's `skill.id`. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
 
 ### Agent self-review pass
 
@@ -116,6 +120,8 @@ Aggregate `summary.counts` and `summary.coverage` as the sums across invoked sub
 `suppressed[]` at the super-skill level remains empty. Knowledge-file-level suppression is reported by each sub-skill within its own entry in `sub-results`.
 
 Derive `outcome` using the DO rollup rules. `outcome-reason` is populated for `partial` and `failed` and SHOULD summarize per-sub-skill state, for example: *"al-security-review failed (tool timeout); al-performance-review completed."*
+
+Before emitting the rollup, apply DO's reference-integrity gate to every nested and top-level finding. Every knowledge-backed ID/reference path must exist in the live checkout, must have been opened by the producing leaf, and must be copied verbatim rather than synthesized. Treat a sub-result containing an unverifiable citation as failed and exclude its findings from the top-level rollup.
 
 ## Output
 

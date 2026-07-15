@@ -17,6 +17,10 @@ API keys, OAuth tokens, client secrets, and connection strings must not be store
 
 Persist every credential in `IsolatedStorage`, write it at the point of capture, and read it only when needed. Prefer `SetEncrypted` when the value fits its documented length limit. On BC24 and later, carry the value through the `SecretText` overloads; on earlier releases, keep any required `Text` handling inside a `[NonDebuggable]` boundary. Choose the `DataScope` that matches the credential's lifetime. See `isolatedstorage-datascope-module-vs-company`, `isolatedstorage-setencrypted-for-sensitive-values`, and `secrettext-for-credentials` for those separate concerns.
 
+See sample: `secrets-isolated-storage.good.al`.
+
 ## Anti Pattern
 
 A "Setup" or "Connection" table carrying a `Text` field named `API Key`, `Password`, or `Client Secret`. The value is now readable by any object with table permission, ships in RapidStart packages and Excel exports, and appears in record snapshots — a credential disclosure that no amount of encryption-in-transit elsewhere makes up for. Reviewer signal: a secret-shaped field declared on a table instead of an `IsolatedStorage` call.
+
+See sample: `secrets-isolated-storage.bad.al`.

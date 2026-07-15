@@ -19,4 +19,4 @@ Declare credential-carrying parameters and variables as `SecretText` from the ca
 
 ## Anti Pattern
 
-Holding a credential in a `Text` variable (`BearerToken: Text`), concatenating it into a header, then passing it to `HttpClient`. The token is visible in the debugger and in any error that prints the variable, and the compiler offers no help because the type was wrong from the start. Reviewers should flag any local or parameter named like a secret (`ApiKey`, `Token`, `Password`, `ClientSecret`) whose type is `Text` or `Code`. See sample: `secrettext-for-credentials.bad.al`.
+Holding a credential in a `Text` variable (`BearerToken: Text`) makes it visible in the debugger and in any error that prints the variable, and the compiler offers no help because the type was wrong from the start. Reviewers should flag any local or parameter named like a secret (`ApiKey`, `Token`, `Password`, `ClientSecret`) whose type is `Text` or `Code`. When the same value is visibly sent through an HTTP URI, header, or body, `secrettext-with-httpclient.md` is the more specific primary rule. See sample: `secrettext-for-credentials.bad.al`.

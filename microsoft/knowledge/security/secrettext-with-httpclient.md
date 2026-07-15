@@ -19,4 +19,4 @@ Compose a secret URI with `SecretStrSubstNo`, call `Request.SetSecretRequestUri(
 
 ## Anti Pattern
 
-Holding a credential in `Text`, interpolating it with `StrSubstNo` or concatenation, and passing that plain text to `HttpClient.Get` or `HttpHeaders.Add`. The secret-aware request and header APIs remove the need to materialize the value as `Text`. See sample: `secrettext-with-httpclient.bad.al`.
+Holding a credential in `Text`, interpolating it with `StrSubstNo` or concatenation, and passing that plain text to `HttpClient.Get` or `HttpHeaders.Add`. The secret-aware request and header APIs remove the need to materialize the value as `Text`. This HTTP-sink rule supersedes the generic `secrettext-for-credentials.md` rule at the same location. See sample: `secrettext-with-httpclient.bad.al`.

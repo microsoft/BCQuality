@@ -85,7 +85,10 @@ Before opening a pull request:
 - No fenced code blocks.
 - File is under 100 lines.
 - File covers one concern.
+- Frontmatter `domain` exactly matches the containing domain folder.
 - File is in the correct layer and domain folder.
 - Name is kebab-case and descriptive.
+- Every companion sample is referenced by filename from the article, and every referenced sample exists.
+- A changed review domain has a positive and clean control in `evaluation/review-fixtures.json`.
 
 Agents scaffolding new files SHOULD run this checklist programmatically before emitting the file.

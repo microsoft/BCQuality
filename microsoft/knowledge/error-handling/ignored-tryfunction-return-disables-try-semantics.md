@@ -24,3 +24,7 @@ See sample: `ignored-tryfunction-return-disables-try-semantics.good.al`.
 Calling a `[TryFunction]` procedure as a standalone statement and assuming the attribute suppresses its errors. The call has ordinary error semantics because its Boolean result is ignored.
 
 See sample: `ignored-tryfunction-return-disables-try-semantics.bad.al`.
+
+## See also
+
+`microsoft/knowledge/performance/use-tryfunction-for-error-catching-not-rollback.md` owns transaction rollback expectations after a try method has actually caught an error.

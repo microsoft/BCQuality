@@ -39,9 +39,20 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 - The changed AL objects and procedures — especially telemetry wrapper codeunits, feature lifecycle instrumentation, error logging, integration diagnostics, and background/session processing.
 - Calls to `Session.LogMessage`, `Session.LogError`, or `FeatureTelemetry` methods, weighted toward the event ID, verbosity, data classification, custom dimensions, and `TelemetryScope` arguments.
-- Tokens extracted from the diff that relate to telemetry (`Session.LogMessage`, `Session.LogError`, `FeatureTelemetry`, `TelemetryScope`, `ExtensionPublisher`, `All`, `Verbosity`, `DataClassification`, `CustomDimensions`, `Application Insights`, `LogUsage`, `LogError`, `LogUptake`, `Feature Uptake Status`).
+- Telemetry infrastructure codeunits that implement `"Telemetry Logger"` or subscribe to `"Telemetry Loggers".OnRegisterTelemetryLogger`.
+- Tokens extracted from the diff that relate to telemetry (`Session.LogMessage`, `Session.LogError`, `FeatureTelemetry`, `TelemetryScope`, `ExtensionPublisher`, `All`, `Verbosity`, `Critical`, `Error`, `Warning`, `Normal`, `Verbose`, `DataClassification`, `CustomDimensions`, `Application Insights`, `Telemetry Logger`, `Telemetry Loggers`, `OnRegisterTelemetryLogger`, `LogUsage`, `LogError`, `LogUptake`, `Feature Uptake Status`, `Discovered`, `Set up`, `Used`, `Undiscovered`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone. When the diff contains no telemetry-related changes by any of the above signals, return `outcome: "not-applicable"` without evaluating files.
+
+The following targeted checks cover every current `telemetry` article. Treat each as a candidate-selection cue:
+
+- A `Session.LogMessage` event ID is empty, generated dynamically, reused for different events, changed on an existing event, or uses a placeholder such as `0000`, `1234`, `TODO`, or `XX0000` — `telemetry-event-id-stable-unique`.
+- `TelemetryScope::All` is used for a clearly publisher-only implementation diagnostic, or `ExtensionPublisher` hides a clearly customer-actionable failure from environment telemetry — `choose-telemetry-scope-by-audience`. Do not infer the audience when the message and surrounding branch are ambiguous.
+- An explicit failure branch logs through `Session.LogMessage` with `Verbosity::Normal` or `Verbose`, or a non-error event is inflated to `Error`/`Critical` — `match-verbosity-to-signal-severity`.
+- A new feature's visible uptake calls skip `Discovered` or `Set up`, jump directly to `Used`, or use inconsistent feature-name literals across states — `feature-uptake-transitions-in-order`. Require repository-level lifecycle evidence; one isolated call is not proof.
+- `FeatureTelemetry.LogUsage` runs before success is known or on a failure path — `feature-usage-only-after-success`. `LogUptake(...Used)` records an attempt and is not this anti-pattern.
+- A complete app or app family uses `FeatureTelemetry` without any registered `"Telemetry Logger"`, or registers more than one implementation for the same publisher — `register-one-telemetry-logger-per-publisher`. Absence requires repository/app-family context.
+- A custom-dimension key contains spaces or non-PascalCase naming, or an existing event ID changes/removes a shipped key — `keep-custom-dimension-schema-stable`. Treat naming alone as advisory; the schema change is the compatibility defect.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
@@ -53,7 +64,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee; otherwise the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file.
+- Applicability alone is not a finding. Emit `info` only for a concrete, non-actionable observation the article explicitly defines; otherwise emit nothing when no violation is present.
 
 Set `confidence` to:
 

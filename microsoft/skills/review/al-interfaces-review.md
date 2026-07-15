@@ -55,13 +55,15 @@ The following targeted checks map diff signals to specific `interfaces` articles
 - A method added directly to an interface that exists in the baseline, instead of adding a BC25+ interface that `extends` it or a versioned sibling for older targets — `extend-published-interfaces-dont-edit-them`.
 - A declared enum value with no `Implementation` and no enum-level `DefaultImplementation` — `set-defaultimplementation-on-enum`.
 
+For `set-defaultimplementation-on-enum`, inspect the complete containing enum before emitting. An enum-level `DefaultImplementation = <Interface> = <Codeunit>;` conclusively covers every declared value that omits its own `Implementation`; do not flag such a value and do not replace the intentional fallback with a per-value mapping.
+
 ## Action
 
 For each worklist entry, evaluate the diff against the file's `## Best Practice` and `## Anti Pattern` sections. Emit findings as follows:
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee. When the file does not make such a claim, the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file. Repository-wide observations MAY omit `location`.
+- Applicability alone is not a finding. Emit `info` only for a concrete, non-actionable observation the article explicitly defines; otherwise emit nothing when no violation is present.
 
 Set `confidence` to:
 

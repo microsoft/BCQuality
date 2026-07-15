@@ -45,6 +45,13 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object or declaration. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
+Do not worklist `temporary-variable-temp-prefix.md` for an event publisher parameter. `events/prefix-temporary-record-event-parameters-with-temp.md` is the exclusive owner of that shape.
+
+Apply these high-signal mappings before fuzzy topic ranking:
+
+- A `Label` or `TextConst` contains multiple or ambiguous placeholders but has no `Comment`, or its Comment does not explain every placeholder — `label-comment-explains-placeholders.md`. A single placeholder whose meaning is explicit in the text, such as `Customer %1`, is allowed without a Comment and must not be flagged.
+- `function-call-parentheses-required.md` applies only to a zero-argument invocation written without `()`. Never worklist it from an invocation that already has parentheses or supplies arguments, including `Error(Label, Arg1, Arg2)`.
+
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ and record suppressions.
 
 When the post-conflict worklist is empty because no applicable style knowledge exists, or because configuration suppressed every candidate, emit `outcome: "no-knowledge"`. When the worklist is empty because no applicable style knowledge matched the changes, emit `outcome: "completed"` with an empty `findings` array.

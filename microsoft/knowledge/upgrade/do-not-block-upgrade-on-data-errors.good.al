@@ -13,7 +13,7 @@ codeunit 50206 "Upgrade Graceful"
     begin
         if not Customer.Get(CustomerNo) then begin
             Session.LogMessage(
-                '0000ABC',
+                'UPG0001',
                 'Customer not found during upgrade',
                 Verbosity::Warning,
                 DataClassification::SystemMetadata,

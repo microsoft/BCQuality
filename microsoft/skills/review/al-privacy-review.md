@@ -45,6 +45,11 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Apply the topic-specific gates above after this overlap check; in particular, bare `Message` and `DataClassification` tokens cannot admit ErrorInfo guidance. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
+Apply API ownership before fuzzy ranking:
+
+- A `Session.LogMessage` message built with `StrSubstNo` or concatenation from customer, employee, filename, document, or other identifying values belongs to `no-pii-in-telemetry-message-string.md`.
+- `avoid-strsubstno-prebuild-before-error.md` applies only when `StrSubstNo` or concatenation supplies the first argument to `Error(...)`. Never apply it to `Session.LogMessage`, `FeatureTelemetry`, or another telemetry API.
+
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
 When the post-conflict worklist is empty because no applicable privacy knowledge exists, or because configuration suppressed every candidate, emit `outcome: "no-knowledge"`. When the worklist is empty because no applicable privacy knowledge matched the changes, emit `outcome: "completed"` with an empty `findings` array.
@@ -55,7 +60,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee (for example, documented telemetry-classification rules or GDPR-adjacent data-handling requirements). When the file does not make such a claim, the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file. Repository-wide observations MAY omit `location`.
+- Applicability alone is not a finding. Emit `info` only for a concrete, non-actionable observation the article explicitly defines; otherwise emit nothing when no violation is present.
 
 Set `confidence` to:
 

@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [15..]
 domain: ui
 keywords: [enqueuebackgroundtask, async-calculation, child-session, factbox, cue-tile, onaftergetcurrrecord, responsive-page, read-only]
 technologies: [al]

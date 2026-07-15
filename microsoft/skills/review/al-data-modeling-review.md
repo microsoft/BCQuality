@@ -39,7 +39,7 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 - The changed AL object names and types — especially `* Setup` singleton tables and Card pages, custom master tables, tableextensions that add master-data fields, and document or journal lines that reference a master.
 - The changed fields, keys, triggers, and procedures, weighted toward `Primary Key`, `No.`, `No. Series`, `Blocked`, `Last Date Modified`, `OnInsert`, `OnModify`, `OnRename`, reference-field `OnValidate`, and posting validation.
-- Tokens extracted from the diff that relate to data modeling (`setup`, `master`, `Primary Key`, `Code[10]`, `Code[20]`, `AutoIncrement`, `SystemId`, `No.`, `No. Series`, `NoSeriesManagement`, `Codeunit "No. Series"`, `GetNextNo`, `IsManual`, `TestManual`, `Blocked`, `TestField`, `Last Date Modified`, `Today`, `WorkDate`, `InsertAllowed`, `DeleteAllowed`, `PageType = Card`, `OnOpenPage`, `GetRecordOnce`, `OnInsert`, `OnModify`, `OnRename`).
+- Tokens extracted from the diff that relate to data modeling (`setup`, `master`, `Primary Key`, `Code[10]`, `Code[20]`, `AutoIncrement`, `SystemId`, `No.`, `No. Series`, `NoSeriesManagement`, `Codeunit "No. Series"`, `GetNextNo`, `IsManual`, `TestManual`, `Blocked`, `TestField`, `Last Date Modified`, `Today`, `WorkDate`, `InsertAllowed`, `DeleteAllowed`, `PageType = Card`, `OnOpenPage`, `GetRecordOnce`, `OnInsert`, `OnModify`, `OnRename`, `TableRelation`, `tableextension`, `enumextension`, `Media`, `MediaSet`, `Item`, `Count`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone. When the diff contains no data-modeling changes by any of the above signals, return `outcome: "not-applicable"` without evaluating files.
 
@@ -50,6 +50,8 @@ The following targeted checks cover every current `data-modeling` article. Treat
 - BC v22 or later code introduces or retains `NoSeriesManagement`, `InitSeries`, `SelectSeries`, or `SetSeries`, or number assignment/manual-entry checks do not use codeunit `"No. Series"` methods such as `GetNextNo`, `IsManual`, or `TestManual` — `use-no-series-codeunit-not-noseriesmanagement`.
 - A master gains or changes `Blocked`, or a document line, journal line, reference-field `OnValidate`, or posting routine uses that master without `TestField(Blocked, false)` at the point of use; also cue when the check is placed only in the master's own triggers — `check-blocked-in-referencing-code-not-in-master`.
 - A master table adds or changes `Last Date Modified`, `OnModify`, or `OnRename`, but the non-editable field is not assigned `Today()` in both triggers — `set-last-date-modified-in-onmodify-and-onrename`.
+- A `tableextension` appends a conditional `TableRelation` as if it overrides an earlier unconditional relation, or relation branches are otherwise designed without accounting for additive top-down evaluation — `table-relation-extensions-are-additive-and-top-down`.
+- A `Media` or `MediaSet` field is assigned directly between different table types or different field IDs instead of registering each shared item with `MediaSet.Insert` — `share-mediaset-items-with-insert-not-field-assignment`.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
@@ -61,7 +63,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the model can create ambiguous setup state, incompatible business identifiers, or silently stale synchronization data; otherwise the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file.
+- Applicability alone is not a finding. Emit `info` only for a concrete, non-actionable observation the article explicitly defines; otherwise emit nothing when no violation is present.
 
 Set `confidence` to:
 

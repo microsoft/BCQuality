@@ -15,7 +15,7 @@ Error method trace telemetry includes the AL error string only when the first `E
 
 ## Best Practice
 
-Declare the complete message as a `Label` or `TextConst` and pass it directly to `Error`, followed by substitution values. The client receives the formatted message while telemetry can retain the static message template without using the dynamic values as its message. See `error-direct-substitution-safe-for-telemetry.md`.
+Declare the complete message as a `Label` or `TextConst` and pass it directly to `Error`, followed by substitution values. The client receives the formatted message while telemetry retains the static message template without using the dynamic values as its message. Independently review whether each substitution value is appropriate to show to the current user.
 
 See sample: `avoid-strsubstno-prebuild-before-error.good.al`.
 

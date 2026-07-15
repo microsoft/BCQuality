@@ -1,9 +1,9 @@
-codeunit 50261 "Sample Telemetry Id Good"
+codeunit 50260 "Telemetry Event Id Bad"
 {
     procedure LogCustomerProcessed(var Customer: Record Customer)
     begin
         Session.LogMessage(
-            'QS0001',
+            '0000',
             'Customer record processed',
             Verbosity::Normal,
             DataClassification::SystemMetadata,

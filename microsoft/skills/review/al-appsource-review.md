@@ -37,15 +37,19 @@ Discard files that are not applicable. Retain conditionally applicable files (an
 
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
-- The changed files and AL object types — especially `app.json`, `AppSourceCop.json`, new objects, and table/page/report extensions that add fields, keys, controls, or actions to base objects.
+- The changed files and AL object types — especially `app.json`, `AppSourceCop.json`, namespace declarations, permission-set objects, new objects, and table/page/report extensions that add fields, keys, controls, or actions to base objects.
 - The changed object and member names, weighted toward prefix/suffix consistency with `mandatoryAffixes` or `mandatoryPrefix`, plus AppSource-facing help metadata.
-- Tokens extracted from the diff that relate to AppSource (`AppSourceCop`, `mandatoryAffixes`, `mandatoryPrefix`, `AS0011`, `prefix`, `suffix`, `tableextension`, `pageextension`, `reportextension`, `field`, `key`, `control`, `action`, `app.json`, `help`, `ContextSensitiveHelpPage`, `Copilot`, `https`).
+- Tokens extracted from the diff that relate to AppSource (`AppSourceCop`, `mandatoryAffixes`, `mandatoryPrefix`, `AS0011`, `prefix`, `suffix`, `namespace`, `using`, `permissionset`, `Assignable`, `Permissions`, `SUPER`, `tableextension`, `pageextension`, `reportextension`, `field`, `key`, `control`, `action`, `app.json`, `help`, `ContextSensitiveHelpPage`, `Copilot`, `https`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone. When the diff contains no AppSource-related source or metadata changes by any of the above signals, return `outcome: "not-applicable"` without evaluating files.
 
 The following targeted checks cover every current `appsource` article across the Microsoft and community layers. Treat each as a candidate-selection cue: when the signal appears in changed code, add the named article to the worklist and evaluate it in Action.
 
-- A new or renamed object lacks the reserved prefix/suffix, or a tableextension/pageextension/reportextension adds an unaffixed field, key, control, or action to a base object despite `mandatoryAffixes`/`mandatoryPrefix` and AS0011 — `object-affixes-prevent-collisions`.
+- Select exactly one naming-collision owner. When no namespace declaration is present, a new/renamed object lacks the reserved prefix/suffix, or an extension object adds an unaffixed member to a base object — `object-affixes-prevent-collisions`.
+- For BC23 or later, use `two-level-namespace-replaces-object-affix-not-extension-member-affix` instead when the changed source actually declares or changes a namespace and relies on it as the owned-object affix alternative, but has fewer than two levels or incorrectly applies that exception to members on another publisher's object. Never worklist this article for an unaffixed source file with no namespace declaration.
+- The app has no assignable permission set covering its setup and usage paths, omits visible object/tabledata grants, or requires `SUPER` for normal operation — `permission-sets-cover-setup-and-usage-without-super`. Require repository-level app context; one isolated permission-set object cannot prove complete coverage.
+
+Before emitting an affix finding, compare every owned object name and every member added to another publisher's object against the configured `mandatoryAffixes`/`mandatoryPrefix`. A matching prefix or suffix is compliant. Do not flag an `ABC`-prefixed object or an `ABC`-suffixed extension member when `ABC` is the configured affix.
 - For BC v27 or later, `app.json` adds or changes the `help` URL to a path deeper than two levels, or a changed Copilot/context-sensitive help arrangement would ground the app under an overly broad truncated parent — `keep-copilot-help-url-to-two-path-levels`.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
@@ -58,7 +62,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the change violates an AppSource submission requirement; otherwise the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file.
+- Applicability alone is not a finding. Emit `info` only for a concrete, non-actionable observation the article explicitly defines; otherwise emit nothing when no violation is present.
 
 Set `confidence` to:
 
