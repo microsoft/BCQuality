@@ -8,8 +8,7 @@
       "context": "AppSourceCop mandatoryAffixes is configured to ABC."
     },
     "breaking-changes": {
-      "article": "obsolete-table-fields-instead-of-deleting-them",
-      "context": "Baseline version: field ID 2 was named Email. Review the provided changed version."
+      "article": "do-not-expose-sensitive-data-through-public-api"
     },
     "events": {
       "article": "initialize-ishandled-to-false-before-publishing"
