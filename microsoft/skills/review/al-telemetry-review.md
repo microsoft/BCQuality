@@ -88,7 +88,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. The empty-corpus case produces:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Telemetry"`. The empty-corpus case produces:
 
 ```json
 {

@@ -87,7 +87,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Data Modeling"`. A populated example:
 
 ```json
 {
@@ -110,6 +110,7 @@ Output conforms to the DO output contract. A populated example:
         { "path": "microsoft/knowledge/data-modeling/set-last-date-modified-in-onmodify-and-onrename.md" }
       ],
       "confidence": "high",
+      "domain": "Data Modeling",
       "suggested-code": "trigger OnRename()\nbegin\n    \"Last Date Modified\" := Today();\nend;"
     }
   ],

@@ -95,6 +95,7 @@ Every action skill emits a single JSON document that conforms to this schema:
       ],
       "confidence": "high | medium | low",
       "from-sub-skill": "string",
+      "domain": "string",
       "suggested-code": "string",
       "suggested-code-omission-reason": "string"
     }
@@ -200,6 +201,10 @@ This gate applies independently to every leaf result and again to a super-skill'
 
 **`findings[].from-sub-skill`** — optional. Set only by super-skills. The `skill.id` of the sub-skill that produced the finding, or the literal string `"agent"` for an agent finding the super-skill produced from its own cross-cutting reasoning. Absent on findings emitted directly by a leaf skill — including agent findings the leaf emits within its own domain, which appear in the leaf's own report without this field.
 
+**`findings[].domain`** — optional in the shared schema for backward compatibility and for non-review findings. It is a short, human-readable display label for the review domain that produced the finding (for example, `Security`, `Breaking Changes`, `API & Web Services`). A review leaf skill MUST set it on every finding it emits. The value MUST be a non-empty, single-line string with no leading or trailing whitespace or control characters. Internal whitespace, punctuation, case, and non-ASCII characters are valid and significant.
+
+A review super-skill MUST preserve `domain` verbatim when rolling a leaf finding into its top-level `findings[]`, including preserving its absence from older producers, and MUST set it to `"Agent"` for agent findings it emits about cross-cutting concerns. Consumers MUST tolerate its absence. When rendering a present value, consumers MUST preserve the complete display text, escaping only as required by the output format; they MUST NOT split it on whitespace or restrict it to identifier characters. `domain` is display text, not a stable machine identifier. If a consumer embeds it in metadata or uses it in a deduplication key, it MUST retain the exact string, use a lossless encoding, or use a collision-resistant digest; it MUST NOT rely on lowercasing or lossy slugification as the sole identity.
+
 **`findings[].suggested-code`** — optional in the schema but **expected for mechanical findings**. It is a concrete code-replacement payload for the lines indicated by `location`. When present, the string MUST be a literal replacement for the source lines covered by `location.line` (or `location.range` if set) — i.e., what the file would contain after the fix, with no surrounding diff markers, fences, or commentary. Consumers MAY render it as a one-click suggestion in the delivery surface (for example, a GitHub ```` ```suggestion ```` block).
 
 Emit `suggested-code` whenever the fix is small, local, and mechanical: deleting unreachable code; replacing one expression (`Count() > 0` → `not IsEmpty()`); moving a local `Label` to object scope; adding a missing property such as `ToolTip`, `OptionCaption`, or `DataClassification`; replacing a string-concatenated `Error` with a Label-backed call; changing a permission token; or adding a missing `else`/guard branch whose replacement is unambiguous from the surrounding diff. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, prefer adapting the `.good.al` replacement into `suggested-code`.
@@ -237,7 +242,7 @@ The five required sections still apply. Their meaning shifts from knowledge file
 - `## Source` — names the sub-skills invoked (mirrors `sub-skills` in frontmatter).
 - `## Relevance` — rules for deciding which sub-skills apply to the current task. A sub-skill is relevant when its declared `inputs` are satisfied by the orchestrator's provided inputs and the orchestrator has not disabled it via configuration. The super-skill MUST NOT filter sub-skills by task content (for example, by inspecting the diff or the file). Task-level applicability is the sub-skill's own responsibility; sub-skills signal non-applicability by returning `outcome: "not-applicable"` or `outcome: "no-knowledge"`.
 - `## Worklist` — the final list of sub-skills to invoke; the rest go to `skipped-sub-skills`.
-- `## Action` — invoke each worklisted sub-skill with the appropriate subset of inputs, collect its findings-report verbatim into `sub-results`, and copy its `findings[]` into the super-skill's top-level `findings[]` with `from-sub-skill` set. Findings from a sub-skill with `outcome: "failed"` MUST NOT be copied into the super-skill's top-level `findings[]` and MUST NOT contribute to the super-skill's `summary.counts` (their report is still preserved in `sub-results` for traceability, consistent with DO's rule that consumers ignore a failed skill's findings).
+- `## Action` — invoke each worklisted sub-skill with the appropriate subset of inputs, collect its findings-report verbatim into `sub-results`, and copy its `findings[]` into the super-skill's top-level `findings[]` with `from-sub-skill` set. All finding fields, including the optional `domain`, are preserved verbatim unless this contract explicitly requires a transformation. Findings from a sub-skill with `outcome: "failed"` MUST NOT be copied into the super-skill's top-level `findings[]` and MUST NOT contribute to the super-skill's `summary.counts` (their report is still preserved in `sub-results` for traceability, consistent with DO's rule that consumers ignore a failed skill's findings).
 - `## Output` — the super-skill's output contract, including `sub-results` and, if any, `skipped-sub-skills`.
 
 ### Outcome rollup

@@ -86,7 +86,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Testing"`. A populated example:
 
 ```json
 {
@@ -109,6 +109,7 @@ Output conforms to the DO output contract. A populated example:
         { "path": "microsoft/knowledge/testing/asserterror-needs-expectederror-and-code.md" }
       ],
       "confidence": "high",
+      "domain": "Testing",
       "suggested-code": "asserterror PostInvalidOrder();\nAssert.ExpectedError(ExpectedPostingErr);"
     }
   ],

@@ -79,8 +79,8 @@ For each sub-skill in the worklist, executed one at a time per the discipline ab
 1. Invoke the sub-skill with the orchestrator's inputs, passing only the subset each sub-skill declares in its `inputs`.
 2. Capture the sub-skill's complete findings-report verbatim and append it to `sub-results`.
 3. If the sub-skill's `outcome` is `failed`, stop here for this sub-skill: its findings are not reliable per the DO contract and MUST NOT be copied into the super-skill's top-level `findings[]` or counted in `summary.counts`.
-4. Otherwise, compare each entry from the sub-skill's `findings[]` with findings already rolled up. Two findings are duplicates when they point to the same file and overlapping line/range and prescribe materially the same correction, even when their knowledge-file IDs differ. Merge duplicates instead of appending both: keep the more specific domain owner, use its reference as `references[0]` and therefore as `id`, append the other references as supporting references, keep the highest severity and confidence justified by either report, and preserve one self-contained message. Article and leaf ownership notes decide specificity; do not choose by execution order.
-5. Append each non-duplicate finding, setting `from-sub-skill` to the sub-skill's `skill.id`. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
+4. Otherwise, compare each entry from the sub-skill's `findings[]` with findings already rolled up. Two findings are duplicates when they point to the same file and overlapping line/range and prescribe materially the same correction, even when their knowledge-file IDs differ. Merge duplicates instead of appending both: keep the more specific domain owner, preserve that finding's optional `domain` field verbatim (including its absence), use its reference as `references[0]` and therefore as `id`, append the other references as supporting references, keep the highest severity and confidence justified by either report, and preserve one self-contained message. Article and leaf ownership notes decide specificity; do not choose by execution order.
+5. Append each non-duplicate finding, setting `from-sub-skill` to the sub-skill's `skill.id` and preserving its optional `domain` field verbatim, including its absence. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
 
 ### Agent self-review pass
 
@@ -93,11 +93,12 @@ Frame the pass by cross-cutting concerns — architecture, error handling, resou
 For every candidate the agent identifies in this pass:
 
 1. **Validate against BCQuality knowledge.** Check the candidate against the knowledge files the sub-skills have already loaded for this task (visible via their `references` and `suppressed` lists in `sub-results`).
-   - If a BCQuality knowledge file matches the candidate, upgrade it to a knowledge-backed finding: cite the file in `references`, set `id` to the file's path, set `from-sub-skill` to the sub-skill that owns that knowledge domain, and merge with or deduplicate against any sub-skill finding that already covers the same concern at the same location.
+   - If a BCQuality knowledge file matches the candidate, upgrade it to a knowledge-backed finding: cite the file in `references`, set `id` to the file's path, set `from-sub-skill` to the sub-skill that owns that knowledge domain, set `domain` to the human-readable label required by that sub-skill's Output contract, and merge with or deduplicate against any sub-skill finding that already covers the same concern at the same location.
    - If a BCQuality knowledge file **explicitly contradicts** the candidate (its `## Best Practice` or `## Anti Pattern` says the opposite of what the agent flagged), suppress the candidate and do not surface it.
    - Otherwise the candidate has no BCQuality coverage; emit it as a super-skill agent finding.
 2. **Emit agent finding.** Per DO's *Agent findings* rules:
    - `from-sub-skill: "agent"` (the super-skill itself produced it)
+   - `domain: "Agent"` (the display label for super-skill cross-cutting findings)
    - `references: []`
    - `id` is a skill-defined slug prefixed with `agent:` (for example, `agent:missing-error-handling-on-http-call`).
    - `confidence` capped at `medium`.
@@ -149,7 +150,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
         { "path": "microsoft/knowledge/performance/apply-filters-before-iterating.md" }
       ],
       "confidence": "high",
-      "from-sub-skill": "al-performance-review"
+      "from-sub-skill": "al-performance-review",
+      "domain": "Performance"
     },
     {
       "id": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md",
@@ -163,7 +165,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
         { "path": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md" }
       ],
       "confidence": "high",
-      "from-sub-skill": "al-performance-review"
+      "from-sub-skill": "al-performance-review",
+      "domain": "Performance"
     },
     {
       "id": "microsoft/knowledge/security/secrettext-for-credentials.md",
@@ -178,7 +181,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
         { "path": "microsoft/knowledge/security/secrettext-for-credentials.md" }
       ],
       "confidence": "high",
-      "from-sub-skill": "al-security-review"
+      "from-sub-skill": "al-security-review",
+      "domain": "Security"
     },
     {
       "id": "microsoft/knowledge/security/secrets-isolated-storage.md",
@@ -192,7 +196,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
         { "path": "microsoft/knowledge/security/secrets-isolated-storage.md" }
       ],
       "confidence": "medium",
-      "from-sub-skill": "al-security-review"
+      "from-sub-skill": "al-security-review",
+      "domain": "Security"
     },
     {
       "id": "agent:missing-error-handling-on-http-client",
@@ -205,7 +210,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
       },
       "references": [],
       "confidence": "medium",
-      "from-sub-skill": "agent"
+      "from-sub-skill": "agent",
+      "domain": "Agent"
     }
   ],
   "suppressed": [],
@@ -230,7 +236,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
           "references": [
             { "path": "microsoft/knowledge/performance/apply-filters-before-iterating.md" }
           ],
-          "confidence": "high"
+          "confidence": "high",
+          "domain": "Performance"
         },
         {
           "id": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md",
@@ -243,7 +250,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
           "references": [
             { "path": "microsoft/knowledge/performance/use-setloadfields-for-partial-records.md" }
           ],
-          "confidence": "high"
+          "confidence": "high",
+          "domain": "Performance"
         }
       ],
       "suppressed": []
@@ -268,7 +276,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
           "references": [
             { "path": "microsoft/knowledge/security/secrettext-for-credentials.md" }
           ],
-          "confidence": "high"
+          "confidence": "high",
+          "domain": "Security"
         },
         {
           "id": "microsoft/knowledge/security/secrets-isolated-storage.md",
@@ -281,7 +290,8 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
           "references": [
             { "path": "microsoft/knowledge/security/secrets-isolated-storage.md" }
           ],
-          "confidence": "medium"
+          "confidence": "medium",
+          "domain": "Security"
         }
       ],
       "suppressed": []

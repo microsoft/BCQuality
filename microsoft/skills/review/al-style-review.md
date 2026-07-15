@@ -84,7 +84,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Style"`. A populated example:
 
 ```json
 {
@@ -106,7 +106,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/style/label-suffix-approved-list.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Style"
     }
   ],
   "suppressed": []

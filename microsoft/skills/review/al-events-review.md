@@ -96,7 +96,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Events"`. A populated example:
 
 ```json
 {
@@ -119,7 +119,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/events/publish-thin-onbefore-onafter-integration-events.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Events"
     },
     {
       "id": "microsoft/knowledge/events/use-ishandled-to-make-base-behaviour-overridable.md",
@@ -132,7 +133,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/events/use-ishandled-to-make-base-behaviour-overridable.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Events"
     }
   ],
   "suppressed": []

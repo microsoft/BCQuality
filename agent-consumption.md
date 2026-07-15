@@ -21,7 +21,7 @@ flowchart LR
     E -->|3 dispatch record| A
     A -->|4 invoke dispatched skill| S[Action skill<br/>e.g. al-code-review]
     S -->|5 execute| P[Source → Relevance<br/>→ Worklist → Action<br/>reading READ · DO on demand]
-    P -->|6 emit| R[Findings · References<br/>· Confidence]
+    P -->|6 emit| R[Findings · Domain labels<br/>· References · Confidence]
     R -->|7 integrate| O
 ```
 
@@ -65,6 +65,7 @@ The output contract is defined in the DO meta-skill so that every action skill �
 
 - **Outcome** — `completed`, `not-applicable`, `no-knowledge`, `partial`, or `failed`. An orchestrator can distinguish a clean run from a no-op from a failure without guessing.
 - **Findings** — what the skill observed (severity, message, optional location).
+- **Domain** — the producer-owned, human-readable display label on each review finding.
 - **References** — structured objects (`path` plus optional commit `sha`) pointing to the knowledge files that informed each finding.
 - **Confidence** — per-finding evidence strength.
 - **Suppressed** — knowledge files that were discarded by layer precedence or configuration, so reviewers can see what was overridden.
@@ -78,12 +79,12 @@ The orchestrator turns findings into PR comments, build gates, or IDE diagnostic
 
 BCQuality is an **additive** knowledge layer. The agent surfaces two kinds of findings, both shaped to the same DO output contract:
 
-- **Knowledge-backed findings** carry one or more entries in `references[]` pointing at BCQuality knowledge files. Their `id` is the primary file's repo-relative path. These are produced by leaf sub-skills and rolled up by super-skills.
-- **Agent findings** are surfaced by a super-skill from its own self-review pass when no BCQuality knowledge file backs the concern. They are tagged with `from-sub-skill: "agent"`, carry an empty `references: []`, use a slug `id` prefixed `agent:`, and have `confidence` capped at `medium`. Their `message` is self-contained because there is no knowledge-file footer to fall back on.
+- **Knowledge-backed findings** carry one or more entries in `references[]` pointing at BCQuality knowledge files. Their `id` is the primary file's repo-relative path. Leaf sub-skills set `domain` to their human-readable display label, and super-skills preserve it verbatim during rollup.
+- **Agent findings** carry an empty `references: []`, use a slug `id` prefixed `agent:`, and have `confidence` capped at `medium`. A leaf can emit one strictly within its own domain and uses that leaf's display label. A super-skill can emit a cross-cutting agent finding with `from-sub-skill: "agent"` and `domain: "Agent"`. Their `message` is self-contained because there is no knowledge-file footer to fall back on.
 
-Before a super-skill emits an agent finding, it validates the candidate against the BCQuality knowledge already loaded for the task: a matching file upgrades the candidate to a knowledge-backed finding (and merges or deduplicates against the relevant sub-skill output); a contradicting file suppresses the candidate. Only candidates with no BCQuality coverage become agent findings.
+Before a skill emits an agent finding, it validates the candidate against the BCQuality knowledge already loaded for the task: a matching file upgrades the candidate to a knowledge-backed finding (and merges or deduplicates against relevant existing output); a contradicting file suppresses the candidate. Only candidates with no BCQuality coverage become agent findings.
 
-Orchestrators MAY render the two kinds differently — for example, by labelling agent findings or routing them to a separate review domain — and MAY apply independent severity floors. The `from-sub-skill: "agent"` marker is the contract.
+Orchestrators MUST tolerate an absent `domain` in reports from older producers. When it is present, treat it as display text rather than an identifier: preserve the full string and its case, whitespace, punctuation, and non-ASCII characters, escaping only for the target rendering format. Do not tokenize it on spaces or use a lowercased or slugified form as the sole metadata or deduplication key, because distinct labels can collapse to the same slug. Retain the exact string, use a lossless encoding, or use a collision-resistant digest instead. Orchestrators MAY render knowledge-backed and agent findings differently and MAY apply independent severity floors; `references: []` and the `agent:` id prefix distinguish agent findings, while `from-sub-skill: "agent"` identifies those emitted by the super-skill itself.
 
 ## Why this architecture
 

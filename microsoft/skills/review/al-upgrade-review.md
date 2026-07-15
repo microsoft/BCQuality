@@ -80,7 +80,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Upgrade"`. A populated example:
 
 ```json
 {
@@ -102,7 +102,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/upgrade/enum-values-additive-at-end.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Upgrade"
     }
   ],
   "suppressed": []

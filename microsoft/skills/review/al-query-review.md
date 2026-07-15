@@ -53,4 +53,4 @@ Outcome selection follows DO: `completed`, `no-knowledge`, `not-applicable`, `pa
 
 ## Output
 
-Output conforms to the DO findings-report contract.
+Output conforms to the DO findings-report contract. Every finding this skill emits MUST set `findings[].domain` to `"Query"`.

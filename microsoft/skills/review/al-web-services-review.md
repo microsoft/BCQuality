@@ -80,7 +80,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Web Services"`. A populated example:
 
 ```json
 {
@@ -103,7 +103,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/web-services/set-required-api-page-properties.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Web Services"
     },
     {
       "id": "microsoft/knowledge/web-services/expose-systemid-as-the-api-key.md",
@@ -116,7 +117,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/web-services/expose-systemid-as-the-api-key.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Web Services"
     }
   ],
   "suppressed": []
