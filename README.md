@@ -18,6 +18,8 @@ Poor fit: "Use HTTPS instead of HTTP." "Don't hardcode secrets." "Keep transacti
 
 The practical consequence: when a code-review agent flags something it shouldn't have, or misses something it should have caught, the remedy is a new knowledge file. When it already behaves correctly on a topic, no file is needed.
 
+A file that *prevents* a false positive — documenting why a pattern is legitimate so the agent stops flagging it — is as valid as one that catches a defect: negative clarifications are first-class knowledge files. What never belongs is a BC fact hard-coded into a skill. Skills are finders and appliers; knowledge files are what the agent knows. See [`skills/do.md`](skills/do.md) and [`skills/write.md`](skills/write.md).
+
 ## What's in this repo
 
 BCQuality contains **knowledge** and **skills**. It does not contain agents. Agents that consume BCQuality ship with [AL-Go](https://github.com/microsoft/AL-Go) and other orchestrators.
@@ -147,6 +149,7 @@ Contributions are welcome. Before submitting a PR:
 1. Read the knowledge file format above — frontmatter and sections are validated by CI.
 2. Keep files atomic: one concern per file, under 100 lines.
 3. Target your contribution to the right layer — most community contributions go in `/community/knowledge/`.
+4. Adding a BC fact — or stopping the agent from flagging a false positive — is a knowledge file, not a skill edit. If a PR changes *what* a review skill flags, the change almost certainly belongs in a knowledge file. See [`skills/write.md`](skills/write.md).
 
 CI runs validation on every PR. If your knowledge file has schema violations, missing sections, code blocks, or exceeds 100 lines, the check will fail with a clear error message.
 

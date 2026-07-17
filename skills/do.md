@@ -21,6 +21,19 @@ An action skill is a single markdown file with YAML frontmatter. It lives inside
 
 Action skills do not live at the repo root. The files in `/skills/` — the three meta-skill contracts (READ, DO, WRITE) and the entry-point skill (`entry.md`, `kind: entry-point`) — are the only skills that sit outside a layer. The entry-point skill structurally follows this same four-step pattern but produces a dispatch record rather than a findings-report; see `skills/entry.md` for its contract.
 
+## Skills hold mechanics; knowledge files hold BC facts
+
+An action skill is a *finder and applier*: its prose says how to discover candidate knowledge (Source), filter it (Relevance), narrow it to the task (Worklist), and shape output (Action). Every Business-Central-specific behavioural claim a skill acts on — what a property defaults to, what a trigger does, why a given shape is or is not a defect — belongs in a knowledge file the skill cites, not in the skill prose.
+
+This includes **negative knowledge**. A false-positive guard — "pattern X is not a defect, because BC does Y" — is as much a knowledge file as a positive best practice. When an eval shows the agent over-reporting a pattern, the fix is a knowledge file documenting why the pattern is legitimate, so the skill can cite it and any leaf can reuse it — not a hard-coded exclusion buried in one skill. See `skills/write.md` (*Is this a knowledge file?*).
+
+Two rules follow for skill authors:
+
+- **Do not add a BC fact to a skill.** If you are editing a skill to change *what it flags* — adding an exclusion, encoding a platform default, teaching it that some pattern is fine — you are holding a knowledge file, not a skill edit. Author the knowledge file and let Worklist route to it.
+- **Do not restate an article's fact inline.** A Worklist cue may name the article to load and the diff shape that selects it; it must not re-assert the article's reasoning, which then drifts from the source. Cite, don't copy.
+
+The meta-skills themselves (`read.md`, `do.md`, `write.md`) are domain-agnostic templates and carry no BC-specific rule.
+
 ## Frontmatter schema
 
 ```yaml

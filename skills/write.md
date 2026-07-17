@@ -9,6 +9,25 @@ title: New Knowledge — how to author a knowledge file
 
 Anyone — human or agent — adding a knowledge file to BCQuality follows this guide. READ is the format specification; WRITE is the authoring guide. This file does not restate the schema; consult READ for field-by-field semantics.
 
+## Is this a knowledge file?
+
+Before authoring anything, confirm a knowledge file is the right artifact. BCQuality separates *mechanics* from *facts*:
+
+- **Skills** (`*/skills/**`) hold only finder/applier mechanics — how to discover, filter, worklist, and emit findings. See `skills/do.md`.
+- **Knowledge files** (`*/knowledge/**`) hold every Business-Central-specific fact a skill acts on.
+
+A new BC fact is therefore a knowledge file, never a skill edit. In particular, if you arrived here because a review agent flagged something it should not have (a false positive) or missed something it should have caught, the remedy is a knowledge file — apply the admission test in the [README](../README.md#what-belongs-here): *would a capable LLM get this wrong without the file?* If you find yourself editing a skill to stop it flagging something, stop and write a knowledge file instead.
+
+### Negative knowledge is first-class
+
+A knowledge file does not have to recommend an action. A **negative clarification** — "pattern X is *not* a defect, because BC behaves as Y" — is a first-class knowledge file, authored exactly like a positive rule:
+
+- **Description** states the BC behaviour that makes the pattern legitimate.
+- **Best Practice** tells the reviewer or agent what *not* to flag, and why.
+- **Anti Pattern** describes the false-positive report itself — the mistaken finding to suppress.
+
+For example, `microsoft/knowledge/error-handling/page-boolean-triggers-default-to-true.md` records that the Boolean page record triggers return `true` by default, so a "missing `exit(true)`" report is not a real defect. It reads as ordinary knowledge; its anti-pattern is the incorrect review comment, not the code.
+
 ## Before you start
 
 Read `skills/read.md` first. A file that does not conform to READ will be rejected. WRITE assumes READ is already understood.
