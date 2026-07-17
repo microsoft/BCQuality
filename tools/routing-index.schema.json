@@ -49,6 +49,11 @@
             "type": "string",
             "enum": ["seed", "frontmatter-signal", "keyword"]
           },
+          "effect": {
+            "description": "Whether a hit RAISES the domain suspicion score (default) or SUPPRESSES it. Suppressors encode 'this construct is NOT a violation of the domain' (e.g. the not-a-violation articles); the orchestrator subtracts a suppressor's weighted hits from the domain score (floored at 0) and does not route to it. Optional for back-compat; absent means 'raise'.",
+            "type": "string",
+            "enum": ["raise", "suppress"]
+          },
           "weight": {
             "description": "Tier-1 confidence multiplier applied to signal hit counts in the domain-suspicion score. 1.0 for authored/seed signals; < 1 for soft keyword-derived signals. Tier-2 feedback weights (later) multiply on top of this.",
             "type": "number",

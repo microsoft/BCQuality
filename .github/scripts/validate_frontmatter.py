@@ -236,7 +236,9 @@ def validate_knowledge(path: Path, parsed: Parsed, report: Report) -> None:
                     for opt in ("pattern", "domain"):
                         if opt in entry and (not isinstance(entry[opt], str) or not entry[opt].strip()):
                             report.error(path, "R24", f"signals '{opt}' must be a non-empty string", 1)
-                    unknown = set(entry.keys()) - {"token", "pattern", "domain"}
+                    if "effect" in entry and entry["effect"] not in ("raise", "suppress"):
+                        report.error(path, "R24", "signals 'effect' must be 'raise' or 'suppress'", 1)
+                    unknown = set(entry.keys()) - {"token", "pattern", "domain", "effect"}
                     if unknown:
                         report.error(path, "R24", f"signals entry has unknown keys: {sorted(unknown)}", 1)
                 else:

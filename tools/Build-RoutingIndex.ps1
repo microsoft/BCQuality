@@ -146,10 +146,11 @@ function Read-RoutingFrontmatter {
                             if ($m.Success) { $signals.Add(@{ token = $m.Groups[1].Value.Trim().Trim('"',"'") }) | Out-Null }
                         }
                     } elseif ($bl -match '^\s+\w') {
-                        # continuation of a mapping entry (pattern:/domain:) — attach to last mapping
+                        # continuation of a mapping entry (pattern:/domain:/effect:) — attach to last mapping
                         if ($signals.Count -gt 0 -and ($signals[$signals.Count - 1] -is [hashtable])) {
                             if ($bl -match '^\s*pattern\s*:\s*(.+)$') { $signals[$signals.Count - 1]['pattern'] = $Matches[1].Trim().Trim('"',"'") }
                             elseif ($bl -match '^\s*domain\s*:\s*(.+)$') { $signals[$signals.Count - 1]['domain'] = $Matches[1].Trim().Trim('"',"'") }
+                            elseif ($bl -match '^\s*effect\s*:\s*(.+)$') { $signals[$signals.Count - 1]['effect'] = $Matches[1].Trim().Trim('"',"'") }
                         }
                     } else { break }
                 }
@@ -196,39 +197,50 @@ foreach ($a in $articles) {
 # never duplicate; articles accumulate onto the matching token.
 $signalReg = [ordered]@{}
 function Add-Signal {
-    param([string] $Token, [string] $Pattern, [string] $Domain, [string] $Source, [double] $Weight)
-    if (-not $signalReg.Contains($Token)) {
-        $signalReg[$Token] = [ordered]@{
-            token = $Token; pattern = $Pattern; domain = $Domain; source = $Source; weight = $Weight
+    param([string] $Token, [string] $Pattern, [string] $Domain, [string] $Source, [double] $Weight, [string] $Effect = 'raise')
+    if ($Effect -ne 'suppress') { $Effect = 'raise' }
+    # Key by token + domain + effect: "FindSet raises Performance" and
+    # "FindSet suppresses Privacy" are semantically distinct signals and must
+    # not collide. Same (token,domain,effect) still merges so articles accumulate.
+    $key = "$Token`n$Domain`n$Effect"
+    if (-not $signalReg.Contains($key)) {
+        $signalReg[$key] = [ordered]@{
+            token = $Token; pattern = $Pattern; domain = $Domain; source = $Source; weight = $Weight; effect = $Effect
             articles = [System.Collections.Generic.List[string]]::new()
         }
     }
-    return $signalReg[$Token]
+    return $signalReg[$key]
 }
 
 # 1) Seed signals: guarantee recall >= legacy catalog. Attach every article
 #    whose canonical domain matches the seed signal's domain.
 foreach ($s in $seed.signals) {
-    $sig = Add-Signal -Token $s.token -Pattern $s.pattern -Domain $s.domain -Source 'seed' -Weight 1.0
-    if ($articlesByDomain.ContainsKey($s.domain)) {
+    $seedEffect = if ($s.PSObject.Properties.Name -contains 'effect') { [string]$s.effect } else { 'raise' }
+    $sig = Add-Signal -Token $s.token -Pattern $s.pattern -Domain $s.domain -Source 'seed' -Weight 1.0 -Effect $seedEffect
+    # Suppressors do not route to articles — they only dampen a domain score.
+    if ($sig.effect -ne 'suppress' -and $articlesByDomain.ContainsKey($s.domain)) {
         foreach ($p in $articlesByDomain[$s.domain]) { if (-not $sig.articles.Contains($p)) { $sig.articles.Add($p) | Out-Null } }
     }
 }
 
 # 2) Article-declared signals (front-matter `signals:`): highest-precision,
 #    authored. Default pattern = \b<token>\b; default domain = article domain.
+#    An entry with `effect: suppress` DAMPENS its domain's score instead of
+#    raising it (e.g. "this-is-not-a-violation" articles), and does not route.
 foreach ($a in $articles) {
     foreach ($decl in $a.signals) {
-        $token = $null; $pattern = $null; $domain = $null
+        $token = $null; $pattern = $null; $domain = $null; $effect = 'raise'
         if ($decl -is [string]) { $token = $decl }
-        elseif ($decl -is [hashtable]) { $token = $decl['token']; $pattern = $decl['pattern']; $domain = $decl['domain'] }
+        elseif ($decl -is [hashtable]) { $token = $decl['token']; $pattern = $decl['pattern']; $domain = $decl['domain']; if ($decl['effect']) { $effect = [string]$decl['effect'] } }
         if (-not $token) { continue }
         if (-not $pattern) { $pattern = '\b' + [regex]::Escape($token) + '\b' }
         $domain = if ($domain) { ConvertTo-CanonicalDomain $domain } else { $a.domain }
-        $sig = Add-Signal -Token $token -Pattern $pattern -Domain $domain -Source 'frontmatter-signal' -Weight 1.0
+        $sig = Add-Signal -Token $token -Pattern $pattern -Domain $domain -Source 'frontmatter-signal' -Weight 1.0 -Effect $effect
         # Promote a seed placeholder to authored if the article overrode it.
-        if ($sig.source -eq 'seed' -and $decl -isnot [string]) { $sig.source = 'frontmatter-signal'; $sig.pattern = $pattern; $sig.domain = $domain }
-        if (-not $sig.articles.Contains($a.path)) { $sig.articles.Add($a.path) | Out-Null }
+        if ($sig.source -eq 'seed' -and $decl -isnot [string]) { $sig.source = 'frontmatter-signal'; $sig.pattern = $pattern }
+        # A suppressor's declaring article is a "not-a-violation" note, not a
+        # reading-list target, so it is not attached to the routed articles.
+        if ($sig.effect -ne 'suppress' -and -not $sig.articles.Contains($a.path)) { $sig.articles.Add($a.path) | Out-Null }
     }
 }
 
@@ -251,7 +263,7 @@ if ($IncludeKeywordSignals) {
 $signalsOut = @($signalReg.Values | ForEach-Object {
     [ordered]@{
         token = $_.token; pattern = $_.pattern; domain = $_.domain
-        source = $_.source; weight = $_.weight; articles = @($_.articles)
+        source = $_.source; weight = $_.weight; effect = $_.effect; articles = @($_.articles)
     }
 })
 
