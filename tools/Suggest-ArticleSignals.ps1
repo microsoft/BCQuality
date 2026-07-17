@@ -1,17 +1,27 @@
 <#
 .SYNOPSIS
-    Authoring-assist (PROTOTYPE): suggests routing `signals:` front-matter for
-    BCQuality knowledge articles, and flags articles whose declared `domain`
-    disagrees with what their code samples actually contain.
+    Authoring-assist (PROTOTYPE): reviews the routing-relevant front-matter of
+    BCQuality knowledge articles. It proposes `signals:` (trigger AND suppressor),
+    flags declared-`domain` vs sample-content mismatches, cross-checks
+    `technologies`, and suggests `keywords` — all suggestion-only.
 
 .DESCRIPTION
     Routing quality is capped by how well each article's front-matter describes
-    the code it catches. Today 0 of ~207 articles declare an explicit `signals:`
-    block and 5 review domains have zero detection signals, so ~22% of knowledge
-    is only reachable via the catch-all pass. This tool lowers the authoring cost
-    of closing that gap: it reads an article's own `good`/`bad` `.al` samples plus
-    its prose, extracts candidate AL constructs, and proposes a `signals:` block —
-    then leaves the decision to a human.
+    the code it catches. Today most articles declare no explicit `signals:` block
+    and several review domains have zero detection signals, so a large slice of
+    knowledge is only reachable via the catch-all pass. This tool lowers the
+    authoring cost of closing that gap. For each article it reads the co-located
+    `good`/`bad` `.al` samples AND the article prose (inline code + fenced `al`
+    blocks), extracts candidate AL constructs, and emits:
+
+      * A proposed `signals:` block. For a normal article these are RAISE
+        triggers. For a "this-is-not-a-violation" article (detected from the
+        title/prose) they are `effect: suppress` entries, which DAMPEN the
+        domain score instead of raising it.
+      * A domain-mismatch flag when the samples look like another domain.
+      * An applicability note when the samples use a technology (e.g. JavaScript
+        control add-ins) not declared in `technologies`.
+      * Keyword suggestions for strong constructs missing from `keywords`.
 
     It is OFFLINE and OPEN: no feedback data, deterministic, ships in the repo so
     the community can run it. It SUGGESTS ONLY — it never edits an article. The
@@ -33,8 +43,12 @@
 
 .PARAMETER OnlyGaps
     Only report articles that either have NO existing signal coverage for their
-    domain or trigger a domain-mismatch flag — i.e. where the suggestion adds the
-    most value. Off = report every article that yields a suggestion.
+    domain, are a suppressor candidate, or trigger a domain-mismatch/applicability
+    flag — i.e. where the suggestion adds the most value. Off = report every
+    article that yields a suggestion.
+
+.PARAMETER NoProse
+    Ignore article prose; use only the `.al` samples as the construct source.
 
 .PARAMETER AsJson
     Emit a machine-readable JSON report instead of Markdown (for a future
@@ -53,6 +67,7 @@ param(
     [string] $Path,
     [int]    $Top = 3,
     [switch] $OnlyGaps,
+    [switch] $NoProse,
     [switch] $AsJson,
     [string] $SeedPath
 )
@@ -112,20 +127,69 @@ $stop = @{}
 
 function Get-ArticleFrontmatter {
     param([string[]] $Lines)
-    if ($Lines.Count -lt 1 -or $Lines[0].Trim() -ne '---') { return $null }
+    if (-not $Lines -or @($Lines).Count -lt 1 -or $Lines[0].Trim() -ne '---') { return $null }
     $fmEnd = -1
     for ($i = 1; $i -lt $Lines.Count; $i++) { if ($Lines[$i].Trim() -eq '---') { $fmEnd = $i; break } }
     if ($fmEnd -lt 0) { return $null }
-    $domain = ''; $keywords = @(); $hasSignals = $false
+    $domain = ''; $keywords = @(); $technologies = @(); $hasSignals = $false
     for ($i = 1; $i -lt $fmEnd; $i++) {
         if ($Lines[$i] -match '^\s*domain\s*:\s*(.+?)\s*$') { $domain = $Matches[1].Trim() }
         elseif ($Lines[$i] -match '^\s*keywords\s*:\s*\[(.*)\]\s*$') {
             $inner = $Matches[1].Trim()
             if ($inner) { $keywords = @($inner -split '\s*,\s*' | ForEach-Object { $_.Trim() }) }
         }
+        elseif ($Lines[$i] -match '^\s*technologies\s*:\s*\[(.*)\]\s*$') {
+            $inner = $Matches[1].Trim()
+            if ($inner) { $technologies = @($inner -split '\s*,\s*' | ForEach-Object { $_.Trim().ToLowerInvariant() }) }
+        }
         elseif ($Lines[$i] -match '^\s*signals\s*:') { $hasSignals = $true }
     }
-    return [pscustomobject]@{ domain = $domain; keywords = $keywords; hasSignals = $hasSignals; fmEnd = $fmEnd }
+    return [pscustomobject]@{ domain = $domain; keywords = $keywords; technologies = $technologies; hasSignals = $hasSignals; fmEnd = $fmEnd }
+}
+
+# A "suppressor" article exists to say a construct is NOT a violation of its
+# domain (e.g. page-display-is-not-a-privacy-concern). Its constructs should be
+# proposed as effect: suppress, not raise. Detected from the title/basename and
+# prose — but NOT prohibitions ("do-not-add-X" means X *is* a violation).
+function Test-SuppressorArticle {
+    param([string] $BaseName, [string] $Body)
+    $bn = $BaseName.ToLowerInvariant()
+    if ($bn -match '^(do-not|dont|do-nt|avoid|never|no-inline|prevent|disallow|must-not)') { return $false }
+    $suppressName = $bn -match '(is-not-a|is-not-an|not-a-violation|not-a-[a-z-]*concern|not-an-[a-z-]*issue|need-no|need-not|-allowed(-|$)|allowed-on|is-fine|is-acceptable|no-[a-z-]*concern|exempt)'
+    if ($suppressName) { return $true }
+    # Prose phrasing as a weaker secondary signal (first ~40 lines of body).
+    $head = ($Body -split "`n" | Select-Object -First 40) -join "`n"
+    if ($head -match '(?i)\b(is not a (violation|concern|problem|privacy)|not a violation|no .{0,20}concern|need no |perfectly (fine|acceptable)|is acceptable here|not flagged)\b') {
+        # Guard against prohibition prose.
+        if ($head -notmatch '(?i)\b(do not|don''t|avoid|never|must not|should not)\b') { return $true }
+    }
+    return $false
+}
+
+# Extract candidate AL constructs from ARTICLE PROSE: fenced ```al code blocks
+# (same shape as samples) and inline `code` spans that look like AL constructs.
+# Prose is a weaker source than a .al sample — used to reach the articles that
+# ship no samples, and to corroborate sample constructs.
+function Get-ProseConstructs {
+    param([string] $Body)
+    $out = @{}
+    if (-not $Body) { return $out }
+    # Fenced al/pascal code blocks.
+    foreach ($m in [regex]::Matches($Body, '(?s)```(?:al|pascal)?\s*(.*?)```')) {
+        foreach ($kv in (Get-SampleConstructs -Text $m.Groups[1].Value -IsBad:$false).GetEnumerator()) {
+            if (-not $out.ContainsKey($kv.Key)) { $out[$kv.Key] = 0 }
+            $out[$kv.Key] += $kv.Value.count
+        }
+    }
+    # Inline code spans that are a single AL-construct-shaped token.
+    foreach ($m in [regex]::Matches($Body, '`([A-Za-z][A-Za-z0-9]*)\s*(?:\(\))?`')) {
+        $tok = $m.Groups[1].Value
+        if ($tok -notmatch '^[A-Z][A-Za-z0-9]{2,}$') { continue }
+        if ($stop.ContainsKey($tok.ToLowerInvariant())) { continue }
+        if (-not $out.ContainsKey($tok)) { $out[$tok] = 0 }
+        $out[$tok] += 1
+    }
+    return $out
 }
 
 # Extract candidate AL constructs from sample text: method calls (Foo(),
@@ -177,17 +241,40 @@ foreach ($layerDir in @('microsoft', 'community', 'custom')) {
             $fm = Get-ArticleFrontmatter -Lines $lines
             if (-not $fm) { return }
             $canonDomain = ConvertTo-CanonicalDomain $fm.domain
+            $body = ($lines | Select-Object -Skip ($fm.fmEnd + 1)) -join "`n"
+            $isSuppressor = Test-SuppressorArticle -BaseName $_.BaseName -Body $body
 
             # Collect constructs from co-located samples (good + bad).
             $constructs = @{}
+            $sampleCount = 0
             foreach ($sample in Get-ChildItem -LiteralPath $_.DirectoryName -Filter "$($_.BaseName)*.al" -ErrorAction SilentlyContinue) {
+                $sampleCount++
                 $isBad = $sample.Name -match '\.bad\.al$'
                 $text = Get-Content -LiteralPath $sample.FullName -Raw -ErrorAction SilentlyContinue
                 foreach ($kv in (Get-SampleConstructs -Text $text -IsBad:$isBad).GetEnumerator()) {
-                    if (-not $constructs.ContainsKey($kv.Key)) { $constructs[$kv.Key] = @{ count = 0; inBad = $false } }
+                    if (-not $constructs.ContainsKey($kv.Key)) { $constructs[$kv.Key] = @{ count = 0; inBad = $false; prose = $false; sample = $false } }
                     $constructs[$kv.Key].count += $kv.Value.count
+                    $constructs[$kv.Key].sample = $true
                     if ($kv.Value.inBad) { $constructs[$kv.Key].inBad = $true }
                 }
+            }
+
+            # Corroborate / fill gaps from prose (fenced al + inline code spans).
+            if (-not $NoProse) {
+                foreach ($kv in (Get-ProseConstructs -Body $body).GetEnumerator()) {
+                    if (-not $constructs.ContainsKey($kv.Key)) { $constructs[$kv.Key] = @{ count = 0; inBad = $false; prose = $false; sample = $false } }
+                    $constructs[$kv.Key].count += $kv.Value
+                    $constructs[$kv.Key].prose = $true
+                }
+            }
+
+            # Applicability cross-check: samples/prose that use JavaScript / control
+            # add-ins but `technologies` omits javascript (small but concrete).
+            $applicability = $null
+            $jsUse = @($constructs.Keys | Where-Object { $_ -in @('ControlAddIn','StartupScript','RecreateControls','Scripts') }).Count -gt 0
+            if (-not $jsUse -and ($body -match '(?i)\bcontrol\s*add-?in\b|\.js\b|javascript')) { $jsUse = $true }
+            if ($jsUse -and ($fm.technologies -notcontains 'javascript')) {
+                $applicability = "samples/prose reference a JavaScript control add-in but 'technologies' does not list 'javascript'"
             }
 
             # Keyword set (normalized) for relatedness scoring.
@@ -201,9 +288,11 @@ foreach ($layerDir in @('microsoft', 'community', 'custom')) {
                 $score = [double]$constructs[$c].count
                 if ($constructs[$c].inBad) { $score += 2 }                       # anti-pattern construct
                 if ($kwset.ContainsKey($lc)) { $score += 3 }                     # backed by a declared keyword
+                if ($constructs[$c].sample) { $score += 1 }                      # seen in an actual sample
                 [pscustomobject]@{
                     token = $c; score = $score; inBad = $constructs[$c].inBad
                     keywordBacked = $kwset.ContainsKey($lc)
+                    proseOnly = ($constructs[$c].prose -and -not $constructs[$c].sample)
                     seedDomain = $seedDomain
                     alreadyRoutes = ($seedDomain -eq $canonDomain)
                 }
@@ -212,10 +301,11 @@ foreach ($layerDir in @('microsoft', 'community', 'custom')) {
 
             # Domain-mismatch flag: among candidates already known to the seed,
             # what domain dominates? If it disagrees with the declared domain,
-            # the article's code looks like it belongs elsewhere.
+            # the article's code looks like it belongs elsewhere. Skipped for
+            # suppressor articles, which deliberately reference other domains.
             $seedMatched = @($cands | Where-Object { $_.seedDomain })
             $mismatch = $null
-            if ($seedMatched.Count -ge 2) {
+            if (-not $isSuppressor -and $seedMatched.Count -ge 2) {
                 $byDom = $seedMatched | Group-Object seedDomain | Sort-Object Count -Descending
                 $dominant = $byDom[0]
                 if ($dominant.Name -ne $canonDomain -and $dominant.Count -ge 2) {
@@ -223,26 +313,41 @@ foreach ($layerDir in @('microsoft', 'community', 'custom')) {
                 }
             }
 
-            # Proposals: the highest-value NEW triggers = not already routed to
-            # this domain by the seed. Prefer keyword-backed / anti-pattern ones.
-            $proposals = @($cands | Where-Object { -not $_.alreadyRoutes } | Select-Object -First $Top)
+            # Proposals: for a suppressor, the highest-value constructs (they say
+            # "seeing this here is fine") become effect: suppress. For a normal
+            # article, the highest-value NEW triggers = not already routed here.
+            $effect = if ($isSuppressor) { 'suppress' } else { 'raise' }
+            $proposals = @(if ($isSuppressor) {
+                @($cands | Select-Object -First $Top)
+            } else {
+                @($cands | Where-Object { -not $_.alreadyRoutes } | Select-Object -First $Top)
+            })
+
+            # Keyword suggestions: strong proposed tokens not already a keyword.
+            $keywordSuggestions = @($proposals | Where-Object { -not $_.keywordBacked } | ForEach-Object { $_.token } | Select-Object -First 3)
 
             $domainHasSeed = ($seedByToken.Values -contains $canonDomain)
-            $isGap = (-not $domainHasSeed) -or ($mismatch) -or (-not $fm.hasSignals -and $proposals.Count -gt 0)
+            $isGap = (-not $domainHasSeed) -or ($mismatch) -or ($applicability) -or ($isSuppressor) -or (-not $fm.hasSignals -and $proposals.Count -gt 0)
 
-            if ($proposals.Count -eq 0 -and -not $mismatch) { return }
+            if ($proposals.Count -eq 0 -and -not $mismatch -and -not $applicability) { return }
             if ($OnlyGaps -and -not $isGap) { return }
 
             $reports.Add([pscustomobject]@{
                 path = $rel; layer = $layerDir; domain = $canonDomain; rawDomain = $fm.domain
                 hasSignals = $fm.hasSignals; domainHasSeed = $domainHasSeed
+                suppressor = $isSuppressor; effect = $effect
+                sampleCount = $sampleCount
                 mismatch = $mismatch
+                applicability = $applicability
+                keywordSuggestions = $keywordSuggestions
                 proposals = @($proposals | ForEach-Object {
                     [pscustomobject]@{
                         token = $_.token
                         pattern = '\b' + [regex]::Escape($_.token) + '\b'
+                        effect = $effect
                         keywordBacked = $_.keywordBacked
                         inBad = $_.inBad
+                        proseOnly = $_.proseOnly
                         note = if ($_.seedDomain) { "also seen in seed domain '$($_.seedDomain)'" } else { 'new construct' }
                     }
                 })
@@ -264,26 +369,42 @@ if ($AsJson) {
 
 $flagged = @($reports | Where-Object { $_.mismatch }).Count
 $zeroDomain = @($reports | Where-Object { -not $_.domainHasSeed }).Count
+$suppressors = @($reports | Where-Object { $_.suppressor }).Count
+$applic = @($reports | Where-Object { $_.applicability }).Count
 Write-Host ""
 Write-Host "BCQuality authoring-assist (prototype) — SUGGESTIONS ONLY, nothing written." -ForegroundColor Cyan
-Write-Host ("Articles with suggestions: {0}   Domain-mismatch flags: {1}   In zero-signal domains: {2}" -f $reports.Count, $flagged, $zeroDomain)
+Write-Host ("Articles with suggestions: {0}   Suppressor articles: {1}   Domain-mismatch: {2}   Applicability: {3}   Zero-signal domain: {4}" -f $reports.Count, $suppressors, $flagged, $applic, $zeroDomain)
 if ($Path) { Write-Host ("Filter: *{0}*" -f $Path) }
 Write-Host ("-" * 78)
 
 foreach ($r in ($reports | Sort-Object domain, path)) {
     Write-Host ""
-    Write-Host $r.path -ForegroundColor White
+    $title = if ($r.suppressor) { "$($r.path)  [SUPPRESSOR]" } else { $r.path }
+    Write-Host $title -ForegroundColor White
     $domNote = if (-not $r.domainHasSeed) { " [zero-signal domain]" } else { "" }
-    Write-Host ("  domain: {0}{1}   existing signals: {2}" -f $r.domain, $domNote, $(if ($r.hasSignals) { 'yes' } else { 'none' }))
+    Write-Host ("  domain: {0}{1}   existing signals: {2}   samples: {3}" -f $r.domain, $domNote, $(if ($r.hasSignals) { 'yes' } else { 'none' }), $r.sampleCount)
     if ($r.mismatch) { Write-Host ("  ⚠ domain check: {0}" -f $r.mismatch) -ForegroundColor Yellow }
+    if ($r.applicability) { Write-Host ("  ⚠ applicability: {0}" -f $r.applicability) -ForegroundColor Yellow }
     if ($r.proposals.Count -gt 0) {
-        Write-Host "  proposed signals: front-matter block ->" -ForegroundColor Green
+        $kind = if ($r.suppressor) { "SUPPRESS (this construct is NOT a violation here)" } else { "RAISE" }
+        Write-Host ("  proposed signals [{0}]: front-matter block ->" -f $kind) -ForegroundColor Green
         Write-Host "      signals:"
         foreach ($p in $r.proposals) {
-            $why = @(); if ($p.keywordBacked) { $why += 'keyword-backed' }; if ($p.inBad) { $why += 'anti-pattern sample' }
+            $why = @()
+            if ($p.keywordBacked) { $why += 'keyword-backed' }
+            if ($p.inBad) { $why += 'anti-pattern sample' }
+            if ($p.proseOnly) { $why += 'from prose' }
             $whyStr = if ($why) { "   # " + ($why -join ', ') } else { "" }
-            Write-Host ("        - {0}{1}" -f $p.token, $whyStr)
+            if ($r.suppressor) {
+                Write-Host ("        - token: {0}{1}" -f $p.token, $whyStr)
+                Write-Host  "          effect: suppress"
+            } else {
+                Write-Host ("        - {0}{1}" -f $p.token, $whyStr)
+            }
         }
+    }
+    if ($r.keywordSuggestions.Count -gt 0) {
+        Write-Host ("  keyword idea: consider adding to 'keywords': {0}" -f ([string]::Join(', ', @($r.keywordSuggestions | ForEach-Object { ($_ -creplace '(?<!^)(?=[A-Z])', '-').ToLowerInvariant() })))) -ForegroundColor DarkCyan
     }
 }
 Write-Host ""
