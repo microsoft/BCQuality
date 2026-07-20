@@ -1,3 +1,15 @@
+tableextension 50251 "Sample Tooltip Bad Ext" extends Customer
+{
+    fields
+    {
+        field(50251; "Reward Level"; Code[10])
+        {
+            Caption = 'Reward Level';
+            DataClassification = CustomerContent;
+        }
+    }
+}
+
 page 50251 "Sample Tooltip Bad"
 {
     PageType = Card;
@@ -8,7 +20,7 @@ page 50251 "Sample Tooltip Bad"
         {
             group(General)
             {
-                field("No."; Rec."No.")
+                field("Reward Level"; Rec."Reward Level")
                 {
                     ApplicationArea = All;
                 }

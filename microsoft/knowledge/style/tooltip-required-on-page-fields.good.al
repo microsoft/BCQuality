@@ -1,3 +1,16 @@
+tableextension 50250 "Sample Tooltip Good Ext" extends Customer
+{
+    fields
+    {
+        field(50250; "Loyalty Points"; Integer)
+        {
+            Caption = 'Loyalty Points';
+            DataClassification = CustomerContent;
+            ToolTip = 'Specifies the number of loyalty points the customer has collected.';
+        }
+    }
+}
+
 page 50250 "Sample Tooltip Good"
 {
     PageType = Card;
@@ -8,17 +21,20 @@ page 50250 "Sample Tooltip Good"
         {
             group(General)
             {
-                field("No."; Rec."No.")
+                field("Loyalty Points"; Rec."Loyalty Points")
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Specifies the number that identifies the customer.';
                 }
-                field(Amount; Rec."Balance (LCY)")
+                field(BalanceDue; BalanceDueAmount)
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Shows the total balance in local currency.';
+                    Caption = 'Balance Due';
+                    ToolTip = 'Shows the total balance due in local currency.';
                 }
             }
         }
     }
+
+    var
+        BalanceDueAmount: Decimal;
 }

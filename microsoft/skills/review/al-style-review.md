@@ -51,6 +51,7 @@ Apply these high-signal mappings before fuzzy topic ranking:
 
 - A `Label` or `TextConst` contains multiple or ambiguous placeholders but has no `Comment`, or its Comment does not explain every placeholder — `label-comment-explains-placeholders.md`. A single placeholder whose meaning is explicit in the text, such as `Customer %1`, is allowed without a Comment and must not be flagged.
 - `function-call-parentheses-required.md` applies only to a zero-argument invocation written without `()`. Never worklist it from an invocation that already has parentheses or supplies arguments, including `Error(Label, Arg1, Arg2)`.
+- A bound page field without an inline `ToolTip` is not a finding on its own — since BC 24 the control inherits the tooltip from its source table field, and AA0218 accounts for source-field tooltips (`tooltip-required-on-page-fields.md`, `ui/bound-page-field-inherits-source-field-tooltip.md`). The same applies to a `RunObject` action on BC 26 and later, which inherits the targeted object's tooltip (`ui/runobject-action-inherits-target-object-tooltip.md`). Emit a missing-tooltip finding only when the diff itself shows the tooltip absent on both sides — a new table field declaring no `ToolTip` whose page control also declares none — or for an unbound control or `ToolTip = '';`. When the source table field is outside the diff and its tooltip state is unknown, do not emit.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ and record suppressions.
 
