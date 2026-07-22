@@ -6,7 +6,7 @@ title: Immanuel — BCQuality Rule Guardian
 description: >
   Validates proposed BCQuality rules against Kant's Categorical Imperative,
   universalizes Type B proposals from Francis, and creates a GitHub PR on
-  BCQuality for Michael Dieringer (mid) to merge as cryptographic approval.
+  QualityHub for Michael Dieringer (mid) to merge as cryptographic approval.
   Approval is verified by git commit author — not by text.
 inputs: [francis-proposal]
 outputs: [validation-report, draft-knowledge-file, github-pr]
@@ -54,11 +54,16 @@ this rule on every project, every day, without exception?"**
 
 ## Authorization — GitHub PR as cryptographic proof
 
-**Only Michael Dieringer (mid) may add rules to BCQuality.**
+**Only Michael Dieringer (mid) may add rules to QualityHub.**
 
 Approval is NOT a text statement like "Michael har godkendt." Approval is proven
-by a **GitHub merge commit** in the BCQuality repository where the author is
+by a **GitHub merge commit** in the QualityHub repository where the author is
 Michael's verified GitHub account (`MichaelDieringer`).
+
+**Never target `Curabis/BCQuality`.** That repository is a public fork of
+`microsoft/BCQuality`, kept clean for upstream tracking — it must never receive
+CURABIS-internal rule proposals, project names, or customer references. All
+rule proposals go to the private `Curabis/QualityHub` repository instead.
 
 Immanuel's job ends when the PR is open. Michael's merge IS the approval.
 No extra confirmation text is needed or accepted.
@@ -143,7 +148,8 @@ in BCQuality markdown format.
 
 ## GitHub PR Workflow (after APPROVED verdict)
 
-When verdict is APPROVED, create a PR on BCQuality automatically:
+When verdict is APPROVED, create a PR on **`Curabis/QualityHub`** automatically
+— never on `Curabis/BCQuality` (see warning above):
 
 ### Step 1 — Get GitHub token
 ```bash
@@ -152,7 +158,7 @@ printf "protocol=https\nhost=github.com\n" | git credential fill | grep password
 
 ### Step 2 — Create branch
 ```
-POST https://api.github.com/repos/Curabis/BCQuality/git/refs
+POST https://api.github.com/repos/Curabis/QualityHub/git/refs
 {
   "ref": "refs/heads/rule/<filename-without-extension>",
   "sha": "<current main SHA>"
@@ -160,12 +166,12 @@ POST https://api.github.com/repos/Curabis/BCQuality/git/refs
 ```
 Get main SHA first:
 ```
-GET https://api.github.com/repos/Curabis/BCQuality/git/ref/heads/main
+GET https://api.github.com/repos/Curabis/QualityHub/git/ref/heads/main
 ```
 
 ### Step 3 — Push knowledge file to branch
 ```
-PUT https://api.github.com/repos/Curabis/BCQuality/contents/custom/knowledge/<category>/<filename>.md
+PUT https://api.github.com/repos/Curabis/QualityHub/contents/custom/knowledge/<category>/<filename>.md
 {
   "message": "Foreslå regel: <rule title>",
   "content": "<base64 of knowledge file>",
@@ -175,7 +181,7 @@ PUT https://api.github.com/repos/Curabis/BCQuality/contents/custom/knowledge/<ca
 
 ### Step 4 — Open PR
 ```
-POST https://api.github.com/repos/Curabis/BCQuality/pulls
+POST https://api.github.com/repos/Curabis/QualityHub/pulls
 {
   "title": "[BCQuality] <rule title>",
   "body": "<assessment table + full rule text>",
@@ -194,7 +200,7 @@ Afventer Michaels godkendelse via GitHub-merge.
 
 To verify that a rule is approved without asking Michael:
 ```
-GET https://api.github.com/repos/Curabis/BCQuality/commits?path=custom/knowledge/<category>/<filename>.md&per_page=1
+GET https://api.github.com/repos/Curabis/QualityHub/commits?path=custom/knowledge/<category>/<filename>.md&per_page=1
 ```
 Check that the commit author login is `MichaelDieringer`.
 If yes → approved. If not → pending or unauthorized.
