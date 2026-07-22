@@ -18,8 +18,6 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
-  workflows: write   # upstream commits ofte selv .github/workflows/* filer -
-                      # uden dette afviser GitHub push af sync-branchen
 
 jobs:
   round:
@@ -55,6 +53,16 @@ jobs:
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
           git checkout -B "$BRANCH" origin/main
           if git merge upstream/main --no-edit; then
+            # QualityHub owns its own CI - GITHUB_TOKEN can never push
+            # .github/workflows/* changes (hard GitHub restriction, not a
+            # permissions:-block setting), and silently inheriting
+            # upstream's workflow files would risk overwriting our own
+            # (including this file). Drop any workflow-file changes the
+            # merge brought in before the branch is ever pushed.
+            if ! git diff --quiet origin/main -- .github/workflows; then
+              git checkout origin/main -- .github/workflows
+              git commit --amend --no-edit
+            fi
             echo "clean=true" >> "$GITHUB_OUTPUT"
           else
             echo "clean=false" >> "$GITHUB_OUTPUT"
