@@ -18,6 +18,8 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  workflows: write   # upstream commits ofte selv .github/workflows/* filer -
+                      # uden dette afviser GitHub push af sync-branchen
 
 jobs:
   round:
@@ -74,7 +76,9 @@ jobs:
           tail -3 /tmp/val.txt; tail -3 /tmp/idx.txt
 
       - name: Open PR (clean merge, validators green)
+        id: openpr
         if: steps.validate.outputs.ok == 'true'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -96,3 +100,15 @@ jobs:
             --title "Florence: upstream-sync kraever menneskehaender ($REASON)" \
             --body "$(printf '%s.\n\nVentende upstream-commits:\n%s\n\nManuel procedure: fetch bcquality/upstream, merge paa branch, loes, valider, PR.' "$REASON" "$COMMITS")"
           echo "## Florence taendte lampen: ISSUE oprettet ($REASON)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open issue (PR-create/push failure after clean merge)
+        if: steps.validate.outputs.ok == 'true' && steps.openpr.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          COMMITS=$(git log --format='- %h %s' "${{ steps.probe.outputs.base }}..upstream/main")
+          gh issue create \
+            --title "Florence: upstream-sync — push/PR-oprettelse fejlede efter ren merge" \
+            --body "$(printf 'Merge var ren og validatorerne groenne, men push af sync-branchen eller PR-oprettelsen fejlede (se Actions-loggen for denne koersel).\n\nVentende upstream-commits:\n%s\n\nManuel procedure: fetch upstream, merge paa branch %s, push, PR.' "$COMMITS" "${{ steps.merge.outputs.branch }}")"
+          echo "## Florence taendte lampen: ISSUE oprettet (push/PR fejlede)" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
