@@ -64,7 +64,7 @@ Session observation
    Michael (mid)
   (approval)
        ↓
-   BCQuality
+   QualityHub
 ```
 
 Francis proposes. He does not validate, universalize, approve, or push.
@@ -169,11 +169,11 @@ session has to improvise that boundary either.
 
 ## Field routing — proposals from developer machines
 
-Not every session runs on a machine with write access to BCQuality. The
+Not every session runs on a machine with write access to QualityHub. The
 delivery channel depends on where Francis fires:
 
 1. **Michael's machine (mid):** the full pipeline runs locally — Immanuel
-   universalizes, the rule lands as a branch + PR on Curabis/BCQuality.
+   universalizes, the rule lands as a branch + PR on Curabis/QualityHub.
 2. **Any other machine (field):** file the proposal as a **GitHub Issue** on
    `Curabis/QualityHub` with the complete Ferencz-format brief (Observation,
    Evidence with citations, Suggested rule/filename, Context). The issue IS
@@ -184,9 +184,15 @@ delivery channel depends on where Francis fires:
 Field sessions NEVER:
 - open pull requests against `stable` — the channel is fast-forward-only
   from `main`; a direct commit to stable breaks every future promote
-- push rule files to BCQuality directly — proposals are evidence, not merges
+- push rule files to QualityHub directly — proposals are evidence, not merges
 - fall back to `main` when a documented `stable` fetch 404s (rule
   `setup-doc-must-not-reference-unpromoted-stable-files`) — report instead
+- **open pull requests, branches, or pushes against `Curabis/BCQuality`** —
+  that repository is a public fork of `microsoft/BCQuality` kept clean for
+  upstream tracking; it must never receive CURABIS-internal rule content,
+  project names, or customer references (observed 2026-07-22: a session
+  opened a branch + PR there, naming two CURABIS projects in the PR body,
+  before the mistake was caught and remediated — closed PR, deleted branch)
 
 Observed 2026-07-03: the first field session with `gh` installed proposed a
 PR that would have committed directly to `stable`. It asked first — good —
