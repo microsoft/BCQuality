@@ -10,6 +10,10 @@ name: Promote to stable
 # rulesettets bypass-liste, for at push'et kan gennemføres.
 
 on:
+  # Genindekseringstrigger 2026-07-22: workflowen laa paa main siden 07-03
+  # men blev aldrig registreret af GitHub Actions (bekraeftet 404 paa baade
+  # REST og gh CLI) - en kendt indekseringsfejl. Denne kommentar ryster filen
+  # loes og tvinger GitHub til at genopdage den.
   workflow_dispatch:
 
 permissions:
