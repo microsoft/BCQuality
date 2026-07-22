@@ -66,6 +66,33 @@ Relevance filtering: `custom/` rules are always active in CURABIS repos — read
 them all; use each file's frontmatter `domain`/`keywords` only to prioritize,
 never to skip.
 
+## Mandatory checks — breaking changes & performance
+
+`community/` and `microsoft/` are normally consulted reactively, by matching
+task keywords against `INDEX.md`. That is not enough for two domains where a
+missed check is expensive: breaking changes (costly for both customer apps
+and CURABIS AppSource apps) and the core performance anti-patterns Microsoft
+warns AI tools specifically about (unbounded `FindSet`, missing
+`SetLoadFields`, explicit `Commit()` inside a transaction). A task's own
+wording rarely mentions "breaking" or "performance" even when it triggers
+one — the trigger is the object type touched, not the request phrasing.
+
+Before considering an AL task complete, consult
+`microsoft/knowledge/breaking-changes/**` and `microsoft/knowledge/performance/**`
+(via `INDEX.md` or `al_symbolsearch`, filtered to those two domains) — **regardless
+of task wording** — whenever the diff:
+
+- adds, renames, or removes a table or table extension field
+- adds a procedure/event with public access, or changes the signature of one
+  that already has public access (obsoleting per BCQuality guidance beats
+  changing or deleting)
+- adds or changes a permission set
+- writes or modifies a loop that iterates a `Record` variable
+  (`FindSet`/`FindFirst`/`FindLast`), or calls `Commit()` explicitly
+
+If none of these apply, skip — this is a targeted gate, not a blanket
+re-read of both layers on every task.
+
 ## Action
 
 CURABIS-ARCH-001: Logic belongs in codeunits, not pages.
