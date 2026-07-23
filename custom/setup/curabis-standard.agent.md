@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 21
+version: 22
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -601,7 +601,7 @@ Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`
 | `.mcp.json` — `al` `-File` path | Validate and correct if wrong (see below) |
 | `.apps/*.code-workspace` — reference layout | Create/complete: app projects + `.AL-Go` + relative `../docs` (rule `al-development-must-use-apps-workspace`) |
 | Alle øvrige `*.code-workspace` (inkl. rodens `al.code-workspace`) | Delete — kun ét workspace pr. repo; rapportér de slettede |
-| `HEARTBEAT.md` | Create from template if missing (substitute tokens), never overwrite |
+| `HEARTBEAT.md` | Create from template if missing (substitute tokens), never overwrite — but run the staleness check below on every Mode B pass |
 | `docs/specs/`, `docs/decisions/`, `docs/cleanup/` | Create if missing, never overwrite content |
 
 ### bcquality-knowledge — machine re-sync (Mode B)
@@ -711,6 +711,26 @@ When creating HEARTBEAT.md from template in Mode B:
    If CLAUDE.md has no heading, use the git remote repo name.
 2. Set `{SETUP_DATE}` to today's ISO date (YYYY-MM-DD)
 3. Substitute both tokens before writing the file
+
+### HEARTBEAT.md staleness check (Mode B)
+
+`HEARTBEAT.md` is "never overwrite" (Step 4f / the reconciliation table above) — that
+protects legitimate developer customization and the "Sidst opdateret" line, but it must
+not mean drift goes undetected forever (BCQuality rule
+`mode-b-never-overwrite-files-still-need-staleness-checks`). If `HEARTBEAT.md` already
+exists, check it for known-bad patterns:
+
+- **`Curabis/BCQuality` referenced anywhere** (PR checks, API URLs — e.g.
+  `https://api.github.com/repos/Curabis/BCQuality/pulls?state=open`). That repository is
+  the abandoned public fork of `microsoft/BCQuality` — Florence will silently report
+  "Routine: no open PRs" against it forever, since no one opens PRs there. The correct
+  target is `Curabis/QualityHub`.
+
+If a match is found, show the specific line(s) and the proposed corrected line(s), and
+ask for confirmation before editing — same confirmation gate as the CLAUDE.md
+obsolete-forms check above. Never silently rewrite the whole file; this is a targeted
+line fix that leaves everything else (custom checklist items, the "Sidst opdateret" date,
+any team-added stations) untouched.
 
 ### What does NOT get updated
 
