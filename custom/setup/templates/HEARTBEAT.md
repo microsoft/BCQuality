@@ -10,8 +10,8 @@ Sidst opdateret: {SETUP_DATE}
 ## Checklistet
 
 ### 1. BCQuality PRs
-Tjek åbne PRs på `Curabis/BCQuality`:
-`https://api.github.com/repos/Curabis/BCQuality/pulls?state=open`
+Tjek åbne PRs på `Curabis/QualityHub`:
+`https://api.github.com/repos/Curabis/QualityHub/pulls?state=open`
 
 | Klassifikation | Kriterium |
 |---|---|
