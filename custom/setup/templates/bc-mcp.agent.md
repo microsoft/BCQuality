@@ -99,7 +99,14 @@ assume it holds**: `List_<Entity>_PAG<id>` (read), `Modify_<Entity>_PAG<id>` (up
 | activeTasks (6102900) | active sub-tasks, `Accepted` / `In progress` | `gitHubDevStatus`, `gitHubBranch` | other fields, create, delete |
 | newTasks (6102905) | pending sub-tasks, `Created` (awaiting customer approval) | create new task | `status` — always Created on insert, never change it |
 | taskComments (6102902) | comment lines for a task | create a comment, edit `comment`/`date`/`lineType` | delete |
-| users (6102903) | project-mgmt users: `userId` (login email), `name`, `employeeCode` | **read-only** | any write |
+| consultants (PAG50009) | CURABIS employees: `userID`, `name`, `employeeCode`, `production`, `costPrHourLCY` | **read-only** | any write |
+
+`consultants` was previously documented here as `users (6102903)` — that entity does not exist
+in the BC MCP action catalog under any name or search term. The real page is
+`List_Consultants_PAG50009` (corrected 2026-07-24 after `users`/`employee` searches returned
+nothing). Reverify with `bc_actions_search` before relying on either name — this correction
+itself may drift. `costPrHourLCY` is an internal billing-rate field — never surface it to a
+customer, and include it in internal summaries only when specifically relevant.
 
 `gitHubDevStatus` uses enum **CUR GitHub Dev Status**: `Backlog`, `In Progress`, `Done`,
 `On Hold` (developer/Claude-managed, independent of the BC sub-task `status`).
@@ -132,7 +139,7 @@ Follow ALL steps — do not skip any:
    The developer has the final say — their number wins, no argument.
 4. **Link to repo.** Set `gitHubRepository` from `git remote get-url origin`. Verify it matches
    the project's `gitHubRepository` via `projectRepositories`.
-5. **Set responsible.** Resolve the developer's `employeeCode` from `users` via `git config user.email`.
+5. **Set responsible.** Resolve the developer's `employeeCode` from `consultants` via `git config user.email`.
 6. **Create.** POST to `newTasks` with: `projectNo`, `description`, `taskType`, `taskResponsible`,
    `estimatedTime`, `startingDate`, `expectedDelivery`, `customerPriority`.
    Status is always `Created` — the page enforces this.
@@ -149,7 +156,7 @@ Resolve it client-side and map to a BC user:
 
 1. Read the developer's email locally - `git config user.email` (matches their MS Passport /
    BC login email).
-2. Look it up via the `users` tool: match `userId` (login email) -> `employeeCode` + `name`.
+2. Look it up via the `consultants` tool: match `userID` (login email) -> `employeeCode` + `name`.
 3. Use that to scope "my tasks" (filter `activeTasks` by `taskResponsible` = the employee)
    and to sign status comments (e.g. end with "- <name>") so attribution survives the shared
    app identity.
