@@ -192,8 +192,6 @@ jobs:
         with:
           name: authoring-assist-output-${{ needs.review.outputs.pr_number }}
           path: ${{ github.workspace }}/advisory-output
-          github-token: ${{ github.token }}
-          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Upsert advisory comment
         env:
