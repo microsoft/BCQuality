@@ -1,0 +1,242 @@
+name: Authoring-assist advisory runner
+
+# Privileged companion to `Authoring-assist advisory`. Runs in the trusted
+# workflow_run context so it can post a comment on fork PRs. Two jobs:
+#   review  - read-only; resolves the PR, reads the PR-head article content, runs
+#             the (trusted-base) suggestion tool + renderer, uploads the comment.
+#   publish - holds pull-requests:write; upserts the single advisory comment.
+# The suggestion tool is a deterministic PowerShell script that only PARSES
+# article text (it never executes AL or PR content), and it runs from the trusted
+# base checkout with the trusted routing seed, so only inert article text comes
+# from the PR head. The advisory is NON-BLOCKING and is never a required check.
+
+on:
+  workflow_run:
+    workflows:
+      - Authoring-assist advisory
+    types:
+      - completed
+
+concurrency:
+  group: authoring-assist-runner-${{ github.event.workflow_run.id }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  review:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    defaults:
+      run:
+        shell: pwsh
+    outputs:
+      pr_number: ${{ steps.pr.outputs.number }}
+      head_sha: ${{ steps.pr.outputs.head_sha }}
+      has_report: ${{ steps.run.outputs.has_report }}
+    steps:
+      - name: Checkout trusted base tools
+        uses: actions/checkout@v4
+        with:
+          ref: refs/heads/main
+          path: trusted
+          fetch-depth: 1
+          # The tool reads untrusted PR-head article text; keep no token in
+          # .git/config. Public content is fetched unauthenticated below.
+          persist-credentials: false
+
+      - name: Resolve PR details
+        id: pr
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $headers = @{
+            Accept        = 'application/vnd.github+json'
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+            'User-Agent'  = 'bcquality-authoring-assist'
+          }
+          $expectedHeadSha = '${{ github.event.workflow_run.head_sha }}'
+          $prNumber = '${{ github.event.workflow_run.pull_requests[0].number }}'
+
+          if (-not $prNumber) {
+            $headOwner  = '${{ github.event.workflow_run.head_repository.owner.login }}'
+            $headBranch = '${{ github.event.workflow_run.head_branch }}'
+            if (-not $headOwner -or -not $headBranch) {
+              throw 'No PR number in workflow_run payload and insufficient head metadata for fallback.'
+            }
+            $encodedHead = [System.Uri]::EscapeDataString("${headOwner}:$headBranch")
+            $searchUri = "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=$encodedHead&per_page=30"
+            $candidates = Invoke-RestMethod -Uri $searchUri -Headers $headers -Method GET
+            $matching = @($candidates | Where-Object { $_.head.sha -eq $expectedHeadSha })
+            if ($matching.Count -eq 1) { $prNumber = [string]$matching[0].number }
+            elseif ($matching.Count -gt 1) { throw 'Fallback PR lookup returned multiple matches.' }
+          }
+          if (-not $prNumber) { throw 'No pull request number resolved.' }
+
+          $pr = Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/pulls/$prNumber" -Headers $headers -Method GET
+          if ($expectedHeadSha -and $pr.head.sha -ne $expectedHeadSha) {
+            throw 'Resolved PR head SHA does not match workflow_run head SHA.'
+          }
+
+          "number=$($pr.number)"       >> $env:GITHUB_OUTPUT
+          "head_sha=$($pr.head.sha)"   >> $env:GITHUB_OUTPUT
+          "base_ref=$($pr.base.ref)"   >> $env:GITHUB_OUTPUT
+
+      - name: List changed knowledge articles
+        id: changed
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $headers = @{
+            Accept        = 'application/vnd.github+json'
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+            'User-Agent'  = 'bcquality-authoring-assist'
+          }
+          $n = '${{ steps.pr.outputs.number }}'
+          $changed = [System.Collections.Generic.List[string]]::new()
+          for ($page = 1; $page -le 30; $page++) {
+            $uri = "https://api.github.com/repos/${{ github.repository }}/pulls/$n/files?per_page=100&page=$page"
+            $files = Invoke-RestMethod -Uri $uri -Headers $headers -Method GET
+            if (-not $files -or @($files).Count -eq 0) { break }
+            foreach ($f in $files) {
+              if ($f.status -in @('added','modified','renamed','changed') `
+                  -and $f.filename -match '(^|/)knowledge/' `
+                  -and $f.filename -match '\.md$') {
+                $changed.Add($f.filename) | Out-Null
+              }
+            }
+            if (@($files).Count -lt 100) { break }
+          }
+          $outFile = Join-Path $env:GITHUB_WORKSPACE 'changed-articles.txt'
+          ($changed | Sort-Object -Unique) -join "`n" | Set-Content -LiteralPath $outFile -Encoding UTF8
+          Write-Host "Changed knowledge articles: $($changed.Count)"
+          "count=$($changed.Count)" >> $env:GITHUB_OUTPUT
+
+      - name: Fetch PR head content
+        if: steps.changed.outputs.count != '0'
+        run: |
+          $root = Join-Path $env:GITHUB_WORKSPACE 'head'
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          git -C $root init -q
+          git -C $root remote add origin "https://github.com/${{ github.repository }}.git"
+          # PR head commits (incl. forks) are replicated under refs/pull/N/head.
+          git -C $root fetch --depth=1 origin "refs/pull/${{ steps.pr.outputs.number }}/head"
+          if ($LASTEXITCODE -ne 0) { throw "git fetch of PR head failed (exit $LASTEXITCODE)" }
+          git -C $root checkout -q FETCH_HEAD
+
+      - name: Generate suggestions and render comment
+        id: run
+        if: steps.changed.outputs.count != '0'
+        env:
+          AUTHORING_ASSIST_DOC_URL: ${{ vars.AUTHORING_ASSIST_DOC_URL }}
+        run: |
+          $out = Join-Path $env:GITHUB_WORKSPACE 'advisory-output'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+
+          $changed = @(Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'changed-articles.txt') |
+                       Where-Object { $_ -and $_.Trim() })
+
+          $tool     = Join-Path $env:GITHUB_WORKSPACE 'trusted/tools/Suggest-ArticleSignals.ps1'
+          $renderer = Join-Path $env:GITHUB_WORKSPACE 'trusted/tools/New-AuthoringAssistComment.ps1'
+          # Routing seed is optional (owned by the routing-index tuning thread).
+          # Pass it through only if that thread has landed one in trusted/tools;
+          # otherwise the tool runs self-contained.
+          $seed     = Join-Path $env:GITHUB_WORKSPACE 'trusted/tools/routing-seed.json'
+          $headRoot = Join-Path $env:GITHUB_WORKSPACE 'head'
+          $reportPath = Join-Path $out 'report.json'
+          $commentPath = Join-Path $out 'comment.md'
+
+          # Trusted logic over head article text; enrich with the trusted seed
+          # only when present. Only inert article text comes from head.
+          $seedArgs = if (Test-Path -LiteralPath $seed) { @('-SeedPath', $seed) } else { @() }
+          & $tool -BCQualityRoot $headRoot @seedArgs -ChangedFiles $changed -AsJson |
+            Set-Content -LiteralPath $reportPath -Encoding UTF8
+
+          $repoUrl = "https://github.com/${{ github.repository }}"
+          & $renderer -JsonPath $reportPath `
+              -RepoUrl $repoUrl `
+              -Ref '${{ steps.pr.outputs.head_sha }}' `
+              -DocUrl $env:AUTHORING_ASSIST_DOC_URL |
+            Set-Content -LiteralPath $commentPath -Encoding UTF8
+
+          $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
+          "article_count=$($report.articleCount)" >> $env:GITHUB_OUTPUT
+          "has_report=true" >> $env:GITHUB_OUTPUT
+          Write-Host "Articles with suggestions: $($report.articleCount)"
+
+      - name: Upload advisory output
+        if: steps.run.outputs.has_report == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: authoring-assist-output-${{ steps.pr.outputs.number }}
+          path: ${{ github.workspace }}/advisory-output
+          if-no-files-found: warn
+
+  publish:
+    needs: review
+    if: ${{ needs.review.result == 'success' && needs.review.outputs.has_report == 'true' && needs.review.outputs.pr_number != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Download advisory output
+        uses: actions/download-artifact@v4
+        with:
+          name: authoring-assist-output-${{ needs.review.outputs.pr_number }}
+          path: ${{ github.workspace }}/advisory-output
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Upsert advisory comment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $anchor = '<!-- authoring-assist-advisory -->'
+          $body = Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'advisory-output/comment.md') -Raw
+          $report = Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'advisory-output/report.json') -Raw | ConvertFrom-Json
+
+          $headers = @{
+            Accept        = 'application/vnd.github+json'
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+            'User-Agent'  = 'bcquality-authoring-assist'
+          }
+          $repo = '${{ github.repository }}'
+          $n = '${{ needs.review.outputs.pr_number }}'
+
+          # Find an existing advisory comment (idempotent update-in-place).
+          $existing = $null
+          for ($page = 1; $page -le 20; $page++) {
+            $uri = "https://api.github.com/repos/$repo/issues/$n/comments?per_page=100&page=$page"
+            $comments = Invoke-RestMethod -Uri $uri -Headers $headers -Method GET
+            if (-not $comments -or @($comments).Count -eq 0) { break }
+            $hit = $comments | Where-Object { $_.body -and $_.body.Contains($anchor) } | Select-Object -First 1
+            if ($hit) { $existing = $hit; break }
+            if (@($comments).Count -lt 100) { break }
+          }
+
+          # Do not create a brand-new "no suggestions" comment; only update an
+          # existing one to reflect that state.
+          if (-not $existing -and [int]$report.articleCount -eq 0) {
+            Write-Host 'No suggestions and no existing advisory comment; nothing to post.'
+            return
+          }
+
+          $payload = @{ body = $body } | ConvertTo-Json -Depth 4
+          $bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+          if ($existing) {
+            $uri = "https://api.github.com/repos/$repo/issues/comments/$($existing.id)"
+            Invoke-RestMethod -Uri $uri -Headers $headers -Method PATCH -Body $bytes -ContentType 'application/json' | Out-Null
+            Write-Host "Updated advisory comment $($existing.id)."
+          } else {
+            $uri = "https://api.github.com/repos/$repo/issues/$n/comments"
+            Invoke-RestMethod -Uri $uri -Headers $headers -Method POST -Body $bytes -ContentType 'application/json' | Out-Null
+            Write-Host 'Created advisory comment.'
+          }
