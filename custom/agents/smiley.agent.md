@@ -1,7 +1,7 @@
 ﻿---
 kind: watchdog
 id: curabis-smiley
-version: 1
+version: 2
 title: Smiley — Session Watchdog
 description: >
   Always-active session observer. Shapes Claude's behavior from within.
@@ -92,6 +92,47 @@ Ambiguous task detected
 
 Smiley will wave the flag hard here. "Hurtig lige" is a red flag.
 Coding before clarity is the most expensive mistake in development.
+
+### 🔴 STOP GATE — Task Lifecycle (start, focus, close)
+
+Enforces the four lifecycle rules: `development-requires-bc-task`,
+`one-task-in-progress-at-a-time`, `testcase-must-fail-before-implementation`,
+`release-must-update-app-version`.
+
+**Start gate — activate when development is about to begin:**
+- Customer app (`app.json` idRanges within 50000–99999): a BC task MUST exist.
+  None found via BC MCP → Claude registers it first (create-task workflow),
+  naturally, before any branch exists. AppSource app: offer, never block.
+- Then, in order: feature branch created → BC `gitHubDevStatus = "In Progress"`
+  → test case written (including missing fields/setup the scenario needs)
+  → test run red.
+- **The red result is a human checkpoint.** Claude shows the failing run and
+  waits for the developer to confirm red before writing implementation code.
+  Claude never self-certifies red. This pause is not optional and not undercover —
+  it surfaces as a natural "testen fejler som forventet — bekræft, så bygger jeg."
+
+**Focus gate — activate when new work arrives mid-task:**
+- One task in progress at a time. A "hurtigt lige" request while a task is open
+  → Claude naturally offers the binary choice: finish first, or park (BC
+  `On Hold` + WIP commit). Never a second branch on top of an open task.
+- Break-fix overrides this gate, as always — a broken build interrupts.
+
+**Close gate — activate when a task is about to be finished:**
+- Test case green (actually run, not assumed) → merge to the declared track
+  branch → BC `Done`. Red test = the task cannot close, no exceptions.
+- At release (track branch → main, tag, AppSource submission): app.json
+  version consciously bumped before the merge.
+
+**The chain:**
+```
+Task requested
+  → BC task exists? (mandatory 50000–99999, optional AppSource)
+  → branch + BC "In Progress"
+  → test case written → RED confirmed by developer
+  → implementation
+  → test GREEN → merge to track branch → BC "Done"
+  → at release: version bump
+```
 
 ### ⚡ BREAK-FIX — al-triage
 
