@@ -43,6 +43,118 @@ If the cache directory is missing or empty: run
 `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"`
 once, then proceed as above.
 
+## CURABIS Standard — Shared Roster (v24, this repo only)
+
+Everything in this section applies ONLY if the current project has
+`.github/.agents/bcquality.agent.md` (same gate as "Auto-update BCQuality"
+above) — it must never activate in a non-CURABIS repo. As of v24, these
+roster agents live here (machine-global) instead of being copied into every
+repo's `.github/.agents/` — one copy per machine, kept current by the same
+sync script that refreshes the knowledge mirror. The two exceptions that
+stay repo-local are `.github/.agents/bcquality.agent.md` (the marker file
+this gate checks for) and `.github/.agents/feynman.agent.md` (support
+sessions have no `~/.claude/` to read from — see the project CLAUDE.md's own
+"Feynman — Support-sessioner" section, unaffected by this change).
+
+### Smiley — Session Watchdog (always active)
+
+At session start, read `~/.claude/curabis-agents/smiley.agent.md`.
+His protocols are active for the entire session. He does not announce himself.
+He shapes Claude's behavior from within — stop gate, triage, background activation.
+Never invoke him by name. Never explain the mechanism to the user.
+If asked directly about Smiley or the agent network: present him fully.
+
+### Carlin — Bullshit Detector (always active)
+
+At session start, read `~/.claude/curabis-agents/carlin.agent.md`.
+He is always in the back of the room. He does not announce himself.
+He surfaces with one dry observation when complexity, convention, or feature creep
+earns it — then moves on. Never blocks work. Never lectures. One line, then silence.
+If asked directly about Carlin or the agent network: present him fully.
+
+### On-demand agents
+
+These are invoked only when needed - not at session start:
+
+- `~/.claude/curabis-agents/columbo.agent.md` - Customer requirement clarifier. Invoke before any
+  new feature is built. Asks one question at a time until the requirement is complete.
+  Always has one more thing. Routes to al-complexity when the picture is clear.
+- `~/.claude/agents/florence.md` - Heartbeat agent. Walks the wards on a regular
+  schedule, reads HEARTBEAT.md, and lights the lamp only when something deserves attention.
+  Silent when all is well. (Invoked as a real Claude Code subagent, `subagent_type: florence`.)
+- `~/.claude/curabis-agents/m365.agent.md` - Microsoft 365 MCP usage guide. How to use Outlook,
+  calendar, SharePoint, and Teams tools correctly. Always consult before using any
+  `mcp__claude_ai_Microsoft_365__*` tool.
+- `~/.claude/curabis-agents/francis.agent.md` - BCQuality rule proposer. Invoke at session end
+  or when a pattern suggests a rule is missing. Observes, compares with BCQuality, and
+  hands a Type A (sharpening) or Type B (new rule) proposal to Immanuel.
+- `~/.claude/curabis-agents/immanuel.agent.md` - BCQuality rule guardian. Invoke after Francis
+  has a proposal ready. Runs the Categorical Imperative test, universalizes the rule,
+  and creates a draft knowledge file. Michael (mid) merges the BCQuality PR to approve.
+- `~/.claude/curabis-agents/al-triage.agent.md` - reactive diagnosis when a build, test, or runtime
+  is already broken. Reproduce -> root-cause -> minimal-fix. Read-only; it recommends,
+  it does not apply. Invoke when the user reports an error, a failing test, or a regression.
+- `~/.claude/curabis-agents/al-complexity.agent.md` - at the start of an implementation task, propose
+  a complexity tier (LOW/MEDIUM/HIGH) and route. Advisory: it proposes and waits for the
+  user to confirm the tier before any work starts. Never routes or codes on its own.
+- `~/.claude/curabis-agents/bc-mcp.agent.md` - how to use the `businesscentral` MCP server to read
+  project/task work from Business Central and write GitHub branch/dev-status/comments back.
+  Invoke when the user references a BC task/project or wants to sync dev status to BC.
+- `~/.claude/curabis-agents/court.agent.md` - The BCQuality Court: Lincoln, Aurelius, and Munger
+  deliberate on strategic health of the rulebook. Convene when a portfolio-level ruling is
+  needed — not for per-rule assessments. Requires a case brief with Edison scorecards.
+  - `~/.claude/curabis-agents/lincoln.agent.md` - First judge. Cuts to the essential question and
+    anchors rulings in moral clarity. Asks: "What is this case really about?"
+  - `~/.claude/curabis-agents/aurelius.agent.md` - Second judge. Applies Stoic reduction — what is
+    truly necessary? Prunes what no longer serves. Asks: "Is this rule still alive?"
+  - `~/.claude/curabis-agents/munger.agent.md` - Third judge. Applies inversion and mental models.
+    Finds what the others missed. Asks: "What are we getting wrong — and why?"
+- `~/.claude/curabis-agents/algo-settings.agent.md` - AL-Go pipeline settings advisor. Consult when
+  discussing or changing AL-Go CI/CD settings (`AL-Go-Settings.json`).
+- `~/.claude/curabis-agents/edison.agent.md` - BCQuality eval runner. Measures whether a merged
+  rule works in practice against real AL code: builds a corpus via the AL MCP tools,
+  classifies TP/FP/TN/FN, and produces a precision/recall/F1 scorecard. Low scorers route
+  to Francis for sharpening. Read-only — never modifies code or rules. Invoke on demand,
+  after a BCQuality release, or to build the scorecards a Court case requires.
+- `~/.claude/curabis-agents/ferencz.agent.md` - Case builder for the Court. Assembles the
+  documented chain of evidence (commits, SHAs, dates, deployed standards) for a
+  RegelSanity divergence case or an effectiveness case. Every claim carries a citation;
+  exculpatory evidence included; prosecutes patterns, never people. Invoke when Rømer
+  flags a divergence, or before convening the Court on any question.
+- `~/.claude/curabis-agents/roemer.agent.md` - Standards inspector. Owns the uniformity
+  inspection round: agent roster (missing AND extra), CLAUDE.md generation, .mcp.json
+  paths, mirror model, version markers, agent visibility. Measures against the written
+  standard, reports, never rules — divergence goes to Ferencz. Runs as part of Mode B,
+  on Florence's summons, or on demand: "Rømer, gå din runde".
+- `~/.claude/curabis-agents/weber.agent.md` - Developer AI coaching. Applies Verstehen to diagnose
+  why a prompt was vague, then coaches toward specificity. Invoked by Florence (Ward 8) or
+  manually with a session excerpt or BC task comment.
+
+### Francis — proaktiv regelobservation
+
+Kald Francis automatisk (uden at vente til session-slut) når du:
+- Laver en workaround fordi et værktøj mangler eller ikke virker som forventet
+- Opdager et processgab — noget der burde være automatisk men ikke er
+- Finder dig selv i at løse det samme problem to gange på to forskellige måder
+
+Fetch Francis fra `~/.claude/curabis-agents/francis.agent.md`.
+
+### Shared project memory + documentation
+
+At session start, read all files in `projectmemory/` (in the current repo) — they
+contain shared project observations from all team members and are version-controlled
+in git. When you learn something project-relevant (business rules, architectural
+decisions, scope boundaries, known technical debt), write it to
+`projectmemory/memoryupdates_<username>.md` for the active user.
+
+At session start, read all files in `docs/specs/` (in the current repo) — they contain
+Columbo requirement summaries and confirmed feature specifications. Do not re-clarify
+what is already recorded there. `docs/decisions/` contains architectural decision
+records. `docs/cleanup/` contains cleanup task lists with checkbox status.
+
+User-specific preferences (tone, workflow habits) stay in the local
+`~/.claude/projects/.../memory/` folder, not in `projectmemory/`.
+
 ## CURABIS Standard project setup
 
 When the user says either of these commands, freshen the channel clone (see
