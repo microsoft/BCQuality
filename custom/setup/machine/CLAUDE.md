@@ -54,6 +54,7 @@ Auto-update step 1) and follow the setup agent read from:
 
 - **"Konfigurer dette projekt til CURABIS Standard"** → fuld setup af nyt repo
 - **"Opdater CURABIS Standard fra BCQuality"** → manuel opdatering
+- **"Onboard en supportbruger til CURABIS Standard"** → support-profil (Mode C, Feynman)
 
 ## Identity
 

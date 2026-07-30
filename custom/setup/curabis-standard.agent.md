@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 22
+version: 23
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -11,6 +11,8 @@ description: >
   to the developer's machine (~/.claude/) — the mirror is machine-local and is
   never committed to a project repository. Also handles updates to an
   already-configured project, including cleanup of v6-era repo-local mirrors.
+  Mode C onboards a support user (non-developer) to the Feynman support
+  profile: browser-only, read-only, no machine setup.
 inputs: [repo-root]
 outputs: [CLAUDE.md, .mcp.json, .github/.agents/*, ~/.claude/bcquality-knowledge/, cspell.json, projectmemory/, docs/]
 domain: setup
@@ -31,6 +33,7 @@ This agent runs when the developer says any of:
 
 - **"Konfigurer dette projekt til CURABIS Standard"** → full setup (new project)
 - **"Opdater CURABIS Standard fra BCQuality"** → update mode (existing project)
+- **"Onboard en supportbruger til CURABIS Standard"** → support profile (Mode C)
 
 Detect which mode based on the trigger phrase and proceed accordingly.
 
@@ -76,6 +79,7 @@ old HTTP-encoding pitfalls do not exist here).
 | florence.agent.md | `{AGENTS_BASE}/florence.agent.md` |
 | m365.agent.md | `{AGENTS_BASE}/m365.agent.md` |
 | weber.agent.md | `{AGENTS_BASE}/weber.agent.md` |
+| feynman.agent.md | `{AGENTS_BASE}/feynman.agent.md` |
 | smiley.agent.md | `{AGENTS_BASE}/smiley.agent.md` |
 | court.agent.md | `{AGENTS_BASE}/court.agent.md` |
 | lincoln.agent.md | `{AGENTS_BASE}/lincoln.agent.md` |
@@ -86,6 +90,7 @@ old HTTP-encoding pitfalls do not exist here).
 | roemer.agent.md | `{AGENTS_BASE}/roemer.agent.md` |
 | cspell.json | `{BASE}/templates/cspell.json` |
 | find-altool.ps1 | `{BASE}/templates/find-altool.ps1` |
+| feynman-onboarding.md | `{BASE}/templates/feynman-onboarding.md` |
 | sync-bcquality-knowledge.ps1 | `{BASE}/sync-bcquality-knowledge.ps1` |
 
 CLAUDE.md and .mcp.json are generated dynamically — not fetched as static templates
@@ -236,6 +241,20 @@ or run the full onboarding above.)
 
 These rules are always active.
 
+## Feynman — Support-sessioner
+
+Hvis sessionens første besked starter med **"Feynman:"** — eller brugeren
+identificerer sig som support/forretningskonsulent (ikke-udvikler):
+
+1. Læs `.github/.agents/feynman.agent.md` og arbejd efter hans protokol
+   resten af sessionen.
+2. Spring over: BCQuality machine self-heal, AL MCP, BC MCP og test-afvikling.
+   Support-miljøet er browserbaseret (claude.ai / Claude Code på web) — der er
+   ingen lokal maskine at onboarde, og det er meningen.
+3. Strengt læsende: ingen redigering, ingen commits, ingen builds.
+
+Denne sektion har forrang over BCQuality-sektionens self-heal ovenfor.
+
 ## Smiley — Session Watchdog (always active)
 
 At session start, read `.github/.agents/smiley.agent.md`.
@@ -309,6 +328,10 @@ These are invoked only when needed - not at session start:
 - `.github/.agents/weber.agent.md` - Developer AI coaching. Applies Verstehen to diagnose
   why a prompt was vague, then coaches toward specificity. Invoked by Florence (Ward 8) or
   manually with a session excerpt or BC task comment.
+- `.github/.agents/feynman.agent.md` - Support-navigator for ikke-udviklere. Svarer på
+  forretningsspørgsmål fra repoets dokumentation, koden og Microsofts kilder — i klart
+  sprog, altid med kildehenvisning, strengt læsende. Aktiveres automatisk i
+  support-sessioner (se sektionen "Feynman — Support-sessioner").
 
 ## Francis — proaktiv regelobservation
 
@@ -457,6 +480,7 @@ Fetch and write verbatim:
 - `{AGENTS_BASE}/ferencz.agent.md`         → `.github/.agents/ferencz.agent.md`
 - `{AGENTS_BASE}/roemer.agent.md`          → `.github/.agents/roemer.agent.md`
 - `{AGENTS_BASE}/weber.agent.md`           → `.github/.agents/weber.agent.md`
+- `{AGENTS_BASE}/feynman.agent.md`         → `.github/.agents/feynman.agent.md`
 - `{AGENTS_BASE}/smiley.agent.md`          → `.github/.agents/smiley.agent.md`
 - `{BASE}/templates/algo-settings.agent.md`→ `.github/.agents/algo-settings.agent.md`
 
@@ -589,6 +613,7 @@ Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`
 | `.github/.agents/roemer.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `.github/.agents/carlin.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `.github/.agents/weber.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
+| `.github/.agents/feynman.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `.github/.agents/algo-settings.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `.github/.agents/smiley.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `~/.claude/sync-bcquality-knowledge.ps1` | Fetch fresh from BCQuality (raw bytes), overwrite (add if missing) |
@@ -810,11 +835,86 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 ---
 
+## MODE C — Support-profil (onboard en supportbruger)
+
+Triggered by: **"Onboard en supportbruger til CURABIS Standard"**
+(også accepteret: "Konfigurer support-profil")
+
+Formål: give en ikke-udvikler (forretningskonsulent, supportmedarbejder)
+mulighed for at stille spørgsmål til CURABIS-repos og Microsofts kilder —
+via Feynman-agenten (`feynman.agent.md`), uden VS Code, uden lokal
+maskinopsætning og uden skriveadgang.
+
+### Hvad profilen IKKE indeholder — med vilje
+
+- Ingen VS Code, ingen AL Language extension
+- Ingen bc-mcp-bridge, ingen `~/.bc-mcp.config.json` — supportbrugeren får
+  aldrig secrets
+- Ingen QualityHub-klon og ingen machine self-heal — supportbrugeren har ikke
+  (og skal ikke have) adgang til QualityHub; `feynman.agent.md` ligger i hvert
+  konfigureret repo, og CLAUDE.md-templatens "Feynman — Support-sessioner"-
+  sektion slår self-heal fra i support-mode
+- Ingen skriveadgang til noget repo — rollen er læsende, og GitHub-rollen
+  håndhæver det
+
+### Step 1 — Spørg om to ting
+
+```
+1. Supportbrugerens navn og GitHub-brugernavn?
+2. Hvilke repos skal brugeren have læseadgang til?
+```
+
+### Step 2 — GitHub-adgang (udføres af administratoren)
+
+Guide administratoren gennem:
+
+1. Invitér brugeren til organisationen som **member**
+2. Giv **Read**-rolle på de valgte repos — aldrig Write/Maintain/Admin
+3. Verificér at brugeren IKKE har adgang til `Curabis/QualityHub`
+
+### Step 3 — Claude-miljø (browser, ikke VS Code)
+
+1. Claude-sæde til brugeren (Team-plan)
+2. **Claude Code på web** (claude.ai/code): forbind brugerens GitHub-konto og
+   vælg de tildelte repos
+3. MCP-connectors i brugerens miljø — begge læsende, ingen tokens med
+   skrive-scopes:
+   - **GitHub MCP** — adgang til Microsofts offentlige repos:
+     `microsoft/BCApps`, `microsoft/ALAppExtensions`,
+     `MicrosoftDocs/dynamics365smb-docs`
+   - **Microsoft Learn MCP** — officiel dokumentationssøgning
+
+### Step 4 — Onboarding-dokument
+
+1. Fetch `{BASE}/templates/feynman-onboarding.md`
+2. Erstat `{SUPPORT_NAME}`, `{REPO_LIST}` (punktliste over de tildelte repos)
+   og `{SETUP_DATE}` (dags dato, ISO)
+3. Aflevér dokumentet til supportbrugeren (mail/Teams) — det forklarer
+   trigger-frasen "Feynman:", gode spørgsmål, og hvordan et Feynman-notat
+   videresendes til en udvikler
+
+### Step 5 — Verifikation
+
+Bed supportbrugeren starte en session i et af de tildelte repos med:
+
+> "Feynman: hvad kan du hjælpe mig med i dette projekt?"
+
+Forventet: svar på dansk i forretningssprog, bekræftelse af support-mode
+(strengt læsende), og INGEN self-heal-/onboarding-støj ved session-start.
+
+### Forudsætning
+
+Mode C forudsætter at de tildelte repos er konfigureret med CURABIS Standard
+v23+ (Feynman i rosteret + support-sektionen i CLAUDE.md). Kør Mode B på
+repos, der endnu ikke har `feynman.agent.md`.
+
+---
+
 ## Invocation note
 
 This agent is read on demand from the machine's channel clone
 (`%USERPROFILE%\.claude\QualityHub\custom\setup\curabis-standard.agent.md`,
-after freshening — see Source section). Both commands work in any project —
+after freshening — see Source section). All three commands work in any project —
 including one not yet configured — because the machine's `~/.claude/CLAUDE.md`
 (installed by onboarding) knows the clone location. On a machine without the
 clone, the two-line onboarding in Step 4a's self-heal is the entry point.
