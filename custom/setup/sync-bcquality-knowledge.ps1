@@ -15,6 +15,17 @@
 # Mirroren committes ALDRIG til et projekt-repo - se BCQuality-reglen
 # bcquality-knowledge-must-mirror-to-machine-not-repo. Koer periodisk:
 #   powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"
+#
+# v24: samme script deployer OGSAA resten af de maskin-globale artefakter,
+# der foer v24 blev kopieret ind i hvert repo (se BCQuality-reglen
+# roster-agents-live-on-machine-not-in-repo):
+#   ~/.claude/curabis-agents/   - 18 "read-as-protocol-doc" roster-agenter
+#   ~/.claude/agents/florence.md - Florence som rigtig Claude Code-subagent
+#   ~/.claude/find-altool.ps1   - AL-tool-finder (cwd-walkup, ikke repo-bundet)
+#   MCP-servere (al, businesscentral) - registreret med `claude mcp --scope user`
+# Undtagelser der IKKE roeres herfra (blive repo-lokale via curabis-standard.agent.md):
+#   .github/.agents/bcquality.agent.md - markoerfilen der gater al denne logik
+#   .github/.agents/feynman.agent.md   - support-brugere har intet ~/.claude/
 
 $ErrorActionPreference = 'Stop'
 
@@ -111,3 +122,79 @@ Set-Content -Path $marker -Value $sha -Encoding ascii
 Write-Host ''
 Write-Host "Done. $($files.Count) filer, 3 lag, stable @ $($sha.Substring(0,7))."
 Write-Host "Machine-local mirror updated: $dest"
+
+# --- 5. Roster-agenter -> ~/.claude/curabis-agents/ (v24, maskin-globalt) ---
+# De 18 "read-as-protocol-doc" agenter der IKKE er bcquality.agent.md eller
+# feynman.agent.md (de bliver repo-lokale, se filens header). Florence
+# haandteres separat nedenfor (hun er en rigtig Claude Code-subagent).
+$curabisAgentsDest = Join-Path $env:USERPROFILE '.claude\curabis-agents'
+New-Item -ItemType Directory -Force $curabisAgentsDest | Out-Null
+
+$rosterFromAgentsDir = @(
+    'aurelius', 'carlin', 'columbo', 'court', 'edison', 'ferencz',
+    'francis', 'immanuel', 'lincoln', 'm365', 'munger', 'roemer',
+    'smiley', 'weber'
+) | ForEach-Object { Join-Path $clone "custom\agents\$_.agent.md" }
+
+$rosterFromSetupTemplates = @(
+    'al-complexity', 'al-triage', 'algo-settings', 'bc-mcp'
+) | ForEach-Object { Join-Path $clone "custom\setup\templates\$_.agent.md" }
+
+$rosterCount = 0
+foreach ($src in ($rosterFromAgentsDir + $rosterFromSetupTemplates)) {
+    if (-not (Test-Path $src)) {
+        Write-Warning "Roster-agent ikke fundet i klonen, springer over: $src"
+        continue
+    }
+    Copy-Item $src (Join-Path $curabisAgentsDest (Split-Path $src -Leaf)) -Force
+    $rosterCount++
+}
+Write-Host "Roster-agenter synkroniseret til $curabisAgentsDest - $rosterCount filer."
+
+# --- 6. Florence -> ~/.claude/agents/florence.md (rigtig subagent, ikke curabis-agents) ---
+$nativeAgentsDest = Join-Path $env:USERPROFILE '.claude\agents'
+New-Item -ItemType Directory -Force $nativeAgentsDest | Out-Null
+Copy-Item (Join-Path $clone 'custom\agents\florence.agent.md') (Join-Path $nativeAgentsDest 'florence.md') -Force
+Write-Host "Florence-subagent opdateret: $(Join-Path $nativeAgentsDest 'florence.md')"
+
+# --- 7. find-altool.ps1 -> ~/.claude/find-altool.ps1 (maskin-globalt, raw bytes) ---
+$findAltoolDest = Join-Path $env:USERPROFILE '.claude\find-altool.ps1'
+Copy-Item (Join-Path $clone 'custom\setup\machine\find-altool.ps1') $findAltoolDest -Force
+Write-Host "find-altool.ps1 opdateret: $findAltoolDest"
+
+# --- 8. MCP-servere: registrer al + businesscentral paa user scope (idempotent) ---
+# claude mcp add fejler med exit 1 og "already exists" hvis serveren allerede er
+# registreret - det er IKKE en fejltilstand her, kun rigtige fejl skal stoppe scriptet.
+# NB: $ErrorActionPreference='Stop' goer stderr fra native kommandoer til en
+# terminating exception ved 2>&1-redirect - skal skiftes til 'Continue' om
+# selve kaldet, ellers naar if-tjekket nedenfor aldrig at koere.
+function Ensure-UserMcpServer {
+    param([string]$Name, [string[]]$CommandAndArgs)
+    # BEMAERK: `claude mcp add --scope user $Name -- @CommandAndArgs` (splat EFTER
+    # et literalt '--') taber '--'-grænsen et sted i PowerShell -> commander.js,
+    # og flagene i $CommandAndArgs bliver fejlagtigt tolket som claude-flag ("unknown
+    # option '-NoProfile'"). Eneste form der virker paalideligt: ét fladt array med
+    # ALT (inkl. 'mcp','add',flag,navn,'--') kaldt som @allArgs i ét hug.
+    $allArgs = @('mcp', 'add', '--scope', 'user', $Name, '--') + $CommandAndArgs
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $output = & claude @allArgs 2>&1
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
+    if ($exitCode -ne 0) {
+        if ($output -match 'already exists') {
+            Write-Host "MCP-server '$Name' er allerede registreret paa user scope."
+        } else {
+            throw "claude mcp add fejlede for '$Name': $output"
+        }
+    } else {
+        Write-Host "MCP-server '$Name' registreret paa user scope."
+    }
+}
+
+Ensure-UserMcpServer -Name 'businesscentral' -CommandAndArgs @('node', '${USERPROFILE}\.claude\bc-mcp-bridge.js')
+Ensure-UserMcpServer -Name 'al' -CommandAndArgs @(
+    'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+    '-File', '${USERPROFILE}\.claude\find-altool.ps1',
+    'launchmcpserver', 'auto', '--transport', 'stdio'
+)
