@@ -1,20 +1,26 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 23
+version: 24
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
-  environment. Writes CLAUDE.md, BCQuality agents, .mcp.json and cspell.json
-  from authoritative templates in BCQuality. Deploys bc-mcp-bridge.js and the
-  three-layer BCQuality knowledge mirror (custom/community/microsoft + INDEX.md)
-  to the developer's machine (~/.claude/) — the mirror is machine-local and is
-  never committed to a project repository. Also handles updates to an
-  already-configured project, including cleanup of v6-era repo-local mirrors.
-  Mode C onboards a support user (non-developer) to the Feynman support
-  profile: browser-only, read-only, no machine setup.
+  environment. Writes a slim project CLAUDE.md, cspell.json, and the two
+  repo-local exceptions (bcquality.agent.md, feynman.agent.md) from
+  authoritative templates in BCQuality. Deploys bc-mcp-bridge.js, the
+  three-layer BCQuality knowledge mirror, the shared agent roster
+  (~/.claude/curabis-agents/), find-altool.ps1, and the al/businesscentral
+  MCP server registrations to the developer's machine (~/.claude/) — all
+  machine-local, never committed to a project repository (v24: this now
+  includes the roster and MCP config that used to be copied into every repo,
+  see BCQuality rule roster-agents-live-on-machine-not-in-repo). Also handles
+  updates to an already-configured project, including cleanup of v6-era
+  repo-local mirrors and one-time migration of pre-v24 repos off the
+  per-repo roster/.mcp.json/find-altool.ps1 copies. Mode C onboards a support
+  user (non-developer) to the Feynman support profile: browser-only,
+  read-only, no machine setup — unaffected by the v24 machine/repo split.
 inputs: [repo-root]
-outputs: [CLAUDE.md, .mcp.json, .github/.agents/*, ~/.claude/bcquality-knowledge/, cspell.json, projectmemory/, docs/]
+outputs: [CLAUDE.md, .github/.agents/bcquality.agent.md, .github/.agents/feynman.agent.md, ~/.claude/bcquality-knowledge/, ~/.claude/curabis-agents/, ~/.claude/find-altool.ps1, cspell.json, projectmemory/, docs/]
 domain: setup
 keywords: [setup, bootstrap, update, mcp, bcquality, standard, new-project]
 ---
@@ -89,12 +95,26 @@ old HTTP-encoding pitfalls do not exist here).
 | ferencz.agent.md | `{AGENTS_BASE}/ferencz.agent.md` |
 | roemer.agent.md | `{AGENTS_BASE}/roemer.agent.md` |
 | cspell.json | `{BASE}/templates/cspell.json` |
-| find-altool.ps1 | `{BASE}/templates/find-altool.ps1` |
+| find-altool.ps1 | `{BASE}/machine/find-altool.ps1` (v24: machine artifact, not a repo template) |
 | feynman-onboarding.md | `{BASE}/templates/feynman-onboarding.md` |
 | sync-bcquality-knowledge.ps1 | `{BASE}/sync-bcquality-knowledge.ps1` |
 
-CLAUDE.md and .mcp.json are generated dynamically — not fetched as static templates
-because they contain project-specific paths.
+CLAUDE.md is generated dynamically — not fetched as a static template because
+it contains project-specific paths.
+
+**v24 — machine vs. repo split:** of the 21 agent files above, only
+`bcquality.agent.md` (the marker this whole mechanism gates on) and
+`feynman.agent.md` (support sessions have no `~/.claude/` to read from) are
+still written into a repo's `.github/.agents/`. The remaining 19 — including
+`florence.agent.md`, which goes to `~/.claude/agents/florence.md` as a real
+Claude Code subagent rather than `~/.claude/curabis-agents/` — are deployed
+ONCE PER MACHINE by `sync-bcquality-knowledge.ps1` to `~/.claude/curabis-agents/`
+(or `~/.claude/agents/` for Florence) and referenced from the machine's own
+`~/.claude/CLAUDE.md`, not from any repo's CLAUDE.md. Same script also
+deploys `find-altool.ps1` to `~/.claude/find-altool.ps1` and registers the
+`al` + `businesscentral` MCP servers at user scope (`claude mcp add --scope
+user`) — no `.mcp.json` is written into the repo for these two standard
+servers any more. See BCQuality rule `roster-agents-live-on-machine-not-in-repo`.
 
 ---
 
@@ -113,10 +133,16 @@ git config user.name
 ```
 
 Check whether these paths exist:
-- `.vscode/find-altool.ps1`        → AL MCP available
+- `~/.claude/find-altool.ps1`      → AL MCP tool-finder deployed (v24: machine-global, not repo-local)
 - `CLAUDE.md`                      → already configured?
 - `~/.claude/bc-mcp-bridge.js`     → bridge already installed?
 - `~/.bc-mcp.config.json`          → BC credentials present?
+
+Also run `claude mcp list` (or `claude mcp get al` / `claude mcp get businesscentral`)
+to check whether the two standard MCP servers are already registered at user scope.
+If any of the above machine-level artifacts are missing, Step 3 will deploy them via
+`sync-bcquality-knowledge.ps1` — no separate action needed here beyond noting it in
+the setup report.
 
 If `CLAUDE.md` already exists, ask: "CLAUDE.md eksisterer allerede. Overskrive? (ja/nej)"
 Stop if the developer answers no.
@@ -181,65 +207,121 @@ If it does NOT exist:
    >  Åbn filen og erstat `<indsæt din personlige client secret her>` med din egen secret.
    >  Gem filen — BC MCP er klar når du genstarter Claude Code."
 
+#### 3c. bcquality-knowledge, roster agents, find-altool.ps1, MCP registration (v24)
+
+Everything machine-global beyond the bridge and BC secret — the knowledge
+mirror, the 19 roster agent files (18 to `~/.claude/curabis-agents/` +
+Florence to `~/.claude/agents/florence.md`), `~/.claude/find-altool.ps1`, and
+the `al`/`businesscentral` MCP registrations — is deployed by ONE script,
+`sync-bcquality-knowledge.ps1`. None of it is ever committed to a project
+repository (BCQuality rule `bcquality-knowledge-must-mirror-to-machine-not-repo`,
+extended in v24 to `roster-agents-live-on-machine-not-in-repo`). Rationale:
+developers switch between many repos daily — N per-repo copies are
+permanently out of sync with each other, while one machine copy needs
+exactly one sync per upstream change.
+
+1. Fetch `{BASE}/sync-bcquality-knowledge.ps1` → write AS RAW BYTES
+   (`Invoke-WebRequest -OutFile`, never via string content — re-encoding
+   corrupts UTF-8) to `~/.claude/sync-bcquality-knowledge.ps1`
+2. Run it once:
+   `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"`
+   This populates:
+   - `~/.claude/bcquality-knowledge/{custom,community,microsoft}/` + `INDEX.md`
+     (domain + keywords per file, for relevance-based lookup — `custom/` is
+     always read in full, `community/` and `microsoft/` are scanned via the
+     index rather than preloaded, since together they run into the hundreds
+     of files)
+   - `~/.claude/curabis-agents/*.agent.md` (18 files)
+   - `~/.claude/agents/florence.md` (Florence, as a real subagent)
+   - `~/.claude/find-altool.ps1`
+   - `al` + `businesscentral` registered at user MCP scope (idempotent — a
+     server that already exists is reported, not re-added or overwritten)
+3. If a v6-era `.github/.agents/bcquality-knowledge/` exists in THIS repo,
+   add it to `.gitignore` so no future session can accidentally commit it
+   (see the v6-cleanup step in Mode B for full removal — this step just
+   prevents new commits).
+4. Confirm: "Maskine-opsætning synkroniseret — bcquality-knowledge [antal]
+   filer, curabis-agents 18 filer, Florence, find-altool.ps1, MCP (al,
+   businesscentral)."
+
+This machine setup is what the global `~/.claude/CLAUDE.md` roster section
+and the project CLAUDE.md's session-start line both depend on. Without this
+step, those references point at artifacts that don't exist yet on a fresh
+machine.
+
 ### Step 4 — Write project files
 
 #### 4a. CLAUDE.md
+
+**v24 change:** most of what used to be duplicated into every repo's CLAUDE.md
+(Smiley, Carlin, on-demand roster, Francis, projectmemory/docs read
+instructions) now lives ONCE in the developer's own `~/.claude/CLAUDE.md`
+(see `machine/CLAUDE.md`'s "CURABIS Standard — Shared Roster" section),
+gated on this repo having `.github/.agents/bcquality.agent.md` — the same
+marker file/gate the existing "Auto-update BCQuality" section already used.
+The project CLAUDE.md shrinks to what is genuinely repo state OR must work
+before any global file exists: project name, AL app layout, the machine
+self-heal bootstrap (kept — see why below), the Feynman support-session
+trigger (kept — support sessions have no `~/.claude/` to read the global
+file from either), and the project footer.
+
+**Why self-heal stays repo-local (do NOT move it to global):** self-heal's
+entire job is bootstrapping `~/.claude/CLAUDE.md` on a machine that doesn't
+have it yet — a developer cloning an already-configured repo for the first
+time on a fresh machine has nothing BUT this repo's CLAUDE.md to read. If
+self-heal itself lived only in the global file, there would be no way to
+reach it on that fresh machine. This is the mirror image of why Feynman
+stays repo-local (his audience never gets a global file; self-heal's job IS
+installing one) — both are genuine exceptions to the v24 move, for opposite
+reasons.
 
 Generate from this template, substituting answers from Step 2:
 
 ```markdown
 # {PROJECT_NAME} — Claude Code Instructions
 
-This file is read automatically by Claude Code at the start of every session.
+This file is read automatically by Claude Code at the start of every
+session, together with the developer's `~/.claude/CLAUDE.md` (once it
+exists — see self-heal below for a fresh machine). This repo has
+`.github/.agents/bcquality.agent.md`, so once the global file exists, its
+"CURABIS Standard — Shared Roster" section applies for the whole session:
+BCQuality knowledge, Smiley, Carlin, the on-demand agent roster, Francis,
+and the projectmemory/docs read instructions. That content is not
+duplicated here — see `~/.claude/CLAUDE.md` on the developer's machine for
+the full text.
 
-## BCQuality
+## BCQuality — machine self-heal
 
-At the start of every session, before doing anything else:
-
-1. Read `.github/.agents/bcquality.agent.md`
-2. Read BCQuality knowledge files from the machine-local mirror at
-   `~/.claude/bcquality-knowledge/` (Windows: `%USERPROFILE%\.claude\bcquality-knowledge\`):
-   - **`custom/`** — always read in full (CURABIS-specific rules, always active)
-   - **`community/`** and **`microsoft/`** — do NOT read in full (~200 files is too
-     much to preload every session). Instead read `INDEX.md` first and open only
-     the files whose domain/keywords match the task at hand.
-
-The mirror covers all three BCQuality layers and lives on the developer's
-machine, shared by every CURABIS repo on it. It is deliberately NOT committed
-to this repository (BCQuality rule
-`bcquality-knowledge-must-mirror-to-machine-not-repo`) — one sync per machine
-covers every repo, and the repo history stays free of upstream rule churn.
-
-**Machine self-heal (auto-onboarding + stale-machine repair):** trigger if
-EITHER (a) this machine is not CURABIS-onboarded — `~/.claude/CLAUDE.md` or
-`~/.claude/bc-mcp-bridge.js` is missing — OR (b) the machine is STALE:
-`~/.claude/CLAUDE.md` still references `raw.githubusercontent.com` or the
-legacy `Curabis/BCQuality` repo (a machine that slept through a consumption
-migration — vacation, leave, spare laptop). Run the onboarding NOW
-(idempotent; identity from git config; the first git contact may open a
-browser login — that IS the authentication):
+**Trigger** if EITHER (a) this machine is not CURABIS-onboarded —
+`~/.claude/CLAUDE.md` or `~/.claude/bc-mcp-bridge.js` is missing — OR (b) the
+machine is STALE: `~/.claude/CLAUDE.md` still references
+`raw.githubusercontent.com` or the legacy `Curabis/BCQuality` repo (a
+machine that slept through a consumption migration — vacation, leave, spare
+laptop). Run the onboarding NOW (idempotent; identity from git config; the
+first git contact may open a browser login — that IS the authentication):
 
     git clone --branch stable --single-branch https://github.com/Curabis/QualityHub.git "$env:USERPROFILE\.claude\QualityHub"
     powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\QualityHub\custom\setup\machine\Install-CurabisMachine.ps1"
 
 (Skip the clone line if `%USERPROFILE%\.claude\QualityHub` already exists.)
-In the STALE case, additionally refresh the machine's `~/.claude/CLAUDE.md`
-CURABIS sections from `%USERPROFILE%\.claude\QualityHub\custom\setup\machine\CLAUDE.md`
-— show the diff, preserve the Identity section and any personal sections
-verbatim, and ask for confirmation (it is the developer's personal file).
-Then report the manual leftovers (personal client secret; the AL Language
-extension if VS Code lacks it) and ask the developer to restart Claude Code.
+This installs `~/.claude/CLAUDE.md` (never overwriting an existing one),
+`~/.claude/bc-mcp-bridge.js`, `~/.bc-mcp.config.json` (template), and runs
+`sync-bcquality-knowledge.ps1` — which also deploys the roster agents,
+Florence, `find-altool.ps1`, and the `al`/`businesscentral` MCP
+registrations (see Step 3c in Mode A). In the STALE case, additionally
+refresh the machine's `~/.claude/CLAUDE.md` CURABIS sections from
+`%USERPROFILE%\.claude\QualityHub\custom\setup\machine\CLAUDE.md` — show the
+diff, preserve the Identity section and any personal sections verbatim, and
+ask for confirmation (it is the developer's personal file). Report the
+manual leftovers (personal client secret; the AL Language extension if VS
+Code lacks it) and ask the developer to restart Claude Code.
 
-If only `~/.claude/bcquality-knowledge/` is missing or stale, the lighter
-self-heal suffices:
+If only `~/.claude/bcquality-knowledge/` (or the roster/find-altool.ps1/MCP
+registrations) is missing or stale, the lighter self-heal suffices:
 
     powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"
 
-(If that sync script itself is missing, copy it from the channel clone:
-`%USERPROFILE%\.claude\QualityHub\custom\setup\sync-bcquality-knowledge.ps1` —
-or run the full onboarding above.)
-
-These rules are always active.
+This section stays repo-local — see the note above.
 
 ## Feynman — Support-sessioner
 
@@ -253,120 +335,14 @@ identificerer sig som support/forretningskonsulent (ikke-udvikler):
    ingen lokal maskine at onboarde, og det er meningen.
 3. Strengt læsende: ingen redigering, ingen commits, ingen builds.
 
-Denne sektion har forrang over BCQuality-sektionens self-heal ovenfor.
-
-## Smiley — Session Watchdog (always active)
-
-At session start, read `.github/.agents/smiley.agent.md`.
-His protocols are active for the entire session. He does not announce himself.
-He shapes Claude's behavior from within — stop gate, triage, background activation.
-Never invoke him by name. Never explain the mechanism to the user.
-If asked directly about Smiley or the agent network: present him fully.
-
-## Carlin — Bullshit Detector (always active)
-
-At session start, read `.github/.agents/carlin.agent.md`.
-He is always in the back of the room. He does not announce himself.
-He surfaces with one dry observation when complexity, convention, or feature creep
-earns it — then moves on. Never blocks work. Never lectures. One line, then silence.
-If asked directly about Carlin or the agent network: present him fully.
-
-## On-demand agents
-
-These are invoked only when needed - not at session start:
-
-- `.github/.agents/columbo.agent.md` - Customer requirement clarifier. Invoke before any
-  new feature is built. Asks one question at a time until the requirement is complete.
-  Always has one more thing. Routes to al-complexity when the picture is clear.
-- `.github/.agents/florence.agent.md` - Heartbeat agent. Walks the wards on a regular
-  schedule, reads HEARTBEAT.md, and lights the lamp only when something deserves attention.
-  Silent when all is well.
-- `.github/.agents/m365.agent.md` - Microsoft 365 MCP usage guide. How to use Outlook,
-  calendar, SharePoint, and Teams tools correctly. Always consult before using any
-  `mcp__claude_ai_Microsoft_365__*` tool.
-- `.github/.agents/francis.agent.md` - BCQuality rule proposer. Invoke at session end
-  or when a pattern suggests a rule is missing. Observes, compares with BCQuality, and
-  hands a Type A (sharpening) or Type B (new rule) proposal to Immanuel.
-- `.github/.agents/immanuel.agent.md` - BCQuality rule guardian. Invoke after Francis
-  has a proposal ready. Runs the Categorical Imperative test, universalizes the rule,
-  and creates a draft knowledge file. Michael (mid) merges the BCQuality PR to approve.
-- `.github/.agents/al-triage.agent.md` - reactive diagnosis when a build, test, or runtime
-  is already broken. Reproduce -> root-cause -> minimal-fix. Read-only; it recommends,
-  it does not apply. Invoke when the user reports an error, a failing test, or a regression.
-- `.github/.agents/al-complexity.agent.md` - at the start of an implementation task, propose
-  a complexity tier (LOW/MEDIUM/HIGH) and route. Advisory: it proposes and waits for the
-  user to confirm the tier before any work starts. Never routes or codes on its own.
-- `.github/.agents/bc-mcp.agent.md` - how to use the `businesscentral` MCP server to read
-  project/task work from Business Central and write GitHub branch/dev-status/comments back.
-  Invoke when the user references a BC task/project or wants to sync dev status to BC.
-- `.github/.agents/court.agent.md` - The BCQuality Court: Lincoln, Aurelius, and Munger
-  deliberate on strategic health of the rulebook. Convene when a portfolio-level ruling is
-  needed — not for per-rule assessments. Requires a case brief with Edison scorecards.
-  - `.github/.agents/lincoln.agent.md` - First judge. Cuts to the essential question and
-    anchors rulings in moral clarity. Asks: "What is this case really about?"
-  - `.github/.agents/aurelius.agent.md` - Second judge. Applies Stoic reduction — what is
-    truly necessary? Prunes what no longer serves. Asks: "Is this rule still alive?"
-  - `.github/.agents/munger.agent.md` - Third judge. Applies inversion and mental models.
-    Finds what the others missed. Asks: "What are we getting wrong — and why?"
-- `.github/.agents/algo-settings.agent.md` - AL-Go pipeline settings advisor. Consult when
-  discussing or changing AL-Go CI/CD settings (`AL-Go-Settings.json`).
-- `.github/.agents/edison.agent.md` - BCQuality eval runner. Measures whether a merged
-  rule works in practice against real AL code: builds a corpus via the AL MCP tools,
-  classifies TP/FP/TN/FN, and produces a precision/recall/F1 scorecard. Low scorers route
-  to Francis for sharpening. Read-only — never modifies code or rules. Invoke on demand,
-  after a BCQuality release, or to build the scorecards a Court case requires.
-- `.github/.agents/ferencz.agent.md` - Case builder for the Court. Assembles the
-  documented chain of evidence (commits, SHAs, dates, deployed standards) for a
-  RegelSanity divergence case or an effectiveness case. Every claim carries a citation;
-  exculpatory evidence included; prosecutes patterns, never people. Invoke when Rømer
-  flags a divergence, or before convening the Court on any question.
-- `.github/.agents/roemer.agent.md` - Standards inspector. Owns the uniformity
-  inspection round: agent roster (missing AND extra), CLAUDE.md generation, .mcp.json
-  paths, mirror model, version markers, agent visibility. Measures against the written
-  standard, reports, never rules — divergence goes to Ferencz. Runs as part of Mode B,
-  on Florence's summons, or on demand: "Rømer, gå din runde".
-- `.github/.agents/weber.agent.md` - Developer AI coaching. Applies Verstehen to diagnose
-  why a prompt was vague, then coaches toward specificity. Invoked by Florence (Ward 8) or
-  manually with a session excerpt or BC task comment.
-- `.github/.agents/feynman.agent.md` - Support-navigator for ikke-udviklere. Svarer på
-  forretningsspørgsmål fra repoets dokumentation, koden og Microsofts kilder — i klart
-  sprog, altid med kildehenvisning, strengt læsende. Aktiveres automatisk i
-  support-sessioner (se sektionen "Feynman — Support-sessioner").
-
-## Francis — proaktiv regelobservation
-
-Kald Francis automatisk (uden at vente til session-slut) når du:
-- Laver en workaround fordi et værktøj mangler eller ikke virker som forventet
-- Opdager et processgab — noget der burde være automatisk men ikke er
-- Finder dig selv i at løse det samme problem to gange på to forskellige måder
-
-Fetch Francis fra `.github/.agents/francis.agent.md` hvis den eksisterer,
-ellers fra `{AGENTS_BASE}/francis.agent.md`.
+Denne sektion har forrang over BCQuality-sektionens self-heal — og den bliver
+bevidst stående HER, repo-lokalt, uanset v24-flytningen ovenfor: en
+supportbruger har intet `~/.claude/CLAUDE.md` at læse den globale roster-
+sektion fra, så Feynman-trigger'en skal være synlig i selve repoet.
 
 ## AL projects
 
 {AL_PROJECTS_SECTION}
-
-## Project documentation
-
-At session start, read all files in `docs/specs/` — they contain Columbo requirement
-summaries and confirmed feature specifications. These record what has been clarified
-and what scope has been agreed. Do not re-clarify what is already in docs/specs/.
-
-`docs/decisions/` contains architectural decision records.
-`docs/cleanup/` contains cleanup task lists with checkbox status.
-
-## Shared project memory
-
-At session start, read **all files** in `projectmemory/` — they contain shared
-project observations from all team members and are version-controlled in git.
-
-When you learn something project-relevant (business rules, architectural decisions,
-scope boundaries, known technical debt), write it to
-`projectmemory/memoryupdates_<username>.md` for the active user.
-
-User-specific preferences (tone, workflow habits) stay in the local
-`~/.claude/projects/.../memory/` folder as before.
 
 ## About this project
 
@@ -409,109 +385,52 @@ After creating any new `.al` file, reload the AL extension in VS Code
 (`Ctrl+Shift+P -> AL: Reload Extension`) before trusting diagnostics.
 ```
 
-#### 4b. AL MCP + .mcp.json
+#### 4b. AL MCP + businesscentral MCP (v24: machine-registered, no repo .mcp.json)
 
-`find-altool.ps1` is a CURABIS artifact deployed from BCQuality — there is NO
-VS Code command that generates it (the historical instruction "AL: Configure
-MCP Server" referenced a command that does not exist).
+**v24 change:** both standard MCP servers now live entirely on the
+developer's machine — registered once via `claude mcp add --scope user`,
+never committed as `.mcp.json` in the repo. This eliminates the entire class
+of "hardcoded developer path in a git-committed file" bugs, since there is
+now exactly one place per machine to get it right, not one per repo.
 
-1. If `.vscode/find-altool.ps1` is missing: fetch
-   `{BASE}/templates/find-altool.ps1` AS RAW BYTES → `.vscode/find-altool.ps1`
-   (create `.vscode/` if needed) and stage it for commit.
-2. Write `.mcp.json` — ALWAYS with both entries, and the `al` entry is
-   **byte-identical for every repo** (no substitution). Two facts force the
-   shape: (a) `altool launchmcpserver <projects>` REQUIRES project folders or
-   the server dies instantly; (b) sessions bind to the apps-workspace folder
-   (one-workspace standard), so the MCP server's cwd is an APP folder, not
-   the repo root — and `${CLAUDE_PROJECT_DIR}` is NOT available to MCP
-   launches (verified from logs: the fallback `.` resolved to
-   `.apps\<App>` and `-File` failed). The entry therefore walks up from cwd
-   to the repo's `.vscode\find-altool.ps1`, and the script resolves the
-   project folders itself via the `auto` argument:
+Nothing to write here in Step 4 — Step 3c (above) already handled
+registration as part of the machine deploy, and it is idempotent (safe to
+run again on an already-onboarded machine).
 
-```json
-{
-  "mcpServers": {
-    "al": {
-      "type": "stdio",
-      "command": "powershell",
-      "args": [
-        "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-Command",
-        "$d=(Get-Location).Path; while(-not(Test-Path(Join-Path $d '.vscode\\find-altool.ps1')) -and $d.Length -gt 3){$d=Split-Path $d}; $f=Join-Path $d '.vscode\\find-altool.ps1'; if(-not(Test-Path $f)){Write-Error 'find-altool.ps1 ikke fundet i nogen overliggende mappe'; exit 1}; & $f launchmcpserver auto --transport stdio"
-      ]
-    },
-    "businesscentral": {
-      "command": "node",
-      "args": ["${USERPROFILE}\\.claude\\bc-mcp-bridge.js"]
-    }
-  }
-}
-```
+If a repo ever needs an ADDITIONAL MCP server beyond these two standard
+ones (repo- or customer-specific), create `.mcp.json` for just that entry —
+never re-add `al` or `businesscentral` to it; they would shadow the
+user-scope registration with a project-scope duplicate approval prompt for
+no benefit.
 
-Use Claude Code's built-in environment-variable expansion — `${CLAUDE_PROJECT_DIR:-.}`
-and `${USERPROFILE}` — instead of substituting literal detected paths. `.mcp.json` is
-git-committed and shared; a path baked in for one developer's machine or username
-breaks every other developer's clone (see BCQuality rule
-`mcp-config-must-not-hardcode-developer-paths`).
+The only machine prerequisite for the `al` server is the AL Language
+extension itself (`ms-dynamics-smb.al` from the Marketplace, recent version)
+— `find-altool.ps1` locates its `altool.exe` dynamically and reports clearly
+if it is missing.
 
-The only machine prerequisite is the AL Language extension itself
-(`ms-dynamics-smb.al` from the Marketplace, recent version) — find-altool.ps1
-locates its `altool.exe` dynamically and reports clearly if it is missing.
-
-#### 4c. .github/.agents/ (fetch from BCQuality)
+#### 4c. .github/.agents/ (fetch from BCQuality — v24: two files, not twenty-one)
 
 Fetch and write verbatim:
-- `{BASE}/templates/bcquality.agent.md`    → `.github/.agents/bcquality.agent.md`
-- `{AGENTS_BASE}/immanuel.agent.md`        → `.github/.agents/immanuel.agent.md`
-- `{AGENTS_BASE}/carlin.agent.md`          → `.github/.agents/carlin.agent.md`
-- `{AGENTS_BASE}/francis.agent.md`         → `.github/.agents/francis.agent.md`
-- `{BASE}/templates/al-triage.agent.md`    → `.github/.agents/al-triage.agent.md`
-- `{BASE}/templates/al-complexity.agent.md`→ `.github/.agents/al-complexity.agent.md`
-- `{BASE}/templates/bc-mcp.agent.md`       → `.github/.agents/bc-mcp.agent.md`
-- `{AGENTS_BASE}/columbo.agent.md`         → `.github/.agents/columbo.agent.md`
-- `{AGENTS_BASE}/florence.agent.md`        → `.github/.agents/florence.agent.md`
-- `{AGENTS_BASE}/m365.agent.md`            → `.github/.agents/m365.agent.md`
-- `{AGENTS_BASE}/court.agent.md`           → `.github/.agents/court.agent.md`
-- `{AGENTS_BASE}/lincoln.agent.md`         → `.github/.agents/lincoln.agent.md`
-- `{AGENTS_BASE}/aurelius.agent.md`        → `.github/.agents/aurelius.agent.md`
-- `{AGENTS_BASE}/munger.agent.md`          → `.github/.agents/munger.agent.md`
-- `{AGENTS_BASE}/edison.agent.md`          → `.github/.agents/edison.agent.md`
-- `{AGENTS_BASE}/ferencz.agent.md`         → `.github/.agents/ferencz.agent.md`
-- `{AGENTS_BASE}/roemer.agent.md`          → `.github/.agents/roemer.agent.md`
-- `{AGENTS_BASE}/weber.agent.md`           → `.github/.agents/weber.agent.md`
-- `{AGENTS_BASE}/feynman.agent.md`         → `.github/.agents/feynman.agent.md`
-- `{AGENTS_BASE}/smiley.agent.md`          → `.github/.agents/smiley.agent.md`
-- `{BASE}/templates/algo-settings.agent.md`→ `.github/.agents/algo-settings.agent.md`
+- `{BASE}/templates/bcquality.agent.md` → `.github/.agents/bcquality.agent.md`
+- `{AGENTS_BASE}/feynman.agent.md`      → `.github/.agents/feynman.agent.md`
 
 Create `.github/.agents/` if it does not exist.
 
-#### 4c-2. bcquality-knowledge — machine-local mirror (NEVER in the repo)
+These are the only two agent files that belong in a repo. `bcquality.agent.md`
+is the marker file the machine's `~/.claude/CLAUDE.md` gates the whole
+"CURABIS Standard — Shared Roster" section on; `feynman.agent.md` must stay
+repo-local because Mode C support sessions have no `~/.claude/` to read a
+global roster from. Every other roster agent (Smiley, Carlin, Immanuel,
+Francis, Columbo, Florence, the Court, Rømer, Weber, Ferencz, Edison,
+al-triage, al-complexity, bc-mcp, algo-settings) is deployed machine-globally
+by Step 3c and referenced from `~/.claude/CLAUDE.md` — see BCQuality rule
+`roster-agents-live-on-machine-not-in-repo`.
 
-The knowledge mirror lives on the developer's machine and is shared by every
-CURABIS repo on that machine: `~/.claude/bcquality-knowledge/`. It must never
-be committed to a project repository (BCQuality rule
-`bcquality-knowledge-must-mirror-to-machine-not-repo`). Rationale: developers
-switch between many repos daily — N per-repo mirrors are permanently out of
-sync with each other, while one machine mirror needs exactly one sync per
-upstream change.
+#### 4c-2. bcquality-knowledge, roster agents, MCP — see Step 3c
 
-1. Fetch `{BASE}/sync-bcquality-knowledge.ps1` → write AS RAW BYTES
-   (`Invoke-WebRequest -OutFile`, never via string content — re-encoding
-   corrupts UTF-8) to `~/.claude/sync-bcquality-knowledge.ps1`
-2. Run it once:
-   `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\sync-bcquality-knowledge.ps1"`
-   This populates `~/.claude/bcquality-knowledge/{custom,community,microsoft}/`
-   plus an `INDEX.md` (domain + keywords per file, for relevance-based lookup —
-   `custom/` is always read in full, `community/` and `microsoft/` are scanned via
-   the index rather than preloaded, since together they run into the hundreds of files).
-3. Add `.github/.agents/bcquality-knowledge/` to the repo's `.gitignore`, so no
-   future session can accidentally commit a repo-local mirror.
-4. Confirm: "bcquality-knowledge synkroniseret til din maskine — [antal] filer, 3 lag."
-
-This mirror is what Step 4a's generated CLAUDE.md instructs Claude to read at
-session start. Without this step, the CLAUDE.md reference in 4a points at a
-folder that doesn't exist yet on a fresh machine.
+Already handled by Step 3c above (it runs before project files are written,
+since 4a's CLAUDE.md and 4c's bcquality.agent.md both assume the machine
+side is in place). Nothing further to do here.
 
 #### 4d. cspell.json
 
@@ -566,13 +485,15 @@ If yes, stage and commit:
 ```
 [SETUP] Konfigurer til CURABIS Standard
 
-- CLAUDE.md med BCQuality knowledge-liste
-- .github/.agents/ med alle standard-agenter
-- .mcp.json med BC MCP bridge
+- CLAUDE.md (slank, peger på ~/.claude/CLAUDE.md for delte regler)
+- .github/.agents/bcquality.agent.md + feynman.agent.md (repo-lokale undtagelser)
 - cspell.json
 - HEARTBEAT.md — Florence's vagtliste
 - projectmemory/ — delt projekthukommelse
 - docs/specs/, docs/decisions/, docs/cleanup/ — projektdokumentation
+
+(Resten af rosteret, find-altool.ps1 og MCP-registrering er maskin-globalt —
+intet at committe for dem, se Step 3c.)
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
@@ -588,46 +509,42 @@ Triggered by: "Opdater CURABIS Standard fra BCQuality"
 missing. Every copy below reads from that clone.
 
 Updates only the files that come directly from BCQuality.
-Never touches `CLAUDE.md`, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`.
+Never touches `CLAUDE.md`'s project-specific content, `projectmemory/`, `docs/`, or `~/.bc-mcp.config.json`.
 
-### What gets updated
+**v24 note:** as of v24 this table is much shorter than it used to be — 19 of
+the 21 agent files, `.mcp.json`'s standard entries, and `find-altool.ps1` are
+no longer repo artifacts at all; they are machine-global (see the
+machine-level table below, and Step 3c in Mode A for what deploys them).
+Repos still on v23 or earlier need the one-time migration below before this
+shorter table applies to them.
+
+### What gets updated — repo-level
 
 | Fil | Handling |
 |---|---|
-| `~/.claude/bc-mcp-bridge.js` | Fetch fresh from BCQuality, overwrite |
 | `.github/.agents/bcquality.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/immanuel.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/francis.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/al-triage.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/al-complexity.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/bc-mcp.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/columbo.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/florence.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/m365.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/court.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/lincoln.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/aurelius.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/munger.agent.md` | Fetch fresh from BCQuality, overwrite |
-| `.github/.agents/edison.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
-| `.github/.agents/ferencz.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
-| `.github/.agents/roemer.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
-| `.github/.agents/carlin.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
-| `.github/.agents/weber.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `.github/.agents/feynman.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
-| `.github/.agents/algo-settings.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
-| `.github/.agents/smiley.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
-| `~/.claude/sync-bcquality-knowledge.ps1` | Fetch fresh from BCQuality (raw bytes), overwrite (add if missing) |
-| `~/.claude/bcquality-knowledge/` | Re-run the sync script (see below) — machine-local, nothing to commit |
-| `.github/.agents/bcquality-knowledge/` + `.github/.agents/sync-bcquality-knowledge.ps1` | v6-era repo-local mirror: propose removal (see below) |
 | `cspell.json` — words from template | Merge new words, keep project words |
-| `.vscode/find-altool.ps1` | Fetch from `{BASE}/templates/` (raw bytes), add if missing — CURABIS artifact, no VS Code command generates it |
-| `.mcp.json` — `al` entry | Add if missing (find-altool.ps1 is deployed by the row above) |
-| `.mcp.json` — `businesscentral` path | Validate and correct if wrong (see below) |
-| `.mcp.json` — `al` `-File` path | Validate and correct if wrong (see below) |
 | `.apps/*.code-workspace` — reference layout | Create/complete: app projects + `.AL-Go` + relative `../docs` (rule `al-development-must-use-apps-workspace`) |
 | Alle øvrige `*.code-workspace` (inkl. rodens `al.code-workspace`) | Delete — kun ét workspace pr. repo; rapportér de slettede |
 | `HEARTBEAT.md` | Create from template if missing (substitute tokens), never overwrite — but run the staleness check below on every Mode B pass |
 | `docs/specs/`, `docs/decisions/`, `docs/cleanup/` | Create if missing, never overwrite content |
+
+### What gets updated — machine-level (once per machine, not per repo)
+
+Run every time Mode B runs, regardless of which repo it was triggered from —
+these are shared across every CURABIS repo on the machine:
+
+| Artefakt | Handling |
+|---|---|
+| `~/.claude/bc-mcp-bridge.js` | Fetch fresh from BCQuality, overwrite |
+| `~/.claude/sync-bcquality-knowledge.ps1` | Fetch fresh from BCQuality (raw bytes), overwrite (add if missing) |
+| `~/.claude/bcquality-knowledge/` | Re-run the sync script (see below) |
+| `~/.claude/curabis-agents/*.agent.md` (18 files) | Re-run the sync script |
+| `~/.claude/agents/florence.md` | Re-run the sync script |
+| `~/.claude/find-altool.ps1` | Re-run the sync script |
+| `al` + `businesscentral` MCP servers (user scope) | Re-run the sync script — idempotent: registers if missing, does NOT touch an existing registration (a developer's personal-scope config is not policed the way repo-shared `.mcp.json` used to be) |
+| `.github/.agents/bcquality-knowledge/` + `.github/.agents/sync-bcquality-knowledge.ps1` | v6-era repo-local mirror: propose removal (see below) |
 
 ### bcquality-knowledge — machine re-sync (Mode B)
 
@@ -678,54 +595,90 @@ Detect and clean up:
 ### Machine CLAUDE.md refresh (Mode B)
 
 The developer's global `~/.claude/CLAUDE.md` carries the CURABIS auto-update
-instructions. After a consumption-model change (like v19's git migration),
-those instructions go stale on every already-onboarded machine. Compare the
-machine file's CURABIS sections against `{BASE}/machine/CLAUDE.md` in the
-channel clone. If they diverge structurally (e.g. still reference raw URLs
-or GitHub-API SHA checks), propose the update — show the diff, preserve the
-Identity section verbatim, and ask for confirmation before editing: it is the
-developer's personal file.
+instructions. After a consumption-model change (like v19's git migration, or
+v24's move of the roster/on-demand-agents/Smiley/Carlin/Francis sections
+from every repo's CLAUDE.md into this file), those instructions go stale on
+every already-onboarded machine. Compare the machine file's CURABIS sections
+against `{BASE}/machine/CLAUDE.md` in the channel clone. If they diverge
+structurally (e.g. still reference raw URLs or GitHub-API SHA checks, or are
+missing the v24 "CURABIS Standard — Shared Roster" section entirely),
+propose the update — show the diff, preserve the Identity section verbatim,
+and ask for confirmation before editing: it is the developer's personal file.
 
-### .mcp.json — hardcoded developer-path validation (Mode B)
+### v23 → v24 migration (existing repos, one-time per repo)
 
-`.mcp.json` is git-committed and shared — it must not contain a path baked in for
-one developer's machine or username (BCQuality rule
-`mcp-config-must-not-hardcode-developer-paths`). After any update, validate both
-entries:
+v24 moved 19 agent files, `.mcp.json`'s two standard entries, and
+`find-altool.ps1` from repo-local to machine-global (see the Source section's
+"machine vs. repo split" note). A repo configured under v23 or earlier still
+has the old repo-local copies. Detect and migrate — always confirm before
+removing anything, same gate as the v6-era cleanup above:
 
-**`businesscentral` entry** — the bridge path must use env-var expansion, not a
-literal username or drive path:
-1. Read `.mcp.json` and locate the `businesscentral` entry
-2. Check the `args` array — the bridge path must be `${USERPROFILE}\.claude\bc-mcp-bridge.js`
-3. If it is anything else (e.g. `Scripts/bc-mcp-bridge.js`, a project subfolder,
-   `C:\Users\<literal-name>\.claude\bc-mcp-bridge.js`, or any path not built from
-   `${USERPROFILE}`): **correct it silently** to `${USERPROFILE}\.claude\bc-mcp-bridge.js`
-4. If the `businesscentral` entry is missing entirely: add it with the correct path
+**1. Extra `.github/.agents/*.agent.md` files**
 
-**`al` entry** — the `-File` path to `find-altool.ps1` must use
-`${CLAUDE_PROJECT_DIR:-.}`, not a literal absolute path to the repo clone:
-1. Read the `al` entry's `args` array
-2. Check the `-File` value is `${CLAUDE_PROJECT_DIR:-.}\.vscode\find-altool.ps1`
-3. If it is a literal absolute path (e.g. `C:\Curabis\ProjectX\.vscode\find-altool.ps1`
-   or any drive-letter path): **correct it silently** to use `${CLAUDE_PROJECT_DIR:-.}`
-4. Check that the `al` entry uses the universal cwd-agnostic form from
-   Mode A 4b (`-Command` with walk-up + `launchmcpserver auto`). OLDER forms
-   fail predictably: `-File ${CLAUDE_PROJECT_DIR:-.}\...` breaks because
-   sessions bind to the apps-workspace folder (cwd = app folder, no
-   `${CLAUDE_PROJECT_DIR}` in MCP launches); explicit project paths with the
-   same prefix break identically. If the entry deviates: **replace it
-   silently** with the universal form (byte-identical across repos), ensure
-   `find-altool.ps1` is current (it must support `auto`), then report the
-   correction and remind the developer to restart Claude Code.
+List `.github/.agents/*.agent.md`. Anything other than `bcquality.agent.md`
+and `feynman.agent.md` is a pre-v24 repo-local copy of a now-machine-global
+agent. Before proposing removal, confirm Step 3c has run on THIS machine in
+THIS Mode B pass (it always does, earlier in this flow) — that guarantees
+the roster is available globally before the repo-local copies disappear.
 
-Report any correction made:
 ```
-⚠️ .mcp.json: <entry>-stien indeholdt en hardcodet udvikler-sti og er rettet.
-Gammel: <old path>
-Ny:     <new path with env-var expansion>
+⚠️ v24-migrering: dette repo har [N] agent-filer i .github/.agents/ som nu er
+maskin-globale (~/.claude/curabis-agents/ + ~/.claude/agents/florence.md).
+Maskinen her har allerede den globale roster (bekræftet i dette Mode B-kald).
+Må jeg fjerne de [N] repo-lokale kopier? (ja/nej)
+
+  - immanuel.agent.md, francis.agent.md, columbo.agent.md, ... [list them]
 ```
 
-This is the most common setup error on projects configured before CURABIS Standard.
+On yes: `git rm` each file not in `{bcquality.agent.md, feynman.agent.md}`.
+
+**2. Old-style CLAUDE.md (inline generic sections)**
+
+Check for any of these headings still present verbatim in the project
+CLAUDE.md: `## Smiley — Session Watchdog`, `## Carlin — Bullshit Detector`,
+`## On-demand agents`, `## Francis — proaktiv regelobservation`,
+`## Shared project memory`, `## Project documentation`. Their presence means
+this repo predates v24. Propose REMOVING only those headings/sections and
+replacing them with the short pointer paragraph from Step 4a. Do NOT touch
+`## BCQuality` (the self-heal section) or `## Feynman — Support-sessioner` —
+both stay, unchanged, in every version. Preserve everything project-specific
+(project name, AL_PROJECTS_SECTION, running-tests, about-this-project)
+verbatim. Show the diff and ask for confirmation before editing (same gate
+as the v6-era obsolete-forms check above).
+
+**3. `.mcp.json` — standard entries (multi-developer coordination required)**
+
+This is the one migration step that is NOT safe to do unilaterally from a
+single Mode B run, because `.mcp.json` is git-committed and shared: removing
+it assumes EVERY developer working on this repo has already run Step 3c on
+their OWN machine. Doing this before that is true silently breaks AL/BC MCP
+for anyone who pulls the change and hasn't migrated yet.
+
+If `.mcp.json` contains the standard `al` and/or `businesscentral` entries:
+
+```
+⚠️ .mcp.json indeholder de to standard MCP-servere (al, businesscentral), som
+i v24 er maskin-globale i stedet. At fjerne dem fra .mcp.json er kun sikkert
+naar ALLE udviklere paa dette repo har koert maskin-opsaetningen (Step 3c) paa
+egen maskine - ellers mister de AL/BC MCP naar de henter aendringen.
+
+Har alle udviklere paa dette repo allerede migreret deres maskine? (ja/nej)
+Hvis usikker: svar nej - .mcp.json kan blive staaende uden problemer, det er
+kun en smule duplikeret konfiguration, ikke en fejltilstand.
+```
+
+Only remove the two entries (never the whole file — a repo may have
+legitimate additional MCP servers) if the developer explicitly confirms yes.
+If the file becomes empty afterward (`{"mcpServers": {}}`), propose deleting
+`.mcp.json` entirely in the same confirmation.
+
+**4. `.vscode/find-altool.ps1`**
+
+If present, propose removal — it is superseded by `~/.claude/find-altool.ps1`
+(machine-global, cwd-walkup discovery, no repo dependency). Safe to remove
+independently of the `.mcp.json` migration above, since removing the *file*
+doesn't affect any `.mcp.json` entry that still references the old
+repo-relative walk-up form until that entry itself is migrated per step 3.
 
 ### HEARTBEAT.md token substitution (Mode B)
 
@@ -759,10 +712,17 @@ any team-added stations) untouched.
 
 ### What does NOT get updated
 
-- `CLAUDE.md` — project-specific, managed per project
+- `CLAUDE.md`'s project-specific content (project name, AL_PROJECTS_SECTION,
+  running-tests, Feynman section, about-this-project) — managed per project,
+  never auto-overwritten. Its now-removed generic sections (Smiley, Carlin,
+  on-demand roster, Francis, projectmemory/docs instructions) are only
+  touched once, during the v23→v24 migration above, and only with confirmation.
 - `projectmemory/` — team knowledge, never overwritten by tooling
 - `docs/` content — project documentation, never overwritten by tooling
 - `~/.bc-mcp.config.json` — contains developer secrets
+- An existing `al`/`businesscentral` user-scope MCP registration — Step 3c
+  registers if missing but never corrects an existing one (see the
+  machine-level table above)
 
 ### After update — lokal-agent-check (RegelSanity)
 
@@ -772,6 +732,15 @@ list). Reconciliation runs in BOTH directions. Missing template files are
 handled above — this check finds the opposite: **extra** files in
 `.github/.agents/` that are not in this document's template table (see
 BCQuality rule `repo-local-agents-must-be-universalized-or-removed`).
+
+**v24 note:** the template table now has exactly two rows (`bcquality.agent.md`,
+`feynman.agent.md`), so on a v24 repo this check simply means "nothing else
+should ever appear in `.github/.agents/`." A repo still full of pre-v24
+copies isn't a RegelSanity violation — it is v23-era state, handled by the
+one-time migration above (step 1), which runs first. This check is what
+catches NEW extra files going forward (e.g. someone manually drops a custom
+agent into `.github/.agents/` after migration) — same universalize-or-remove
+choice as before.
 
 1. List `.github/.agents/*.agent.md` and compare against the template table
 2. For each file NOT in the table, output:
@@ -793,33 +762,29 @@ Hvad vælger du? (a/b)
    If (a): draft the Francis observation immediately — the local file is the
    evidence. If (b): remove the file and note it in the update report.
 
-### After update — agent-synligheds-check
+### After update — agent-synligheds-check (v24: machine-level, not repo-level)
 
-After updating agent files, compare `.github/.agents/*.agent.md` against CLAUDE.md:
+**v24 change:** the on-demand roster and the always-active Smiley/Carlin
+sections moved to `~/.claude/CLAUDE.md` (see "CURABIS Standard — Shared
+Roster" in `machine/CLAUDE.md`), so this check no longer compares against
+the PROJECT CLAUDE.md — there is nothing left there to reconcile (the
+project CLAUDE.md has no on-demand list any more; Feynman has his own
+dedicated section and needs no separate visibility check). The check itself
+still matters, just one level up: compare `~/.claude/curabis-agents/*.agent.md`
++ `~/.claude/agents/florence.md` against the roster list inside
+`~/.claude/CLAUDE.md`.
 
 **Special case — Smiley:** `smiley.agent.md` is always-active, not on-demand.
 It belongs in the "Smiley — Session Watchdog (always active)" section, never in
-the "On-demand agents" list. If Smiley is missing from CLAUDE.md, propose his
-own section — not an on-demand entry.
+the "On-demand agents" list. If Smiley is missing, propose his own section —
+not an on-demand entry.
 
-1. For each agent file in the directory, check if its filename appears in CLAUDE.md
-2. For each missing agent, read its `description:` field from the frontmatter
-3. If any are missing, propose exact CLAUDE.md text and ask for confirmation:
-
-```
-⚠️ Nye agenter installeret men ikke refereret i CLAUDE.md:
-
-Foreslået tilføjelse til "On-demand agents"-sektionen:
-
-- `.github/.agents/court.agent.md` - <description from frontmatter>
-- `.github/.agents/lincoln.agent.md` - <description from frontmatter>
-
-Vil du have mig til at tilføje dem til CLAUDE.md? (ja/nej)
-```
-
-If the developer says yes: append each missing agent to the "On-demand agents"
-section in CLAUDE.md using the frontmatter description as the text.
-Do not add without confirmation.
+In practice this check is subsumed by "Machine CLAUDE.md refresh (Mode B)"
+above: that step already diffs the developer's `~/.claude/CLAUDE.md`
+structurally against `{BASE}/machine/CLAUDE.md` and proposes the update
+(with confirmation) whenever they diverge — a newly-shipped roster agent not
+yet listed is exactly the kind of structural divergence that step catches.
+No separate action needed here beyond running that step.
 
 ### After update — report and commit
 
