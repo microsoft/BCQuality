@@ -1,9 +1,9 @@
 ---
 kind: action-skill
 id: curabis-bc-mcp
-version: 1
+version: 2
 title: CURABIS Business Central MCP usage
-description: How to use the CURABIS Business Central MCP server to read project-management work from BC and write GitHub dev status back. Company-default workflow for syncing Claude Code / GitHub work with BC tasks.
+description: How to use the CURABIS Business Central MCP server to read project-management work from BC and write GitHub dev status back. Company-default workflow for syncing Claude Code / GitHub work with BC tasks. v2 (2026-07-30) - BC MCP switched from Dynamic to Static Tool Mode; 14 directly-named tools replace the old search/describe/invoke indirection.
 inputs: [project-no, task-no, branch, dev-status, comment]
 outputs: [task-list, updated-task, posted-comment]
 bc-version: [all]
@@ -60,52 +60,51 @@ branch / status / a note back to BC.
   so attribute work to a developer yourself (see "Developer identity" below).
 - If the server is not connected, say so and stop. Do not invent task data.
 
-## Session start: pre-load the three MCP tools
+## Session start: pre-load the tools you'll need
 
-Before producing any user-visible output, load the three tool schemas by exact name:
+**2026-07-30: BC MCP switched from Dynamic Tool Mode to Static Tool Mode** (BC's
+"Konfiguration af MCP-server" — CURABIS_DEV). The generic `bc_actions_search` /
+`bc_actions_describe` / `bc_actions_invoke` tools **no longer exist**. Every BC
+action is now its own directly-named, directly-typed MCP tool — confirmed live
+via the tool panel after a reconnect (a stale connection cached the old three-tool
+list for a while after the BC-side toggle; a full reconnect is what surfaced the
+real list). There is nothing left to search or describe — the tool names below
+are the actual MCP tool names, not a guessed convention.
 
-    ToolSearch query: select:mcp__businesscentral__bc_actions_search,mcp__businesscentral__bc_actions_invoke,mcp__businesscentral__bc_actions_describe
+Before producing any user-visible output, load the tools this task actually needs
+by exact name, e.g. for the standard dev workflow:
+
+    ToolSearch query: select:mcp__businesscentral__List_ActiveTasks_PAG6102900,mcp__businesscentral__Modify_ActiveTask_PAG6102900,mcp__businesscentral__Create_TaskComment_PAG6102902
 
 Do this first, silently. It must complete before you respond to the user - loading it
 mid-task means the user hits unexpected latency at the moment they expect an action,
-not setup.
+not setup. Load only what the task needs — see the table below for the full set.
 
-## Tools (BC MCP, Dynamic Tool Mode OFF)
+## Tools (BC MCP, Static Tool Mode)
 
-The `businesscentral` MCP server exposes exactly **three** callable tools:
-`bc_actions_search`, `bc_actions_describe`, `bc_actions_invoke`. There is no static
-tool list to browse - BC entity/action names (`List_Projects_PAG6102901` and so on)
-are not separate MCP tools; they only exist as results of `bc_actions_search`.
+The `businesscentral` MCP server exposes **14 directly-named tools**, one per
+BC action, each with its own typed schema reflecting exactly which fields that
+page allows you to write. No discovery step, no per-call reverification — call
+the tool by name directly, matching the convention `List_<Entity>_PAG<id>` (read),
+`Modify_<Entity>_PAG<id>` (update, **singular** entity name), `Create_<Entity>_PAG<id>`
+(create). All are marked `destructive` except the `List_*` reads, which are `read-only`.
 
-**Do not use the general-purpose `ToolSearch` to look for BC entity/action names.**
-`ToolSearch` only resolves this session's own deferred client-side tools (the three
-above) - it does not search Business Central's action catalog and will return
-irrelevant matches from unrelated servers. To find an action:
-
-1. `bc_actions_search` with `SearchMode: keyword` and a few field/entity keywords
-   (e.g. `"project, repository, gitHubRepository"`), filtered by `ActionType` if known.
-2. `bc_actions_describe` on the exact name it returns, to get the callable schema.
-3. `bc_actions_invoke` with matching `RequestParameters`.
-
-Expected naming convention - **reverify per call with `bc_actions_search`, do not
-assume it holds**: `List_<Entity>_PAG<id>` (read), `Modify_<Entity>_PAG<id>` (update,
-**singular** entity name - e.g. `Modify_ProjectRepository_PAG6102904`, not
-`ModifyProjectRepositories` or `ListUpdate...`), `Create_<Entity>_PAG<id>` (create).
-
-| Entity (page) | Read | Write you MAY do | Never |
+| Entity (page) | Tools | Write you MAY do | Never |
 | --- | --- | --- | --- |
-| projects (6102901) | active projects, `Status = Started` | **read-only for the agent** | any field — humans manage projects |
-| projectRepositories (6102904) | project + gitHubRepository | `gitHubRepository` | all other fields |
-| activeTasks (6102900) | active sub-tasks, `Accepted` / `In progress` | `gitHubDevStatus`, `gitHubBranch` | other fields, create, delete |
-| newTasks (6102905) | pending sub-tasks, `Created` (awaiting customer approval) | create new task | `status` — always Created on insert, never change it |
-| taskComments (6102902) | comment lines for a task | create a comment, edit `comment`/`date`/`lineType` | delete |
-| consultants (PAG50009) | CURABIS employees: `userID`, `name`, `employeeCode`, `production`, `costPrHourLCY` | **read-only** | any write |
+| projects (6102901) | `List_Projects_PAG6102901` | **read-only for the agent** | any field — humans manage projects; no Modify tool exists |
+| projectRepositories (6102904) | `List_ProjectRepositories_PAG6102904`, `Modify_ProjectRepository_PAG6102904` | `gitHubRepository` | all other fields |
+| activeTasks (6102900) | `List_ActiveTasks_PAG6102900`, `Modify_ActiveTask_PAG6102900` | `gitHubDevStatus`, `gitHubBranch`, `taskResponsible` (added 2026-07-30 — task reassignment between consultants, same category as the two GitHub fields) | other fields, create, delete |
+| newTasks (6102905) | `List_NewTasks_PAG6102905`, `Create_NewTask_PAG6102905` | create new task | `status` — always Created on insert, never change it |
+| taskComments (6102902) | `List_TaskComments_PAG6102902`, `Create_TaskComment_PAG6102902`, `Modify_TaskComment_PAG6102902` | create a comment, edit `comment`/`date`/`lineType` | delete |
+| consultants (PAG50009) | `List_Consultants_PAG50009` | **read-only** | any write; no Modify/Create tool exists |
+| projectAIScores (6102906) | `List_ProjectAIScores_PAG6102906`, `Create_ProjectAIScore_PAG6102906` | **Edison only** — insert one score entry per eval iteration | modify, delete (immutable posting table — no such tool exists); any other agent inserting here |
+| projectWeberScores (6102908) | `List_ProjectWeberScores_PAG6102908`, `Create_ProjectWeberScore_PAG6102908` | **Weber only** — insert one classification per sub-task coached | modify, delete (immutable posting table — no such tool exists); any other agent inserting here |
 
 `consultants` was previously documented here as `users (6102903)` — that entity does not exist
-in the BC MCP action catalog under any name or search term. The real page is
-`List_Consultants_PAG50009` (corrected 2026-07-24 after `users`/`employee` searches returned
-nothing). Reverify with `bc_actions_search` before relying on either name — this correction
-itself may drift. `costPrHourLCY` is an internal billing-rate field — never surface it to a
+in the BC MCP action catalog under any name. The real page is `List_Consultants_PAG50009`
+(corrected 2026-07-24). Now that tool names are static and directly listed above, this class
+of drift cannot recur — the name IS the tool, not a search result to reverify. `costPrHourLCY`
+(on `List_Consultants_PAG50009`) is an internal billing-rate field — never surface it to a
 customer, and include it in internal summaries only when specifically relevant.
 
 `gitHubDevStatus` uses enum **CUR GitHub Dev Status**: `Backlog`, `In Progress`, `Done`,
@@ -116,12 +115,12 @@ Moving to `Accepted` requires `Starting date`, `Estimated time` and `Expected De
 
 ## Standard workflow
 
-1. **Find the work.** Read `activeTasks` (filter by `projectNo` or `gitHubRepository`). Use
-   `gitHubRepository` on the project to confirm you are in the right repo.
-2. **Claim it.** When you start, set `gitHubBranch` to the working branch and
-   `gitHubDevStatus = In Progress` on the task (search `bc_actions_search` for the
-   modify action on `activeTasks` - expect `Modify_ActiveTask_PAG6102900`, reverify).
-3. **Record progress.** Post a status note with `Create taskComments`
+1. **Find the work.** Call `List_ActiveTasks_PAG6102900` (filter by `projectNo` or
+   `gitHubRepository`). Use `gitHubRepository` on the project to confirm you are in
+   the right repo.
+2. **Claim it.** When you start, call `Modify_ActiveTask_PAG6102900` to set
+   `gitHubBranch` to the working branch and `gitHubDevStatus = In Progress`.
+3. **Record progress.** Call `Create_TaskComment_PAG6102902`
    (`projectNo` + `subTaskNo` scope it to one task). Keep notes short and factual.
 4. **Finish.** Set `gitHubDevStatus = Done` automatically when branch is merged to main.
    Set `On Hold` if the branch is parked.
@@ -131,8 +130,9 @@ Moving to `Accepted` requires `Starting date`, `Estimated time` and `Expected De
 Use `Create_NewTask_PAG6102905` when a developer wants to register a new task from VS Code.
 Follow ALL steps — do not skip any:
 
-1. **Duplicate check.** Search `activeTasks` and `newTasks` for similar descriptions on the same
-   project. If a match is found, show it and ask the developer to confirm it is truly a new task.
+1. **Duplicate check.** Call `List_ActiveTasks_PAG6102900` and `List_NewTasks_PAG6102905` for
+   similar descriptions on the same project. If a match is found, show it and ask the developer
+   to confirm it is truly a new task.
 2. **Ask clarifying questions.** Before estimating, ask: What is the expected outcome? What is
    the scope? Are there dependencies or unknowns? Summarise the answers as line-level comments.
 3. **Propose an estimate.** Based on the summary, suggest estimated hours with reasoning.
@@ -140,8 +140,8 @@ Follow ALL steps — do not skip any:
 4. **Link to repo.** Set `gitHubRepository` from `git remote get-url origin`. Verify it matches
    the project's `gitHubRepository` via `projectRepositories`.
 5. **Set responsible.** Resolve the developer's `employeeCode` from `consultants` via `git config user.email`.
-6. **Create.** POST to `newTasks` with: `projectNo`, `description`, `taskType`, `taskResponsible`,
-   `estimatedTime`, `startingDate`, `expectedDelivery`, `customerPriority`.
+6. **Create.** Call `Create_NewTask_PAG6102905` with: `projectNo`, `description`, `taskType`,
+   `taskResponsible`, `estimatedTime`, `startingDate`, `expectedDelivery`, `customerPriority`.
    Status is always `Created` — the page enforces this.
 7. **Inform.** Tell the developer the task is created and awaiting customer approval in BC
    before work can begin.
@@ -165,9 +165,15 @@ If no matching user is found, say so - do not guess whose tasks these are.
 
 ## Safety rules
 
-CURABIS-BCMCP-001 Write only `gitHubBranch` / `gitHubDevStatus` on active tasks, and task comments.
-  Never write BC sub-task `status` — it controls time registration and invoicing. Never modify
-  any other field, never create/delete projects, never delete tasks or comments.
+CURABIS-BCMCP-001 Write only `gitHubBranch` / `gitHubDevStatus` / `taskResponsible` on active
+  tasks, and task comments. Never write BC sub-task `status` — it controls time registration
+  and invoicing. Never modify any other field, never create/delete projects, never delete
+  tasks or comments.
+CURABIS-BCMCP-008 `projectAIScores` and `projectWeberScores` are immutable posting logs —
+  insert-only (no Modify/Delete tool exists for either). Only Edison inserts to
+  `projectAIScores`; only Weber inserts to `projectWeberScores`. An agent acting in any
+  other capacity must not call `Create_ProjectAIScore_PAG6102906` or
+  `Create_ProjectWeberScore_PAG6102908`.
 CURABIS-BCMCP-006 Never start a task that is not `Accepted`. Before setting `gitHubDevStatus =
   In Progress`, verify the task appears in `activeTasks` (Status = Accepted or In progress).
   A task in `newTasks` (Status = Created) has not been approved — do not begin work on it.
