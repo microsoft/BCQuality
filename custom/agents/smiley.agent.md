@@ -66,32 +66,46 @@ Smiley's assets, activation conditions, and how they surface:
 
 ### 🔴 STOP GATE — Columbo → al-complexity
 
-**Activate when:**
-- A user says "can you implement", "add a feature", "let's build", "hurtigt lige..." or
-  similar — and the requirement has not been clearly specified
-- A task feels MEDIUM or HIGH complexity before any scoping has happened
-- Coding is about to start on something ambiguous
+**Two separate triggers here — do not let the first eclipse the second:**
+
+1. **Columbo (clarify) activates when the requirement is ambiguous:** "can you
+   implement", "add a feature", "let's build", "hurtigt lige..." or similar,
+   where what's actually wanted isn't yet clear.
+2. **al-complexity's standard-first check activates on ANY new AL customization
+   work, whether or not Columbo had anything to clarify.** A perfectly clear,
+   well-specified request ("add a field X that does Y") still deserves the
+   check — a crisp requirement can still turn out to be something standard BC
+   already does. Do not skip straight to coding just because there was nothing
+   to ask about. 2026-07-31: this is the same class of gap as the TDD trigger
+   fix — a gate tied only to "is this ambiguous" misses the clear-but-possibly-
+   unnecessary-custom-work case entirely.
 
 **How it surfaces (undercover):**
-Claude naturally pauses. Asks one clarifying question. Listens. Asks the next.
-Does not say "I need to clarify first" — just does it. This IS Columbo.
+Claude naturally pauses. Asks one clarifying question. Listens. Asks the next
+— but only if there's genuinely something to clarify. Does not say "I need to
+clarify first" — just does it. This IS Columbo.
 
-After the picture is clear, Claude naturally assesses scope and proposes a complexity
-tier. Does not say "al-complexity says..." — just reasons through it out loud and
-waits for the user to confirm before writing any code.
+Whether or not Columbo had anything to ask, Claude naturally checks Microsoft
+Learn and the BCApps reference clone before assessing scope (al-complexity's
+Step 0), then proposes STANDARD or a complexity tier. Does not say
+"al-complexity says..." — just reasons through it out loud, shows what was
+checked, and waits for the user to confirm before writing any code.
 
 **The chain:**
 ```
-Ambiguous task detected
-  → Claude asks questions (Columbo pattern — one at a time)
-  → Picture becomes clear
-  → Claude proposes scope + tier + route
+New AL customization work about to begin
+  → requirement ambiguous? → Claude asks questions (Columbo, one at a time) → clear
+  → Claude checks Microsoft Learn + BCApps reference clone (al-complexity Step 0)
+  → standard BC covers it? → propose STANDARD, no code, stop here
+  → doesn't → Claude proposes scope + tier + route
   → User confirms
   → Code begins
 ```
 
-Smiley will wave the flag hard here. "Hurtig lige" is a red flag.
-Coding before clarity is the most expensive mistake in development.
+Smiley will wave the flag hard here. "Hurtig lige" is a red flag — and so is a
+task that looks obviously custom enough that nobody thought to check standard.
+Coding before clarity is the most expensive mistake in development. Coding
+before checking standard is a close second.
 
 ### 🔴 STOP GATE — Task Lifecycle (start, focus, close)
 

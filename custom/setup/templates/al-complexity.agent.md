@@ -1,9 +1,9 @@
 ---
 kind: action-skill
 id: curabis-al-complexity
-version: 1
+version: 2
 title: CURABIS AL complexity triage
-description: Advisory intake classifier. Assesses an implementation task and proposes a complexity tier (LOW/MEDIUM/HIGH) plus a route. Recommends only - it never starts work and never routes by itself. The developer confirms or adjusts the tier first.
+description: Advisory intake classifier. First checks whether Business Central already solves the requirement natively (Microsoft Learn + the BCApps reference clone) before proposing a complexity tier (STANDARD/LOW/MEDIUM/HIGH) plus a route. KISS applies to whatever custom route is chosen. Recommends only - it never starts work and never routes by itself. The developer confirms or adjusts first.
 inputs: [task-description]
 outputs: [tier-recommendation]
 bc-version: [all]
@@ -11,7 +11,7 @@ technologies: [al]
 countries: [w1]
 application-area: [all]
 domain: orchestration
-keywords: [complexity, tier, routing, intake, scope, spec, tdd, architecture, advisory, human-in-the-loop]
+keywords: [complexity, tier, routing, intake, scope, spec, tdd, architecture, advisory, human-in-the-loop, standard-first, kiss, microsoft-learn, bcapps]
 sub-skills:
   - microsoft/skills/review/al-code-review.md
 ---
@@ -54,7 +54,36 @@ it never starts implementation and never routes on its own.
 This is a **rubric, not a calculation** - there is no numeric score. The tier comes from
 which classification signals below match the task.
 
-Loop: classify -> propose tier + route -> WAIT for human confirmation -> hand off.
+Loop: **standard-first check -> classify -> propose tier + route -> WAIT for human
+confirmation -> hand off.**
+
+## Step 0 — Standard-first check (2026-07-31, runs before classification)
+
+Custom AL is the most expensive way to solve a requirement — every line becomes something
+CURABIS must maintain forever. Before proposing ANY tier, check whether Business Central
+already does this natively: a standard feature, a setup/configuration option, an existing
+extension point. This is not optional and not skippable because the task "obviously" needs
+code — the check itself is what proves that.
+
+1. **Search Microsoft Learn** (`mcp__microsoft-learn__microsoft_docs_search`, then
+   `microsoft_docs_fetch` on anything promising) for the actual business requirement, not
+   the AL implementation you're imagining. Search for what the user wants to happen, not
+   "how to build X in AL".
+2. **Check the real standard app**, not memory or training-data assumptions. Use the
+   machine-global reference clone (`~/.claude/reference-repos/microsoft/BCApps/` — see
+   `[[curabis-app-sources-must-be-checked-first]]` for the clone/refresh mechanism) and
+   grep for the relevant tables/pages/setup fields. Training data goes stale; the clone
+   does not.
+3. **State the finding, with evidence — never "I checked and found nothing" unsupported.**
+   Cite the Learn URL or the BCApps object/field you found (or searched for and confirmed
+   absent). This is the same human-verifiable-evidence bar as the TDD red-confirmation —
+   a claim of "nothing" is only trustworthy if you show what you searched.
+4. **If standard BC already covers it:** propose **STANDARD** — no tier, no code, just the
+   configuration/setup steps. This is the cheapest possible resolution and the reason this
+   check runs first. Stop here; do not continue to classification.
+5. **If it genuinely doesn't:** proceed to classification below, and carry KISS forward as
+   a constraint on whatever tier is chosen (see "KISS applies to the route" below) — the
+   absence of a standard solution is not license to over-build the custom one.
 
 ## Classification signals
 
@@ -77,7 +106,20 @@ HIGH
 - New table, or a field change on an existing table that needs an upgrade codeunit / data migration.
 - Multi-module change, or a change to permissions.
 
+## KISS applies to the route (not just to Step 0)
+
+Once a tier is confirmed, the route itself must stay as simple as the requirement allows —
+the fewest objects, the least new abstraction, no speculative generality for a future need
+nobody has asked for. A HIGH-tier task justifies architecture clarification because the
+*problem* is genuinely complex, not license for the *solution* to be more elaborate than
+the problem requires. If a simpler design becomes visible during spec/architecture, propose
+it — do not silently build the more complex version because it was the one first assumed.
+
 ## Routes (every tier keeps a review - control is preserved)
+
+STANDARD
+- No AL code. Document the configuration/setup steps and hand off — nothing for
+  bcquality.agent.md to review, because nothing was written.
 
 LOW
 - Implement -> **light review via bcquality.agent.md**. No spec or architecture phase, but
@@ -105,12 +147,23 @@ CURABIS-COMPLEXITY-005 Every tier gets a review. No tier skips bcquality.agent.m
   a light review, not none.
 CURABIS-COMPLEXITY-006 Re-classify on scope change. If the task grows during work, stop and
   re-propose a tier rather than silently continuing on the old one.
+CURABIS-COMPLEXITY-007 Standard-first is not skippable. Every task runs Step 0 before any
+  tier is proposed, regardless of how obviously custom it looks. Show the Learn/BCApps
+  evidence — do not assert "nothing standard covers this" without it.
+CURABIS-COMPLEXITY-008 KISS is a route constraint, not just a Step 0 concern. A HIGH tier
+  justifies more process (architecture sign-off); it does not justify a more elaborate
+  solution than the requirement needs.
 
 ## Output format
 
 ```
-PROPOSED TIER  LOW | MEDIUM | HIGH
-SIGNALS        <which classification signals matched, and why>
+STANDARD-FIRST CHECK
+  Learn search:  <what you searched, with URL(s) if found>
+  BCApps check:  <object/field/setup area checked, found or confirmed absent>
+  Result:        Standard BC covers this | Standard BC does not cover this
+
+PROPOSED TIER  STANDARD | LOW | MEDIUM | HIGH
+SIGNALS        <which classification signals matched, and why — omit if STANDARD>
 ROUTE          <the recommended path for this tier>
 GATES          <where human approval is required before proceeding>
 AWAITING       Confirm the tier or adjust it before I proceed.
