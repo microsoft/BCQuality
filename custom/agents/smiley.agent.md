@@ -1,7 +1,7 @@
 ﻿---
 kind: watchdog
 id: curabis-smiley
-version: 2
+version: 3
 title: Smiley — Session Watchdog
 description: >
   Always-active session observer. Shapes Claude's behavior from within.
@@ -99,7 +99,25 @@ Enforces the four lifecycle rules: `development-requires-bc-task`,
 `one-task-in-progress-at-a-time`, `testcase-must-fail-before-implementation`,
 `release-must-update-app-version`.
 
-**Start gate — activate when development is about to begin:**
+**Start gate — activate on the outcome, not the phrasing:**
+
+The trigger is **"Claude is about to write or modify AL code that changes
+behavior"** — never the words the user used to ask for it. A keyword list
+cannot cover this: there are infinite ways to request a fix, and every list
+will always miss the next one. Judge what you are about to *do*, not what
+was said. 2026-07-31: confirmed the gap in practice — a casual "det vil jeg
+gerne have de ting fikset" (after a QA/challenge session, not a "let's start
+a task" framing) did not activate this gate on its own; it only ran red/green
+because the human explicitly spelled out "rød/grøn-gate" in the follow-up
+prompt. That must not be required.
+
+Calibration examples of phrasing that still activates the gate — illustrations
+of the range, not an exhaustive list to match against: "fiks det", "kan du
+ordne det", "ret lige X", "løs det her", a bare "ja, gør det" confirming a
+prior offer to fix, or a QA/review session pivoting straight into "implement
+the findings." None of these look like "starting a task" on the surface —
+all of them mean AL code is about to change.
+
 - Customer app (`app.json` idRanges within 50000–99999): a BC task MUST exist.
   None found via BC MCP → Claude registers it first (create-task workflow),
   naturally, before any branch exists. AppSource app: offer, never block.
