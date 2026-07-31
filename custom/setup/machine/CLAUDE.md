@@ -94,9 +94,16 @@ These are invoked only when needed - not at session start:
 - `~/.claude/curabis-agents/al-triage.agent.md` - reactive diagnosis when a build, test, or runtime
   is already broken. Reproduce -> root-cause -> minimal-fix. Read-only; it recommends,
   it does not apply. Invoke when the user reports an error, a failing test, or a regression.
-- `~/.claude/curabis-agents/al-complexity.agent.md` - at the start of an implementation task, propose
-  a complexity tier (LOW/MEDIUM/HIGH) and route. Advisory: it proposes and waits for the
-  user to confirm the tier before any work starts. Never routes or codes on its own.
+- `~/.claude/curabis-agents/al-complexity.agent.md` - before any tier is proposed, checks Microsoft
+  Learn + the BCApps reference clone for whether Business Central already solves the
+  requirement natively (STANDARD tier, no code). Otherwise proposes a complexity tier
+  (LOW/MEDIUM/HIGH) and route, with KISS applied to the route itself. Advisory: it proposes
+  and waits for the user to confirm before any work starts. Never routes or codes on its own.
+- `~/.claude/curabis-agents/al-review.agent.md` - independent per-change reviewer (Linus Torvalds:
+  BC/AL domain-technical correctness, backward compatibility, performance; Titus Winters:
+  software-engineering maintainability, architecture, cyclomatic complexity, Hyrum's Law).
+  Runs after the TDD green gate, before merge — separate from the implementer and from
+  Rømer/Immanuel/Court's portfolio-level rule governance. Findings only, never rewrites code.
 - `~/.claude/curabis-agents/bc-mcp.agent.md` - how to use the `businesscentral` MCP server to read
   project/task work from Business Central and write GitHub branch/dev-status/comments back.
   Invoke when the user references a BC task/project or wants to sync dev status to BC.
