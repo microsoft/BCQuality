@@ -1,6 +1,8 @@
 {
-  "tenantId": "CURABIS-TENANT-ID",
+  "tenant": "CURABIS-TENANT-ID",
   "clientId": "CURABIS-CLIENT-ID",
   "clientSecret": "<indsæt din personlige client secret her>",
-  "baseUrl": "https://api.businesscentral.dynamics.com"
+  "environment": "Production",
+  "company": "<PRÆCIS firmanavnet fra BC's 'Navn'-felt - IKKE 'Vist navn'. 2026-07-31: 'CURABIS ApS' (Vist navn) fejlede med 'company not found' hos BC MCP; det korrekte var 'Curabis ApS' (Navn). Tjek Virksomheder-siden i BC, kolonnen 'Navn', hvis usikker.>",
+  "configurationName": "CURABIS_DEV"
 }
