@@ -79,6 +79,7 @@ old HTTP-encoding pitfalls do not exist here).
 | francis.agent.md | `{AGENTS_BASE}/francis.agent.md` |
 | al-triage.agent.md | `{BASE}/templates/al-triage.agent.md` |
 | al-complexity.agent.md | `{BASE}/templates/al-complexity.agent.md` |
+| al-review.agent.md | `{BASE}/templates/al-review.agent.md` |
 | bc-mcp.agent.md | `{BASE}/templates/bc-mcp.agent.md` |
 | algo-settings.agent.md | `{BASE}/templates/algo-settings.agent.md` |
 | columbo.agent.md | `{AGENTS_BASE}/columbo.agent.md` |
@@ -102,10 +103,10 @@ old HTTP-encoding pitfalls do not exist here).
 CLAUDE.md is generated dynamically — not fetched as a static template because
 it contains project-specific paths.
 
-**v24 — machine vs. repo split:** of the 21 agent files above, only
+**v24 — machine vs. repo split:** of the 22 agent files above, only
 `bcquality.agent.md` (the marker this whole mechanism gates on) and
 `feynman.agent.md` (support sessions have no `~/.claude/` to read from) are
-still written into a repo's `.github/.agents/`. The remaining 19 — including
+still written into a repo's `.github/.agents/`. The remaining 20 — including
 `florence.agent.md`, which goes to `~/.claude/agents/florence.md` as a real
 Claude Code subagent rather than `~/.claude/curabis-agents/` — are deployed
 ONCE PER MACHINE by `sync-bcquality-knowledge.ps1` to `~/.claude/curabis-agents/`
@@ -210,7 +211,7 @@ If it does NOT exist:
 #### 3c. bcquality-knowledge, roster agents, find-altool.ps1, MCP registration (v24)
 
 Everything machine-global beyond the bridge and BC secret — the knowledge
-mirror, the 19 roster agent files (18 to `~/.claude/curabis-agents/` +
+mirror, the 20 roster agent files (19 to `~/.claude/curabis-agents/` +
 Florence to `~/.claude/agents/florence.md`), `~/.claude/find-altool.ps1`, and
 the `al`/`businesscentral`/`microsoft-learn` MCP registrations — is deployed
 by ONE script, `sync-bcquality-knowledge.ps1`. None of it is ever committed
@@ -232,7 +233,7 @@ change.
      always read in full, `community/` and `microsoft/` are scanned via the
      index rather than preloaded, since together they run into the hundreds
      of files)
-   - `~/.claude/curabis-agents/*.agent.md` (18 files)
+   - `~/.claude/curabis-agents/*.agent.md` (19 files)
    - `~/.claude/agents/florence.md` (Florence, as a real subagent)
    - `~/.claude/find-altool.ps1`
    - `al` + `businesscentral` + `microsoft-learn` registered at user MCP scope
@@ -247,7 +248,7 @@ change.
    (see the v6-cleanup step in Mode B for full removal — this step just
    prevents new commits).
 4. Confirm: "Maskine-opsætning synkroniseret — bcquality-knowledge [antal]
-   filer, curabis-agents 18 filer, Florence, find-altool.ps1, MCP (al,
+   filer, curabis-agents 19 filer, Florence, find-altool.ps1, MCP (al,
    businesscentral, microsoft-learn)."
 
 This machine setup is what the global `~/.claude/CLAUDE.md` roster section
@@ -428,7 +429,7 @@ is the marker file the machine's `~/.claude/CLAUDE.md` gates the whole
 repo-local because Mode C support sessions have no `~/.claude/` to read a
 global roster from. Every other roster agent (Smiley, Carlin, Immanuel,
 Francis, Columbo, Florence, the Court, Rømer, Weber, Ferencz, Edison,
-al-triage, al-complexity, bc-mcp, algo-settings) is deployed machine-globally
+al-triage, al-complexity, al-review, bc-mcp, algo-settings) is deployed machine-globally
 by Step 3c and referenced from `~/.claude/CLAUDE.md` — see BCQuality rule
 `roster-agents-live-on-machine-not-in-repo`.
 
@@ -546,7 +547,7 @@ these are shared across every CURABIS repo on the machine:
 | `~/.claude/bc-mcp-bridge.js` | Fetch fresh from BCQuality, overwrite |
 | `~/.claude/sync-bcquality-knowledge.ps1` | Fetch fresh from BCQuality (raw bytes), overwrite (add if missing) |
 | `~/.claude/bcquality-knowledge/` | Re-run the sync script (see below) |
-| `~/.claude/curabis-agents/*.agent.md` (18 files) | Re-run the sync script |
+| `~/.claude/curabis-agents/*.agent.md` (19 files) | Re-run the sync script |
 | `~/.claude/agents/florence.md` | Re-run the sync script |
 | `~/.claude/find-altool.ps1` | Re-run the sync script |
 | `al` + `businesscentral` + `microsoft-learn` MCP servers (user scope) | Re-run the sync script — idempotent: registers if missing, does NOT touch an existing registration (a developer's personal-scope config is not policed the way repo-shared `.mcp.json` used to be) |

@@ -1,7 +1,7 @@
 ﻿---
 kind: watchdog
 id: curabis-smiley
-version: 3
+version: 4
 title: Smiley — Session Watchdog
 description: >
   Always-active session observer. Shapes Claude's behavior from within.
@@ -150,8 +150,12 @@ all of them mean AL code is about to change.
 - Break-fix overrides this gate, as always — a broken build interrupts.
 
 **Close gate — activate when a task is about to be finished:**
-- Test case green (actually run, not assumed) → merge to the declared track
-  branch → BC `Done`. Red test = the task cannot close, no exceptions.
+- Test case green (actually run, not assumed) → **independent review**
+  (`al-review.agent.md` — Torvalds & Winters, 2026-07-31) → merge to the
+  declared track branch → BC `Done`. Red test = the task cannot close, no
+  exceptions. A BLOCK verdict from the independent review is the same kind
+  of hard stop as a red test — green tests prove the requirement is met,
+  not that the change is well-built.
 - At release (track branch → main, tag, AppSource submission): app.json
   version consciously bumped before the merge.
 
@@ -162,7 +166,9 @@ Task requested
   → branch + BC "In Progress"
   → test case written → RED confirmed by developer
   → implementation
-  → test GREEN → merge to track branch → BC "Done"
+  → test GREEN
+  → independent review (al-review: Torvalds + Winters lenses) → APPROVE(-WITH-NOTES)
+  → merge to track branch → BC "Done"
   → at release: version bump
 ```
 
@@ -223,6 +229,8 @@ never reports patterns to management without aggregation.
 - Does not activate **Immanuel** directly — that is Francis's downstream
 - Does not interfere with **Florence's** heartbeat — she has her own trigger
 - Does not route to **algo-settings** — too specific, on-demand only
+- Does not let **al-review** rewrite the code it reviews — findings only,
+  same separation as al-triage; fixing a BLOCK verdict is the implementer's job
 - Does not write BCQuality rules — Francis and Immanuel do that
 - Does not take credit for anything
 
