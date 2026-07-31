@@ -198,3 +198,27 @@ Ensure-UserMcpServer -Name 'al' -CommandAndArgs @(
     '-File', '${USERPROFILE}\.claude\find-altool.ps1',
     'launchmcpserver', 'auto', '--transport', 'stdio'
 )
+
+# --- 9. Microsoft Learn MCP (HTTP, ingen auth) - samme adgang udviklere faar som
+# Mode C support-brugere allerede har. Verificeret 2026-07-30: offentlig, ingen
+# nogen creds noedvendige, stdio-mekanismen ovenfor gaelder ikke - HTTP-transport
+# bruger et andet flag-sæt (--transport http, ingen '--' kommando-adskiller).
+function Ensure-UserMcpHttpServer {
+    param([string]$Name, [string]$Url)
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $output = & claude mcp add --scope user --transport http $Name $Url 2>&1
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
+    if ($exitCode -ne 0) {
+        if ($output -match 'already exists') {
+            Write-Host "MCP-server '$Name' er allerede registreret paa user scope."
+        } else {
+            throw "claude mcp add fejlede for '$Name': $output"
+        }
+    } else {
+        Write-Host "MCP-server '$Name' registreret paa user scope."
+    }
+}
+
+Ensure-UserMcpHttpServer -Name 'microsoft-learn' -Url 'https://learn.microsoft.com/api/mcp'

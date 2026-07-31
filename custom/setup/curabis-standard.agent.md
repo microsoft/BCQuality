@@ -212,13 +212,14 @@ If it does NOT exist:
 Everything machine-global beyond the bridge and BC secret — the knowledge
 mirror, the 19 roster agent files (18 to `~/.claude/curabis-agents/` +
 Florence to `~/.claude/agents/florence.md`), `~/.claude/find-altool.ps1`, and
-the `al`/`businesscentral` MCP registrations — is deployed by ONE script,
-`sync-bcquality-knowledge.ps1`. None of it is ever committed to a project
-repository (BCQuality rule `bcquality-knowledge-must-mirror-to-machine-not-repo`,
-extended in v24 to `roster-agents-live-on-machine-not-in-repo`). Rationale:
-developers switch between many repos daily — N per-repo copies are
-permanently out of sync with each other, while one machine copy needs
-exactly one sync per upstream change.
+the `al`/`businesscentral`/`microsoft-learn` MCP registrations — is deployed
+by ONE script, `sync-bcquality-knowledge.ps1`. None of it is ever committed
+to a project repository (BCQuality rule
+`bcquality-knowledge-must-mirror-to-machine-not-repo`, extended in v24 to
+`roster-agents-live-on-machine-not-in-repo`). Rationale: developers switch
+between many repos daily — N per-repo copies are permanently out of sync
+with each other, while one machine copy needs exactly one sync per upstream
+change.
 
 1. Fetch `{BASE}/sync-bcquality-knowledge.ps1` → write AS RAW BYTES
    (`Invoke-WebRequest -OutFile`, never via string content — re-encoding
@@ -234,15 +235,20 @@ exactly one sync per upstream change.
    - `~/.claude/curabis-agents/*.agent.md` (18 files)
    - `~/.claude/agents/florence.md` (Florence, as a real subagent)
    - `~/.claude/find-altool.ps1`
-   - `al` + `businesscentral` registered at user MCP scope (idempotent — a
-     server that already exists is reported, not re-added or overwritten)
+   - `al` + `businesscentral` + `microsoft-learn` registered at user MCP scope
+     (idempotent — a server that already exists is reported, not re-added or
+     overwritten). `microsoft-learn` is `https://learn.microsoft.com/api/mcp`,
+     HTTP transport, no auth — the same official documentation search Mode C
+     already gives support users; v24 closes the gap where developers had
+     only the static `microsoft/` knowledge-file snapshot and no live search
+     of Microsoft's own docs.
 3. If a v6-era `.github/.agents/bcquality-knowledge/` exists in THIS repo,
    add it to `.gitignore` so no future session can accidentally commit it
    (see the v6-cleanup step in Mode B for full removal — this step just
    prevents new commits).
 4. Confirm: "Maskine-opsætning synkroniseret — bcquality-knowledge [antal]
    filer, curabis-agents 18 filer, Florence, find-altool.ps1, MCP (al,
-   businesscentral)."
+   businesscentral, microsoft-learn)."
 
 This machine setup is what the global `~/.claude/CLAUDE.md` roster section
 and the project CLAUDE.md's session-start line both depend on. Without this
@@ -543,7 +549,7 @@ these are shared across every CURABIS repo on the machine:
 | `~/.claude/curabis-agents/*.agent.md` (18 files) | Re-run the sync script |
 | `~/.claude/agents/florence.md` | Re-run the sync script |
 | `~/.claude/find-altool.ps1` | Re-run the sync script |
-| `al` + `businesscentral` MCP servers (user scope) | Re-run the sync script — idempotent: registers if missing, does NOT touch an existing registration (a developer's personal-scope config is not policed the way repo-shared `.mcp.json` used to be) |
+| `al` + `businesscentral` + `microsoft-learn` MCP servers (user scope) | Re-run the sync script — idempotent: registers if missing, does NOT touch an existing registration (a developer's personal-scope config is not policed the way repo-shared `.mcp.json` used to be) |
 | `.github/.agents/bcquality-knowledge/` + `.github/.agents/sync-bcquality-knowledge.ps1` | v6-era repo-local mirror: propose removal (see below) |
 
 ### bcquality-knowledge — machine re-sync (Mode B)
