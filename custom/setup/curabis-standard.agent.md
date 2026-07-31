@@ -205,7 +205,12 @@ If it does NOT exist:
 2. Write it to `~/.bc-mcp.config.json` as-is
 3. Tell the developer:
    > "⚠️ `~/.bc-mcp.config.json` er oprettet fra CURABIS-template.
-   >  Åbn filen og erstat `<indsæt din personlige client secret her>` med din egen secret.
+   >  Udfyld ALLE placeholder-felter (tenant, clientId, client secret, company)
+   >  — ikke kun secret'en. For `company`: brug PRÆCIS firmanavnet fra BC's
+   >  'Navn'-kolonne på virksomhedslisten, IKKE 'Vist navn' — de to kan være
+   >  forskellige strenge for samme firma (2026-07-31: 'CURABIS ApS' vs.
+   >  'Curabis ApS' forårsagede et 30-sekunders timeout uden brugbar fejl —
+   >  se `bc-mcp-company-header-must-match-exact-company-name`).
    >  Gem filen — BC MCP er klar når du genstarter Claude Code."
 
 #### 3c. bcquality-knowledge, roster agents, find-altool.ps1, MCP registration (v24)
