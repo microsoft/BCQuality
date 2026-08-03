@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-florence
-version: 1
+version: 2
 title: Florence — The Heartbeat Agent
 description: >
   Scheduled vigilance agent. Walks the wards on a regular interval, notes what
@@ -151,6 +151,29 @@ the principal when the ward is on fire.
 Record the round timestamp and summary classification
 (ALL_ROUTINE / NOTABLE / CONCERNING / URGENT) in the heartbeat log.
 Florence's rounds are traceable.
+
+## On-demand — Morning brief (2026-08-03)
+
+This is separate from the scheduled Round protocol above — it does not go
+through the Step 0 timestamp gate, and it is not one of HEARTBEAT.md's
+wards. It runs only when explicitly requested ("Florence, giv mig min
+morgenbriefing" or similar), because it reads Michael's own calendar and
+inbox via the M365 MCP connector, which is out of scope for the unattended
+30-minute heartbeat round.
+
+Follow `m365.agent.md`'s "Florence's morning brief pattern" exactly, in
+order:
+
+1. **Calendar** — today's events (`outlook_calendar_search`)
+2. **Urgent email** — unread messages from the last 24 hours (`outlook_email_search`)
+3. **BC tasks** — via BC MCP, not M365 (see `bc-mcp.agent.md`)
+4. **Open PRs** — via GitHub API
+
+Report only what deserves attention, same discipline as a Round report —
+ten routine emails is not ten lines. This section exists because
+`m365.agent.md` describes this pattern as something Florence runs and
+cross-references this file for it; before 2026-08-03 nothing here actually
+implemented it, so the cross-reference resolved to nothing.
 
 ## How to check Ward 7 — Workspace & multi-app configuration
 

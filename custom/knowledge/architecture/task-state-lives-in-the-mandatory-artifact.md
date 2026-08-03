@@ -40,12 +40,30 @@ can drift; the artifact the flow already requires cannot drift from itself.
 
 ```
 TASK_STARTED        branch created, BC gitHubDevStatus = In Progress (PTE only)
+ERGASTERION_RULING: PROCEED | PROCEED_WITH_CHANGES | RECONSIDER   (HIGH tier only,
+                     before implementation — see below)
 RED_CONFIRMED        test written, developer confirmed the failing run
 GREEN_CONFIRMED       test passes, developer/CI has actually run it
 REVIEW: APPROVE | APPROVE_WITH_NOTES | BLOCK    al-review's verdict
 ON_HOLD              parked mid-task (Focus gate) — always includes why
 MERGED               track branch merged, BC Done (PTE) / PR merged (AppSource)
 ```
+
+**2026-08-03 — `ERGASTERION_RULING` carries required changes forward.** When
+a HIGH-tier task convenes the Ergasterion (`ergasterion.agent.md`) before
+implementation, its ruling — and, critically, the *exact required changes*
+for a PROCEED_WITH_CHANGES or RECONSIDER disposition — is written into the
+same trail, not just decided in the moment and forgotten. Without this,
+nothing downstream (al-review, at merge time) has any way to check whether
+the implementation actually honored a design ruling that happened before
+code existed. The checkpoint text includes the required-changes list
+verbatim, e.g.:
+
+    [CURABIS-STATE] ERGASTERION_RULING: PROCEED_WITH_CHANGES — hide the
+    exchange-rate lookup behind an interface before implementation — 2026-08-03, mid
+
+al-review's Titus checklist reads this checkpoint back and treats an
+unaddressed required change as a BLOCK finding — see `al-review.agent.md`.
 
 ## PTE format — a tagged comment per transition
 
