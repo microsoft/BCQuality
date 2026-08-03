@@ -131,9 +131,9 @@ $curabisAgentsDest = Join-Path $env:USERPROFILE '.claude\curabis-agents'
 New-Item -ItemType Directory -Force $curabisAgentsDest | Out-Null
 
 $rosterFromAgentsDir = @(
-    'aurelius', 'carlin', 'columbo', 'court', 'edison', 'ferencz',
-    'francis', 'immanuel', 'lincoln', 'm365', 'munger', 'roemer',
-    'smiley', 'weber'
+    'aurelius', 'carlin', 'columbo', 'court', 'edison', 'ergasterion',
+    'ferencz', 'fowler', 'francis', 'hickey', 'immanuel', 'lincoln', 'm365',
+    'munger', 'parnas', 'roemer', 'smiley', 'weber'
 ) | ForEach-Object { Join-Path $clone "custom\agents\$_.agent.md" }
 
 $rosterFromSetupTemplates = @(

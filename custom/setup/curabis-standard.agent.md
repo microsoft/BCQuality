@@ -92,6 +92,10 @@ old HTTP-encoding pitfalls do not exist here).
 | lincoln.agent.md | `{AGENTS_BASE}/lincoln.agent.md` |
 | aurelius.agent.md | `{AGENTS_BASE}/aurelius.agent.md` |
 | munger.agent.md | `{AGENTS_BASE}/munger.agent.md` |
+| ergasterion.agent.md | `{AGENTS_BASE}/ergasterion.agent.md` |
+| hickey.agent.md | `{AGENTS_BASE}/hickey.agent.md` |
+| fowler.agent.md | `{AGENTS_BASE}/fowler.agent.md` |
+| parnas.agent.md | `{AGENTS_BASE}/parnas.agent.md` |
 | edison.agent.md | `{AGENTS_BASE}/edison.agent.md` |
 | ferencz.agent.md | `{AGENTS_BASE}/ferencz.agent.md` |
 | roemer.agent.md | `{AGENTS_BASE}/roemer.agent.md` |
@@ -104,10 +108,10 @@ old HTTP-encoding pitfalls do not exist here).
 CLAUDE.md is generated dynamically — not fetched as a static template because
 it contains project-specific paths.
 
-**v24 — machine vs. repo split:** of the 22 agent files above, only
+**v24 — machine vs. repo split:** of the 26 agent files above, only
 `bcquality.agent.md` (the marker this whole mechanism gates on) and
 `feynman.agent.md` (support sessions have no `~/.claude/` to read from) are
-still written into a repo's `.github/.agents/`. The remaining 20 — including
+still written into a repo's `.github/.agents/`. The remaining 24 — including
 `florence.agent.md`, which goes to `~/.claude/agents/florence.md` as a real
 Claude Code subagent rather than `~/.claude/curabis-agents/` — are deployed
 ONCE PER MACHINE by `sync-bcquality-knowledge.ps1` to `~/.claude/curabis-agents/`
