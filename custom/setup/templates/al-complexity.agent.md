@@ -129,9 +129,13 @@ MEDIUM
 - Short spec -> TDD (tests FIRST, then code) -> bcquality.agent.md review.
 
 HIGH
-- Architecture clarify first (CURABIS-ARCH-010) -> spec -> TDD -> bcquality.agent.md review,
-  with al-triage.agent.md on standby. Flag for explicit human architecture sign-off before
-  implementation starts.
+- If the requirement itself is still ambiguous, Columbo resolves that first
+  (CURABIS-ARCH-010) — this is not the Ergasterion's job. Then convene the
+  Ergasterion (`ergasterion.agent.md` — Hickey, Fowler, Parnas) on the proposed
+  design -> spec -> TDD -> bcquality.agent.md review, with al-triage.agent.md
+  on standby. The Ergasterion's ruling (PROCEED / PROCEED WITH CHANGES /
+  RECONSIDER), plus Michael's decision on it, IS the human architecture
+  sign-off — not a step a developer can wave off by saying "looks fine to me."
 
 ## Action - advisory protocol
 

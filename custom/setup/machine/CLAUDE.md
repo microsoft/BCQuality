@@ -116,6 +116,17 @@ These are invoked only when needed - not at session start:
     truly necessary? Prunes what no longer serves. Asks: "Is this rule still alive?"
   - `~/.claude/curabis-agents/munger.agent.md` - Third judge. Applies inversion and mental models.
     Finds what the others missed. Asks: "What are we getting wrong — and why?"
+- `~/.claude/curabis-agents/ergasterion.agent.md` - the architecture workshop: Hickey, Fowler,
+  and Parnas inspect one proposed design before it's built — not the rulebook (that's the
+  Court) and not the diff after the fact (that's al-review). This IS the human architecture
+  sign-off al-complexity's HIGH route requires; also invocable on demand for any design.
+  - `~/.claude/curabis-agents/hickey.agent.md` - First voice. Names what the design actually
+    models and what's been complected. Asks: "What does this actually model?"
+  - `~/.claude/curabis-agents/fowler.agent.md` - Second voice. Prices what this change costs
+    or saves later. Asks: "Does this pay for itself, or does it borrow against the next change?"
+  - `~/.claude/curabis-agents/parnas.agent.md` - Third voice. Checks whether what's likely to
+    change is hidden behind a stable interface. Asks: "Is what's going to change hidden behind
+    what won't?"
 - `~/.claude/curabis-agents/algo-settings.agent.md` - AL-Go pipeline settings advisor. Consult when
   discussing or changing AL-Go CI/CD settings (`AL-Go-Settings.json`).
 - `~/.claude/curabis-agents/edison.agent.md` - BCQuality eval runner. Measures whether a merged
