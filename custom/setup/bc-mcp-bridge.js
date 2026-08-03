@@ -92,7 +92,14 @@ async function forward(msg) {
   const sid = r.headers.get("mcp-session-id"); if (sid) sessionId = sid;
   const ct = r.headers.get("content-type") || "";
   const text = await r.text();
-  if (!r.ok && !text) throw new Error(`HTTP ${r.status}`);
+  // 2026-07-31: BC has returned error bodies as plain JSON while still labelling
+  // content-type text/event-stream (e.g. "company not found"). parseSSE only
+  // extracts lines starting with "data:" - a plain JSON error body has none, so
+  // it silently returned []. The stdin loop then wrote nothing at all, and the
+  // client (Claude Code) waited out its own 30s timeout instead of seeing the
+  // real error immediately. Check !r.ok BEFORE any SSE parsing, unconditionally -
+  // never let a non-2xx response fall through to parseSSE.
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${text || "(empty body)"}`);
   return ct.includes("text/event-stream") ? parseSSE(text) : (text.trim() ? [text.trim()] : []);
 }
 

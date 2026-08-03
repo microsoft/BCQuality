@@ -70,11 +70,15 @@ Tjek branches ældre end 14 dage uden åben PR.
 
 ### 6. Agent-synlighed i CLAUDE.md
 Sammenlign filer i `.github/.agents/` med referencer i `CLAUDE.md`.
+Kald Rømer (`roemer.agent.md`) hvis 1+ agent i mappen ikke er nævnt i
+CLAUDE.md — det er præcis hans station 8 (agent visibility), og han kan
+afgøre om det er drift eller en legitim lokal afvigelse der skal videre
+til Ferencz.
 
 | Klassifikation | Kriterium |
 |---|---|
 | Routine | Alle agenter er nævnt i CLAUDE.md |
-| Concerning | 1+ agent i mappen er ikke nævnt i CLAUDE.md |
+| Concerning | 1+ agent i mappen er ikke nævnt i CLAUDE.md — Rømer kaldt |
 
 ---
 

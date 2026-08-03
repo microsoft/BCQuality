@@ -79,6 +79,7 @@ old HTTP-encoding pitfalls do not exist here).
 | francis.agent.md | `{AGENTS_BASE}/francis.agent.md` |
 | al-triage.agent.md | `{BASE}/templates/al-triage.agent.md` |
 | al-complexity.agent.md | `{BASE}/templates/al-complexity.agent.md` |
+| al-review.agent.md | `{BASE}/templates/al-review.agent.md` |
 | bc-mcp.agent.md | `{BASE}/templates/bc-mcp.agent.md` |
 | algo-settings.agent.md | `{BASE}/templates/algo-settings.agent.md` |
 | columbo.agent.md | `{AGENTS_BASE}/columbo.agent.md` |
@@ -91,9 +92,14 @@ old HTTP-encoding pitfalls do not exist here).
 | lincoln.agent.md | `{AGENTS_BASE}/lincoln.agent.md` |
 | aurelius.agent.md | `{AGENTS_BASE}/aurelius.agent.md` |
 | munger.agent.md | `{AGENTS_BASE}/munger.agent.md` |
+| ergasterion.agent.md | `{AGENTS_BASE}/ergasterion.agent.md` |
+| hickey.agent.md | `{AGENTS_BASE}/hickey.agent.md` |
+| fowler.agent.md | `{AGENTS_BASE}/fowler.agent.md` |
+| parnas.agent.md | `{AGENTS_BASE}/parnas.agent.md` |
 | edison.agent.md | `{AGENTS_BASE}/edison.agent.md` |
 | ferencz.agent.md | `{AGENTS_BASE}/ferencz.agent.md` |
 | roemer.agent.md | `{AGENTS_BASE}/roemer.agent.md` |
+| curabis-task-state-check.yml | `{BASE}/templates/curabis-task-state-check.yml` |
 | cspell.json | `{BASE}/templates/cspell.json` |
 | find-altool.ps1 | `{BASE}/machine/find-altool.ps1` (v24: machine artifact, not a repo template) |
 | feynman-onboarding.md | `{BASE}/templates/feynman-onboarding.md` |
@@ -102,10 +108,10 @@ old HTTP-encoding pitfalls do not exist here).
 CLAUDE.md is generated dynamically — not fetched as a static template because
 it contains project-specific paths.
 
-**v24 — machine vs. repo split:** of the 21 agent files above, only
+**v24 — machine vs. repo split:** of the 26 agent files above, only
 `bcquality.agent.md` (the marker this whole mechanism gates on) and
 `feynman.agent.md` (support sessions have no `~/.claude/` to read from) are
-still written into a repo's `.github/.agents/`. The remaining 19 — including
+still written into a repo's `.github/.agents/`. The remaining 24 — including
 `florence.agent.md`, which goes to `~/.claude/agents/florence.md` as a real
 Claude Code subagent rather than `~/.claude/curabis-agents/` — are deployed
 ONCE PER MACHINE by `sync-bcquality-knowledge.ps1` to `~/.claude/curabis-agents/`
@@ -204,13 +210,18 @@ If it does NOT exist:
 2. Write it to `~/.bc-mcp.config.json` as-is
 3. Tell the developer:
    > "⚠️ `~/.bc-mcp.config.json` er oprettet fra CURABIS-template.
-   >  Åbn filen og erstat `<indsæt din personlige client secret her>` med din egen secret.
+   >  Udfyld ALLE placeholder-felter (tenant, clientId, client secret, company)
+   >  — ikke kun secret'en. For `company`: brug PRÆCIS firmanavnet fra BC's
+   >  'Navn'-kolonne på virksomhedslisten, IKKE 'Vist navn' — de to kan være
+   >  forskellige strenge for samme firma (2026-07-31: 'CURABIS ApS' vs.
+   >  'Curabis ApS' forårsagede et 30-sekunders timeout uden brugbar fejl —
+   >  se `bc-mcp-company-header-must-match-exact-company-name`).
    >  Gem filen — BC MCP er klar når du genstarter Claude Code."
 
 #### 3c. bcquality-knowledge, roster agents, find-altool.ps1, MCP registration (v24)
 
 Everything machine-global beyond the bridge and BC secret — the knowledge
-mirror, the 19 roster agent files (18 to `~/.claude/curabis-agents/` +
+mirror, the 20 roster agent files (19 to `~/.claude/curabis-agents/` +
 Florence to `~/.claude/agents/florence.md`), `~/.claude/find-altool.ps1`, and
 the `al`/`businesscentral`/`microsoft-learn` MCP registrations — is deployed
 by ONE script, `sync-bcquality-knowledge.ps1`. None of it is ever committed
@@ -232,7 +243,7 @@ change.
      always read in full, `community/` and `microsoft/` are scanned via the
      index rather than preloaded, since together they run into the hundreds
      of files)
-   - `~/.claude/curabis-agents/*.agent.md` (18 files)
+   - `~/.claude/curabis-agents/*.agent.md` (19 files)
    - `~/.claude/agents/florence.md` (Florence, as a real subagent)
    - `~/.claude/find-altool.ps1`
    - `al` + `businesscentral` + `microsoft-learn` registered at user MCP scope
@@ -247,7 +258,7 @@ change.
    (see the v6-cleanup step in Mode B for full removal — this step just
    prevents new commits).
 4. Confirm: "Maskine-opsætning synkroniseret — bcquality-knowledge [antal]
-   filer, curabis-agents 18 filer, Florence, find-altool.ps1, MCP (al,
+   filer, curabis-agents 19 filer, Florence, find-altool.ps1, MCP (al,
    businesscentral, microsoft-learn)."
 
 This machine setup is what the global `~/.claude/CLAUDE.md` roster section
@@ -428,7 +439,7 @@ is the marker file the machine's `~/.claude/CLAUDE.md` gates the whole
 repo-local because Mode C support sessions have no `~/.claude/` to read a
 global roster from. Every other roster agent (Smiley, Carlin, Immanuel,
 Francis, Columbo, Florence, the Court, Rømer, Weber, Ferencz, Edison,
-al-triage, al-complexity, bc-mcp, algo-settings) is deployed machine-globally
+al-triage, al-complexity, al-review, bc-mcp, algo-settings) is deployed machine-globally
 by Step 3c and referenced from `~/.claude/CLAUDE.md` — see BCQuality rule
 `roster-agents-live-on-machine-not-in-repo`.
 
@@ -482,6 +493,28 @@ Create the standard documentation structure if it does not exist:
 
 Create a `.gitkeep` file in each empty subfolder so git tracks them.
 
+#### 4h. .github/workflows/curabis-task-state-check.yml (2026-08-03)
+
+Fetch `{BASE}/templates/curabis-task-state-check.yml` and write to
+`.github/workflows/curabis-task-state-check.yml`.
+
+Deterministic (not LLM-instruction-based) enforcement of
+`[[task-state-lives-in-the-mandatory-artifact]]`'s AppSource checklist
+order — see that rule and `al-review.agent.md`'s "state trail complete"
+checklist item for the full picture. This is a real CI check, not an agent
+protocol: it parses the PR body for a `## CURABIS Task State` section and
+fails if a later stage is checked while an earlier one isn't. It silently
+does nothing on PRs with no such section — never make it block an unrelated
+PR (a docs fix, an infra change).
+
+**Manual one-time step, cannot be automated by this file deployment:**
+tell the developer/admin to add this check as a **required status check**
+in the repo's branch protection settings (GitHub → Settings → Branches →
+the target branch's protection rule) if they want it to actually block a
+merge rather than just show as a failed check someone could ignore. Report
+this explicitly — do not silently assume it's required just because the
+workflow file exists.
+
 ### Step 5 — Confirm and offer initial commit
 
 List all files written, then ask:
@@ -531,6 +564,7 @@ shorter table applies to them.
 | `.github/.agents/bcquality.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `.github/.agents/feynman.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `cspell.json` — words from template | Merge new words, keep project words |
+| `.github/workflows/curabis-task-state-check.yml` | Fetch fresh from BCQuality, overwrite (add if missing) — remind about the branch-protection required-check step if just added |
 | `.apps/*.code-workspace` — reference layout | Create/complete: app projects + `.AL-Go` + relative `../docs` (rule `al-development-must-use-apps-workspace`) |
 | Alle øvrige `*.code-workspace` (inkl. rodens `al.code-workspace`) | Delete — kun ét workspace pr. repo; rapportér de slettede |
 | `HEARTBEAT.md` | Create from template if missing (substitute tokens), never overwrite — but run the staleness check below on every Mode B pass |
@@ -546,7 +580,7 @@ these are shared across every CURABIS repo on the machine:
 | `~/.claude/bc-mcp-bridge.js` | Fetch fresh from BCQuality, overwrite |
 | `~/.claude/sync-bcquality-knowledge.ps1` | Fetch fresh from BCQuality (raw bytes), overwrite (add if missing) |
 | `~/.claude/bcquality-knowledge/` | Re-run the sync script (see below) |
-| `~/.claude/curabis-agents/*.agent.md` (18 files) | Re-run the sync script |
+| `~/.claude/curabis-agents/*.agent.md` (19 files) | Re-run the sync script |
 | `~/.claude/agents/florence.md` | Re-run the sync script |
 | `~/.claude/find-altool.ps1` | Re-run the sync script |
 | `al` + `businesscentral` + `microsoft-learn` MCP servers (user scope) | Re-run the sync script — idempotent: registers if missing, does NOT touch an existing registration (a developer's personal-scope config is not policed the way repo-shared `.mcp.json` used to be) |
@@ -841,7 +875,20 @@ Guide administratoren gennem:
 
 1. Invitér brugeren til organisationen som **member**
 2. Giv **Read**-rolle på de valgte repos — aldrig Write/Maintain/Admin
-3. Verificér at brugeren IKKE har adgang til `Curabis/QualityHub`
+3. Verificér at brugeren IKKE har adgang til `Curabis/QualityHub` — og tjek
+   BÅDE vejene dertil, ikke kun den ene: (a) ingen direkte collaborator-
+   invitation til QualityHub, OG (b) brugeren er ikke medlem af et team der
+   selv har adgang til QualityHub (team-nedarvet adgang omgår en ren
+   per-repo-check), OG (c) organisationens "Base permissions" (Org Settings →
+   Member privileges) ikke er sat bredere end "No permission"/"Read" på en
+   måde der stiltiende dækker private repos. 2026-08-03: et tidligere audit
+   fandt at trin 3 kun tjekkede (a) — en bruger kunne i praksis få adgang via
+   (b) eller (c) uden at noget fangede det.
+4. **Registrér onboardingen** i `custom/setup/support-users-onboarded.md`
+   (denne fil, append-only) — navn, GitHub-brugernavn, dato, tildelte repos.
+   Uden dette har intet senere trin (station 15 i Rømers runde) noget at
+   tjekke imod, og en glemt/forkert adgang forbliver usynlig for altid, ikke
+   kun til næste inspektion.
 
 ### Step 3 — Claude-miljø (browser, ikke VS Code)
 
