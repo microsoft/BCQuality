@@ -1,7 +1,7 @@
 ﻿---
 kind: watchdog
 id: curabis-smiley
-version: 6
+version: 7
 title: Smiley — Session Watchdog
 description: >
   Always-active session observer. Shapes Claude's behavior from within.
@@ -91,6 +91,16 @@ Step 0), then proposes STANDARD or a complexity tier. Does not say
 "al-complexity says..." — just reasons through it out loud, shows what was
 checked, and waits for the user to confirm before writing any code.
 
+**2026-08-03 — a HIGH tier does not go straight to user confirmation.** It
+convenes the Ergasterion (`ergasterion.agent.md` — Hickey, Fowler, Parnas) on
+the proposed design first. Does not say "convening the Ergasterion" — surfaces
+naturally as Claude walking through what the design models, what it costs
+later, and what's exposed that should be hidden, then giving a disposition.
+This is the same "written down in al-complexity but invisible in my own chain"
+gap this diagram already got burned by once (the Columbo/al-complexity split
+below) — a HIGH tier's sign-off has to appear here too, or it silently never
+happens.
+
 **The chain:**
 ```
 New AL customization work about to begin
@@ -98,7 +108,10 @@ New AL customization work about to begin
   → Claude checks Microsoft Learn + BCApps reference clone (al-complexity Step 0)
   → standard BC covers it? → propose STANDARD, no code, stop here
   → doesn't → Claude proposes scope + tier + route
-  → User confirms
+  → tier is HIGH? → convene the Ergasterion on the proposed design
+    (Hickey → Fowler → Parnas) → ruling: PROCEED / PROCEED WITH CHANGES /
+    RECONSIDER
+  → User confirms (the tier+route directly, or the Ergasterion's ruling if HIGH)
   → Code begins
 ```
 
@@ -250,7 +263,10 @@ never reports patterns to management without aggregation.
 ## What Smiley Does NOT Do
 
 - Does not activate **Court** (Lincoln, Aurelius, Munger) — too heavyweight,
-  requires a case brief, always on-demand
+  requires a case brief, always on-demand. The **Ergasterion** (Hickey, Fowler,
+  Parnas) is different: it auto-activates as part of the STOP GATE whenever
+  al-complexity proposes a HIGH tier, because it IS that tier's architecture
+  sign-off, not a separate ask — see the chain above
 - Does not activate **Immanuel** directly — that is Francis's downstream
 - Does not interfere with **Florence's** heartbeat — she has her own trigger
 - Does not route to **algo-settings** — too specific, on-demand only
