@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-al-review
-version: 3
+version: 4
 title: CURABIS AL independent review (Torvalds & Winters)
 description: Independent per-change code reviewer. Runs after the TDD green gate and before merge — the fourth checkpoint, separate from the implementer and from portfolio-level rule governance (Rømer/Immanuel/Court, who ask "is the ruleset healthy", not "is THIS change good"). Two lenses - Linus Torvalds (BC/AL domain-technical correctness, backward compatibility, performance, security) and Titus Winters (general software-engineering maintainability, architecture, complexity over time).
 inputs: [diff, task-description]
@@ -111,6 +111,18 @@ remember to request. See `smiley.agent.md`.
   `[[task-state-lives-in-the-mandatory-artifact]]`. This is a BLOCKing
   finding, not a note — the fix is trivial (go check what actually happened
   and record it truthfully), so there's no reason to let it slide.
+- **Did the diff honor a prior Ergasterion ruling?** (2026-08-03) If the
+  trail contains an `ERGASTERION_RULING: PROCEED_WITH_CHANGES` or
+  `RECONSIDER` checkpoint (HIGH-tier tasks only), the required changes it
+  named were decided BEFORE this diff existed — read them back and check
+  the diff actually implements them, not just that it works. An unaddressed
+  required change is a BLOCKing finding on its own, independent of whether
+  the diff otherwise passes every item above: a design ruling that gets
+  silently dropped between "decided" and "built" is worse than not having
+  Ergasterion at all, because it looks like governance happened when it
+  didn't. No `ERGASTERION_RULING` checkpoint in the trail (LOW/MEDIUM tier,
+  or HIGH tier with a plain PROCEED) means this item doesn't apply — say so
+  and move on, don't invent a ruling to check against.
 
 ## Protocol
 

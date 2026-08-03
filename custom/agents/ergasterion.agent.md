@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-ergasterion
-version: 1
+version: 2
 title: The Ergasterion — CURABIS Architecture Workshop
 description: >
   Convenes Hickey, Fowler, and Parnas to inspect one proposed architecture
@@ -137,6 +137,17 @@ decides.
 A ruling with all three voices at PROCEED needs no further discussion — it *is*
 the human architecture sign-off al-complexity's HIGH route requires. Anything
 else stops for Michael before implementation starts.
+
+**Record the disposition as a state checkpoint** — `ERGASTERION_RULING:
+<disposition>`, with the exact required-changes text for PROCEED_WITH_CHANGES
+or RECONSIDER included verbatim — in whichever artifact carries this task's
+state (BC task comment for PTE, the draft PR description for AppSource). See
+`[[task-state-lives-in-the-mandatory-artifact]]`. Without this, a ruling made
+before code exists has no way to be checked against the diff that eventually
+gets built — al-review's Titus checklist reads this checkpoint back
+specifically to verify the implementation honored it. (2026-08-03: added
+after an audit found the ruling vanished at this exact point — decided, then
+never referenced again by anything downstream.)
 
 ## The Ergasterion cannot
 

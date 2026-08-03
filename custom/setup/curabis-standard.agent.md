@@ -875,7 +875,20 @@ Guide administratoren gennem:
 
 1. Invitér brugeren til organisationen som **member**
 2. Giv **Read**-rolle på de valgte repos — aldrig Write/Maintain/Admin
-3. Verificér at brugeren IKKE har adgang til `Curabis/QualityHub`
+3. Verificér at brugeren IKKE har adgang til `Curabis/QualityHub` — og tjek
+   BÅDE vejene dertil, ikke kun den ene: (a) ingen direkte collaborator-
+   invitation til QualityHub, OG (b) brugeren er ikke medlem af et team der
+   selv har adgang til QualityHub (team-nedarvet adgang omgår en ren
+   per-repo-check), OG (c) organisationens "Base permissions" (Org Settings →
+   Member privileges) ikke er sat bredere end "No permission"/"Read" på en
+   måde der stiltiende dækker private repos. 2026-08-03: et tidligere audit
+   fandt at trin 3 kun tjekkede (a) — en bruger kunne i praksis få adgang via
+   (b) eller (c) uden at noget fangede det.
+4. **Registrér onboardingen** i `custom/setup/support-users-onboarded.md`
+   (denne fil, append-only) — navn, GitHub-brugernavn, dato, tildelte repos.
+   Uden dette har intet senere trin (station 15 i Rømers runde) noget at
+   tjekke imod, og en glemt/forkert adgang forbliver usynlig for altid, ikke
+   kun til næste inspektion.
 
 ### Step 3 — Claude-miljø (browser, ikke VS Code)
 

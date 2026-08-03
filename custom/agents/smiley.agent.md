@@ -1,7 +1,7 @@
 ﻿---
 kind: watchdog
 id: curabis-smiley
-version: 7
+version: 8
 title: Smiley — Session Watchdog
 description: >
   Always-active session observer. Shapes Claude's behavior from within.
@@ -110,7 +110,7 @@ New AL customization work about to begin
   → doesn't → Claude proposes scope + tier + route
   → tier is HIGH? → convene the Ergasterion on the proposed design
     (Hickey → Fowler → Parnas) → ruling: PROCEED / PROCEED WITH CHANGES /
-    RECONSIDER
+    RECONSIDER                              [state: ERGASTERION_RULING: <ruling>]
   → User confirms (the tier+route directly, or the Ergasterion's ruling if HIGH)
   → Code begins
 ```

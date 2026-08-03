@@ -1,11 +1,37 @@
 name: CURABIS task-state check
 
-# Deterministic enforcement (not LLM diligence) for the AppSource state-trail
-# format from task-state-lives-in-the-mandatory-artifact.md. Parses the PR
-# body for a "## CURABIS Task State" checklist and fails if any checked box
-# appears AFTER an unchecked one - i.e. a later stage claimed without an
-# earlier one. Silently passes (does nothing) if the section is absent -
-# this check only applies to PRs that actually opted into the state trail;
+# 2026-08-03 - scope correction after an audit found the header overstated
+# this check's actual guarantee.
+#
+# What this DOES enforce deterministically: checklist ORDER in the PR body
+# ("## CURABIS Task State") - a later stage cannot be checked while an
+# earlier one isn't. It runs on every push/edit, needs no AI session to
+# execute, and cannot be talked out of failing.
+#
+# What this does NOT enforce, and never has: that a checked box corresponds
+# to a real event (a red test that actually ran, a review that actually
+# happened). A session or a rushed developer can check every box in perfect
+# order having done none of the underlying work, and this Action passes.
+# The order check catches a narrower, still-real failure mode (a later
+# stage claimed before an earlier one) - it is not proof the trail is true.
+#
+# This ALSO does not enforce anything by itself unless a human has
+# separately added it as a required status check in the repo's branch
+# protection settings (curabis-standard.agent.md documents this as a
+# one-time manual step - it cannot be automated by file deployment). Absent
+# that, a failing run just shows as a red X someone can ignore and merge
+# past. Rømer's inspection round has a station that checks whether branch
+# protection is actually configured this way - see roemer.agent.md station 14.
+#
+# This check ONLY covers the AppSource track (PR body checklists). The PTE
+# track (BC task comments) has NO equivalent deterministic backstop - only
+# Smiley's Close-gate self-verification and al-review's "state trail
+# complete?" checklist item, both of which are an AI session re-reading its
+# own/BC's history, not an independent script. That is a known, accepted
+# gap, not an oversight - see task-state-lives-in-the-mandatory-artifact.md.
+#
+# Silently passes (does nothing) if the "## CURABIS Task State" section is
+# absent - this check only applies to PRs that opted into the state trail;
 # it must never block an unrelated PR (docs fix, infra change, etc.).
 
 on:
