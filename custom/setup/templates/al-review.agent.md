@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-al-review
-version: 2
+version: 3
 title: CURABIS AL independent review (Torvalds & Winters)
 description: Independent per-change code reviewer. Runs after the TDD green gate and before merge — the fourth checkpoint, separate from the implementer and from portfolio-level rule governance (Rømer/Immanuel/Court, who ask "is the ruleset healthy", not "is THIS change good"). Two lenses - Linus Torvalds (BC/AL domain-technical correctness, backward compatibility, performance, security) and Titus Winters (general software-engineering maintainability, architecture, complexity over time).
 inputs: [diff, task-description]
@@ -102,6 +102,15 @@ remember to request. See `smiley.agent.md`.
 - Consistency with the rest of the codebase
 - Should this even be implemented this way at all — not "does it work" but
   "is this the right way to have solved it"?
+- **State trail complete?** (2026-08-03) Read back the `[CURABIS-STATE]`
+  comments (PTE) or PR checklist (AppSource) — `TASK_STARTED`,
+  `RED_CONFIRMED`, `GREEN_CONFIRMED` must all be present before this review
+  even runs. A missing earlier checkpoint is a maintainability finding in
+  its own right: the record this task claims to have followed the lifecycle
+  gates can't be trusted after the fact, which defeats the entire point of
+  `[[task-state-lives-in-the-mandatory-artifact]]`. This is a BLOCKing
+  finding, not a note — the fix is trivial (go check what actually happened
+  and record it truthfully), so there's no reason to let it slide.
 
 ## Protocol
 

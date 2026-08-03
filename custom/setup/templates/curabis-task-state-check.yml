@@ -1,0 +1,77 @@
+name: CURABIS task-state check
+
+# Deterministic enforcement (not LLM diligence) for the AppSource state-trail
+# format from task-state-lives-in-the-mandatory-artifact.md. Parses the PR
+# body for a "## CURABIS Task State" checklist and fails if any checked box
+# appears AFTER an unchecked one - i.e. a later stage claimed without an
+# earlier one. Silently passes (does nothing) if the section is absent -
+# this check only applies to PRs that actually opted into the state trail;
+# it must never block an unrelated PR (docs fix, infra change, etc.).
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-task-state-order:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate CURABIS Task State checklist order
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || "";
+            const heading = "## CURABIS Task State";
+            const headingIdx = body.indexOf(heading);
+            if (headingIdx === -1) {
+              console.log("No '## CURABIS Task State' section found - not a state-tracked PR, skipping.");
+              return;
+            }
+
+            // Take everything after the heading up to the next "## " heading (or end of body).
+            const rest = body.slice(headingIdx + heading.length);
+            const nextHeadingIdx = rest.search(/\n##\s/);
+            const section = nextHeadingIdx === -1 ? rest : rest.slice(0, nextHeadingIdx);
+
+            const lineRe = /^-\s*\[( |x|X)\]\s*(.+)$/gm;
+            const items = [];
+            let m;
+            while ((m = lineRe.exec(section)) !== null) {
+              items.push({ checked: m[1].toLowerCase() === "x", label: m[2].trim() });
+            }
+
+            if (items.length === 0) {
+              core.setFailed(
+                "Found a '## CURABIS Task State' heading but no checklist lines under it " +
+                "(expected '- [ ] ...' / '- [x] ...'). Either add the checklist or remove the heading."
+              );
+              return;
+            }
+
+            // Valid order is monotonic: once an item is unchecked, every item after it
+            // must also be unchecked. A checked item after an unchecked one means a
+            // later stage was marked done while an earlier one wasn't.
+            let seenUnchecked = false;
+            let brokenAt = -1;
+            for (let i = 0; i < items.length; i++) {
+              if (!items[i].checked) {
+                seenUnchecked = true;
+              } else if (seenUnchecked) {
+                brokenAt = i;
+                break;
+              }
+            }
+
+            if (brokenAt !== -1) {
+              const lines = items.map((it, i) =>
+                `  ${i === brokenAt ? ">>" : "  "} [${it.checked ? "x" : " "}] ${it.label}`
+              ).join("\n");
+              core.setFailed(
+                "CURABIS Task State checklist is out of order - a later stage is checked " +
+                "while an earlier one is not. A stage cannot be marked done before the ones " +
+                "before it. Offending line marked with '>>':\n\n" + lines
+              );
+              return;
+            }
+
+            console.log(`CURABIS Task State checklist order OK (${items.filter(i => i.checked).length}/${items.length} checked).`);
