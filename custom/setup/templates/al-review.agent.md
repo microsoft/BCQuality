@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-al-review
-version: 1
+version: 2
 title: CURABIS AL independent review (Torvalds & Winters)
 description: Independent per-change code reviewer. Runs after the TDD green gate and before merge — the fourth checkpoint, separate from the implementer and from portfolio-level rule governance (Rømer/Immanuel/Court, who ask "is the ruleset healthy", not "is THIS change good"). Two lenses - Linus Torvalds (BC/AL domain-technical correctness, backward compatibility, performance, security) and Titus Winters (general software-engineering maintainability, architecture, complexity over time).
 inputs: [diff, task-description]
@@ -122,6 +122,13 @@ remember to request. See `smiley.agent.md`.
      missing standing rule, not just a one-off)
    - **BLOCK** — must be addressed before merge, no exceptions negotiated
      by authority or deadline pressure (Linus's rule, not just a suggestion)
+6. **Record the verdict as a state checkpoint** — `REVIEW: <verdict>` — in
+   whichever artifact carries this task's state (BC task comment for PTE,
+   the draft PR description for AppSource). See
+   `[[task-state-lives-in-the-mandatory-artifact]]`. The verdict is not
+   findings-only in this one respect: it's the record that this checkpoint
+   happened at all, so a resumed session doesn't re-run a review that
+   already passed, or silently skip one that hasn't happened yet.
 
 ## Output format
 

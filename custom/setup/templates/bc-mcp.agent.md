@@ -1,9 +1,9 @@
 ---
 kind: action-skill
 id: curabis-bc-mcp
-version: 2
+version: 3
 title: CURABIS Business Central MCP usage
-description: How to use the CURABIS Business Central MCP server to read project-management work from BC and write GitHub dev status back. Company-default workflow for syncing Claude Code / GitHub work with BC tasks. v2 (2026-07-30) - BC MCP switched from Dynamic to Static Tool Mode; 14 directly-named tools replace the old search/describe/invoke indirection.
+description: How to use the CURABIS Business Central MCP server to read project-management work from BC and write GitHub dev status back. Company-default workflow for syncing Claude Code / GitHub work with BC tasks. v2 (2026-07-30) - BC MCP switched from Dynamic to Static Tool Mode; 14 directly-named tools replace the old search/describe/invoke indirection. v3 (2026-08-03) - task-comment state checkpoints for resumability across machine/operator changes.
 inputs: [project-no, task-no, branch, dev-status, comment]
 outputs: [task-list, updated-task, posted-comment]
 bc-version: [all]
@@ -124,6 +124,18 @@ Moving to `Accepted` requires `Starting date`, `Estimated time` and `Expected De
    (`projectNo` + `subTaskNo` scope it to one task). Keep notes short and factual.
 4. **Finish.** Set `gitHubDevStatus = Done` automatically when branch is merged to main.
    Set `On Hold` if the branch is parked.
+
+**State checkpoints (2026-08-03):** at each Smiley Task Lifecycle transition
+(see `smiley.agent.md`), call `Create_TaskComment_PAG6102902` with a one-line
+`[CURABIS-STATE] <STAGE> — <date>, <developer>` comment —
+`TASK_STARTED`/`RED_CONFIRMED`/`ON_HOLD: <why>`/`GREEN_CONFIRMED`/
+`REVIEW: <verdict>`/`MERGED`. This is what makes the task resumable by a
+different developer or a different machine without re-deriving where things
+stood from `gitHubDevStatus` alone (that enum only has four values and can't
+distinguish "red confirmed" from "blocked in review"). To resume: call
+`List_TaskComments_PAG6102902` scoped to the task, filter for
+`[CURABIS-STATE]`, the last one is current. See
+`[[task-state-lives-in-the-mandatory-artifact]]`.
 
 ## Create task workflow (PAG6102905)
 

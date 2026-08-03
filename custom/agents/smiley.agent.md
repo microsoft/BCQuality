@@ -1,7 +1,7 @@
 ﻿---
 kind: watchdog
 id: curabis-smiley
-version: 4
+version: 5
 title: Smiley — Session Watchdog
 description: >
   Always-active session observer. Shapes Claude's behavior from within.
@@ -113,6 +113,14 @@ Enforces the four lifecycle rules: `development-requires-bc-task`,
 `one-task-in-progress-at-a-time`, `testcase-must-fail-before-implementation`,
 `release-must-update-app-version`.
 
+**2026-08-03 — every transition below also writes a state checkpoint.**
+See `[[task-state-lives-in-the-mandatory-artifact]]`: a `[CURABIS-STATE]`
+BC task comment for PTE, a checked line in the draft PR description for
+AppSource. This is additive to the gates, not a replacement for any of
+them — the gates still enforce; the checkpoint just makes where things
+stand readable by the operator and resumable after a machine or operator
+change, without inventing a new state store.
+
 **Start gate — activate on the outcome, not the phrasing:**
 
 The trigger is **"Claude is about to write or modify AL code that changes
@@ -134,41 +142,47 @@ all of them mean AL code is about to change.
 
 - Customer app (`app.json` idRanges within 50000–99999): a BC task MUST exist.
   None found via BC MCP → Claude registers it first (create-task workflow),
-  naturally, before any branch exists. AppSource app: offer, never block.
+  naturally, before any branch exists. AppSource app: offer, never block —
+  but open the draft PR now regardless, since it's the AppSource state carrier.
 - Then, in order: feature branch created → BC `gitHubDevStatus = "In Progress"`
-  → test case written (including missing fields/setup the scenario needs)
-  → test run red.
+  → state checkpoint `TASK_STARTED` → test case written (including missing
+  fields/setup the scenario needs) → test run red.
 - **The red result is a human checkpoint.** Claude shows the failing run and
   waits for the developer to confirm red before writing implementation code.
   Claude never self-certifies red. This pause is not optional and not undercover —
   it surfaces as a natural "testen fejler som forventet — bekræft, så bygger jeg."
+  Once confirmed: state checkpoint `RED_CONFIRMED`.
 
 **Focus gate — activate when new work arrives mid-task:**
 - One task in progress at a time. A "hurtigt lige" request while a task is open
   → Claude naturally offers the binary choice: finish first, or park (BC
   `On Hold` + WIP commit). Never a second branch on top of an open task.
+  Parking writes state checkpoint `ON_HOLD` with the reason — always why,
+  never just the label.
 - Break-fix overrides this gate, as always — a broken build interrupts.
 
 **Close gate — activate when a task is about to be finished:**
-- Test case green (actually run, not assumed) → **independent review**
-  (`al-review.agent.md` — Torvalds & Winters, 2026-07-31) → merge to the
-  declared track branch → BC `Done`. Red test = the task cannot close, no
-  exceptions. A BLOCK verdict from the independent review is the same kind
-  of hard stop as a red test — green tests prove the requirement is met,
-  not that the change is well-built.
+- Test case green (actually run, not assumed) → state checkpoint
+  `GREEN_CONFIRMED` → **independent review** (`al-review.agent.md` —
+  Torvalds & Winters, 2026-07-31) → state checkpoint `REVIEW: <verdict>` →
+  merge to the declared track branch → BC `Done` / PR merged → state
+  checkpoint `MERGED`. Red test = the task cannot close, no exceptions. A
+  BLOCK verdict from the independent review is the same kind of hard stop
+  as a red test — green tests prove the requirement is met, not that the
+  change is well-built.
 - At release (track branch → main, tag, AppSource submission): app.json
   version consciously bumped before the merge.
 
 **The chain:**
 ```
 Task requested
-  → BC task exists? (mandatory 50000–99999, optional AppSource)
-  → branch + BC "In Progress"
-  → test case written → RED confirmed by developer
+  → BC task exists? (mandatory 50000–99999) / draft PR opened (AppSource)
+  → branch + BC "In Progress"                          [state: TASK_STARTED]
+  → test case written → RED confirmed by developer      [state: RED_CONFIRMED]
   → implementation
-  → test GREEN
-  → independent review (al-review: Torvalds + Winters lenses) → APPROVE(-WITH-NOTES)
-  → merge to track branch → BC "Done"
+  → test GREEN                                          [state: GREEN_CONFIRMED]
+  → independent review (al-review: Torvalds + Winters)  [state: REVIEW: <verdict>]
+  → merge to track branch → BC "Done" / PR merged        [state: MERGED]
   → at release: version bump
 ```
 
