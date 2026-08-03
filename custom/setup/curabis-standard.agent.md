@@ -95,6 +95,7 @@ old HTTP-encoding pitfalls do not exist here).
 | edison.agent.md | `{AGENTS_BASE}/edison.agent.md` |
 | ferencz.agent.md | `{AGENTS_BASE}/ferencz.agent.md` |
 | roemer.agent.md | `{AGENTS_BASE}/roemer.agent.md` |
+| curabis-task-state-check.yml | `{BASE}/templates/curabis-task-state-check.yml` |
 | cspell.json | `{BASE}/templates/cspell.json` |
 | find-altool.ps1 | `{BASE}/machine/find-altool.ps1` (v24: machine artifact, not a repo template) |
 | feynman-onboarding.md | `{BASE}/templates/feynman-onboarding.md` |
@@ -488,6 +489,28 @@ Create the standard documentation structure if it does not exist:
 
 Create a `.gitkeep` file in each empty subfolder so git tracks them.
 
+#### 4h. .github/workflows/curabis-task-state-check.yml (2026-08-03)
+
+Fetch `{BASE}/templates/curabis-task-state-check.yml` and write to
+`.github/workflows/curabis-task-state-check.yml`.
+
+Deterministic (not LLM-instruction-based) enforcement of
+`[[task-state-lives-in-the-mandatory-artifact]]`'s AppSource checklist
+order — see that rule and `al-review.agent.md`'s "state trail complete"
+checklist item for the full picture. This is a real CI check, not an agent
+protocol: it parses the PR body for a `## CURABIS Task State` section and
+fails if a later stage is checked while an earlier one isn't. It silently
+does nothing on PRs with no such section — never make it block an unrelated
+PR (a docs fix, an infra change).
+
+**Manual one-time step, cannot be automated by this file deployment:**
+tell the developer/admin to add this check as a **required status check**
+in the repo's branch protection settings (GitHub → Settings → Branches →
+the target branch's protection rule) if they want it to actually block a
+merge rather than just show as a failed check someone could ignore. Report
+this explicitly — do not silently assume it's required just because the
+workflow file exists.
+
 ### Step 5 — Confirm and offer initial commit
 
 List all files written, then ask:
@@ -537,6 +560,7 @@ shorter table applies to them.
 | `.github/.agents/bcquality.agent.md` | Fetch fresh from BCQuality, overwrite |
 | `.github/.agents/feynman.agent.md` | Fetch fresh from BCQuality, overwrite (add if missing) |
 | `cspell.json` — words from template | Merge new words, keep project words |
+| `.github/workflows/curabis-task-state-check.yml` | Fetch fresh from BCQuality, overwrite (add if missing) — remind about the branch-protection required-check step if just added |
 | `.apps/*.code-workspace` — reference layout | Create/complete: app projects + `.AL-Go` + relative `../docs` (rule `al-development-must-use-apps-workspace`) |
 | Alle øvrige `*.code-workspace` (inkl. rodens `al.code-workspace`) | Delete — kun ét workspace pr. repo; rapportér de slettede |
 | `HEARTBEAT.md` | Create from template if missing (substitute tokens), never overwrite — but run the staleness check below on every Mode B pass |

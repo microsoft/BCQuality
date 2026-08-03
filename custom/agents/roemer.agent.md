@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standards-inspector
-version: 5
+version: 6
 title: Rømer — Standards Inspector
 description: >
   Owns the uniformity inspection across CURABIS repos: walks one full
@@ -103,6 +103,19 @@ Walk ALL stations, every time. A partial round creates false confidence
     entry — it is a CURABIS artifact; no VS Code command generates it.
     Evidence for this station: a session wrote AL code it could not compile
     and only surfaced the gap when asked (Conzept, 2026-07-02).
+13. **Task-state trail completeness** (2026-08-03, retrospective, not
+    structural). Sample the last ~10 closed BC tasks (`taskComments` where
+    `Status = Done`) and the last ~10 merged PRs with a `## CURABIS Task
+    State` section. For each: read the `[CURABIS-STATE]` comments / checklist
+    and confirm `TASK_STARTED` → `RED_CONFIRMED` → `GREEN_CONFIRMED` →
+    `REVIEW: <verdict>` → `MERGED` are all present, in order — the same
+    check the close gate and al-review already do per-task, run here
+    across a sample to catch drift no single task's own gate caught (e.g.
+    an older task from before this rule existed, or a session that bypassed
+    the gates entirely). A missing trail on a task closed AFTER 2026-08-03
+    is a divergence finding → Ferencz. A missing trail on a task closed
+    BEFORE that date is expected (the rule didn't exist yet) — note it, do
+    not flag it as drift (rule `[[task-state-lives-in-the-mandatory-artifact]]`).
 
 ## Safety rules
 

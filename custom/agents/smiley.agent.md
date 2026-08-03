@@ -1,7 +1,7 @@
 ﻿---
 kind: watchdog
 id: curabis-smiley
-version: 5
+version: 6
 title: Smiley — Session Watchdog
 description: >
   Always-active session observer. Shapes Claude's behavior from within.
@@ -170,6 +170,17 @@ all of them mean AL code is about to change.
   BLOCK verdict from the independent review is the same kind of hard stop
   as a red test — green tests prove the requirement is met, not that the
   change is well-built.
+- **2026-08-03 — self-verify before merging, don't just trust the session's
+  own memory.** Read back the actual `[CURABIS-STATE]` trail (BC comments
+  for PTE, the PR checklist for AppSource) before allowing the merge — not
+  from what this session remembers doing, from what's actually recorded.
+  If `TASK_STARTED` → `RED_CONFIRMED` → `GREEN_CONFIRMED` → `REVIEW: <verdict>`
+  aren't all present in order, the merge does not proceed, even if the
+  current test run is green and the current review just said APPROVE — a
+  missing earlier checkpoint means the trail itself can't be trusted, which
+  is the entire reason it exists. This is the one advantage a queryable
+  state trail has over a plain instruction: it can be checked, not just
+  followed.
 - At release (track branch → main, tag, AppSource submission): app.json
   version consciously bumped before the merge.
 
