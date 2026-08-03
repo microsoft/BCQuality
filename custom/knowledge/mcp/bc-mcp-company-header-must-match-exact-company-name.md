@@ -55,3 +55,32 @@ machine-local file, not something Mode B can fix centrally. The template
 (`bc-mcp.config.template.json`) carries an explicit warning about this
 distinction as of 2026-07-31, but a machine already onboarded before that
 date needs its existing file checked manually.
+
+## Follow-up (2026-08-03) — a correct header does not guarantee the request resolves
+
+The `Internal_CompanyNotFound` symptom recurred on 2026-08-03 on two
+independent developer machines, both with `company` already set to the
+correct `Navn` value (`"Curabis ApS"`) per this rule. The header-mismatch
+cause above was confirmed absent both times — yet the error still occurred,
+intermittently, within the same working day. Restarting Claude Code (which
+respawns the `bc-mcp-bridge.js` process and re-establishes the MCP session)
+was observed to restore working state, though this has not been root-caused.
+
+This means a correct `Navn`-matching header is **necessary but not proven
+sufficient**: the same-looking error can have a second, distinct cause tied
+to the long-running bridge/session rather than a static config value. A
+developer who has already verified the header matches `Navn` character for
+character should not keep re-checking that same field. Next steps, in order:
+
+1. Restart Claude Code once and retry.
+2. If it recurs, check BC-side state that a config file can't reveal: the
+   Entra app registration's (`BC_DevelopmentMCP`) company-permission
+   assignment, and whether the relevant MCP Server Configuration
+   (`Model Context Protocol (MCP) Server Configurations`, BC page 8351) is
+   still Active.
+3. If it recurs across restarts and BC-side checks pass, treat it as a
+   SaaS-side incident and escalate to Microsoft support rather than
+   re-diagnosing the client config a third time.
+
+Root cause of the session/restart-correlated failure mode is still open —
+this section records the observed correlation, not a confirmed mechanism.
