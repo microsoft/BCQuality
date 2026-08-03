@@ -1,9 +1,9 @@
 ---
 kind: action-skill
 id: curabis-al-triage
-version: 1
+version: 2
 title: CURABIS AL triage
-description: On-demand reactive diagnosis of a failing build, test, or runtime error. Reproduces the symptom, finds the root cause, and recommends a minimal fix. Read-only - never applies changes.
+description: On-demand reactive diagnosis of a failing build, test, or runtime error. Reproduces the symptom, finds the root cause, and recommends a minimal fix. For an obsolete/deprecated-member symptom, checks Microsoft's own published breaking-changes record before theorising. Read-only - never applies changes.
 inputs: [error-message, file-path, test-name, stack-trace]
 outputs: [diagnosis-report]
 bc-version: [all]
@@ -11,7 +11,7 @@ technologies: [al]
 countries: [w1]
 application-area: [all]
 domain: diagnostics
-keywords: [triage, diagnose, root-cause, minimal-fix, compile-error, test-failure, runtime-error, reproduce, regression]
+keywords: [triage, diagnose, root-cause, minimal-fix, compile-error, test-failure, runtime-error, reproduce, regression, obsolete, deprecated, breaking-changes, version-upgrade]
 sub-skills:
   - microsoft/skills/review/al-code-review.md
 ---
@@ -75,6 +75,12 @@ localize before forming any hypothesis:
 - `al_symbolsearch` / `al_symbolrelations` - locate the offending object and what depends on it.
 - `al_getpackagedependencies` - check for version/dependency mismatches.
 
+For an obsolete/deprecated/post-upgrade symptom specifically (CURABIS-TRIAGE-008), also use:
+- `microsoft_docs_search` / `microsoft_docs_fetch` (Microsoft Learn MCP) - the published
+  deprecated-features and upgrade-considerations pages for the relevant version.
+- The `microsoft/BCApps` reference clone's `BREAKINGCHANGES.md`, or GitHub MCP against
+  `microsoft/BCApps` / `microsoft/ALAppExtensions` if the clone is stale.
+
 ## Action - triage protocol
 
 CURABIS-TRIAGE-001 Reproduce first. Capture the exact symptom (diagnostic code, test
@@ -94,6 +100,19 @@ CURABIS-TRIAGE-006 Read-only. Output a diagnosis report only. Never edit, never 
   fix - hand the recommendation back to the developer or the build loop.
 CURABIS-TRIAGE-007 Regression awareness. Before recommending, check what `al_symbolrelations`
   says depends on the object so the minimal fix does not break callers.
+CURABIS-TRIAGE-008 Obsolete/deprecated signature -> check Microsoft's own record first, not
+  memory. (2026-08-03) If the diagnostic text mentions "obsolete", a pending/error-level
+  obsolete warning, or the symptom appeared right after a BC platform or app version bump,
+  this is not a hypothesis to reconstruct from reading source alone — Microsoft publishes
+  the exact record of what changed and why. Check, in order: `BREAKINGCHANGES.md` in the
+  `microsoft/BCApps` reference clone (`~/.claude/reference-repos/microsoft/BCApps/` — see
+  `[[curabis-app-sources-must-be-checked-first]]`; GitHub MCP if the clone is stale) for the
+  relevant version transition, then Microsoft Learn's version-specific pages
+  (`deprecated-features-w1`, `deprecated-features-platform`, `upgrade-considerations-v<NN>`)
+  via `microsoft_docs_search`/`microsoft_docs_fetch`. Cite the specific entry — the
+  replacement member, the removal version, the migration note — as the root cause. Only
+  fall back to reading source and reasoning from scratch if the published record genuinely
+  doesn't cover the symptom, and say so explicitly rather than skipping the check silently.
 
 ## Output format
 
@@ -102,6 +121,7 @@ SYMPTOM      <reproduced error / failing test, with diagnostic code>
 LOCATION     <object - procedure - line>
 ROOT CAUSE   <the actual cause, with citation or UNVERIFIED HYPOTHESIS>
 MINIMAL FIX  <smallest change that removes the cause>
-EVIDENCE     <BCQuality knowledge file(s) or AL diagnostic code(s)>
+EVIDENCE     <BCQuality knowledge file(s), AL diagnostic code(s), or Microsoft's
+              BREAKINGCHANGES.md / deprecated-features entry for obsolete/deprecated symptoms>
 BLAST RADIUS <callers/dependents that the fix could affect, from al_symbolrelations>
 ```
