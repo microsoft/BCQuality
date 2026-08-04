@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__businesscentral__List_ActiveTasks_PAG6102900",
+      "mcp__businesscentral__List_Consultants_PAG50009",
+      "mcp__businesscentral__List_NewTasks_PAG6102905",
+      "mcp__businesscentral__List_ProjectAIScores_PAG6102906",
+      "mcp__businesscentral__List_ProjectRepositories_PAG6102904",
+      "mcp__businesscentral__List_ProjectWeberScores_PAG6102908",
+      "mcp__businesscentral__List_Projects_PAG6102901",
+      "mcp__businesscentral__List_TaskComments_PAG6102902",
+      "mcp__businesscentral__Create_NewTask_PAG6102905",
+      "mcp__businesscentral__Create_ProjectAIScore_PAG6102906",
+      "mcp__businesscentral__Create_ProjectWeberScore_PAG6102908",
+      "mcp__businesscentral__Create_TaskComment_PAG6102902",
+      "mcp__businesscentral__Modify_ActiveTask_PAG6102900",
+      "mcp__businesscentral__Modify_ProjectRepository_PAG6102904",
+      "mcp__businesscentral__Modify_TaskComment_PAG6102902",
+      "mcp__al__al_addproject",
+      "mcp__al__al_auth_login",
+      "mcp__al__al_auth_logout",
+      "mcp__al__al_build",
+      "mcp__al__al_compile",
+      "mcp__al__al_downloadsymbols",
+      "mcp__al__al_getdiagnostics",
+      "mcp__al__al_getpackagedependencies",
+      "mcp__al__al_publish",
+      "mcp__al__al_run_tests",
+      "mcp__al__al_symbolsearch",
+      "mcp__al__al_symbolrelations",
+      "mcp__microsoft-learn__microsoft_docs_search",
+      "mcp__microsoft-learn__microsoft_code_sample_search",
+      "mcp__microsoft-learn__microsoft_docs_fetch"
+    ]
+  }
+}
