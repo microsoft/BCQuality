@@ -185,6 +185,17 @@ Check whether these paths exist:
 - `~/.claude/bc-mcp-bridge.js`     → bridge already installed?
 - `~/.bc-mcp.config.json`          → BC credentials present?
 
+**Runtime prerequisite — check before Step 3, not after:** run `node --version`.
+`bc-mcp-bridge.js` (Step 3a) is a Node.js script, and the `businesscentral` MCP
+registration (Step 3c) launches it via `node ...` — without Node installed and on
+PATH, the bridge can never run, and `claude mcp add` will register a server that
+fails on every connection attempt with a generic timeout, not a clear "Node
+missing" message. If `node --version` fails, stop and tell the developer to
+install Node.js (LTS) before continuing — do not deploy the bridge or register
+the MCP server on a machine that can't run either. 2026-08-03: found missing on a
+fresh machine during a full developer onboarding; nothing in this checklist
+would have caught it before Step 3 silently deployed a script that couldn't run.
+
 Also run `claude mcp list` (or `claude mcp get al` / `claude mcp get businesscentral`)
 to check whether the two standard MCP servers are already registered at user scope.
 If any of the above machine-level artifacts are missing, Step 3 will deploy them via
@@ -245,6 +256,10 @@ Do not proceed until all three are answered.
 ### Step 3 — Deploy machine files
 
 #### 3a. bc-mcp-bridge.js
+
+Node.js must already be confirmed present (Step 1's runtime prerequisite check)
+before this step — a bridge script deployed onto a machine without Node to run
+it is a silent dead end until Step 3c's registration fails.
 
 1. Fetch `{BASE}/bc-mcp-bridge.js`
 2. Write to `~/.claude/bc-mcp-bridge.js` (overwrite silently — BCQuality is authoritative)
