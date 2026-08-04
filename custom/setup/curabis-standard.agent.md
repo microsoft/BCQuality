@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standard-setup
-version: 24
+version: 25
 title: CURABIS Standard — Project Setup
 description: >
   Configures a new or existing repository to the CURABIS Standard development
@@ -42,6 +42,46 @@ This agent runs when the developer says any of:
 - **"Onboard en supportbruger til CURABIS Standard"** → support profile (Mode C)
 
 Detect which mode based on the trigger phrase and proceed accordingly.
+
+## Company policy — glide through when there's no real decision (2026-08-04)
+
+Observed live: a consultant onboarding a machine hit "no" on a setup
+confirmation reflexively while moving fast, and only noticed afterward. Most
+of this document's `ja/nej` gates aren't actual choices — the standard is
+company policy, not a per-developer preference, and a blocking question
+where there's only one sane answer just invites exactly that kind of
+misclick.
+
+The rule going forward, applied throughout this document:
+
+- **No real decision + no real risk → don't ask.** If the file is
+  git-tracked (repo history is the safety net) and the replacement content
+  is already verified correct/present, act directly and report what
+  changed. This covers: the v6-era repo-mirror cleanup, CLAUDE.md's
+  obsolete-forms replacement, and the v24 migration's repo-local agent-file
+  removal — all git-committed, all fully recoverable via `git revert` if
+  anyone ever wants the old version back.
+- **Genuine irreducible ambiguity → don't ask either; default to the safe
+  side and make it visible.** `.mcp.json`'s and `.claude/settings.json`'s
+  multi-developer migration steps are the one real exception: whether every
+  developer on a repo has migrated their own machine is a fact only a human
+  knows, and Claude cannot verify it. But per this policy, that still isn't
+  a reason to interrupt setup with a blocking question — leave the legacy
+  entries in place by default (already documented as harmless, not a fault
+  state), report the finding, and offer removal as a separate, explicitly-
+  requested action later, once a developer confirms the migration is
+  actually complete.
+- **Real risk of losing uncommitted work → still stop and ask.** This is
+  the one case that's a genuine decision: if a file has actual uncommitted
+  local changes, a human has to decide what happens to them; that isn't
+  something to glide past.
+- **The developer's personal machine file (`~/.claude/CLAUDE.md`) still
+  gets asked.** It's not git-tracked and carries the developer's own
+  Identity section — there's no VCS safety net the way there is for
+  repo-committed files.
+- **Committing on the developer's behalf stays a real question** (Step 5,
+  and the post-update commit prompt) — timing of a commit is a legitimate
+  choice, not company policy with one right answer.
 
 ## Source: the channel clone (BCQuality is PRIVATE — no raw URLs)
 
@@ -151,8 +191,12 @@ If any of the above machine-level artifacts are missing, Step 3 will deploy them
 `sync-bcquality-knowledge.ps1` — no separate action needed here beyond noting it in
 the setup report.
 
-If `CLAUDE.md` already exists, ask: "CLAUDE.md eksisterer allerede. Overskrive? (ja/nej)"
-Stop if the developer answers no.
+If `CLAUDE.md` already exists: check `git status` for it specifically. If it
+has uncommitted local changes, stop and tell the developer to commit or
+stash first — that is real, potentially-lost work, a genuine decision, not
+a policy gate. Otherwise (clean, or already tracked with nothing pending),
+overwrite it directly and report what changed — no `ja/nej` needed, per the
+company policy above; git history already protects the old version.
 
 ### Step 1b — Structural readiness: raise the flags (Rømer)
 
@@ -171,9 +215,13 @@ Report every finding immediately and prominently:
   - <manglende test-app for <App>: kør CreateTestApp-workflowet>
 ```
 
-Setup MAY continue on a non-compliant repo — but the flags go in the setup
-report, and the developer must acknowledge them before Step 2. Never
-restructure silently; migration is a deliberate, planned change.
+Setup MAY continue on a non-compliant repo — the flags go in the setup
+report, prominently, and setup continues directly to Step 2 without waiting
+for an acknowledgment (company policy above: reporting the flag IS the
+record, and a blocking `ja/nej` here has no real decision behind it since
+setup proceeds regardless of the answer). Never restructure silently,
+though — actually migrating the repo's structure stays a separate,
+deliberate, explicitly-requested action.
 
 ### Step 2 — Ask exactly three questions
 
@@ -607,16 +655,18 @@ Projects configured under setup v6 have the mirror committed INSIDE the repo.
 Detect and clean up:
 
 1. If `.github/.agents/bcquality-knowledge/` exists in the repo (tracked or not),
-   propose removing it — ask for confirmation first:
+   remove it directly and report it — no `ja/nej` (company policy above:
+   git-tracked, fully recoverable via `git revert`, and the machine-local
+   mirror it's replaced by is already confirmed present earlier in this
+   same run):
 
    ```
-   ⚠️ Dette repo indeholder en v6-æra repo-lokal BCQuality-mirror
-   (.github/.agents/bcquality-knowledge/, ~[antal] filer). Standarden er nu
-   maskin-lokal mirror (~/.claude/bcquality-knowledge/). Må jeg fjerne
-   repo-mirroren og gitignore stien? (ja/nej)
+   ℹ️ Dette repo indeholdt en v6-æra repo-lokal BCQuality-mirror
+   (.github/.agents/bcquality-knowledge/, ~[antal] filer) — fjernet.
+   Standarden er nu maskin-lokal mirror (~/.claude/bcquality-knowledge/).
    ```
 
-   On yes: `git rm -r --cached .github/.agents/bcquality-knowledge/` (if tracked),
+   `git rm -r --cached .github/.agents/bcquality-knowledge/` (if tracked),
    delete the folder, delete `.github/.agents/sync-bcquality-knowledge.ps1` (its
    `$PSScriptRoot`-relative destination is what created the repo mirror), and add
    `.github/.agents/bcquality-knowledge/` to `.gitignore`.
@@ -629,9 +679,10 @@ Detect and clean up:
    - ANY remaining `raw.githubusercontent.com`-based self-heal or onboarding
      command (v15-v18 era) — the repo is private; raw URLs are dead. The
      current form is git-based via the channel clone.
-   If any match, propose replacing the section with the current template from
-   Step 4a and ask for confirmation before editing CLAUDE.md (same confirmation
-   gate as the agent-synligheds-check below).
+   If any match, replace the section with the current template from Step 4a
+   directly and report it — no confirmation needed (company policy above:
+   these forms are objectively obsolete, CLAUDE.md is git-tracked, and this
+   only touches the flagged section, never project-specific content).
 
 ### Machine CLAUDE.md refresh (Mode B)
 
@@ -645,33 +696,39 @@ structurally (e.g. still reference raw URLs or GitHub-API SHA checks, or are
 missing the v24 "CURABIS Standard — Shared Roster" section entirely),
 propose the update — show the diff, preserve the Identity section verbatim,
 and ask for confirmation before editing: it is the developer's personal file.
+Unlike the repo-committed files above, this one stays a real question under
+the company policy above — it isn't git-tracked, so there's no revert
+safety net, and it carries the developer's own personal customizations
+mixed in alongside the CURABIS sections.
 
 ### v23 → v24 migration (existing repos, one-time per repo)
 
 v24 moved 19 agent files, `.mcp.json`'s two standard entries, and
 `find-altool.ps1` from repo-local to machine-global (see the Source section's
 "machine vs. repo split" note). A repo configured under v23 or earlier still
-has the old repo-local copies. Detect and migrate — always confirm before
-removing anything, same gate as the v6-era cleanup above:
+has the old repo-local copies. Detect and migrate. Steps 1, 2, and 4 below
+act directly and report, per the company policy above (git-tracked,
+verified-safe); step 3 is the one genuine multi-developer ambiguity and
+defaults to leaving things in place, not asking:
 
 **1. Extra `.github/.agents/*.agent.md` files**
 
 List `.github/.agents/*.agent.md`. Anything other than `bcquality.agent.md`
 and `feynman.agent.md` is a pre-v24 repo-local copy of a now-machine-global
-agent. Before proposing removal, confirm Step 3c has run on THIS machine in
-THIS Mode B pass (it always does, earlier in this flow) — that guarantees
-the roster is available globally before the repo-local copies disappear.
+agent. Before removing, confirm Step 3c has run on THIS machine in THIS
+Mode B pass (it always does, earlier in this flow) — that guarantees the
+roster is available globally before the repo-local copies disappear. Then
+remove and report directly, no `ja/nej`:
 
 ```
-⚠️ v24-migrering: dette repo har [N] agent-filer i .github/.agents/ som nu er
-maskin-globale (~/.claude/curabis-agents/ + ~/.claude/agents/florence.md).
-Maskinen her har allerede den globale roster (bekræftet i dette Mode B-kald).
-Må jeg fjerne de [N] repo-lokale kopier? (ja/nej)
+ℹ️ v24-migrering: [N] agent-filer i .github/.agents/ er nu maskin-globale
+(~/.claude/curabis-agents/ + ~/.claude/agents/florence.md) — fjernet, siden
+maskinen her allerede har den globale roster (bekræftet i dette Mode B-kald).
 
   - immanuel.agent.md, francis.agent.md, columbo.agent.md, ... [list them]
 ```
 
-On yes: `git rm` each file not in `{bcquality.agent.md, feynman.agent.md}`.
+`git rm` each file not in `{bcquality.agent.md, feynman.agent.md}`.
 
 **2. Old-style CLAUDE.md (inline generic sections)**
 
@@ -679,50 +736,54 @@ Check for any of these headings still present verbatim in the project
 CLAUDE.md: `## Smiley — Session Watchdog`, `## Carlin — Bullshit Detector`,
 `## On-demand agents`, `## Francis — proaktiv regelobservation`,
 `## Shared project memory`, `## Project documentation`. Their presence means
-this repo predates v24. Propose REMOVING only those headings/sections and
-replacing them with the short pointer paragraph from Step 4a. Do NOT touch
-`## BCQuality` (the self-heal section) or `## Feynman — Support-sessioner` —
-both stay, unchanged, in every version. Preserve everything project-specific
-(project name, AL_PROJECTS_SECTION, running-tests, about-this-project)
-verbatim. Show the diff and ask for confirmation before editing (same gate
-as the v6-era obsolete-forms check above).
+this repo predates v24. Remove only those headings/sections directly and
+replace them with the short pointer paragraph from Step 4a — no `ja/nej`.
+Do NOT touch `## BCQuality` (the self-heal section) or `## Feynman —
+Support-sessioner` — both stay, unchanged, in every version. Preserve
+everything project-specific (project name, AL_PROJECTS_SECTION,
+running-tests, about-this-project) verbatim. Report the diff after editing,
+same as the v6-era obsolete-forms replacement above.
 
-**3. `.mcp.json` — standard entries (multi-developer coordination required)**
+**3. `.mcp.json` — standard entries (the one genuine ambiguity — default to leaving it)**
 
 This is the one migration step that is NOT safe to do unilaterally from a
 single Mode B run, because `.mcp.json` is git-committed and shared: removing
 it assumes EVERY developer working on this repo has already run Step 3c on
 their OWN machine. Doing this before that is true silently breaks AL/BC MCP
-for anyone who pulls the change and hasn't migrated yet.
+for anyone who pulls the change and hasn't migrated yet — and whether every
+developer has migrated is a fact only a human knows, not something Claude
+can verify. Per the company policy above, that's still not a reason to
+interrupt setup with a blocking question:
 
-If `.mcp.json` contains the standard `al` and/or `businesscentral` entries:
+If `.mcp.json` contains the standard `al` and/or `businesscentral` entries,
+leave them in place by default and report it — no `ja/nej`:
 
 ```
-⚠️ .mcp.json indeholder de to standard MCP-servere (al, businesscentral), som
-i v24 er maskin-globale i stedet. At fjerne dem fra .mcp.json er kun sikkert
-naar ALLE udviklere paa dette repo har koert maskin-opsaetningen (Step 3c) paa
-egen maskine - ellers mister de AL/BC MCP naar de henter aendringen.
-
-Har alle udviklere paa dette repo allerede migreret deres maskine? (ja/nej)
-Hvis usikker: svar nej - .mcp.json kan blive staaende uden problemer, det er
-kun en smule duplikeret konfiguration, ikke en fejltilstand.
+ℹ️ .mcp.json indeholder stadig de to standard MCP-servere (al, businesscentral)
+fra før v24 — det er maskin-globalt nu, men filen skader ikke noget stående
+som den er (duplikeret konfiguration, ikke en fejltilstand). Fjernes kun når
+du eksplicit bekræfter at ALLE udviklere på repoet er migreret — sig til når
+det er tilfældet.
 ```
 
 Only remove the two entries (never the whole file — a repo may have
-legitimate additional MCP servers) if the developer explicitly confirms yes.
-If the file becomes empty afterward (`{"mcpServers": {}}`), propose deleting
-`.mcp.json` entirely in the same confirmation.
+legitimate additional MCP servers) when a developer separately and
+explicitly confirms every developer on the repo has migrated — never as
+part of this automatic setup/update flow itself. If the file becomes empty
+afterward (`{"mcpServers": {}}`), offer deleting `.mcp.json` entirely at
+that same later point.
 
 **4. `.vscode/find-altool.ps1`**
 
-If present, propose removal — it is superseded by `~/.claude/find-altool.ps1`
-(machine-global, cwd-walkup discovery, no repo dependency). Safe to remove
+If present, remove it directly and report it — no `ja/nej`. It is
+superseded by `~/.claude/find-altool.ps1` (machine-global, cwd-walkup
+discovery, no repo dependency), git-tracked, and safe to remove
 independently of the `.mcp.json` migration above, since removing the *file*
 doesn't affect any `.mcp.json` entry that still references the old
 repo-relative walk-up form until that entry itself is migrated per step 3.
 
 **5. `.claude/settings.json` — legacy repo-committed permissions block
-(2026-08-03, same multi-developer coordination caveat as step 3)**
+(2026-08-03, same genuine ambiguity as step 3 — default to leaving it)**
 
 A repo from before the BC MCP static-tool-mode migration (2026-08-03) may
 have a git-committed `.claude/settings.json` with a `permissions.allow`
@@ -736,25 +797,26 @@ alongside the correct "User" scope registration — confusing, and every
 other CURABIS repo from before the migration likely has the same file.
 
 If `.claude/settings.json` contains `bc_actions_search`, `bc_actions_describe`,
-`bc_actions_invoke`, or an `enabledMcpjsonServers` entry for `al`/`businesscentral`:
+`bc_actions_invoke`, or an `enabledMcpjsonServers` entry for `al`/`businesscentral`,
+leave it in place by default and report it — no `ja/nej`, same reasoning as
+step 3 (a developer who hasn't migrated their own machine's
+`~/.claude/settings.json` yet would lose their auto-approvals if this were
+pulled before they have, and Claude can't verify that from here):
 
 ```
-⚠️ .claude/settings.json indeholder en forældet tilladelsesliste fra før
+ℹ️ .claude/settings.json indeholder en forældet tilladelsesliste fra før
 static-tool-mode-migreringen (bc_actions_search/describe/invoke er de gamle
 værktøjsnavne) og/eller enabledMcpjsonServers for al/businesscentral, som
 duplikerer den korrekte user-scope-registrering under "Project" i MCP-panelet.
-
-Skal jeg fjerne den forældede permissions-blok og enabledMcpjsonServers-linjen
-fra .claude/settings.json? (ja/nej) De aktuelle, korrekte værktøjsnavne bliver
-i stedet dækket af ~/.claude/settings.json (maskin-globalt, Step 3c).
+De aktuelle, korrekte værktøjsnavne dækkes allerede af ~/.claude/settings.json
+(maskin-globalt, Step 3c). Fjernes kun når du eksplicit bekræfter at ALLE
+udviklere på repoet er migreret — sig til når det er tilfældet.
 ```
 
-Only remove the stale entries with explicit confirmation — same reasoning
-as `.mcp.json`: this file is git-committed and shared, and a developer who
-hasn't migrated their own machine's `~/.claude/settings.json` yet (Step 3c)
-would lose their auto-approvals if this is pulled before they have. If the
-file becomes empty afterward, propose deleting it entirely in the same
-confirmation.
+Only remove the stale entries once a developer separately and explicitly
+confirms every developer on the repo has migrated — never as part of this
+automatic setup/update flow itself. If the file becomes empty afterward,
+offer deleting it entirely at that same later point.
 
 ### HEARTBEAT.md token substitution (Mode B)
 
