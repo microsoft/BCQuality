@@ -73,6 +73,7 @@ old HTTP-encoding pitfalls do not exist here).
 |---|---|
 | bc-mcp-bridge.js | `{BASE}/bc-mcp-bridge.js` |
 | bc-mcp.config.template.json | `{BASE}/machine/bc-mcp.config.template.json` |
+| settings.json (permissions template) | `{BASE}/machine/settings.json` (merged into `~/.claude/settings.json`, never overwritten wholesale — see Step 3c) |
 | bcquality.agent.md | `{BASE}/templates/bcquality.agent.md` |
 | immanuel.agent.md | `{AGENTS_BASE}/immanuel.agent.md` |
 | carlin.agent.md | `{AGENTS_BASE}/carlin.agent.md` |
@@ -719,6 +720,41 @@ If present, propose removal — it is superseded by `~/.claude/find-altool.ps1`
 independently of the `.mcp.json` migration above, since removing the *file*
 doesn't affect any `.mcp.json` entry that still references the old
 repo-relative walk-up form until that entry itself is migrated per step 3.
+
+**5. `.claude/settings.json` — legacy repo-committed permissions block
+(2026-08-03, same multi-developer coordination caveat as step 3)**
+
+A repo from before the BC MCP static-tool-mode migration (2026-08-03) may
+have a git-committed `.claude/settings.json` with a `permissions.allow`
+block naming the OLD Dynamic Tool Mode tool names
+(`mcp__businesscentral__bc_actions_search` / `bc_actions_describe` /
+`bc_actions_invoke`) and/or an `enabledMcpjsonServers` entry for `al` /
+`businesscentral`. Found live in the `Wareco` repo during a full developer
+onboarding: the stale `enabledMcpjsonServers` entry causes the MCP servers
+panel to show `al`/`businesscentral` duplicated under "Project" scope
+alongside the correct "User" scope registration — confusing, and every
+other CURABIS repo from before the migration likely has the same file.
+
+If `.claude/settings.json` contains `bc_actions_search`, `bc_actions_describe`,
+`bc_actions_invoke`, or an `enabledMcpjsonServers` entry for `al`/`businesscentral`:
+
+```
+⚠️ .claude/settings.json indeholder en forældet tilladelsesliste fra før
+static-tool-mode-migreringen (bc_actions_search/describe/invoke er de gamle
+værktøjsnavne) og/eller enabledMcpjsonServers for al/businesscentral, som
+duplikerer den korrekte user-scope-registrering under "Project" i MCP-panelet.
+
+Skal jeg fjerne den forældede permissions-blok og enabledMcpjsonServers-linjen
+fra .claude/settings.json? (ja/nej) De aktuelle, korrekte værktøjsnavne bliver
+i stedet dækket af ~/.claude/settings.json (maskin-globalt, Step 3c).
+```
+
+Only remove the stale entries with explicit confirmation — same reasoning
+as `.mcp.json`: this file is git-committed and shared, and a developer who
+hasn't migrated their own machine's `~/.claude/settings.json` yet (Step 3c)
+would lose their auto-approvals if this is pulled before they have. If the
+file becomes empty afterward, propose deleting it entirely in the same
+confirmation.
 
 ### HEARTBEAT.md token substitution (Mode B)
 

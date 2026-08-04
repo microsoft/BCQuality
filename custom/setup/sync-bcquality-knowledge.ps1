@@ -222,3 +222,62 @@ function Ensure-UserMcpHttpServer {
 }
 
 Ensure-UserMcpHttpServer -Name 'microsoft-learn' -Url 'https://learn.microsoft.com/api/mcp'
+
+# --- 10. Permissions allowlist -> ~/.claude/settings.json (MERGE, never overwrite) ---
+# Unlike the other artifacts above, settings.json is not pure BCQuality content -
+# it also carries a developer's personal settings (theme, model, hooks, etc).
+# Only merge the permissions.allow entries from the template below into whatever
+# already exists; never replace the file wholesale. Scope: the three CURABIS-
+# managed MCP servers only (businesscentral, al, microsoft-learn) - all either
+# read-only or already gated by Smiley's own protocol checks (red/green
+# confirmation, independent review), so the tool-permission prompt is redundant
+# friction here, not a real safety boundary. 2026-08-03: added after a developer
+# had to click through the same MCP approval prompts repeatedly across sessions.
+$settingsTemplate = Join-Path $clone 'custom\setup\machine\settings.json'
+$settingsDest = Join-Path $env:USERPROFILE '.claude\settings.json'
+
+if (Test-Path $settingsTemplate) {
+    # NB: -AsHashtable (ConvertFrom-Json) findes kun i PowerShell 6+. Dette script
+    # koeres ogsaa via `powershell` (Windows PowerShell 5.1) paa udviklermaskiner,
+    # saa vi bruger PSCustomObject + Add-Member i stedet - virker paa begge.
+    $templateAllow = (Get-Content $settingsTemplate -Raw | ConvertFrom-Json).permissions.allow
+
+    $settings = $null
+    if (Test-Path $settingsDest) {
+        $raw = Get-Content $settingsDest -Raw
+        if ($raw -and $raw.Trim()) {
+            $settings = $raw | ConvertFrom-Json
+        }
+    }
+    if (-not $settings) { $settings = [PSCustomObject]@{} }
+
+    if (-not (Get-Member -InputObject $settings -Name 'permissions' -MemberType NoteProperty)) {
+        $settings | Add-Member -MemberType NoteProperty -Name 'permissions' -Value ([PSCustomObject]@{})
+    }
+    if (-not (Get-Member -InputObject $settings.permissions -Name 'allow' -MemberType NoteProperty)) {
+        $settings.permissions | Add-Member -MemberType NoteProperty -Name 'allow' -Value @()
+    }
+
+    $existingAllow = [System.Collections.Generic.List[string]]::new()
+    foreach ($r in @($settings.permissions.allow)) { $existingAllow.Add([string]$r) }
+
+    $added = 0
+    foreach ($rule in $templateAllow) {
+        if ($existingAllow -notcontains $rule) {
+            $existingAllow.Add($rule)
+            $added++
+        }
+    }
+    $settings.permissions.allow = $existingAllow.ToArray()
+
+    # NB: Set-Content -Encoding utf8 skriver en BOM i Windows PowerShell 5.1 (ingen
+    # utf8NoBOM-mulighed der) - fundet under test 2026-08-03: settings.json havde
+    # ingen BOM originalt, og en tilfoejet BOM kan knaekke JSON-parsere der laeser
+    # filen. [System.IO.File]::WriteAllText med en explicit no-BOM UTF8Encoding
+    # virker identisk paa PS5.1 og PS7.
+    $json = $settings | ConvertTo-Json -Depth 20
+    [System.IO.File]::WriteAllText($settingsDest, $json, [System.Text.UTF8Encoding]::new($false))
+    Write-Host "Permissions-allowlist merged ind i $settingsDest - $added ny(e) regel(er) tilfoejet."
+} else {
+    Write-Warning "settings.json-skabelon ikke fundet i klonen, springer over."
+}
