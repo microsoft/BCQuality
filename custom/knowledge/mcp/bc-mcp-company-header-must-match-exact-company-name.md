@@ -96,3 +96,49 @@ fixable condition. Escalate to Microsoft support with the evidence bundle
 and timestamps of both failing and working calls) rather than continuing
 local troubleshooting. Root cause of the intermittent failure itself remains
 unconfirmed — likely a BC/SaaS-side condition outside CURABIS's visibility.
+
+## Follow-up (2026-08-07) — toggling the MCP Server Configuration correlates with recovery
+
+New observation, distinct from the 2026-08-03 "MCP Server Configuration
+misconfigured" theory above — that theory tested a **static** state
+(confirmed `Aktiv`/`Standard` both on) and correctly ruled out
+misconfiguration as the cause. This follow-up is about a **save/toggle
+action** on that same page, not its resting state, so it does not
+contradict the earlier ruling.
+
+Observed sequence (2026-08-07, MID): `Internal_CompanyNotFound` on a
+`List_ActiveTasks_PAG6102900` call. Restarting VS Code (respawns the
+`bc-mcp-bridge.js` process) and retrying: failed again, same error —
+consistent with the already-falsified restart theory above. Then, without
+any other change, went into BC → `Konfiguration af MCP-server` →
+`CURABIS_DEV` and toggled the `Standard` field off, saved. Retried: worked
+immediately. MID reports having seen this same pattern — retry after
+restart fails, retry after touching this config page succeeds — on prior
+occasions, not just this one.
+
+**What this does and doesn't establish:**
+- This is a repeated but still informal observation (n≥2, not a controlled
+  test), and the direction of the toggle (on→off vs off→on) has not been
+  isolated — MID's own assessment is that the direction "is probably
+  irrelevant," which would point at the **save/republish action itself**
+  (busting some server-side cache tied to session or company resolution
+  for that MCP configuration record) rather than at which value the field
+  ends up holding.
+- It has NOT been tested against a proper baseline (e.g., retrying the
+  plain API call 5-10 times with no config touch at all, to rule out that
+  the error would have cleared on its own within the same window — it is
+  already documented as intermittent, so some coincidental clears are
+  expected regardless of any workaround).
+- It does NOT yet override the Microsoft-support-escalation guidance
+  above — it is a candidate operational workaround, not a confirmed fix,
+  and definitely not a root cause.
+
+**Suggested next occurrence:** before escalating to Microsoft, try one
+save-cycle on the `CURABIS_DEV` MCP Server Configuration page (toggle
+either field and immediately toggle it back, or leave the toggle as work
+requires — direction untested) and retry once. If this keeps working
+across several independent recurrences, it graduates from "candidate" to
+"confirmed workaround" and this section should be tightened accordingly —
+and it becomes useful supporting evidence for the Microsoft escalation
+itself (a config-page save on CURABIS's side masking a server-side
+symptom points at BC's MCP session/cache layer, not at CURABIS's setup).
