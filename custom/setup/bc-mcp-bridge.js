@@ -15,6 +15,14 @@ const fs = require("fs");
 const path = require("path");
 
 const ENDPOINT = "https://mcp.businesscentral.dynamics.com";
+// 2026-08-04: neither fetch() call below had a timeout, and the BC session
+// (sessionId) + underlying HTTP connection were reused for the bridge
+// process's entire lifetime with no proactive refresh. A long-running Claude
+// Code session with gaps between calls can leave either stale -- observed as
+// a 30-minute hang on one call, and separately as an "Internal_CompanyNotFound"
+// that wasn't actually a company problem. REQUEST_TIMEOUT_MS + the one-retry
+// wrapper below fail fast and self-heal with a forced-fresh session instead.
+const REQUEST_TIMEOUT_MS = 30000;
 
 function die(m) { process.stderr.write(`[bc-mcp-bridge] ${m}\n`); process.exit(1); }
 
@@ -42,7 +50,18 @@ function loadConfig() {
 }
 
 const cfg = loadConfig();
-let token = null, tokenExp = 0, sessionId = null;
+let token = null, tokenExp = 0, sessionId = null, lastInitializeMsg = null, lastActivityAt = 0;
+// 2026-08-07: the reactive re-initialize below only fires after BC has already
+// rejected a request. It self-heals invisibly to the caller, but still burns
+// two round trips (reject, initialize, retry) on the first call after any idle
+// gap. A client that opens a fresh session per call (e.g. a Power Automate
+// flow) never hits this at all, which is why it reads as more stable than a
+// long-lived interactive session that caches sessionId for its whole
+// lifetime. Proactively refreshing before a call that has been idle a while
+// gets the same effective robustness without waiting for BC to reject first.
+// No API exposes the session's actual TTL, so this threshold is a heuristic,
+// not a documented guarantee.
+const SESSION_IDLE_THRESHOLD_MS = 3 * 60 * 1000; // 3 min
 
 async function getToken() {
   if (token && Date.now() < tokenExp - 60000) return token;   // forny 1 min foer udloeb
@@ -56,6 +75,7 @@ async function getToken() {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!r.ok) throw new Error(`token ${r.status}: ${await r.text()}`);
   const j = await r.json();
@@ -76,7 +96,7 @@ function parseSSE(text) {
   return msgs;
 }
 
-async function forward(msg) {
+async function forwardOnce(msg) {
   const tok = await getToken();
   const headers = {
     "Authorization": `Bearer ${tok}`,
@@ -88,7 +108,12 @@ async function forward(msg) {
     "ConfigurationName": enc(cfg.config),
   };
   if (sessionId) headers["Mcp-Session-Id"] = sessionId;
-  const r = await fetch(ENDPOINT, { method: "POST", headers, body: JSON.stringify(msg) });
+  const r = await fetch(ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(msg),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
   const sid = r.headers.get("mcp-session-id"); if (sid) sessionId = sid;
   const ct = r.headers.get("content-type") || "";
   const text = await r.text();
@@ -101,6 +126,58 @@ async function forward(msg) {
   // never let a non-2xx response fall through to parseSSE.
   if (!r.ok) throw new Error(`HTTP ${r.status}: ${text || "(empty body)"}`);
   return ct.includes("text/event-stream") ? parseSSE(text) : (text.trim() ? [text.trim()] : []);
+}
+
+async function forward(msg) {
+  if (msg.method === "initialize") lastInitializeMsg = msg;
+  if (sessionId && msg.method !== "initialize" && lastActivityAt &&
+      Date.now() - lastActivityAt > SESSION_IDLE_THRESHOLD_MS) {
+    process.stderr.write(`[bc-mcp-bridge] session idle ${Math.round((Date.now() - lastActivityAt) / 1000)}s, refreshing proactively\n`);
+    sessionId = null;
+    if (lastInitializeMsg) {
+      try {
+        await forwardOnce(lastInitializeMsg);
+      } catch (initErr) {
+        process.stderr.write(`[bc-mcp-bridge] proactive re-initialize failed: ${initErr.message || initErr}\n`);
+      }
+    }
+  }
+  try {
+    const result = await forwardOnce(msg);
+    lastActivityAt = Date.now();
+    return result;
+  } catch (e) {
+    // 2026-08-04: one retry with a forced-fresh BC session (sessionId cleared).
+    // A long-idle Claude Code session can leave the cached Mcp-Session-Id or
+    // the underlying HTTP connection stale -- observed as a request hanging
+    // until REQUEST_TIMEOUT_MS, or as an "Internal_CompanyNotFound" that was
+    // actually a dead session, not a real company problem. Quick, frequent
+    // calls never idle long enough to hit this; a long session with gaps
+    // between calls does.
+    process.stderr.write(`[bc-mcp-bridge] retrying after: ${e.message || e}\n`);
+    sessionId = null;
+    // 2026-08-05: clearing sessionId is not enough on its own. BC's own error
+    // is explicit -- "A new session can only be created by an initialize
+    // request" -- so simply resending the original non-initialize message
+    // with no session header reproduces the exact same error, not a fresh
+    // session. Replay the client's actual initialize message first (cached
+    // above, the only thing BC will accept to hand out a new session), THEN
+    // retry the original call with the session that establishes. If there's
+    // no cached initialize yet (this failure IS the very first call, or is
+    // itself the initialize), skip straight to the plain retry below.
+    if (msg.method !== "initialize" && lastInitializeMsg) {
+      try {
+        await forwardOnce(lastInitializeMsg);
+      } catch (initErr) {
+        process.stderr.write(`[bc-mcp-bridge] re-initialize failed: ${initErr.message || initErr}\n`);
+        // Fall through anyway -- retrying the original message will still
+        // surface a clear, real error if the session truly can't be restored.
+      }
+    }
+    const result = await forwardOnce(msg);
+    lastActivityAt = Date.now();
+    return result;
+  }
 }
 
 // Splits text into chunks of max maxLen chars, breaking at word boundaries.

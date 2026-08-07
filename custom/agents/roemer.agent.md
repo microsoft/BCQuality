@@ -1,7 +1,7 @@
 ---
 kind: action-skill
 id: curabis-standards-inspector
-version: 7
+version: 8
 title: Rømer — Standards Inspector
 description: >
   Owns the uniformity inspection across CURABIS repos: walks one full
@@ -140,6 +140,15 @@ Walk ALL stations, every time. A partial round creates false confidence
     mistake. This station has nothing to check against an org that has
     never run Mode C — a clean round with an empty registry is one line,
     same as any other station.
+16. **Legacy repo-committed `.claude/settings.json`** (2026-08-03). Grep
+    `.claude/settings.json` for the old Dynamic Tool Mode tool names
+    (`bc_actions_search`, `bc_actions_describe`, `bc_actions_invoke`) or an
+    `enabledMcpjsonServers` entry for `al`/`businesscentral` — same
+    multi-developer coordination caveat as the `.mcp.json` migration
+    (station covers detection only; removal needs explicit developer
+    confirmation via curabis-standard.agent.md's Mode B step 5). Found live
+    in the `Wareco` repo: causes MCP servers to show duplicated under
+    "Project" scope in the panel alongside the correct "User" scope entry.
 
 CURABIS-ROEMER-001 Measure against the written standard only. Every finding
   cites the standard it deviates from — a rule file, the template table, or a
