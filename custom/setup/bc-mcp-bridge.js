@@ -50,7 +50,18 @@ function loadConfig() {
 }
 
 const cfg = loadConfig();
-let token = null, tokenExp = 0, sessionId = null;
+let token = null, tokenExp = 0, sessionId = null, lastInitializeMsg = null, lastActivityAt = 0;
+// 2026-08-07: the reactive re-initialize below only fires after BC has already
+// rejected a request. It self-heals invisibly to the caller, but still burns
+// two round trips (reject, initialize, retry) on the first call after any idle
+// gap. A client that opens a fresh session per call (e.g. a Power Automate
+// flow) never hits this at all, which is why it reads as more stable than a
+// long-lived interactive session that caches sessionId for its whole
+// lifetime. Proactively refreshing before a call that has been idle a while
+// gets the same effective robustness without waiting for BC to reject first.
+// No API exposes the session's actual TTL, so this threshold is a heuristic,
+// not a documented guarantee.
+const SESSION_IDLE_THRESHOLD_MS = 3 * 60 * 1000; // 3 min
 
 async function getToken() {
   if (token && Date.now() < tokenExp - 60000) return token;   // forny 1 min foer udloeb
@@ -118,8 +129,23 @@ async function forwardOnce(msg) {
 }
 
 async function forward(msg) {
+  if (msg.method === "initialize") lastInitializeMsg = msg;
+  if (sessionId && msg.method !== "initialize" && lastActivityAt &&
+      Date.now() - lastActivityAt > SESSION_IDLE_THRESHOLD_MS) {
+    process.stderr.write(`[bc-mcp-bridge] session idle ${Math.round((Date.now() - lastActivityAt) / 1000)}s, refreshing proactively\n`);
+    sessionId = null;
+    if (lastInitializeMsg) {
+      try {
+        await forwardOnce(lastInitializeMsg);
+      } catch (initErr) {
+        process.stderr.write(`[bc-mcp-bridge] proactive re-initialize failed: ${initErr.message || initErr}\n`);
+      }
+    }
+  }
   try {
-    return await forwardOnce(msg);
+    const result = await forwardOnce(msg);
+    lastActivityAt = Date.now();
+    return result;
   } catch (e) {
     // 2026-08-04: one retry with a forced-fresh BC session (sessionId cleared).
     // A long-idle Claude Code session can leave the cached Mcp-Session-Id or
@@ -127,11 +153,30 @@ async function forward(msg) {
     // until REQUEST_TIMEOUT_MS, or as an "Internal_CompanyNotFound" that was
     // actually a dead session, not a real company problem. Quick, frequent
     // calls never idle long enough to hit this; a long session with gaps
-    // between calls does. One retry self-heals without the developer noticing;
-    // if the retry also fails, this is a real error and should surface as one.
+    // between calls does.
     process.stderr.write(`[bc-mcp-bridge] retrying after: ${e.message || e}\n`);
     sessionId = null;
-    return await forwardOnce(msg);
+    // 2026-08-05: clearing sessionId is not enough on its own. BC's own error
+    // is explicit -- "A new session can only be created by an initialize
+    // request" -- so simply resending the original non-initialize message
+    // with no session header reproduces the exact same error, not a fresh
+    // session. Replay the client's actual initialize message first (cached
+    // above, the only thing BC will accept to hand out a new session), THEN
+    // retry the original call with the session that establishes. If there's
+    // no cached initialize yet (this failure IS the very first call, or is
+    // itself the initialize), skip straight to the plain retry below.
+    if (msg.method !== "initialize" && lastInitializeMsg) {
+      try {
+        await forwardOnce(lastInitializeMsg);
+      } catch (initErr) {
+        process.stderr.write(`[bc-mcp-bridge] re-initialize failed: ${initErr.message || initErr}\n`);
+        // Fall through anyway -- retrying the original message will still
+        // surface a clear, real error if the session truly can't be restored.
+      }
+    }
+    const result = await forwardOnce(msg);
+    lastActivityAt = Date.now();
+    return result;
   }
 }
 
