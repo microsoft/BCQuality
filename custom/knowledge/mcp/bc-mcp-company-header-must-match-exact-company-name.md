@@ -62,25 +62,37 @@ The `Internal_CompanyNotFound` symptom recurred on 2026-08-03 on two
 independent developer machines, both with `company` already set to the
 correct `Navn` value (`"Curabis ApS"`) per this rule. The header-mismatch
 cause above was confirmed absent both times — yet the error still occurred,
-intermittently, within the same working day. Restarting Claude Code (which
-respawns the `bc-mcp-bridge.js` process and re-establishes the MCP session)
-was observed to restore working state, though this has not been root-caused.
+intermittently, within the same working day.
 
-This means a correct `Navn`-matching header is **necessary but not proven
-sufficient**: the same-looking error can have a second, distinct cause tied
-to the long-running bridge/session rather than a static config value. A
-developer who has already verified the header matches `Navn` character for
-character should not keep re-checking that same field. Next steps, in order:
+This means a correct `Navn`-matching header is **necessary but not
+sufficient**: the same-looking error can have a second cause unrelated to
+the header value. When this happens, the header-match check (Verification,
+above) has nothing left to find — do not keep re-checking that same field.
 
-1. Restart Claude Code once and retry.
-2. If it recurs, check BC-side state that a config file can't reveal: the
-   Entra app registration's (`BC_DevelopmentMCP`) company-permission
-   assignment, and whether the relevant MCP Server Configuration
-   (`Model Context Protocol (MCP) Server Configurations`, BC page 8351) is
-   still Active.
-3. If it recurs across restarts and BC-side checks pass, treat it as a
-   SaaS-side incident and escalate to Microsoft support rather than
-   re-diagnosing the client config a third time.
+**Ruled out on 2026-08-03, with evidence — do not re-investigate these:**
+- **Stale client process.** A theory that a long-running `bc-mcp-bridge.js`
+  process was running pre-fix code from before its 2026-08-01 update, and
+  that restarting Claude Code would pick up the fix. **Falsified same day:**
+  a full machine reboot (strictly stronger than a Claude Code restart — kills
+  every process, clears all in-memory state, re-establishes every network
+  connection) left the exact same error unchanged immediately after. An
+  earlier apparent "it works after a restart" observation was very likely
+  coincidental with an intermittent server-side state, not causal.
+- **MCP Server Configuration misconfigured.** Verified via BC UI screenshot:
+  `CURABIS_DEV` configuration is `Aktiv` (Active) = on, `Standard` (Default)
+  = on, with the expected tool set and permissions present.
+- **Company record wrong or `Navn` mismatched.** Verified via BC UI
+  screenshot of the company list: `Navn` = `Curabis ApS` exactly (matches
+  config character-for-character), `Vist navn` = `CURABIS ApS` (confirming
+  why the original 2026-07-31 mix-up was easy to make), setup status
+  `Completed`.
 
-Root cause of the session/restart-correlated failure mode is still open —
-this section records the observed correlation, not a confirmed mechanism.
+**Conclusion:** with the header confirmed correct, the MCP configuration
+confirmed active/default, and the company record confirmed correct — all
+via direct BC UI inspection, not inference — and the error still recurring
+intermittently, immune even to a full machine reboot, this is not a client-
+fixable condition. Escalate to Microsoft support with the evidence bundle
+(exact error text, `~/.bc-mcp.config.json` values, both BC UI screenshots,
+and timestamps of both failing and working calls) rather than continuing
+local troubleshooting. Root cause of the intermittent failure itself remains
+unconfirmed — likely a BC/SaaS-side condition outside CURABIS's visibility.
