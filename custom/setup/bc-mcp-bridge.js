@@ -87,6 +87,41 @@ async function getToken() {
 // BC kraever Base64 hvis header-vaerdien har ikke-ASCII (ae/oe/aa).
 const enc = v => /[^\x00-\x7F]/.test(v) ? `=?base64?${Buffer.from(v, "utf8").toString("base64")}?=` : v;
 
+// 2026-08-07: neither of the two "clear sessionId and reinitialize" paths below
+// ever told BC the old session was actually done -- they just drop the local
+// sessionId variable and let a fresh session get issued on the next call. The
+// MCP Streamable HTTP transport spec defines an explicit way to end a session
+// cleanly: an HTTP DELETE to the same endpoint carrying the session's
+// Mcp-Session-Id. This bridge has never called it. Trying it now as a
+// candidate fix for the recurring Internal_CompanyNotFound pattern (retry
+// after a client-side session reset does NOT clear it; a manual save on the
+// BC-side MCP Server Configuration record does) -- if BC's server-side session
+// state is what's actually stuck, telling it explicitly to close might do the
+// same job the manual config-save has been doing by accident. Best-effort and
+// silent on failure: if BC responds 404/405 (DELETE not implemented), that is
+// itself useful evidence for the Microsoft support escalation, not a bug here.
+async function closeSession(oldSessionId) {
+  if (!oldSessionId) return;
+  try {
+    const tok = await getToken();
+    const r = await fetch(ENDPOINT, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${tok}`,
+        "TenantId": cfg.tenant,
+        "EnvironmentName": cfg.environment,
+        "Company": enc(cfg.company),
+        "ConfigurationName": enc(cfg.config),
+        "Mcp-Session-Id": oldSessionId,
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    process.stderr.write(`[bc-mcp-bridge] closed session ${oldSessionId}: HTTP ${r.status}\n`);
+  } catch (e) {
+    process.stderr.write(`[bc-mcp-bridge] session close failed (non-fatal): ${e.message || e}\n`);
+  }
+}
+
 function parseSSE(text) {
   const msgs = [];
   for (const block of text.split(/\r?\n\r?\n/)) {
@@ -133,6 +168,7 @@ async function forward(msg) {
   if (sessionId && msg.method !== "initialize" && lastActivityAt &&
       Date.now() - lastActivityAt > SESSION_IDLE_THRESHOLD_MS) {
     process.stderr.write(`[bc-mcp-bridge] session idle ${Math.round((Date.now() - lastActivityAt) / 1000)}s, refreshing proactively\n`);
+    await closeSession(sessionId);
     sessionId = null;
     if (lastInitializeMsg) {
       try {
@@ -155,6 +191,7 @@ async function forward(msg) {
     // calls never idle long enough to hit this; a long session with gaps
     // between calls does.
     process.stderr.write(`[bc-mcp-bridge] retrying after: ${e.message || e}\n`);
+    await closeSession(sessionId);
     sessionId = null;
     // 2026-08-05: clearing sessionId is not enough on its own. BC's own error
     // is explicit -- "A new session can only be created by an initialize
