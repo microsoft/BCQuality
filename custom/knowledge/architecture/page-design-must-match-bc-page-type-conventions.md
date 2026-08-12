@@ -76,6 +76,14 @@ is asserted here. `API` pages are governed separately by
 related rules — do not extend an API page via a page extension; add a new
 API page instead.
 
+## Design Process Best Practices
+
+Before wiring up controls, the design step itself should establish:
+- Which user types will use the page, and which tasks they perform on it.
+- The concrete list of fields, commands, and links the page needs — derived from those tasks, not copied from a similar page.
+- The page type that best matches the content to be displayed (see taxonomy above) — chosen before the source table, not after.
+- The source table set to the table holding the page's primary set of data, not a convenient related table.
+
 ## Review Checklist
 
 1. Which page type is this actually, based on structure and use — not the name someone already gave it?
@@ -83,6 +91,9 @@ API page instead.
 3. Does the page name carry the expected suffix for its type (`Card`, `List` vs. plural, `FactBox`, `Journal`, `Role Center`)?
 4. If this is a List page for a Card-backed table, is `CardPageID` set? If this is a ListPart/CardPart, is `SubPageLink` actually filtering to the host record (see [[factbox-design]])?
 5. Is a Worksheet or List page showing primary-key fields it shouldn't (Worksheet), or hiding them when it should show them (List)?
+6. Is `UsageCategory` set, so the page is actually searchable from the Tell Me box? A page with no `UsageCategory` is invisible to search even if it's otherwise complete.
+7. Are actions promoted to an appropriate group, sequence, and size, rather than left at whatever the `tpage` snippet generated? Are rarely-used fields (used in fewer than roughly 3 of 10 sessions) marked `Importance = Additional` (see [[fasttab-field-importance]]), and does the page show at most one to three FactBoxes by default (see [[factbox-design]])?
+8. If this is a List page, has linking from the relevant RoleCenter profile(s) been considered? If this is a task page, has linking from the List pages it's useful from been considered?
 
 A page that mixes conventions from two types (for example, a "Card" page
 built on a table with a two-field primary key, or a "List" page with no
