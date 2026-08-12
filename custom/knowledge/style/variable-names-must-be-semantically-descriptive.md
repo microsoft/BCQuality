@@ -28,11 +28,19 @@ subtracted), name them for their distinct roles in that calculation
 (`OriginalAmount` / `AdjustedAmount`), not for their shared type
 (`Amt1` / `Amt2`).
 
-**Exception:** short-lived loop counters and array indices (`i`, `idx`,
-`x`) are an accepted convention precisely because their entire meaning is
-visible in the two or three lines of the loop that declares and uses them.
-This exception does not extend to variables that live longer than a tight
-loop body or that carry business meaning beyond "the current position."
+**Exception:** short-lived variables in a handful of idiomatic, universally
+recognized roles are accepted single-letter, because their entire meaning
+is visible in the few lines that declare and use them:
+- Loop counters and array indices (`i`, `idx`, `x`).
+- The progress step counter in a `Dialog`/progress-window idiom — a status
+  iterator whose only job is tracking how far a long-running process has
+  gotten (`s`), and the count fed into the update call itself, e.g.
+  `Window.Update(1, c)` (`c`).
+
+This exception does not extend to variables that live longer than that
+tight idiomatic scope, or that carry business meaning beyond "the current
+position" or "the current progress count" — a `Status` field on a table, or
+a `Counter` that is read elsewhere in the object, still needs a real name.
 
 ## Best Practice
 
@@ -44,6 +52,13 @@ var
 ...
 for idx := 1 to ArrayLen(SalesLine) do
     TotalAmount += SalesLine[idx];
+...
+Window.Open('Processing #1#########');
+for s := 1 to Item.Count do begin
+    c += 1;
+    Window.Update(1, Round(c / Item.Count * 10000, 1));
+end;
+Window.Close();
 ```
 
 ## Anti Pattern
