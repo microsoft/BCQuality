@@ -89,6 +89,33 @@ Unit-level tests keep the strict one-WHEN rule without exception. (Edison
 eval 2026-07-02, Jernpladsen @ b7656b1: five deliberate round-labelled flow
 procedures in SVPartialFlowTests — the rule previously gave no verdict.)
 
+## Defect-then-fix regression tests — a second, narrower exception
+
+A test that reproduces a specific stale/broken state and then verifies a
+subsequent action corrects it (`RecalcRestoresStaleDiscountAfterPick`: pick
+creates the stale state, recalc is the fix under test) is not the same
+shape as an unrelated-action test, even though its `[THEN]` assertions
+decompose cleanly per step — decomposing cleanly is expected here, not a
+sign of two unrelated tests. The three flow-test conditions above are the
+wrong fit for this case: the name doesn't need to declare a multi-round
+"flow," and there is no natural "Runde 1/2" framing for "create the broken
+state, then fix it." This shape is permitted when:
+
+1. The second `[WHEN]` cannot be meaningfully tested without the first —
+   the fix being verified only has an effect on the specific stale state
+   the first action produced, so splitting would require re-running the
+   first action inside a second test's `[GIVEN]` anyway, testing nothing
+   new.
+2. The procedure name communicates the before/after relationship (a
+   defect symptom and its correction), even without the word "flow."
+
+Applying flow-test criterion 3 ("assertions decompose cleanly → split") to
+this shape would have been a false positive (Edison eval 2026-08-13,
+Wareco @ a2fc8ff8, `SalesOrderAmountAfterPickTest.RecalcRestoresStaleDiscountAfterPick`)
+— clean decomposition is exactly what a defect-then-fix test's assertions
+are supposed to do at each step, not evidence the steps belong in separate
+tests.
+
 ## Naming implication
 
 The procedure name should make the single WHEN self-evident.
