@@ -28,6 +28,28 @@ subtracted), name them for their distinct roles in that calculation
 (`OriginalAmount` / `AdjustedAmount`), not for their shared type
 (`Amt1` / `Amt2`).
 
+The same failure shows up in a second, more common shape that's easy to
+miss because it doesn't look like an abbreviation: a **real record type
+name plus a letter suffix** — `ItemA`/`ItemB`/`ItemC`, `VendorA`/`VendorB`.
+This is most common in test fixtures, where two records of the same type
+play distinct roles the letter suffix erases (e.g. one vendor has a price
+configured, the other doesn't and the test expects a zero-price lookup to
+fall through to it) — a reader has to go read the test body to learn which
+letter means what, exactly the lookup cost this rule exists to avoid. Name
+them for the role: `PricedVendor`/`UnpricedVendor`, `ScrapItem`/`RegularItem`,
+not for their shared type plus an arbitrary letter.
+
+**Read the sibling declarations before flagging a type+letter name.** A
+single-letter suffix on a real type name isn't always the anti-pattern
+above — it can be one member of a deliberate, self-consistent naming
+family that happens to use single letters for a real reason (a country or
+region code, a variant identifier). `ItemN` sitting next to `ItemDk`,
+`ItemSE`, `ItemFI` in the same `var` section isn't an unexplained letter —
+it's Norway's country code, following the exact same pattern as its
+siblings. Flagging `ItemN` in isolation, without reading what else is
+declared alongside it, produces a false positive; the letter/suffix only
+counts as unexplained if nothing nearby explains it.
+
 **Exception:** short-lived variables in a handful of idiomatic, universally
 recognized roles are accepted single-letter, because their entire meaning
 is visible in the few lines that declare and use them:
@@ -78,3 +100,19 @@ A reviewer reading `Amt1 := Amt2 - TempX;` cannot tell what this line is
 computing without opening the variable declarations and searching for every
 other assignment to `Amt2` and `TempX` first. The same line as
 `AmountInclVAT := AmountExclVAT - DiscountAmount;` needs no further lookup.
+
+```al
+// Same failure, real-type-name shape — common in test fixtures.
+var
+    VendorA: Record Vendor;
+    VendorB: Record Vendor;
+...
+LibraryPurchase.CreateVendor(VendorA);
+CreateVendorPrice(VendorA, Item, 10);
+LibraryPurchase.CreateVendor(VendorB); // no price created for VendorB
+Assert.AreEqual(0, PriceMgt.GetVendorPrice(VendorB."No.", Item."No."), '');
+```
+
+`VendorA`/`VendorB` tell the reader nothing about why the test needs two
+vendors. `PricedVendor`/`UnpricedVendor` would make the assertion make
+sense without reading the setup lines above it.
