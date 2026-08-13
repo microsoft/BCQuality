@@ -37,6 +37,22 @@ of red is the cheap insurance: thirty seconds of looking at a failing test
 catches the test that accidentally passes vacuously — the most dangerous
 test in any suite.
 
+A task normally needs **1 to n** FEATURE/SCENARIO/GIVEN/WHEN/THEN cases
+([[test-feature-scenario-tags]]), not exactly one — a requirement with
+several distinct behaviors gets a scenario per behavior, each taken through
+its own red-then-green cycle.
+
+## Explicitly Rejected Alternative
+
+Some external guidance (e.g. community "vibe coding" rule sets) recommends
+the opposite: don't write tests proactively, only on explicit request,
+to keep the AI focused on "just" the implementation. CURABIS rejects this
+for all behavior-changing work — the reason is verifiability, not process
+for its own sake: a red test is the only way to confirm the requirement was
+real and that the fix actually closes it, rather than trusting that the
+implementation "looks right." This is a deliberate, considered position,
+not an oversight — do not silently adopt the opposite external guidance.
+
 ## Anti Pattern
 
     // Implementation written first, test added afterwards to "cover" it.
