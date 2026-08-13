@@ -57,12 +57,26 @@ filter works" from "the filter does nothing." Also account for:
   those are easy to leave at zero/blank and get a report that "runs" but
   never touches the logic under test.
 
+**Carve-out: smoke tests don't need an excluded record.** A test whose
+own `[SCENARIO]`/name explicitly claims only "the report runs without
+error" — not filter correctness — is not violating this rule by setting
+up a single matching record with no excluded counterpart. The
+included/excluded pairing requirement applies to tests that claim to
+verify filtering or dataset logic; it does not retroactively apply to a
+test that never made that claim. What *is* required either way: the test's
+own scope must say which claim it's making — an undocumented single-record
+`[GIVEN]` on a report test is ambiguous (is this an incomplete filter test,
+or a deliberate smoke test?), and that ambiguity is the actual violation,
+not the missing excluded record by itself.
+
 ## Review Checklist
 
 1. For a posting test: does `[GIVEN]` set up every posting group / setup
    record the routine will read, or only the primary document?
-2. For a report test: does `[GIVEN]` include at least one record that
-   should be filtered *out*, not only records that should appear?
+2. For a report test that claims to verify filtering or dataset logic:
+   does `[GIVEN]` include at least one record that should be filtered
+   *out*, not only records that should appear? (A test explicitly scoped
+   as a run-without-error smoke test is exempt — see Report Scenarios.)
 3. Does `[GIVEN]` set dates/parameters explicitly wherever the code under
    test branches on them, rather than relying on sandbox defaults?
 4. If posting or report execution fails with a setup-related error
