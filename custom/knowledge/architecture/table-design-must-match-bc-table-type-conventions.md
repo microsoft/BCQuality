@@ -87,6 +87,7 @@ decision — key shape, naming suffix, and which pages must exist."
 - **Naming:** functional area name + `Setup` (exception: `Company Information`).
 - **Primary key:** `Code[10]` named `Primary Key`, always left blank — enforces the single-record rule.
 - **Pages:** one page, same name as the table, primary key field not shown.
+- **Record instantiation:** the page's `OnOpenPage` trigger — not the table — creates the singleton the first time it is opened; it is never assumed to pre-exist. Standard shape: `Rec.Reset(); if not Rec.Get() then begin Rec.Init(); Rec.Insert(); end;` (the `Reset()` clears any stale filter before the `Get()`, since the blank `Code` PK would otherwise be vulnerable to one). Verified against Base App W1: `General Ledger Setup` and `Sales & Receivables Setup` both use this exact pattern. A Setup page that omits this and assumes the record exists fails at runtime on first open in a fresh company.
 - **Caveat:** a table with "Setup" in its name that holds more than one record follows the Subsidiary-table rules instead — the name alone is not proof of type.
 
 ## Review Checklist
@@ -97,6 +98,7 @@ When reviewing or designing a table, ask:
 3. Does the table name carry the expected suffix (`Ledger Entry`, `Journal Line`, `Register`, `Setup`, `Header`/`Line`)?
 4. Do the expected pages exist (Card+List(+Statistics) for Master, Worksheet for Journal/Subsidiary-with-Integer-PK, List for Ledger/Register/Document History, Document/Card+subpage for Document Header)?
 5. If a Ledger/Register/Document History table's primary key is user-editable, or a Master/Setup table allows duplicate identity, flag it — the design contradicts its own type.
+6. For a Setup table's page, does `OnOpenPage` create the singleton record (`Get` → `Init` → `Insert`, guarded by `Reset`) instead of assuming it already exists?
 
 A table that mixes conventions from two types (for example, a "Ledger" table that
 lets users freely insert or delete rows) is not "flexible" — it is either
@@ -108,3 +110,9 @@ CURABIS Academy course "Your Key to Application Language for Microsoft Business
 Central" (rev. July 2022), Chapter 2: Tables, "Table Types and Characteristics"
 (p. 73–84). Cross-checked against the current Base Application table structure
 as of 2026-08-12 — the taxonomy still holds.
+
+Setup-page record-instantiation pattern (2026-08-13) verified directly against
+`microsoft/BCApps` source (W1 layer): `src/Layers/W1/BaseApp/Finance/GeneralLedger/Setup/GeneralLedgerSetup.Page.al`
+(`OnOpenPage`, line ~889) and `src/Layers/W1/BaseApp/Sales/Setup/SalesReceivablesSetup.Page.al`
+(`OnOpenPage`, line ~601) — not inferred from the Academy material, which does
+not document this detail.
