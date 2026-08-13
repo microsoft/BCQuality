@@ -52,3 +52,43 @@ Silently choosing to ignore the return value (or silently choosing to wrap
 every call in an `if not ... then` with a generic error message) without
 first checking whether the surrounding code, task, or object convention
 already signals which behavior is intended.
+
+## The High-Stakes Case: Financially or Legally Significant Fields
+
+The most damaging version of guessing wrong isn't a crash — it's a guarded
+`Get()` whose failure path silently returns a blank/zero value that then
+flows into VAT, posting, or amount calculations. A crash is visible; a
+silently wrong VAT posting group or a blank VAT registration number used
+in compliance reporting is not, and it can post real, wrong financial data
+before anyone notices.
+
+```al
+// ANTI-PATTERN: a guarded lookup defaults a VAT-relevant field to blank
+// on failure, and that blank value flows straight into VAT classification.
+local procedure GetRelatedVATRegistrationNo(DocumentNo: Code[20]): Text[20]
+var
+    Header: Record "Some Document Header";
+begin
+    if Header.Get(DocumentNo) then
+        exit(Header."VAT Registration No.");
+    exit(''); // silently wrong — this Get() should not be expected to fail
+end;
+```
+
+Verified against Microsoft's own current Base Application source
+(microsoft/BCApps, 2026-08-13): wherever a VAT-relevant field like `VAT
+Registration No.` is read for a document check or compliance report, the
+pattern is `TestField("VAT Registration No.")` — fail loud with the exact
+field named — not a silent default (seen consistently across
+`OIOUBLCheckSalesHeader`, `OIOUBLCheckReminder`, `VATVIESDeclarationDisk`,
+and others). Where Microsoft *does* guard a Setup `Get()` for a VAT-related
+field (e.g. `VATSetup.Get() ? VATSetup."Alt. Cust. VAT Reg. Consistent" :
+"...Consist."::Default`), the fallback is always an explicit, named,
+business-meaningful default value — never a blank string or a bare zero.
+
+The rule this sharpens to: if the field being read feeds a VAT, posting,
+or amount calculation, resolving the ambiguity in [[clarify-before-building]]'s
+favor is not optional — either the lookup shouldn't be guarded at all (the
+parent record is expected to always exist, so let `Get()`/`TestField` fail
+loud), or the fallback must be an explicit, named, deliberately-chosen
+business default, never a blank or zero value that quietly passes through.
