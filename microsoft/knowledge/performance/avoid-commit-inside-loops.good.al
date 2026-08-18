@@ -16,11 +16,22 @@ codeunit 50128 "Perf Sample CommitInLoop Good"
 {
     procedure NormalizeCustomerNames()
     var
+        NormalizeState: Record "Perf Normalize State";
         LastCustomerNo: Code[20];
     begin
-        // The outer loop owns checkpoints; the per-row loop contains no Commit.
-        while NormalizeNextChunk(LastCustomerNo) do
+        if not NormalizeState.Get('CUSTOMER') then begin
+            NormalizeState.Init();
+            NormalizeState.Code := 'CUSTOMER';
+            NormalizeState.Insert();
+        end;
+        LastCustomerNo := NormalizeState."Last Customer No.";
+
+        while NormalizeNextChunk(LastCustomerNo) do begin
+            // Persist progress in the same transaction as the completed chunk.
+            NormalizeState."Last Customer No." := LastCustomerNo;
+            NormalizeState.Modify();
             Commit();
+        end;
     end;
 
     local procedure NormalizeNextChunk(var LastCustomerNo: Code[20]): Boolean
@@ -57,4 +68,18 @@ codeunit 50128 "Perf Sample CommitInLoop Good"
         LastCustomerNo := LastChunkCustomerNo;
         exit(true);
     end;
+}
+
+table 50128 "Perf Normalize State"
+{
+    fields
+    {
+        field(1; Code; Code[10]) { }
+        field(2; "Last Customer No."; Code[20]) { }
+    }
+
+    keys
+    {
+        key(PK; Code) { Clustered = true; }
+    }
 }

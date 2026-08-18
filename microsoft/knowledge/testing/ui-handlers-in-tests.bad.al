@@ -1,43 +1,58 @@
-codeunit 50401 "Test UI Handlers Bad"
+codeunit 50401 "Test UI Handler Proof Bad"
 {
     Subtype = Test;
 
-    // Several wiring mistakes, each of which fails at runtime rather than as a
-    // clean assertion the reviewer can read:
-    //  * A UI call with no listed handler -> "unhandled UI" abort (the Message
-    //    below has no handler).
-    //  * The mirror mistake, listing a handler the path never hits, instead
-    //    fails with "handler function was not executed".
-    //  * A handler that hardcodes its answer and asserts inline, with no
-    //    enqueue/dequeue -> nothing proves the RIGHT dialog fired the RIGHT
-    //    number of times, and a failed inline assert can be swallowed by the
-    //    calling UI operation.
     [Test]
-    [HandlerFunctions('ConfirmHandler')]
-    procedure PostDocumentConfirmsAndMessages()
+    [HandlerFunctions('CustomerCardHandler')]
+    procedure PreSetBooleanDoesNotProveCustomerCardResult()
+    var
+        Customer: Record Customer;
     begin
-        // No Initialize(): a value leaked by an earlier test corrupts this one.
-        RunPostingThatConfirmsAndMessages();
-        // No AssertEmpty(): a missing or extra dialog goes unnoticed.
+        LibrarySales.CreateCustomer(Customer);
+        ActionSucceeded := true;
+
+        Page.RunModal(Page::"Customer Card", Customer);
+
+        // This only proves a value assigned before the action stayed true.
+        Assert.IsTrue(ActionSucceeded, 'The customer card action failed.');
     end;
 
-    local procedure RunPostingThatConfirmsAndMessages()
+    [Test]
+    [HandlerFunctions('CustomerCardHandler')]
+    procedure MissingMessageHandlerFailsAtRuntime()
+    var
+        Customer: Record Customer;
     begin
-        // Raises a Confirm AND a Message, but only ConfirmHandler is listed:
-        // the Message has nothing to intercept it -> unhandled-UI runtime abort.
-        if Confirm('Post this document?', false) then
-            Message('Posting completed.');
+        LibrarySales.CreateCustomer(Customer);
+
+        Page.RunModal(Page::"Customer Card", Customer);
+        Message('Customer card closed.');
+    end;
+
+    [Test]
+    [HandlerFunctions('CustomerCardHandler,UnusedConfirmHandler')]
+    procedure UnreachedListedHandlerFailsAtRuntime()
+    var
+        Customer: Record Customer;
+    begin
+        LibrarySales.CreateCustomer(Customer);
+
+        Page.RunModal(Page::"Customer Card", Customer);
+    end;
+
+    [ModalPageHandler]
+    procedure CustomerCardHandler(var CustomerCard: TestPage "Customer Card")
+    begin
     end;
 
     [ConfirmHandler]
-    procedure ConfirmHandler(Question: Text[1024]; var Reply: Boolean)
+    procedure UnusedConfirmHandler(Question: Text[1024]; var Reply: Boolean)
     begin
-        // Hardcoded expectation and hardcoded reply. If the wrong dialog fires,
-        // this inline assert may never surface as the test's verdict.
-        Assert.AreEqual('Post this document?', Question, 'Wrong confirm.');
         Reply := true;
     end;
 
     var
         Assert: Codeunit "Library Assert";
+        LibrarySales: Codeunit "Library - Sales";
+        ActionSucceeded: Boolean;
 }

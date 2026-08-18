@@ -1,57 +1,29 @@
-codeunit 50400 "Test UI Handlers Good"
+codeunit 50400 "Test UI Handler Capture Good"
 {
     Subtype = Test;
 
     [Test]
-    [HandlerFunctions('ConfirmHandler,PostMessageHandler')]
-    procedure PostDocumentConfirmsAndMessages()
+    [HandlerFunctions('CustomerCardHandler')]
+    procedure CustomerCardShowsSelectedCustomer()
+    var
+        Customer: Record Customer;
     begin
-        Initialize();
+        LibrarySales.CreateCustomer(Customer);
+        CapturedCustomerNo := '';
 
-        // [GIVEN] the test enqueues, in interaction order, what each handler
-        //         will see and how it should answer: the Confirm's expected
-        //         question plus the reply to return, then the expected Message.
-        LibraryVariableStorage.Enqueue('Post this document?'); // expected question (substring)
-        LibraryVariableStorage.Enqueue(true);                  // reply ConfirmHandler returns
-        LibraryVariableStorage.Enqueue('Posting completed.');  // expected message (substring)
+        Page.RunModal(Page::"Customer Card", Customer);
 
-        // [WHEN] the code under test raises the Confirm and then the Message
-        RunPostingThatConfirmsAndMessages();
-
-        // [THEN] every enqueued expectation was consumed exactly once
-        LibraryVariableStorage.AssertEmpty();
+        Assert.AreEqual(Customer."No.", CapturedCustomerNo, 'The customer card opened for the wrong customer.');
     end;
 
-    local procedure Initialize()
+    [ModalPageHandler]
+    procedure CustomerCardHandler(var CustomerCard: TestPage "Customer Card")
     begin
-        // Clear leftover values so a value leaked by an earlier test cannot
-        // cascade into this one.
-        LibraryVariableStorage.Clear();
-    end;
-
-    local procedure RunPostingThatConfirmsAndMessages()
-    begin
-        // Stands in for the production routine that confirms, then messages.
-        if Confirm('Post this document?', false) then
-            Message('Posting completed.');
-    end;
-
-    [ConfirmHandler]
-    procedure ConfirmHandler(Question: Text[1024]; var Reply: Boolean)
-    begin
-        // Verify the RIGHT dialog fired (substring match), then return the
-        // reply the test enqueued for it.
-        Assert.ExpectedConfirm(LibraryVariableStorage.DequeueText(), Question);
-        Reply := LibraryVariableStorage.DequeueBoolean();
-    end;
-
-    [MessageHandler]
-    procedure PostMessageHandler(Message: Text[1024])
-    begin
-        Assert.ExpectedMessage(LibraryVariableStorage.DequeueText(), Message);
+        CapturedCustomerNo := CustomerCard."No.".Value();
     end;
 
     var
         Assert: Codeunit "Library Assert";
-        LibraryVariableStorage: Codeunit "Library - Variable Storage";
+        LibrarySales: Codeunit "Library - Sales";
+        CapturedCustomerNo: Code[20];
 }

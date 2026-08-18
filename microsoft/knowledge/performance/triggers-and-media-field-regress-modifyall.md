@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: performance
-keywords: [modifyall, deleteall, regression, triggers, media, getglobaltabletriggermask, subscriber]
+keywords: [modifyall, deleteall, regression, triggers, media, security-filtering, companion-fields, subscriber, progress]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -11,12 +11,12 @@ application-area: [all]
 
 ## Description
 
-`ModifyAll` and `DeleteAll` usually execute as single SQL statements, but the platform falls back to a fetch-then-row-by-row loop under specific conditions. Per the upstream guidance, the regression is triggered by any of: global database triggers defined via `GetGlobalTableTriggerMask` or `GetDatabaseTableTriggerSetup` (so that `OnDatabaseDelete`/`OnGlobalDelete` must run); event subscribers on the table's `OnBeforeDelete`/`OnAfterDelete` (for `DeleteAll`) or `OnBeforeModify`/`OnAfterModify` (for `ModifyAll`); or "adding a Media or MediaSet table field to either the table or table extension." Each of these forces the platform to materialize each affected row in AL.
+`ModifyAll` and `DeleteAll` can limit SQL calls, but Microsoft documents that they [revert to individual calls](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/optimize-sql-al-database-methods-and-performance-on-server#modifyall-and-deleteall) when the table has trigger code, related modify/delete/global/database event subscribers, active security filtering, `Media` or `MediaSet` fields, or fields added through companion tables. These conditions must be assessed from the target table and runtime context, not only from the visible bulk call.
 
 ## Best Practice
 
-Before introducing any of the above on a table — a global trigger registration, a `Modify`/`Delete` subscriber, a media or media-set field — note every `ModifyAll`/`DeleteAll` that targets the table and assess whether the regression cost is acceptable. The upstream guidance is explicit: "There should be a very good reason for doing any of the above since they will significantly regress performance of `ModifyAll` and/or `DeleteAll`." Once a table has regressed, multiple `ModifyAll` calls each iterate the rows themselves, so consolidating to one explicit `FindSet`+`Modify` loop becomes faster than chaining several `ModifyAll` calls.
+Before introducing a fallback condition, audit the `ModifyAll`/`DeleteAll` call sites that target the table and assess the regression cost. Once a bulk path already executes row by row, one explicit loop can be reasonable when it preserves the same trigger semantics and adds required per-row progress UX; consolidating several regressed bulk calls into one pass can also avoid repeated iteration. This is a narrow equivalence check, not a generic progress-dialog exemption: when no fallback condition applies, retain the bulk API.
 
 ## Anti Pattern
 
-Adding a media field to a hot table — or subscribing to its modify/delete events from a generic logging codeunit — without auditing the bulk-write call sites. The schema change is mechanical; the performance change is invisible at the call site and only surfaces when a previously fast `ModifyAll` starts paying the per-row trigger cost in production. The mirror anti-pattern is chaining several `ModifyAll` calls on a table that has already regressed; each one re-iterates the same rows.
+Adding a fallback condition to a hot table without auditing bulk-write call sites, or replacing a working bulk API with a per-row loop solely to show progress. The mirror anti-pattern is chaining several bulk calls on a table that already falls back, causing repeated row-by-row passes.
