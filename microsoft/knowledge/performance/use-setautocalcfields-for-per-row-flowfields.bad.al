@@ -4,8 +4,8 @@ codeunit 50491 "Perf AutoCalcFields Bad"
     var
         Customer: Record Customer;
     begin
-        Customer.SetLoadFields("Credit Limit (LCY)");
         Customer.SetFilter("Credit Limit (LCY)", '>0');
+        Customer.SetLoadFields("Credit Limit (LCY)");
         if Customer.FindSet() then
             repeat
                 Customer.CalcFields("Balance (LCY)");

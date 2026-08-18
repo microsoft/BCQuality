@@ -5,8 +5,8 @@ codeunit 50493 "Perf Record Clone Bad"
         Customer: Record Customer;
         CustomerCopy: Record Customer;
     begin
-        Customer.SetLoadFields("Credit Limit (LCY)");
         Customer.SetFilter("Credit Limit (LCY)", '>0');
+        Customer.SetLoadFields("Credit Limit (LCY)");
         if Customer.FindSet(true) then
             repeat
                 CustomerCopy.Copy(Customer);
