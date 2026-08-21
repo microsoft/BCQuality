@@ -1,5 +1,5 @@
 ---
-bc-version: [all]
+bc-version: [16..]
 domain: data-modeling
 keywords: [transferfields, skipfieldsnotmatchingtype, type-mismatch, field-mapping, data-transfer]
 technologies: [al]
@@ -15,7 +15,7 @@ application-area: [all]
 
 ## Best Practice
 
-Use `TransferFields(Source)` when matching field definitions are an expected part of the table design. If source and destination fields intentionally have different types, map those fields explicitly and handle the conversion or validation in code. Use `SkipFieldsNotMatchingType = true` only when skipping incompatible fields is an intentional, documented part of the transfer contract.
+Use `TransferFields(Source)` only when every field the destination requires, including primary key fields, is guaranteed to share a matching field number and type with the source; this form defaults `InitPrimaryKeyFields` to `true`. Fields with no matching field number, and fields whose types differ across extensions, are skipped regardless of `SkipFieldsNotMatchingType` — that parameter only governs same-extension type mismatches. If the destination depends on a field that falls into either case, map and validate it explicitly in code rather than relying on `TransferFields` to catch the gap. Use `SkipFieldsNotMatchingType = true` only when skipping same-extension type mismatches is an intentional, documented part of the transfer contract.
 
 ## Anti Pattern
 
