@@ -49,8 +49,11 @@ table 50122 "Transfer Target"
 codeunit 50491 "TransferFields Good"
 {
     procedure CopyData(Source: Record "Transfer Source"; var Target: Record "Transfer Target")
+    var
+        ConvertedReference: Integer;
     begin
         Target."Entry No." := Source."Entry No.";
-        Evaluate(Target."Reference", Source."Reference");
+        Evaluate(ConvertedReference, Source."Reference");
+        Target.Validate("Reference", ConvertedReference);
     end;
 }
