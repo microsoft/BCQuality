@@ -15,7 +15,7 @@ A `SetRange` or `SetFilter` placed before `FindSet` narrows the result set at th
 
 ## Best Practice
 
-Move every predicate that can be expressed as an equality or range filter into a `SetRange` or `SetFilter` ahead of the find. Combine with `SetCurrentKey` to choose a key whose first fields match the filter (see `setcurrentkey-aligns-key-with-filters.md`). The loop body should then contain only the work that depends on per-row state.
+Move every predicate that can be expressed as an equality or range filter into a `SetRange` or `SetFilter` ahead of the find. Make sure a key (index) exists whose leading fields cover the filter so the optimizer can seek; note that `SetCurrentKey` only sets sort order and is not an index hint (see `setcurrentkey-sets-sort-order-not-index-hint.md`). The loop body should then contain only the work that depends on per-row state.
 
 See sample: `apply-filters-before-iterating.good.al`.
 
