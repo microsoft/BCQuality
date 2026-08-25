@@ -15,7 +15,7 @@ AL gives no short-circuit (lazy) evaluation guarantee for `and`, `or`, and `xor`
 
 ## Best Practice
 
-Split a condition into nested `if` statements whenever one operand is only safe or only worth evaluating once another has passed. The guarding or cheapest condition goes in the outer `if`, the dependent or expensive one in the inner `if`, which makes the dependency explicit and keeps the expensive operand off the path that would have been skipped. Where there is no `else` branch, nesting is a pure win; where there is one, extract the conditions into a helper procedure that exits early instead. Keep `and` and `or` for operands that are independently safe and cheap — in-memory field comparisons, enum tests, bound checks — where combining them reads better and costs nothing.
+Split a condition into nested `if` statements whenever one operand is only safe or only worth evaluating once another has passed. The guarding or cheapest condition goes in the outer `if`, the dependent or expensive one in the inner `if`, which makes the dependency explicit and keeps the expensive operand off the path that would have been skipped. Where there is no `else` branch, nesting is a pure win; where there is one, extract the conditions into a helper procedure that exits early instead. Where the chain runs past about three conditions, stop nesting and use a `case` statement instead — see `case-true-of-for-long-condition-chains.md`. Keep `and` and `or` for operands that are independently safe and cheap — in-memory field comparisons, enum tests, bound checks — where combining them reads better and costs nothing.
 
 See sample: `boolean-operators-do-not-short-circuit.good.al`.
 
@@ -27,4 +27,4 @@ See sample: `boolean-operators-do-not-short-circuit.bad.al`.
 
 ## See also
 
-`microsoft/knowledge/performance/apply-guards-before-get.md` covers the related ordering rule for statements rather than operands.
+`case-true-of-for-long-condition-chains.md` covers what to do when nesting the conditions would go more than about three levels deep. `microsoft/knowledge/performance/apply-guards-before-get.md` covers the related ordering rule for statements rather than operands.
