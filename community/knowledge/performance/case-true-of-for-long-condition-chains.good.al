@@ -4,16 +4,20 @@ codeunit 50542 "Perf Sample CaseChain Good"
     var
         Item: Record Item;
     begin
-        // 'case false of' evaluates the value sets in order and stops at the first
-        // match, so each condition is reached only when the previous one passed —
+        // 'case false of' matches the value sets in order and stops at the first
+        // match, so each value set is reached only when the previous one passed —
         // and Item.Get is never called for a non-item line.
         case false of
-            (SalesLine.Type = SalesLine.Type::Item):
-                exit(false);
-            (SalesLine."No." <> ''):
-                exit(false);
+            // Pure field reads with no side effects and no order dependency, so
+            // they share one value set and one action.
+            (SalesLine.Type = SalesLine.Type::Item),
+            (SalesLine."No." <> ''),
             (SalesLine."Qty. to Ship" > 0):
                 exit(false);
+            // These two keep their own value sets even though the action repeats:
+            // ordering across separate value sets is what the documentation
+            // guarantees. The Get must not run until the checks above pass, and
+            // Blocked must not be read until the Get succeeded.
             Item.Get(SalesLine."No."):
                 exit(false);
             (not Item.Blocked):
