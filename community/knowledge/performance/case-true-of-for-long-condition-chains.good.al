@@ -8,11 +8,11 @@ codeunit 50542 "Perf Sample CaseChain Good"
         // so each condition is reached only when the previous one passed — and
         // Item.Get is never called for a non-item line.
         case false of
-            (SalesLine.Type = SalesLine.Type::Item),
-            (SalesLine."No." <> ''),
-            (SalesLine."Qty. to Ship" > 0),
+            SalesLine.Type = SalesLine.Type::Item,
+            SalesLine."No." <> '',
+            SalesLine."Qty. to Ship" > 0,
             Item.Get(SalesLine."No."),
-            (not Item.Blocked):
+            not Item.Blocked:
                 exit(false);
         end;
         exit(true);

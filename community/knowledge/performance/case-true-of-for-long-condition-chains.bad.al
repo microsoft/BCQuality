@@ -21,7 +21,8 @@ codeunit 50543 "Perf Sample CaseChain Bad"
     begin
         // The wrong escape from the ladder: flattening it into 'and' trades the
         // nesting for a defect, because every operand is still evaluated. Item
-        // fields are read even when the Get failed.
+        // fields are read even when the Get failed. The parentheses are not
+        // optional either — 'and' binds tighter than '=' and '<>' in AL.
         exit((SalesLine.Type = SalesLine.Type::Item) and (SalesLine."No." <> '') and
              (SalesLine."Qty. to Ship" > 0) and Item.Get(SalesLine."No.") and (not Item.Blocked));
     end;
