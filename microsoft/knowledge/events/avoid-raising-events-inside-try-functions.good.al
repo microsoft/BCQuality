@@ -3,7 +3,7 @@
 codeunit 50114 "Payment Processor"
 {
     [IntegrationEvent(false, false)]
-    procedure OnBeforeSubmitPayment(var PaymentAmount: Decimal; var Cancel: Boolean)
+    local procedure OnBeforeSubmitPayment(var PaymentAmount: Decimal; var Cancel: Boolean)
     begin
     end;
 

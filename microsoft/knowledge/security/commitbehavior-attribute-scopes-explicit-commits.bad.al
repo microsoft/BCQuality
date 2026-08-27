@@ -1,7 +1,7 @@
 codeunit 50151 "Sec Sample CommitBeh Bad"
 {
     [IntegrationEvent(true, false)]
-    procedure OnBeforeApplyingDiscount(var Customer: Record Customer)
+    local procedure OnBeforeApplyingDiscount(var Customer: Record Customer)
     begin
     end;
 

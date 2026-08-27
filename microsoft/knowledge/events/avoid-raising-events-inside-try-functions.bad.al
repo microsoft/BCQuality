@@ -3,7 +3,7 @@
 codeunit 50116 "Payment Processor Bad"
 {
     [IntegrationEvent(false, false)]
-    procedure OnBeforeSubmitPayment(var PaymentAmount: Decimal; var Cancel: Boolean)
+    local procedure OnBeforeSubmitPayment(var PaymentAmount: Decimal; var Cancel: Boolean)
     begin
     end;
 
