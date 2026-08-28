@@ -8,7 +8,6 @@ codeunit 50540 "Process Context Good Sample"
     var
         IsRunning: Boolean;
     begin
-        IsRunning := false;
         OnCheckProcessRunning(IsRunning);
         exit(IsRunning);
     end;
@@ -43,21 +42,15 @@ codeunit 50542 "Process Driver Good Sample"
         ProcessFlag: Codeunit "Process Flag Good Sample";
     begin
         // A fresh instance, bound for exactly this call. If the shared code
-        // errors, the stack unwinds, ProcessFlag leaves scope and the binding
-        // goes with it - no reset code, no UnbindSubscription in an error path.
+        // errors, the stack unwinds and takes the binding with it - nothing to reset.
         BindSubscription(ProcessFlag);
         RunSharedCode(DocumentNo);
-        FinishProcess(DocumentNo);
     end;
 
     local procedure RunSharedCode(DocumentNo: Code[20])
     begin
         // A base application report, a posting routine, or any other object
         // that extensions hook into - including a customer's own replacement.
-    end;
-
-    local procedure FinishProcess(DocumentNo: Code[20])
-    begin
     end;
 }
 

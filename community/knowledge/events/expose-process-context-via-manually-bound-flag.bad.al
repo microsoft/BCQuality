@@ -27,7 +27,6 @@ codeunit 50546 "Process Driver Bad Sample"
     begin
         ProcessState.SetProcessRunning(true);
         RunSharedCode(DocumentNo);
-        FinishProcess(DocumentNo);
         // An error above never reaches this line. The database writes roll
         // back, the single-instance variable does not: ProcessRunning stays
         // true until the company is closed, so every later run in this session
@@ -38,21 +37,16 @@ codeunit 50546 "Process Driver Bad Sample"
     local procedure RunSharedCode(DocumentNo: Code[20])
     begin
     end;
-
-    local procedure FinishProcess(DocumentNo: Code[20])
-    begin
-    end;
 }
 
-// Anti-pattern 2: the binding is used correctly, but the context stays private.
-// The query is internal, so only the owning app can ever ask.
+// Anti-pattern 2: the context stays private. Flag and driver look like the
+// good sample, but the query is internal, so only the owning app can ever ask.
 codeunit 50547 "Process Ctx Bad Sample"
 {
     internal procedure IsProcessRunning(): Boolean
     var
         IsRunning: Boolean;
     begin
-        IsRunning := false;
         OnCheckProcessRunning(IsRunning);
         exit(IsRunning);
     end;
