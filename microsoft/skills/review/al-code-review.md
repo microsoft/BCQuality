@@ -80,7 +80,14 @@ For each sub-skill in the worklist, executed one at a time per the discipline ab
 2. Capture the sub-skill's complete findings-report verbatim and append it to `sub-results`.
 3. If the sub-skill's `outcome` is `failed`, stop here for this sub-skill: its findings are not reliable per the DO contract and MUST NOT be copied into the super-skill's top-level `findings[]` or counted in `summary.counts`.
 4. Otherwise, compare each entry from the sub-skill's `findings[]` with findings already rolled up. Two findings are duplicates when they point to the same file and overlapping line/range and prescribe materially the same correction, even when their knowledge-file IDs differ. Merge duplicates instead of appending both: keep the more specific domain owner, preserve that finding's optional `domain` field verbatim (including its absence), use its reference as `references[0]` and therefore as `id`, append the other references as supporting references, keep the highest severity and confidence justified by either report, and preserve one self-contained message. Article and leaf ownership notes decide specificity; do not choose by execution order.
-5. Append each non-duplicate finding, setting `from-sub-skill` to the sub-skill's `skill.id` and preserving its optional `domain` field verbatim, including its absence. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
+5. **Adjudicate each non-duplicate finding before appending it.** The super-skill is the review's final quality gate. A leaf reports what its own domain knowledge matched, in isolation; only the super-skill sees that finding beside the full diff and the other leaves' reports. Re-read the cited lines and decide whether the finding survives. **Reject** it — do not append it, and record it in `adjudicated-out[]` as `{ id, from-sub-skill, location, reason }` — when any of the following holds:
+   - **Precondition not met.** The applicability condition behind the finding does not actually hold here: the construct the knowledge file targets is absent, or this file is outside the article's declared scope.
+   - **Unsupported by the code.** The finding asserts something the cited lines do not bear out — a symbol, property, call, or control-flow claim that is not there. Re-read the code before accepting; do not take the leaf's description on trust.
+   - **Contradicted by knowledge.** A knowledge file loaded for this task explicitly permits what the leaf flagged (its `## Best Practice` or `## Anti Pattern` says the opposite).
+   - **Not actionable.** The finding names no concrete, correct change the author could make at that location.
+
+   Reject on evidence, never on taste. A correct, in-scope, actionable finding stays even when it is low severity, repeats a theme already reported elsewhere in the diff, or is not one you would have raised yourself. When the evidence is genuinely ambiguous, keep the finding.
+6. Append each surviving finding, setting `from-sub-skill` to the sub-skill's `skill.id` and preserving its optional `domain` field verbatim, including its absence. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
 
 ### Agent self-review pass
 
@@ -106,7 +113,7 @@ For every candidate the agent identifies in this pass:
    - `message` is non-empty and self-contained, describing both the issue and a concrete recommendation. A consumer rendering the finding has no knowledge-file footer to fall back on.
    - `suggested-code` MUST be set when the fix is small, local, and mechanical. If a mechanical-looking finding omits it, set `suggested-code-omission-reason` with the reason (for example, the fix spans non-contiguous code or requires choosing a real production value).
 
-Leaf-level agent findings (those with `references: []` inside a sub-skill's report) are rolled up into the super-skill's top-level `findings[]` like any other sub-skill finding — they keep their `from-sub-skill: <leaf-id>` attribution and are not rewritten. They are not subject to the "MUST validate against knowledge" step above, because each leaf has already validated within its own domain.
+Leaf-level agent findings (those with `references: []` inside a sub-skill's report) are rolled up into the super-skill's top-level `findings[]` like any other sub-skill finding — they keep their `from-sub-skill: <leaf-id>` attribution and are not rewritten. They are not subject to the "MUST validate against knowledge" step above, which governs the super-skill's *own* self-review candidates. They **are** subject to the adjudication gate in *Roll up sub-skill findings* step 5, which applies to every finding a leaf reports, knowledge-backed or agent.
 
 ### Suggested-code guidance
 
@@ -116,7 +123,7 @@ Sub-skills MAY also emit `suggested-code` when their knowledge file unambiguousl
 
 ### Summary and rollup
 
-Aggregate `summary.counts` and `summary.coverage` as the sums across invoked sub-skills whose `outcome` is not `failed`. Agent findings emitted by the super-skill itself contribute to `summary.counts` but not to `summary.coverage` (coverage is a sub-skill worklist metric and is undefined for self-review).
+Aggregate `summary.counts` and `summary.coverage` as the sums across invoked sub-skills whose `outcome` is not `failed`. `summary.counts` reflects the findings that **survived adjudication**, not the raw sub-skill totals; `summary.coverage` is a worklist metric and is unaffected by adjudication. Agent findings emitted by the super-skill itself contribute to `summary.counts` but not to `summary.coverage` (coverage is a sub-skill worklist metric and is undefined for self-review).
 
 `suppressed[]` at the super-skill level remains empty. Knowledge-file-level suppression is reported by each sub-skill within its own entry in `sub-results`.
 
@@ -126,7 +133,7 @@ Before emitting the rollup, apply DO's reference-integrity gate to every nested 
 
 ## Output
 
-Output conforms to the DO output contract, extended with `sub-results` and `skipped-sub-skills`. A populated example — both leaves ran, each produced findings:
+Output conforms to the DO output contract, extended with `sub-results`, `skipped-sub-skills`, and `adjudicated-out`. `adjudicated-out[]` records the sub-skill findings the super-skill rejected in *Roll up sub-skill findings* step 5 — each entry is `{ id, from-sub-skill, location, reason }`, where `reason` names which rejection criterion applied. It is an audit trail only; rejected findings do not appear in `findings[]` and are not counted in `summary.counts`. An empty array is valid and expected when every finding survived. A populated example — both leaves ran, each produced findings:
 
 ```json
 {
