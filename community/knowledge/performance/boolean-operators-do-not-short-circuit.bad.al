@@ -15,4 +15,17 @@ codeunit 50541 "Perf Sample NoShortCircuit Bad"
         // Get failed, so the result is taken from a record that was never loaded.
         exit((CustomerNo <> '') and Customer.Get(CustomerNo) and (Customer.Blocked <> Customer.Blocked::" "));
     end;
+
+    procedure IsEligibleForFreeShipping(SalesHeader: Record "Sales Header"): Boolean
+    begin
+        // HasActiveLoyaltyBenefit runs even when the amount alone already qualifies,
+        // paying for the costly check on every evaluation instead of only the path
+        // where it can still change the outcome.
+        exit((SalesHeader."Amount Including VAT" >= 1000) or HasActiveLoyaltyBenefit(SalesHeader."Sell-to Customer No."));
+    end;
+
+    local procedure HasActiveLoyaltyBenefit(CustomerNo: Code[20]): Boolean
+    begin
+        exit(CustomerNo <> '');
+    end;
 }

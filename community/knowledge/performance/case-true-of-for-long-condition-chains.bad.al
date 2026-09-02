@@ -24,6 +24,6 @@ codeunit 50543 "Perf Sample CaseChain Bad"
         // fields are read even when the Get failed. The parentheses are not
         // optional either — 'and' binds tighter than '=' and '<>' in AL.
         exit((SalesLine.Type = SalesLine.Type::Item) and (SalesLine."No." <> '') and
-             (SalesLine."Qty. to Ship" > 0) and Item.Get(SalesLine."No.") and (not Item.Blocked));
+             (SalesLine."Qty. to Ship" > 0) and Item.Get(SalesLine."No.") and not Item.Blocked);
     end;
 }

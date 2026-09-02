@@ -4,14 +4,18 @@ codeunit 50542 "Perf Sample CaseChain Good"
     var
         Item: Record Item;
     begin
-        // 'case false of' matches the values in order and stops at the first match,
-        // so each condition is reached only when the previous one passed — and
-        // Item.Get is never called for a non-item line.
+        // 'case false of' matches value sets in order and stops at the first match.
+        // The first three checks are pure and order-independent, so they share one
+        // value set. Get and Blocked are each their own value set, in order, because
+        // the ordering the documentation guarantees is across value sets, not within
+        // one — Item.Get must run, and succeed, before Blocked is read.
         case false of
             SalesLine.Type = SalesLine.Type::Item,
             SalesLine."No." <> '',
-            SalesLine."Qty. to Ship" > 0,
-            Item.Get(SalesLine."No."),
+            SalesLine."Qty. to Ship" > 0:
+                exit(false);
+            Item.Get(SalesLine."No."):
+                exit(false);
             not Item.Blocked:
                 exit(false);
         end;
