@@ -60,6 +60,47 @@ Skills define how agents consume knowledge. They come in three flavors:
 
 An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s) to invoke. The agent then invokes each dispatched skill in turn, reading READ and DO on demand. No prior knowledge of BCQuality's structure is baked into the orchestrator — only the convention *"invoke `/skills/entry.md` first."*
 
+### Standalone plugin installation
+
+BCQuality can also be installed directly as a plugin. The plugin registers one
+host-native skill,
+[`al-code-review`](skills/al-code-review/SKILL.md), which adapts the caller's
+request to the same Entry protocol used by orchestrators.
+
+For GitHub Copilot CLI:
+
+```shell
+copilot plugin install microsoft/BCQuality
+```
+
+Plugin version `0.2.0` renamed the former `bcquality-al-review` skill to
+`al-code-review`; explicit invocations and allowlists using the old skill name
+must be updated. The name remains distinct from BC-ALAgents' public
+`al-review` skill because current hosts may load plugin skill names into one
+shared inventory.
+
+The adapter is intentionally not a second review implementation:
+
+```text
+standalone host skill: skills/al-code-review/SKILL.md
+  -> routing contract: skills/entry.md
+    -> review coordinator: microsoft/skills/review/al-code-review.md
+      -> domain review leaves
+```
+
+Only the first file follows the host's `SKILL.md` packaging format. The
+remaining files are BCQuality's internal protocol and layered action skills.
+Entry remains the single owner of routing and index preparation;
+`al-code-review.md` remains the single owner of broad-review composition. This
+separation keeps standalone installation available without duplicating those
+policies in the plugin adapter.
+
+The host adapter and internal action skill intentionally share the
+`al-code-review` name: they expose the same operation in two different skill
+formats. Their paths make the boundary explicit. The adapter lives under
+`skills/al-code-review/SKILL.md`; the internal Microsoft-layer coordinator
+lives at `microsoft/skills/review/al-code-review.md`.
+
 ## Knowledge file format
 
 Every knowledge file is a markdown file with mandatory YAML frontmatter. Files target under 100 lines (ideal under 50). If two ideas would share a file, split them.

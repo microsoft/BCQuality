@@ -12,6 +12,10 @@ For the high-level framing and repo structure, start with the [README](README.md
   - **Global skills** in `/skills/` — the `entry.md` entry-point skill plus the READ · DO · WRITE contracts that govern the rest of the repo.
   - **Layer content** in `/microsoft/`, `/community/`, and `/custom/` — knowledge files and action skills grouped by authority.
 
+When BCQuality is installed as a standalone plugin, it additionally exposes
+`skills/al-code-review/SKILL.md`. This is a host-format adapter, not another
+action skill: it creates the task context and enters the same flow at Entry.
+
 ## The flow
 
 ```mermaid
@@ -30,6 +34,12 @@ The orchestrator has a URL setting that points at BCQuality (default: `github.co
 
 ### 2. Agent invokes Entry
 The agent reads `/skills/entry.md` and runs it against the task context. Entry applies its Source → Relevance → Worklist → Action steps over the action skills under `*/skills/**/*.md` and returns a **dispatch record**: the set of action skills to invoke, plus a list of candidates it skipped (with reasons). Routing is a skill, not orchestrator logic.
+
+For a standalone plugin installation, the host activates the
+`skills/al-code-review/SKILL.md` adapter first. That adapter preserves the
+caller's actual goal, constructs the task context, and invokes Entry. It does
+not select the internal `microsoft/skills/review/al-code-review.md` action skill
+itself or duplicate Entry's preparation, routing, and failure semantics.
 
 ### 3. Agent consumes the dispatch record
 The dispatch record names one or more action skills and the subset of inputs each should receive. If the outcome is `no-match` or `failed`, the agent returns the record to the orchestrator unchanged.
@@ -89,6 +99,10 @@ Orchestrators MUST tolerate an absent `domain` in reports from older producers. 
 ## Why this architecture
 
 - **Entry is the only hardcoded thing.** Orchestrators ship with one convention — *"invoke `/skills/entry.md` first"* — and nothing else. New action skills and new knowledge files are picked up automatically because Entry discovers them at dispatch time.
+- **Standalone installation adds an adapter, not another policy layer.** The
+  plugin's host-format `al-code-review` skill only translates the invocation
+  into Entry's task context. Entry and the dispatched action skills remain
+  authoritative.
 - **Layers decide authority, not code.** The agent sees `/microsoft/` and `/community/` together; if two files conflict, the precedence rule defined in READ resolves it. A partner fork can disable `/community/` — that's a config choice, not a code change.
 - **Knowledge and skills evolve independently.** A new knowledge file requires no skill changes — existing skills pick it up via frontmatter filters. A new skill requires no knowledge changes — it sources from what's already there.
 

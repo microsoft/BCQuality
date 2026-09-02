@@ -42,6 +42,7 @@ ACTION_SKILL_OPTIONAL_KEYS = {
 }
 META_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
+HOST_SKILL_REQUIRED_KEYS = {"name", "description"}
 
 STANDARD_INPUTS = {
     "pr-diff", "object-list", "file-path", "repository", "telemetry-query",
@@ -444,10 +445,36 @@ def validate_entry_skill(path: Path, parsed: Parsed, report: Report) -> None:
             report.error(path, "R23", f"version must be a positive integer: {v!r}", 1)
 
 
+def validate_host_skill(path: Path, parsed: Parsed, report: Report) -> None:
+    if parsed.frontmatter_error:
+        report.error(path, "R01", parsed.frontmatter_error, 1)
+        return
+    fm = parsed.frontmatter
+    assert fm is not None
+    missing = HOST_SKILL_REQUIRED_KEYS - fm.keys()
+    if missing:
+        report.error(path, "R29", f"missing required host-skill keys: {sorted(missing)}", 1)
+
+    name = fm.get("name")
+    if not isinstance(name, str) or not name:
+        report.error(path, "R29", "host-skill name must be a non-empty string", 1)
+    else:
+        if len(name) > 64 or not KEBAB_CASE.fullmatch(name):
+            report.error(path, "R29", f"host-skill name must be lowercase kebab-case and at most 64 characters: '{name}'", 1)
+        if name != path.parent.name:
+            report.error(path, "R29", f"host-skill name must match parent directory '{path.parent.name}', got '{name}'", 1)
+
+    description = fm.get("description")
+    if not isinstance(description, str) or not description:
+        report.error(path, "R29", "host-skill description must be a non-empty string", 1)
+    elif len(description) > 1024:
+        report.error(path, "R29", "host-skill description must be at most 1024 characters", 1)
+
+
 # --- Path and sample checks -------------------------------------------------
 
 def classify(path_from_root: Path) -> str | None:
-    """Return 'knowledge' | 'action-skill' | 'meta' | 'entry' | None."""
+    """Return 'knowledge' | 'action-skill' | 'host-skill' | 'meta' | 'entry' | None."""
     parts = path_from_root.parts
     if len(parts) < 2:
         return None
@@ -459,6 +486,8 @@ def classify(path_from_root: Path) -> str | None:
                 return "entry"
             if name in META_SKILL_FILES:
                 return "meta"
+        if len(parts) == 3 and parts[2] == "SKILL.md":
+            return "host-skill"
         return None
     if top in LAYERS and path_from_root.suffix == ".md":
         if len(parts) >= 3 and parts[1] == "skills":
@@ -616,6 +645,8 @@ def run(root: Path) -> Report:
             validate_entry_skill(path, parsed, report)
             if parsed.frontmatter and isinstance(parsed.frontmatter.get("id"), str):
                 skill_records.append(SkillRecord(path, "entry-point", parsed.frontmatter["id"]))
+        elif kind == "host-skill":
+            validate_host_skill(path, parsed, report)
 
     # Second pass: sample files per knowledge domain
     for layer in LAYERS:
