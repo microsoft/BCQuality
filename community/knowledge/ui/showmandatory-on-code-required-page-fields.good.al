@@ -45,6 +45,7 @@ page 50543 "Sample Shipping Agents"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the code of the shipping agent.';
+                    ShowMandatory = true;
                 }
                 field(Description; Rec.Description)
                 {
