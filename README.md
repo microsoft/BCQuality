@@ -26,7 +26,7 @@ BCQuality contains **knowledge** and **skills**. It does not contain agents. Age
 
 ### Knowledge files
 
-Atomic markdown files with YAML frontmatter. Each file covers one concern — one thing an agent would cite when reviewing or generating code. Knowledge files live in two layers:
+Atomic markdown files with YAML frontmatter. Each file covers one concern — one thing an agent would cite when reviewing or generating code. Knowledge files live in three layers:
 
 - **`/microsoft/`** — Microsoft-endorsed layer.
   - `/microsoft/knowledge/` — Platform guardrails, official guidance.
@@ -39,7 +39,9 @@ Atomic markdown files with YAML frontmatter. Each file covers one concern — on
   - `/custom/knowledge/` — Organization-specific knowledge files.
   - `/custom/skills/` — Organization-specific action skills.
 
-All three layers are enabled by default when an agent consumes BCQuality. Content can be promoted from Community to Microsoft-endorsed once it proves itself — this is a first-class concept, not an afterthought.
+All three layers are enabled by default when an agent consumes BCQuality. In the shared upstream layers, an action skill and the canonical knowledge it owns should live together: knowledge used by a Microsoft-endorsed skill belongs in `/microsoft/`, while `/community/` holds community-owned skills and their related knowledge. A split is acceptable briefly while a skill or corpus is being promoted, but it should not be the steady state. The `/custom/` layer remains the intentional exception because it overrides shared content in consumer forks.
+
+Layer authority follows review and ownership, not the contributor's affiliation. Community contributions to a Microsoft-owned knowledge domain can therefore be accepted directly into `/microsoft/`; content can also be promoted from Community to Microsoft-endorsed once its owning skill is promoted.
 
 ### Skills
 
@@ -194,7 +196,7 @@ Contributions are welcome. Before submitting a PR:
 
 1. Read the knowledge file format above — frontmatter and sections are validated by CI.
 2. Keep files atomic: one concern per file, under 100 lines.
-3. Target your contribution to the right layer — most community contributions go in `/community/knowledge/`.
+3. Target your contribution to the layer that owns the action skill: use `/microsoft/knowledge/` for Microsoft-owned domains and `/community/knowledge/` for knowledge that accompanies a community-owned skill.
 4. Adding a BC fact — or stopping the agent from flagging a false positive — is a knowledge file, not a skill edit. If a PR changes *what* a review skill flags, the change almost certainly belongs in a knowledge file. See [`skills/write.md`](skills/write.md).
 
 CI runs validation on every PR. If your knowledge file has schema violations, missing sections, code blocks, or exceeds 100 lines, the check will fail with a clear error message.

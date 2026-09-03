@@ -80,8 +80,10 @@ Knowledge files do not contain code. Samples live as **sibling files** next to t
 
 ## Choosing a layer
 
-- **`/microsoft/knowledge/<domain>/`** — platform-endorsed guidance. Authored or approved by the BC platform team. Use this layer only when the guidance reflects a platform guarantee or official recommendation.
-- **`/community/knowledge/<domain>/`** — shared community patterns. The default layer for contributions from outside the platform team. Content here can be promoted to `/microsoft/` once it proves itself.
+In the shared upstream layers, keep an action skill and the canonical knowledge it acts on in the same layer. The action skill's ownership determines the destination; the author's affiliation does not. Do not use `/community/knowledge/` as a staging area for articles in a domain already owned by a Microsoft-endorsed skill. A cross-layer split is acceptable only as a short-lived migration state while the skill or corpus is being promoted. Custom overrides are intentionally exempt because they extend shared skills from a consumer fork.
+
+- **`/microsoft/knowledge/<domain>/`** — guidance owned by a Microsoft-endorsed action skill. It has been approved as platform-endorsed guidance, whether authored by Microsoft or contributed by the community.
+- **`/community/knowledge/<domain>/`** — knowledge that accompanies a community-owned action skill. Promote the knowledge with the skill when that skill becomes Microsoft-endorsed.
 - **`/custom/knowledge/<domain>/`** — partner or customer overrides. Generally does not appear in the BCQuality repository itself; `/custom/` lives in consumer repositories.
 
 ### Writing to `/custom/` — fork precondition
