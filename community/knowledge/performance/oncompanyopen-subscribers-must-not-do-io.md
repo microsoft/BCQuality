@@ -17,7 +17,7 @@ application-area: [all]
 
 ## Best Practice
 
-Keep company-open subscribers to cheap in-memory work: set a flag, enqueue a job-queue entry, or `TaskScheduler.CreateTask`. Perform HTTP and large SQL after the session is running, in that background work.
+Keep company-open subscribers to cheap in-memory work: set a flag, enqueue a job-queue entry, or `TaskScheduler.CreateTask`. Perform HTTP and large SQL after the session is running, in that background work. When the subscriber can run repeatedly, use `store-scheduled-task-id-to-avoid-duplicate-tasks.md` to avoid creating the same logical task more than once.
 
 See sample: `oncompanyopen-subscribers-must-not-do-io.good.al`.
 
