@@ -35,7 +35,15 @@ context and execute the resulting dispatch.
 3. Read and execute `PLUGIN_ROOT/skills/entry.md` exactly as written, including
    its Preparation step. Entry is authoritative for index freshness, routing,
    defaults, and failure behavior; this adapter must not duplicate or weaken
-   those rules.
+   those rules. Entry is written for a checkout whose root is the current
+   directory, so resolve every repo-relative path it names against
+   `PLUGIN_ROOT` rather than the caller's working directory, which is the
+   user's own project. In particular, run Preparation's index build as
+   `pwsh PLUGIN_ROOT/tools/Build-KnowledgeIndex.ps1`: the generator resolves
+   its own root and writes `PLUGIN_ROOT/knowledge-index.json`, which is not
+   shipped and is therefore absent on a fresh install. If `pwsh` is
+   unavailable or the build fails, continue — READ falls back to path-based
+   discovery — but do not treat a failed build as a failed review.
 4. Follow Entry's **How the agent uses the dispatch** instructions. Invoke only
    the returned action skills, pass each dispatch entry's exact input subset,
    and read `PLUGIN_ROOT/skills/read.md` and `PLUGIN_ROOT/skills/do.md` on
@@ -48,3 +56,14 @@ The internal `microsoft/skills/review/al-code-review.md` action skill remains
 the canonical coordinator for a broad AL review. Entry decides whether that
 super-skill or a narrower domain skill applies; this host adapter never chooses
 between them.
+
+## Layer selection is not a deny mechanism
+
+A plugin install ships the whole BCQuality tree, so `enabled-layers` here can
+only narrow *discovery*: the files of a layer left out of the list still exist
+on disk. This differs from the clone model Entry's Preparation step describes,
+where a consumer prunes its checkout to policy before the agent runs and the
+index is rebuilt over the pruned tree. Treat `BCQUALITY_ENABLED_LAYERS` as a
+selection filter, never as a security boundary. A host that needs a genuine
+deny mechanism must prune the installed tree itself.
+

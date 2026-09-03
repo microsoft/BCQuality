@@ -95,6 +95,11 @@ Entry remains the single owner of routing and index preparation;
 separation keeps standalone installation available without duplicating those
 policies in the plugin adapter.
 
+Note that a plugin install ships the entire tree, so `BCQUALITY_ENABLED_LAYERS`
+narrows discovery without removing any files. Layer selection is a filter here,
+not a deny mechanism — see [the adapter](skills/al-code-review/SKILL.md) for the
+difference from the pruned-clone model.
+
 The host adapter and internal action skill intentionally share the
 `al-code-review` name: they expose the same operation in two different skill
 formats. Their paths make the boundary explicit. The adapter lives under
