@@ -44,7 +44,11 @@ development action skill itself or duplicate Entry's preparation, routing, and
 failure semantics.
 
 ### 3. Agent consumes the dispatch record
-The dispatch record names one or more action skills and the subset of inputs each should receive. If the outcome is `no-match` or `failed`, the agent returns the record to the orchestrator unchanged.
+The dispatch record names one or more action skills, the subset of inputs each
+should receive, and each skill's output kind. The output kind identifies
+read-only review or planning work versus repository-changing implementation
+before invocation. If the outcome is `no-match` or `failed`, the agent returns
+the record to the orchestrator unchanged.
 
 ### 4. Agent invokes each dispatched action skill
 Action skills live inside the layers — `/microsoft/skills/`, `/community/skills/`, `/custom/skills/` — so their authority is carried by their location. For a PR review, Entry typically dispatches `microsoft/skills/review/al-code-review.md`. The agent reads the file and executes it.

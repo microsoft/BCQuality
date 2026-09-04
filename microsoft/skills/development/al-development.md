@@ -12,6 +12,7 @@ countries: [w1]
 application-area: [all]
 guidance-skill: microsoft/skills/development/al-development-plan.md
 quality-skill: microsoft/skills/review/al-code-review.md
+quality-round-limit: 3
 ---
 
 # AL development
@@ -66,7 +67,7 @@ Record unresolved dimensions in the development plan rather than silently substi
 6. Invoke the frontmatter `guidance-skill` with that plan, the repository, and the resolved context. It performs Source, Relevance, and knowledge worklisting independently and read-only.
 7. Require a complete guidance result before editing product code:
    - `completed` — use every returned constraint and validation consideration.
-   - `no-knowledge` — return `no-knowledge` without implementing a Business Central-specific change.
+   - `no-knowledge` — intentionally refuse to implement: return `no-knowledge` with no request changes, set `outcome-reason` to `No applicable BCQuality knowledge was found for this development plan.`, and add a `remaining` entry directing the caller to use a repository-specific workflow/general coding agent or contribute the missing BC-specific knowledge.
    - `not-applicable`, `partial`, or `failed` — return the corresponding non-completed outcome without editing product code; preserve its reason in `remaining`.
 8. Copy the guidance report's selected paths into the eventual implementation report only when the corresponding constraint materially shaped the implementation. Carry its suppression records forward.
 
@@ -83,9 +84,15 @@ Record unresolved dimensions in the development plan rather than silently substi
 4. Implement the request end to end. Include all surfaces required by the mode, acceptance criteria, and repository conventions. Do not create success-shaped stubs.
 5. Treat the guidance report as design constraints throughout implementation. Adapt its referenced companion samples to the target codebase; never copy demonstration IDs or names blindly.
 6. Run the smallest existing build, analyzer, and test commands that cover the change. Fix failures caused by the implementation. Record every command and real outcome in `validation`; unavailable checks are `not-run`, never `passed`.
-7. Invoke the frontmatter `quality-skill` against the final implementation diff. Fix all justified knowledge-backed `blocker` and `major` findings and concrete defects introduced by this work, then rerun affected validation and review. Preserve the last findings-report in `review` and add a `validation` entry with `id: "review"`. If review is disabled or unavailable, record `not-run` and return `partial`.
-8. Verify the persisted files against the implementation contract, acceptance criteria, and mode-specific evidence. If behavior, validation, or review remains incomplete, return `partial` and list the exact gap in `remaining`.
+7. Invoke the frontmatter `quality-skill` against the final implementation diff, bounded by `quality-round-limit`:
+   - Record every invocation in `review-rounds`, including its gating `blocker` and `major` IDs.
+   - When no gating finding remains, mark the round `clean` and stop.
+   - Otherwise fix every justified, safely actionable gating finding, rerun affected validation, mark the round `fixing`, and start the next review round.
+   - Stop early as `stalled` when the gating ID set is unchanged from the preceding round, no gating finding can be fixed safely, or validation cannot be restored.
+   - When the final allowed round still has gating findings, mark it `limit-reached`.
+   Preserve the last complete findings-report in `review` and add a `validation` entry with `id: "review"`. A `stalled` or `limit-reached` loop returns `partial` with the unresolved gating findings in `remaining`. If review is disabled or unavailable, record `not-run` and return `partial`.
+8. Verify the persisted files against the implementation contract, acceptance criteria, and mode-specific evidence. If behavior, validation, guidance, or review remains incomplete, return `partial` and list the exact gap in `remaining`.
 
 ## Output
 
-Return one `implementation-report` conforming to DO. Set `plan.kind` to the classified execution mode. `knowledge` lists only articles opened in full and materially used. `changes` lists only files changed by this skill. `completed` requires a persisted implementation, passing required validation, and no unresolved `blocker` or `major` finding in `review`.
+Return one `implementation-report` conforming to DO. Set `plan.kind` to the classified execution mode. `knowledge` lists only articles opened in full and materially used. `changes` lists only files changed by this skill. `completed` requires a persisted implementation, passing required validation, and no unresolved `blocker` or `major` finding in `review`. `no-knowledge` is a visible coverage decision, not an error or silent fallback.

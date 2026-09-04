@@ -52,6 +52,22 @@ if ($manifest.version -ne 1) {
 if ($capabilityManifest.version -ne 1) {
     $problems.Add("Unsupported capability manifest version: $($capabilityManifest.version)") | Out-Null
 }
+$minimumFixtureCoverage = if ($capabilityManifest.PSObject.Properties.Name -contains 'minimumFixtureCoverage') {
+    [double]$capabilityManifest.minimumFixtureCoverage
+} else {
+    -1
+}
+if ($minimumFixtureCoverage -lt 0 -or $minimumFixtureCoverage -gt 1) {
+    $problems.Add("minimumFixtureCoverage must be between 0 and 1.") | Out-Null
+}
+$maximumReviewRounds = if ($manifest.PSObject.Properties.Name -contains 'maximumReviewRounds') {
+    [int]$manifest.maximumReviewRounds
+} else {
+    0
+}
+if ($maximumReviewRounds -le 0) {
+    $problems.Add("maximumReviewRounds must be a positive integer.") | Out-Null
+}
 foreach ($thresholdName in @('minimumKnowledgeRecall', 'minimumKnowledgePrecision')) {
     $threshold = [double]$manifest.$thresholdName
     if ($threshold -lt 0 -or $threshold -gt 1) {
@@ -62,6 +78,12 @@ foreach ($thresholdName in @('minimumKnowledgeRecall', 'minimumKnowledgePrecisio
 $skillPath = [string]$manifest.skill
 if (-not (Test-Path -LiteralPath (Join-Path $Root $skillPath) -PathType Leaf)) {
     $problems.Add("Development skill does not exist: $skillPath") | Out-Null
+} else {
+    $skillText = Get-Content -LiteralPath (Join-Path $Root $skillPath) -Raw
+    $limitMatch = [regex]::Match($skillText, '(?m)^quality-round-limit:\s*(\d+)\s*$')
+    if (-not $limitMatch.Success -or [int]$limitMatch.Groups[1].Value -ne $maximumReviewRounds) {
+        $problems.Add("maximumReviewRounds must match the development skill quality-round-limit.") | Out-Null
+    }
 }
 
 $validChecks = @('compile', 'tests', 'review')
@@ -173,6 +195,16 @@ foreach ($case in @($manifest.cases)) {
     }
 }
 
+$fixtureBackedCount = @(
+    $capabilityManifest.capabilities |
+        Where-Object status -in @('fixture', 'validated')
+).Count
+$capabilityCount = @($capabilityManifest.capabilities).Count
+$fixtureCoverage = if ($capabilityCount) { $fixtureBackedCount / $capabilityCount } else { 0.0 }
+if ($fixtureCoverage -lt $minimumFixtureCoverage) {
+    $problems.Add("Fixture-backed capability coverage $fixtureCoverage is below minimumFixtureCoverage $minimumFixtureCoverage.") | Out-Null
+}
+
 if ($problems.Count) {
     Write-Host "Development fixture validation FAILED ($($problems.Count) problem(s)):" -ForegroundColor Red
     $problems | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
@@ -269,6 +301,11 @@ if ($PrepareDirectory) {
                         findings = @()
                         suppressed = @()
                     }
+                    'review-rounds' = @([ordered]@{
+                        round = 1
+                        outcome = 'clean | fixing | stalled | limit-reached'
+                        'gating-finding-ids' = @()
+                    })
                     suppressed = @()
                     remaining = @()
                 }
@@ -303,7 +340,7 @@ if ($ResultsDirectory) {
             continue
         }
         $report = $result.implementationReport
-        foreach ($requiredField in @('skill', 'outcome', 'summary', 'plan', 'knowledge', 'changes', 'validation', 'review', 'suppressed', 'remaining')) {
+        foreach ($requiredField in @('skill', 'outcome', 'summary', 'plan', 'knowledge', 'changes', 'validation', 'review', 'review-rounds', 'suppressed', 'remaining')) {
             if ($report.PSObject.Properties.Name -notcontains $requiredField) {
                 $failures.Add("$($case.id): implementation report is missing '$requiredField'.") | Out-Null
             }
@@ -492,6 +529,41 @@ if ($ResultsDirectory) {
                 $failures.Add("$($case.id): post-implementation review has $($gatingFindings.Count) gating finding(s).") | Out-Null
             }
         }
+        [object[]]$reviewRounds = @()
+        if ($report.PSObject.Properties.Name -contains 'review-rounds') {
+            $reviewRounds = @($report.'review-rounds')
+        }
+        if (-not $reviewRounds.Count -or $reviewRounds.Count -gt $maximumReviewRounds) {
+            $failures.Add("$($case.id): review-rounds must contain 1..$maximumReviewRounds entries.") | Out-Null
+        } else {
+            for ($index = 0; $index -lt $reviewRounds.Count; $index++) {
+                $round = $reviewRounds[$index]
+                $roundNumber = if ($round.PSObject.Properties.Name -contains 'round') { [int]$round.round } else { 0 }
+                $roundOutcome = if ($round.PSObject.Properties.Name -contains 'outcome') { [string]$round.outcome } else { '' }
+                if ($roundNumber -ne ($index + 1)) {
+                    $failures.Add("$($case.id): review round numbering is not contiguous.") | Out-Null
+                }
+                if ($roundOutcome -notin @('clean', 'fixing', 'stalled', 'limit-reached')) {
+                    $failures.Add("$($case.id): review round $roundNumber has invalid outcome '$roundOutcome'.") | Out-Null
+                }
+                [object[]]$roundGatingIds = @()
+                if ($round.PSObject.Properties.Name -contains 'gating-finding-ids') {
+                    $roundGatingIds = @($round.'gating-finding-ids')
+                }
+                if ($roundOutcome -eq 'clean' -and $roundGatingIds.Count) {
+                    $failures.Add("$($case.id): clean review round $roundNumber must have no gating IDs.") | Out-Null
+                }
+                if ($roundOutcome -in @('fixing', 'stalled', 'limit-reached') -and -not $roundGatingIds.Count) {
+                    $failures.Add("$($case.id): review round $roundNumber outcome '$roundOutcome' requires gating IDs.") | Out-Null
+                }
+                if (@($roundGatingIds | Sort-Object -Unique).Count -ne $roundGatingIds.Count) {
+                    $failures.Add("$($case.id): review round $roundNumber has duplicate gating IDs.") | Out-Null
+                }
+            }
+            if ([string]$reviewRounds[-1].outcome -ne 'clean') {
+                $failures.Add("$($case.id): completed implementation must end with a clean review round.") | Out-Null
+            }
+        }
         [object[]]$remaining = @()
         if ($report.PSObject.Properties.Name -contains 'remaining') {
             $remaining = @($report.remaining)
@@ -508,9 +580,5 @@ if ($ResultsDirectory) {
     }
     Write-Host "Development fixture scoring PASSED: $(@($manifest.cases).Count) case(s)."
 } else {
-    $fixtureBackedCapabilities = @(
-        $capabilityManifest.capabilities |
-            Where-Object status -in @('fixture', 'validated')
-    ).Count
-    Write-Host "Development fixture validation PASSED: $(@($manifest.cases).Count) cases; $fixtureBackedCapabilities of $($capabilityIds.Count) capabilities have fixtures."
+    Write-Host "Development fixture validation PASSED: $(@($manifest.cases).Count) cases; $fixtureBackedCount of $($capabilityIds.Count) capabilities have fixtures (minimum $minimumFixtureCoverage)."
 }

@@ -36,6 +36,22 @@ function Get-ModelCaseId {
     }
 }
 
+function Get-PlanRequest {
+    param([object] $Plan)
+
+    if ($Plan.PSObject.Properties.Name -contains 'request' -and
+        -not [string]::IsNullOrWhiteSpace([string]$Plan.request)) {
+        return [string]$Plan.request
+    }
+    if ($Plan.PSObject.Properties.Name -contains 'format' -and
+        [string]$Plan.format -eq 'BCFIX-HANDOFF' -and
+        $Plan.PSObject.Properties.Name -contains 'nextStep') {
+        $issue = if ($Plan.PSObject.Properties.Name -contains 'issue') { [string]$Plan.issue } else { 'unknown' }
+        return "Continue BCFIX issue #${issue}: $($Plan.nextStep)"
+    }
+    return ''
+}
+
 if ($manifest.version -ne 1) {
     $problems.Add("Unsupported guidance fixture version: $($manifest.version)") | Out-Null
 }
@@ -64,11 +80,49 @@ foreach ($case in @($manifest.cases)) {
         continue
     }
     $plan = $case.'development-plan'
-    if ($validKinds -notcontains [string]$plan.kind) {
+    $expectedKind = if ($case.PSObject.Properties.Name -contains 'expectedKind') {
+        [string]$case.expectedKind
+    } else {
+        ''
+    }
+    if ($validKinds -notcontains $expectedKind) {
+        $problems.Add("${id}: expectedKind is invalid.") | Out-Null
+    }
+    $isBcfixHandoff = (
+        $plan.PSObject.Properties.Name -contains 'format' -and
+        [string]$plan.format -eq 'BCFIX-HANDOFF'
+    )
+    if ($isBcfixHandoff) {
+        $requiredHandoffFields = @(
+            'version', 'issue', 'phase', 'status', 'baton', 'rootCause',
+            'harnessMap', 'iterationsUsed', 'filesCommitted', 'lastTestResult',
+            'deadEnds', 'nextStep'
+        )
+        foreach ($field in $requiredHandoffFields) {
+            if ($plan.PSObject.Properties.Name -notcontains $field) {
+                $problems.Add("${id}: BCFIX-HANDOFF is missing '$field'.") | Out-Null
+            }
+        }
+        $handoffVersion = if ($plan.PSObject.Properties.Name -contains 'version') { [int]$plan.version } else { 0 }
+        $handoffPhase = if ($plan.PSObject.Properties.Name -contains 'phase') { [string]$plan.phase } else { '' }
+        $handoffStatus = if ($plan.PSObject.Properties.Name -contains 'status') { [string]$plan.status } else { '' }
+        if ($handoffVersion -ne 1) {
+            $problems.Add("${id}: only BCFIX-HANDOFF version 1 is supported.") | Out-Null
+        }
+        if ($handoffPhase -notin @('plan', 'baseline', 'implement', 'pr')) {
+            $problems.Add("${id}: BCFIX-HANDOFF phase is invalid.") | Out-Null
+        }
+        if ($handoffStatus -notin @('in-progress', 'paused', 'done')) {
+            $problems.Add("${id}: BCFIX-HANDOFF status is invalid.") | Out-Null
+        }
+    } elseif (
+        $plan.PSObject.Properties.Name -notcontains 'kind' -or
+        $validKinds -notcontains [string]$plan.kind
+    ) {
         $problems.Add("${id}: development-plan.kind is invalid.") | Out-Null
     }
-    if ([string]::IsNullOrWhiteSpace([string]$plan.request)) {
-        $problems.Add("${id}: development-plan.request is required.") | Out-Null
+    if ([string]::IsNullOrWhiteSpace((Get-PlanRequest $plan))) {
+        $problems.Add("${id}: development-plan must provide request or BCFIX nextStep.") | Out-Null
     }
 
     $expectedKnowledge = @($case.requiredKnowledge) + @($case.optionalKnowledge)
@@ -125,7 +179,7 @@ if ($PrepareDirectory) {
             skillInstructions = $skillInstructions
             knowledgeIndex = 'knowledge-index.json'
             'task-context' = [ordered]@{
-                goal = [string]$case.'development-plan'.request
+                goal = Get-PlanRequest $case.'development-plan'
                 'inputs-available' = @('development-plan', 'repository')
                 technologies = @($case.context.technologies)
                 countries = @($case.context.countries)
@@ -216,7 +270,7 @@ if ($ResultsDirectory) {
             $report.PSObject.Properties.Name -contains 'summary' -and
             $report.summary.PSObject.Properties.Name -contains 'kind'
         ) { [string]$report.summary.kind } else { '' }
-        if ($kind -ne [string]$case.'development-plan'.kind) {
+        if ($kind -ne [string]$case.expectedKind) {
             $failures.Add("$($case.id): summary.kind '$kind' does not match the plan.") | Out-Null
         }
 

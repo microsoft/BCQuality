@@ -150,6 +150,11 @@ Repository-specific orchestrators do not need to delegate implementation to
 plan, feed its read-only guidance report into their own phases, and retain their
 specialized environment, test, propagation, and delivery gates.
 
+`al-development` does not silently fall back to generic generation when no
+article applies. It returns `no-knowledge` without changing code, making corpus
+coverage visible; callers can use their normal repository workflow or
+contribute the missing Business Central-specific guidance.
+
 Business Central functional domains (Finance, Supply Chain Management, Manufacturing, Jobs, Warehousing, Service), PowerShell, pipelines, and Power Platform remain valid future repository scope, but they are **not current coverage claims** until corresponding knowledge and action skills exist. Consumers should derive supported review scope from the live knowledge index and dispatched skills, not from roadmap breadth.
 
 ## Tracking developer coverage

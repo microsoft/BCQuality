@@ -9,6 +9,11 @@ This is BCQuality's host-native adapter for standalone plugin installations. It 
 
 When the target repository exposes a more specific local workflow for the request, such as an end-to-end bug-fix skill with its own environment and delivery gates, prefer that repository workflow unless the caller explicitly asks to use BCQuality's generic development skill.
 
+This adapter is deliberately knowledge-backed: if BCQuality has no applicable
+guidance, it returns a visible `no-knowledge` result without changing code. Use
+the repository's normal coding workflow for unbacked requests, or add the
+missing BC-specific knowledge before expecting this skill to implement them.
+
 ## Execute
 
 1. Resolve `PLUGIN_ROOT` to the directory containing this plugin's root `plugin.json`. This file is `PLUGIN_ROOT/skills/al-development/SKILL.md`; when the host does not expose the plugin root, resolve it two levels above this file.

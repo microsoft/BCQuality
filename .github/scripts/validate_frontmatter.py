@@ -18,7 +18,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 try:
@@ -39,7 +39,7 @@ ACTION_SKILL_REQUIRED_KEYS = {
 }
 ACTION_SKILL_OPTIONAL_KEYS = {
     "bc-version", "technologies", "countries", "application-area", "sub-skills",
-    "quality-skill", "guidance-skill",
+    "quality-skill", "quality-round-limit", "guidance-skill",
 }
 META_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
@@ -149,6 +149,28 @@ def parse_markdown(text: str) -> Parsed:
 
 def is_non_empty_list_of_str(value: Any) -> bool:
     return isinstance(value, list) and len(value) > 0 and all(isinstance(v, str) and v for v in value)
+
+
+def normalize_repo_md_path(value: Any) -> tuple[str | None, str | None]:
+    """Normalize an optional leading './' and reject absolute/escaping paths."""
+    if not isinstance(value, str) or not value:
+        return None, "must be a non-empty string"
+    if "\\" in value:
+        return None, "must use forward slashes"
+
+    normalized = value[2:] if value.startswith("./") else value
+    segments = normalized.split("/")
+    if (
+        not normalized
+        or normalized.startswith("/")
+        or re.match(r"^[A-Za-z]:", normalized)
+        or any(segment in ("", ".", "..") for segment in segments)
+        or PurePosixPath(normalized).is_absolute()
+    ):
+        return None, "must be a repository-relative path that does not escape the repository"
+    if not normalized.endswith(".md"):
+        return None, "must end in '.md'"
+    return normalized, None
 
 
 def expand_bc_version(value: Any) -> tuple[list[int] | str | None, str | None]:
@@ -384,21 +406,34 @@ def validate_action_skill(path: Path, parsed: Parsed, report: Report) -> None:
         if not is_non_empty_list_of_str(ss):
             report.error(path, "R20", "sub-skills must be a non-empty list of repo-relative paths", 1)
         else:
-            bad = [x for x in ss if not x.endswith(".md")]
+            bad = [f"{x}: {err}" for x in ss if (err := normalize_repo_md_path(x)[1])]
             if bad:
-                report.error(path, "R20", f"sub-skills entries must end in '.md': {bad}", 1)
+                report.error(path, "R20", f"invalid sub-skills paths: {bad}", 1)
 
     if "quality-skill" in fm:
         quality_skill = fm["quality-skill"]
-        if not isinstance(quality_skill, str) or not quality_skill.endswith(".md"):
-            report.error(path, "R31", "quality-skill must be one repo-relative .md path", 1)
+        _, err = normalize_repo_md_path(quality_skill)
+        if err:
+            report.error(path, "R31", f"quality-skill {err}", 1)
         if fm.get("outputs") != ["implementation-report"]:
             report.error(path, "R31", "quality-skill is valid only with outputs: [implementation-report]", 1)
+        if "quality-round-limit" not in fm:
+            report.error(path, "R31", "quality-skill requires quality-round-limit", 1)
+
+    if "quality-round-limit" in fm:
+        limit = fm["quality-round-limit"]
+        if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:
+            report.error(path, "R31", "quality-round-limit must be a positive integer", 1)
+        if "quality-skill" not in fm:
+            report.error(path, "R31", "quality-round-limit requires quality-skill", 1)
+        if fm.get("outputs") != ["implementation-report"]:
+            report.error(path, "R31", "quality-round-limit is valid only with outputs: [implementation-report]", 1)
 
     if "guidance-skill" in fm:
         guidance_skill = fm["guidance-skill"]
-        if not isinstance(guidance_skill, str) or not guidance_skill.endswith(".md"):
-            report.error(path, "R32", "guidance-skill must be one repo-relative .md path", 1)
+        _, err = normalize_repo_md_path(guidance_skill)
+        if err:
+            report.error(path, "R32", f"guidance-skill {err}", 1)
         if fm.get("outputs") != ["implementation-report"]:
             report.error(path, "R32", "guidance-skill is valid only with outputs: [implementation-report]", 1)
 
@@ -598,7 +633,11 @@ def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, rep
     if not is_non_empty_list_of_str(ss):
         return
 
-    declared = {s.lstrip("./") for s in ss}
+    declared = {
+        normalized
+        for s in ss
+        if (normalized := normalize_repo_md_path(s)[0]) is not None
+    }
 
     # Sibling leaves on disk, excluding the super-skill file itself.
     leaves = {
@@ -626,10 +665,10 @@ def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, rep
 def validate_quality_skill(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
     """R30: implementation quality-skill paths resolve to a findings producer."""
     quality_skill = fm.get("quality-skill")
-    if not isinstance(quality_skill, str) or not quality_skill.endswith(".md"):
+    normalized, err = normalize_repo_md_path(quality_skill)
+    if err or normalized is None:
         return
 
-    normalized = quality_skill.lstrip("./")
     target = root / normalized
     if not target.is_file():
         report.error(path, "R30", f"quality-skill does not exist on disk: {normalized}", 1)
@@ -651,10 +690,10 @@ def validate_quality_skill(path: Path, fm: dict[str, Any], root: Path, report: R
 def validate_guidance_skill(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
     """R33: implementation guidance-skill paths resolve to a read-only planner."""
     guidance_skill = fm.get("guidance-skill")
-    if not isinstance(guidance_skill, str) or not guidance_skill.endswith(".md"):
+    normalized, err = normalize_repo_md_path(guidance_skill)
+    if err or normalized is None:
         return
 
-    normalized = guidance_skill.lstrip("./")
     target = root / normalized
     if not target.is_file():
         report.error(path, "R33", f"guidance-skill does not exist on disk: {normalized}", 1)

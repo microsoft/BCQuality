@@ -66,7 +66,7 @@ application-area: [all]
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
-`quality-skill` is optional on an action skill that emits an `implementation-report`. It names one repo-relative review action skill to run over the completed diff. It is a post-implementation gate, not a composed sub-skill: Entry does not route through it, and its complete findings-report is returned in `review`. Consumer configuration still applies; if the named quality skill is disabled or unavailable, record its validation as `not-run` and do not claim `completed`.
+`quality-skill` is optional on an action skill that emits an `implementation-report`. It names one repo-relative review action skill to run over the completed diff. It is a post-implementation gate, not a composed sub-skill: Entry does not route through it, and its final complete findings-report is returned in `review`. `quality-round-limit` is the required positive maximum number of review/fix rounds when a quality skill is declared. Consumer configuration still applies; if the named quality skill is disabled or unavailable, record its validation as `not-run` and do not claim `completed`.
 
 `guidance-skill` is optional on an action skill that emits an `implementation-report`. It names one repo-relative read-only action skill that accepts a `development-plan` and emits a `development-guidance-report`. The implementation skill invokes it after forming its plan and before editing product code. Consumer configuration still applies; when guidance is disabled or unavailable, the implementation skill must not claim knowledge-backed development.
 
@@ -346,6 +346,13 @@ An action skill with `outputs: [implementation-report]` emits one JSON document:
     }
   ],
   "review": { "...full findings-report from the post-implementation review..." : null },
+  "review-rounds": [
+    {
+      "round": 1,
+      "outcome": "clean | fixing | stalled | limit-reached",
+      "gating-finding-ids": ["string"]
+    }
+  ],
   "suppressed": [
     {
       "reference": { "path": "string", "sha": "string" },
@@ -377,6 +384,8 @@ An action skill with `outputs: [implementation-report]` emits one JSON document:
 **`validation`** records commands actually run. `passed` and `failed` require a real command result; unavailable tooling or an intentionally skipped check is `not-run` with `details`. A skill MUST NOT manufacture a successful check or replace a failed command with a success-shaped fallback.
 
 **`review`** is optional for generic implementation skills and required when a skill's instructions mandate post-implementation review. When present, it is the complete findings-report returned by that review skill, not a rewritten summary.
+
+**`review-rounds`** records every quality-skill invocation in order. `gating-finding-ids` contains the `blocker` and `major` IDs from that round. `clean` ends successfully; `fixing` means the skill applied justified fixes before another round; `stalled` means the same gating set persisted or no safe progress was possible; `limit-reached` means the configured round cap was exhausted. The array length MUST NOT exceed `quality-round-limit`. `stalled` or `limit-reached` requires implementation outcome `partial`, the final findings-report in `review`, and every unresolved gating item in `remaining`.
 
 **`suppressed`** has the same semantics as in a findings-report and records applicable knowledge excluded by layer precedence or configuration.
 

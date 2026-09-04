@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "minimumFixtureCoverage": 0.5,
   "capabilities": [
     {
       "id": "setup-and-master-data",
@@ -82,13 +83,15 @@
     {
       "id": "install-and-upgrade",
       "title": "Installation and data upgrade",
-      "status": "planned",
+      "status": "fixture",
       "domains": [
         "breaking-changes",
         "testing",
         "upgrade"
       ],
-      "fixtureIds": []
+      "fixtureIds": [
+        "versioned-data-upgrade"
+      ]
     },
     {
       "id": "external-services",

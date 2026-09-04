@@ -1,6 +1,7 @@
 {
   "version": 1,
   "skill": "microsoft/skills/development/al-development.md",
+  "maximumReviewRounds": 3,
   "minimumKnowledgeRecall": 1.0,
   "minimumKnowledgePrecision": 0.5,
   "cases": [
@@ -177,6 +178,54 @@
       "optionalKnowledge": [
         "microsoft/knowledge/performance/findset-true-applies-updlock-on-read.md",
         "microsoft/knowledge/performance/pass-var-record-to-preserve-partial-load-enumerator.md"
+      ],
+      "requiredChecks": [
+        "compile",
+        "tests",
+        "review"
+      ]
+    },
+    {
+      "id": "versioned-data-upgrade",
+      "title": "Implement a rerunnable data upgrade",
+      "capabilities": [
+        "install-and-upgrade"
+      ],
+      "expectedKind": "upgrade",
+      "development-request": {
+        "kind": "upgrade",
+        "description": "Upgrade an existing app from a text-based Customer Tier field to a new enum-backed Tier field. Preserve existing customer data, support tenants that skip intermediate app versions, keep fresh installation separate from migration, and add upgrade tests.",
+        "acceptance-criteria": [
+          "Existing tier values are migrated without running field validation triggers.",
+          "The migration is guarded by an upgrade tag and is safe when the upgrade runs again.",
+          "Check and validation triggers do not write data.",
+          "Fresh installation does not run version-upgrade migration.",
+          "Tests cover more than one historical source data version."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/upgrade/appversion-meaning-depends-on-execution-context.md",
+        "microsoft/knowledge/upgrade/install-and-upgrade-codeunits-have-no-order.md",
+        "microsoft/knowledge/upgrade/use-upgrade-tags-not-version-checks.md",
+        "microsoft/knowledge/upgrade/check-only-triggers-do-not-migrate-data.md",
+        "microsoft/knowledge/upgrade/install-code-does-not-run-on-version-upgrade.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/upgrade/datatransfer-skips-triggers-and-subscribers.md",
+        "microsoft/knowledge/upgrade/datatransfer-for-bulk-init.md",
+        "microsoft/knowledge/upgrade/register-upgrade-tags-with-subscribers.md",
+        "microsoft/knowledge/testing/transactionmodel-attribute-governs-test-transactions.md"
       ],
       "requiredChecks": [
         "compile",

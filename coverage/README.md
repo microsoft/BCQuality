@@ -14,6 +14,10 @@ one-for-one.
 - `development-capabilities.json` tracks whether representative Business
   Central development capabilities have implementation fixtures.
 
+The capability manifest declares `minimumFixtureCoverage`. CI fails when the
+share of `fixture` or `validated` capabilities falls below that floor, so a
+new planned capability cannot silently dilute generation coverage.
+
 Each tracked unit has a `reviewStatus`:
 
 - `in-progress` — at least one concern has been identified, but editorial

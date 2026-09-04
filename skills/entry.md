@@ -99,7 +99,8 @@ Emit a single JSON document conforming to the output contract below. Entry does 
         "path": "microsoft/skills/review/al-code-review.md"
       },
       "rationale": "string",
-      "inputs": ["pr-diff"]
+      "inputs": ["pr-diff"],
+      "outputs": ["findings-report"]
     }
   ],
   "skipped": [
@@ -126,6 +127,7 @@ Emit a single JSON document conforming to the output contract below. Entry does 
 - `skill.version` — copied from the dispatched skill's frontmatter so the orchestrator can detect drift between dispatch time and execution.
 - `rationale` — short human-readable string, for logs and traceability.
 - `inputs` — the intersection of `task-context.inputs-available` and the skill's declared `inputs`. The agent MUST pass exactly this subset when invoking the skill. Sending a strict intersection avoids accidental information leakage between skills.
+- `outputs` — the dispatched skill's complete, single-element `outputs` value copied from frontmatter. This lets an orchestrator distinguish read-only `findings-report` and `development-guidance-report` work from repository-changing `implementation-report` work before invoking the skill. An orchestrator MAY require an additional write confirmation for `implementation-report`; it MUST NOT infer side effects from the skill ID or title.
 
 Ordering of `dispatch[]` is not significant.
 
@@ -163,7 +165,8 @@ Populated example (PR review on a repo where only `al-performance-review` is ena
     {
       "skill": { "id": "al-performance-review", "version": 1, "path": "microsoft/skills/review/al-performance-review.md" },
       "rationale": "Goal 'review pull request' matched; inputs-available contains pr-diff.",
-      "inputs": ["pr-diff"]
+      "inputs": ["pr-diff"],
+      "outputs": ["findings-report"]
     }
   ],
   "skipped": [
@@ -177,7 +180,7 @@ Populated example (PR review on a repo where only `al-performance-review` is ena
 
 1. Invoke Entry with the orchestrator-supplied task context.
 2. Receive the dispatch record.
-3. For each entry in `dispatch[]`, read the referenced action skill, execute its Source → Relevance → Worklist → Action steps per DO, and produce the report kind declared by that skill's single `outputs` value.
+3. For each entry in `dispatch[]`, inspect `outputs` before invocation, read the referenced action skill, execute its Source → Relevance → Worklist → Action steps per DO, and produce the declared report kind. Verify the file's frontmatter output still equals the dispatch value; return `failed` on drift rather than executing an unexpectedly mutating skill.
 4. Return the action-skill reports to the orchestrator. When Entry's `outcome` is `no-match` or `failed`, return the dispatch record itself so the orchestrator can log the reason.
 
 READ and DO are the contracts that govern what the dispatched skills do. An agent that has not yet read READ and DO reads them when it executes the first dispatched skill — they are not prerequisites for invoking Entry.

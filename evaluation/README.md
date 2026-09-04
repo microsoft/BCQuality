@@ -83,7 +83,8 @@ pwsh ./tools/Test-DevelopmentFixtures.ps1 -Root . -ResultsDirectory ./.developme
 
 The initial fixtures cover setup-backed master data, document header/line
 workflows, versioned API integrations, and surgical diagnosis and repair of a
-batch-processing bug. The broader capability roadmap lives in
+batch-processing bug, plus a rerunnable data upgrade. The capability manifest
+enforces a minimum fixture-backed coverage ratio; the broader roadmap lives in
 `coverage/development-capabilities.json`.
 
 ### Read-only plan guidance
