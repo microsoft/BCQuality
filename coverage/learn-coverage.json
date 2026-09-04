@@ -1,0 +1,456 @@
+{
+  "version": 1,
+  "catalog": "coverage/microsoft-learn-developer-catalog.json",
+  "units": [
+    {
+      "uid": "learn-dynamics.use-document-standards-business-central.4a-use-round-function",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "round-direction-symbols-use-magnitude",
+          "title": "Round direction symbols use magnitude rather than mathematical ordering",
+          "disposition": "authored",
+          "domain": "data-modeling",
+          "articlePaths": [
+            "microsoft/knowledge/data-modeling/round-direction-symbols-use-magnitude.md"
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.use-document-standards-business-central.3-use-initrecord-function",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "initialize-document-defaults-in-initrecord",
+          "title": "Initialize document defaults in InitRecord after assigning the number",
+          "disposition": "authored",
+          "domain": "data-modeling",
+          "articlePaths": [
+            "microsoft/knowledge/data-modeling/initialize-document-defaults-in-initrecord.md"
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.business-central-interfaces.type-testing",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "guard-interface-casts-with-is",
+          "title": "Guard optional interface casts with is",
+          "disposition": "authored",
+          "domain": "interfaces",
+          "articlePaths": [
+            "microsoft/knowledge/interfaces/guard-interface-casts-with-is.md"
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.extend-modify-existing-table.add-field-group",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "dropdown-fieldgroup-respects-lookup-page-visibility",
+          "title": "DropDown fields remain hidden when their lookup-page controls are hidden",
+          "disposition": "authored",
+          "domain": "ui",
+          "articlePaths": [
+            "microsoft/knowledge/ui/dropdown-fieldgroup-respects-lookup-page-visibility.md"
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-with-pages.8-controls",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "updatepropagation-both-refreshes-main-page",
+          "title": "UpdatePropagation Both refreshes the main page after line edits",
+          "disposition": "authored",
+          "domain": "ui",
+          "articlePaths": [
+            "microsoft/knowledge/ui/updatepropagation-both-refreshes-main-page.md"
+          ]
+        },
+        {
+          "id": "applicationarea-parent-inheritance",
+          "title": "Page-level ApplicationArea inheritance excludes extension controls",
+          "disposition": "covered-existing",
+          "domain": "style",
+          "articlePaths": [
+            "microsoft/knowledge/style/applicationarea-required-on-page-controls.md"
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.easy-application-upgrade.3-installation-upgrade-codeunits",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "install-and-upgrade-codeunits-have-no-order",
+          "title": "Separate install or upgrade codeunits have no execution order",
+          "disposition": "authored",
+          "domain": "upgrade",
+          "articlePaths": [
+            "microsoft/knowledge/upgrade/install-and-upgrade-codeunits-have-no-order.md"
+          ]
+        },
+        {
+          "id": "appversion-meaning-depends-on-execution-context",
+          "title": "ModuleInfo AppVersion changes meaning with execution context",
+          "disposition": "authored",
+          "domain": "upgrade",
+          "articlePaths": [
+            "microsoft/knowledge/upgrade/appversion-meaning-depends-on-execution-context.md"
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-with-tables.text-search",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "optimize-for-text-search-requires-double-ampersand-filter",
+          "title": "Optimized full-text search requires the double-ampersand filter operator",
+          "disposition": "candidate",
+          "domain": "query"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.extend-modify-existing-table.define-extension-objects",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "same-app-extension-references-follow-object-id-order",
+          "title": "Same-app extension objects can only reference lower-ID extension objects",
+          "disposition": "candidate",
+          "domain": "data-modeling"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.debug-deploy-extension.resource-policy-settings",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "resource-exposure-policy-is-not-nondebuggable",
+          "title": "Resource exposure policy and NonDebuggable protect different surfaces",
+          "disposition": "candidate",
+          "domain": "security"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-entitlements-permission-sets.3-create-entitlements-permission-sets",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "entitlement-objects-reference-same-app-permission-sets",
+          "title": "Entitlement objects are online-only and reference same-app permission sets",
+          "disposition": "candidate",
+          "domain": "security"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-entitlements-permission-sets.override-entitlements",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "inherent-permissions-cannot-elevate-other-extensions",
+          "title": "Inherent permissions cannot elevate access to another extension",
+          "disposition": "candidate",
+          "domain": "security"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.debug-deploy-extension.3a-snapshot",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "snapshot-debugging-captures-only-snappoints-and-exceptions",
+          "title": "Snapshot debugging captures state only at snappoints and exceptions",
+          "disposition": "candidate",
+          "domain": "testing"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.debug-deploy-extension.recovery-failures",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "publish-recovery-cannot-restore-every-extension-state",
+          "title": "Publish recovery cannot restore every upgrade or app-move failure",
+          "disposition": "candidate",
+          "domain": "upgrade"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.debug-deploy-extension.database-wait-statistics",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "database-wait-statistics-are-exposed-as-a-virtual-table",
+          "title": "Database wait statistics are exposed as a Business Central virtual table",
+          "disposition": "candidate",
+          "domain": "performance"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-with-pages.use-rich-text-editor",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "rich-text-controls-use-html-backed-blob-fields",
+          "title": "Rich text controls use HTML-backed Blob fields and isolated layout groups",
+          "disposition": "candidate",
+          "domain": "ui"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-with-pages.scan-barcodes",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "barcode-integration-scenarios-have-different-platform-support",
+          "title": "Barcode field, camera action, and hardware-scanner scenarios have different platform support",
+          "disposition": "candidate",
+          "domain": "ui"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-with-pages.9-search",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "card-pages-should-not-be-directly-searchable",
+          "title": "Card pages should be opened through their list rather than Tell Me",
+          "disposition": "candidate",
+          "domain": "ui"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.work-with-pages.hidden-fields",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "allowincustomizations-controls-the-add-field-pane",
+          "title": "AllowInCustomizations controls exposure through the Add field pane",
+          "disposition": "candidate",
+          "domain": "privacy"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.intro-development-environment.differentiate-apps",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "application-modules-depend-only-on-same-or-lower-layers",
+          "title": "Application modules depend only on the same or lower architectural layers",
+          "disposition": "candidate",
+          "domain": "data-modeling"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.manipulate-data-via-code.2-retrieve-data",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "legacy-find-directions-do-not-use-top-one",
+          "title": "Legacy Find direction calls do not have FindFirst or FindLast query behavior",
+          "disposition": "candidate",
+          "domain": "performance"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.easy-application-upgrade.2-upgrade-responsibilities",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "uninstall-preserves-extension-data",
+          "title": "Uninstall preserves extension data for reinstall or upgrade",
+          "disposition": "candidate",
+          "domain": "upgrade"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.easy-application-upgrade.consider-update-lifecycle",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "incompatible-cloud-extensions-have-a-remediation-window",
+          "title": "Incompatible cloud extensions have a fixed remediation window",
+          "disposition": "candidate",
+          "domain": "upgrade"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.easy-application-upgrade.6-answers-about-updates",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "minor-and-major-releases-update-apps-differently",
+          "title": "Minor and major Business Central releases update AppSource apps differently",
+          "disposition": "candidate",
+          "domain": "upgrade"
+        },
+        {
+          "id": "dependency-version-is-a-minimum",
+          "title": "An app.json dependency version is a minimum rather than an exact pin",
+          "disposition": "candidate",
+          "domain": "upgrade"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.application-types.3-library-dependency-applications",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "library-apps-install-through-the-dependency-chain",
+          "title": "Library apps install and update through the dependency chain",
+          "disposition": "candidate",
+          "domain": "appsource"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.business-central-interfaces.extending-interfaces",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "interfaces-can-compose-multiple-base-interfaces",
+          "title": "Interfaces can compose multiple base interfaces",
+          "disposition": "candidate",
+          "domain": "interfaces"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.test-automation.page-scripting-tool",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "page-scripting-cannot-drive-non-al-ui",
+          "title": "Page scripting cannot drive control add-ins or other non-AL UI",
+          "disposition": "candidate",
+          "domain": "testing"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.test-automation.2-test-automation-responsibilities",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "appsource-validation-must-use-the-current-build",
+          "title": "AppSource validation must use the current validation build",
+          "disposition": "candidate",
+          "domain": "appsource"
+        },
+        {
+          "id": "permission-testing-also-protects-the-essential-experience",
+          "title": "Permission testing must also protect the unextended Essential experience",
+          "disposition": "candidate",
+          "domain": "testing"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.test-automation.4-answers-about-testing",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "appsource-tests-run-for-every-supported-country",
+          "title": "AppSource tests must run separately for every supported country",
+          "disposition": "candidate",
+          "domain": "appsource"
+        },
+        {
+          "id": "upgrade-tests-cover-nonadjacent-versions",
+          "title": "Upgrade tests cover nonadjacent historical versions",
+          "disposition": "candidate",
+          "domain": "testing"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.bring-app-appsource.4-technical-validation",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "appsource-submissions-cannot-use-runtime-packages",
+          "title": "AppSource submissions cannot use runtime packages",
+          "disposition": "candidate",
+          "domain": "appsource"
+        },
+        {
+          "id": "per-tenant-and-marketplace-apps-need-distinct-identities",
+          "title": "Per-tenant and Marketplace variants need distinct app identities",
+          "disposition": "candidate",
+          "domain": "appsource"
+        },
+        {
+          "id": "profiles-are-declared-with-profile-objects",
+          "title": "Profiles are shipped with AL profile objects rather than table inserts",
+          "disposition": "candidate",
+          "domain": "appsource"
+        },
+        {
+          "id": "extension-layout-uses-relative-placement",
+          "title": "Extension layout uses named relative placement anchors",
+          "disposition": "candidate",
+          "domain": "breaking-changes"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.test-automation.3-documentation-examples",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "tests-use-reproducible-random-data",
+          "title": "Tests use reproducible randomized data instead of shared literals",
+          "disposition": "candidate",
+          "domain": "testing"
+        },
+        {
+          "id": "al-tests-run-through-vscode-test-explorer",
+          "title": "AL tests can run and debug through Visual Studio Code Test Explorer",
+          "disposition": "candidate",
+          "domain": "testing"
+        }
+      ]
+    },
+    {
+      "uid": "learn-dynamics.easy-application-upgrade.4-manage-apps",
+      "reviewStatus": "in-progress",
+      "outcomes": [
+        {
+          "id": "manage-apps-separates-install-and-update-requirements",
+          "title": "Manage Apps separates missing dependencies from dependency updates",
+          "disposition": "candidate",
+          "domain": "upgrade"
+        }
+      ]
+    }
+  ]
+}

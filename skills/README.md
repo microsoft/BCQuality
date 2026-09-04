@@ -1,7 +1,7 @@
 # BCQuality global skills
 
 This folder contains BCQuality's layer-independent protocol files and the
-host-native adapter used by standalone plugin installations.
+host-native adapters used by standalone plugin installations.
 
 The protocol files have two kinds:
 
@@ -31,8 +31,9 @@ READ and DO are read on demand — typically by the first action skill the agent
 | Path | Role |
 |---|---|
 | [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Exposes BCQuality through the standard `SKILL.md` format when this repository is installed as a plugin. |
+| [`al-development/SKILL.md`](al-development/SKILL.md) | Exposes knowledge-backed AL development through the standard `SKILL.md` format. |
 
-The adapter is deliberately thin. It translates the caller's request into an
+Each adapter is deliberately thin. It translates the caller's request into an
 Entry task context, then follows Entry's dispatch without owning routing,
 review, index, or output policy. It is not an action skill, is not considered
 by Entry, and should not accumulate behavior already defined by `entry.md`,
@@ -40,20 +41,23 @@ by Entry, and should not accumulate behavior already defined by `entry.md`,
 
 This gives the two skill formats distinct roles:
 
-- `skills/al-code-review/SKILL.md` is the public host integration surface for a
-  standalone plugin installation.
+- `skills/al-code-review/SKILL.md` and
+  `skills/al-development/SKILL.md` are the public host integration
+  surfaces for a standalone plugin installation.
 - `microsoft/skills/review/al-code-review.md` is BCQuality's internal
   Microsoft-layer super-skill for coordinating a broad AL review.
+- `microsoft/skills/development/al-development.md` is the internal
+  Microsoft-layer implementation skill for all supported development modes.
+- `microsoft/skills/development/al-development-plan.md` is the read-only
+  planning interface for repository-specific orchestrators that retain
+  implementation ownership.
 
-The host adapter and internal coordinator deliberately share the
-`al-code-review` name because they represent the same user-facing operation in
-their respective formats. Their locations distinguish their roles. The
-adapter remains distinct from BC-ALAgents' separately installed `al-review`
-skill, avoiding a collision in hosts that use one shared skill inventory. The
-reference from the adapter to Entry, and from a dispatched super-skill to its
-leaf skills, is intentional progressive disclosure. It avoids registering
-every internal BCQuality protocol file as an ambient host skill while allowing
-each review domain to run in an isolated context.
+Each host adapter deliberately shares its name with the internal action skill
+for the same operation. Their locations distinguish the host integration from
+the layered policy. `al-code-review` remains distinct from BC-ALAgents'
+separately installed `al-review` skill, avoiding a collision in hosts that use
+one shared skill inventory. References from adapters to Entry, and from a
+dispatched super-skill to its leaves, are intentional progressive disclosure.
 
 These contracts are stable. Changes require a PR approved by both maintainers.
 

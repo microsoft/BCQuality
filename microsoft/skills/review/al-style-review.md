@@ -41,7 +41,7 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 - Changed AL objects — especially API pages (`PageType = API`), tables and pages declaring Labels/TextConsts, codeunits issuing `Error`/`Message`/`Confirm`, and any file whose name violates the `<ObjectName>.<ObjectType>.al` convention.
 - Changed declarations, weighted toward `: Label '...'`, `: TextConst '...'`, temporary record variables, option fields, error-handling call sites, and codeunit-internal method calls.
-- Tokens extracted from the diff (`Label`, `TextConst`, `Locked`, `Comment`, `MaxLength`, `temporary`, `OptionMembers`, `OptionCaption`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `DelayedInsert`, `FieldCaption`, `TableCaption`, `FieldName`, `TableName`, `Page.RunModal`, `Report.Run`, `this.`, `StrSubstNo`).
+- Tokens extracted from the diff (`Label`, `TextConst`, `Locked`, `Comment`, `MaxLength`, `temporary`, `OptionMembers`, `OptionCaption`, `ApplicationArea`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `DelayedInsert`, `FieldCaption`, `TableCaption`, `FieldName`, `TableName`, `Page.RunModal`, `Report.Run`, `this.`, `StrSubstNo`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object or declaration. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -51,6 +51,7 @@ Apply these high-signal mappings before fuzzy topic ranking:
 
 - A `Label` or `TextConst` contains multiple or ambiguous placeholders but has no `Comment`, or its Comment does not explain every placeholder — `label-comment-explains-placeholders.md`. A single placeholder whose meaning is explicit in the text, such as `Customer %1`, is allowed without a Comment and must not be flagged.
 - `function-call-parentheses-required.md` applies only to a zero-argument invocation written without `()`. Never worklist it from an invocation that already has parentheses or supplies arguments, including `Error(Label, Arg1, Arg2)`.
+- On runtime 10.0 or later, a page child may inherit `ApplicationArea` from its page object; do not flag that shape. A control added by a page or report extension still requires an explicit value — `applicationarea-required-on-page-controls.md`.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ and record suppressions.
 

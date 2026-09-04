@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "skill": "microsoft/skills/development/al-development-plan.md",
+  "minimumKnowledgeRecall": 1.0,
+  "minimumKnowledgePrecision": 0.67,
+  "cases": [
+    {
+      "id": "bcapps-filtered-batch-bug-plan",
+      "title": "Select guidance from a BCFIX-HANDOFF v1 payload",
+      "expectedKind": "bug",
+      "development-plan": {
+        "format": "BCFIX-HANDOFF",
+        "version": 1,
+        "issue": 4312,
+        "phase": "implement",
+        "status": "paused",
+        "baton": 2,
+        "rootCause": "The routine calls FindFirst and updates the current record without entering an enumerator loop, so only the first record in the supplied filtered set is modified.",
+        "harnessMap": {
+          "testCodeunit": "Update Selected Entries Tests",
+          "libraries": [
+            "Library - Random"
+          ],
+          "pages": [],
+          "handlers": []
+        },
+        "iterationsUsed": 1,
+        "filesCommitted": [
+          "test/Batch/UpdateSelectedEntries.Codeunit.al"
+        ],
+        "lastTestResult": "1 failing, 4 passing; the red test shows only the first of three selected records is updated.",
+        "deadEnds": [
+          "Changing the page selection did not help because the codeunit discarded the supplied enumerator."
+        ],
+        "nextStep": "Replace the single-record read with an update-safe FindSet/Next loop that preserves the supplied filters, then rerun the red test."
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/performance/pair-findset-with-next-loop.md",
+        "microsoft/knowledge/performance/findset-true-applies-updlock-on-read.md",
+        "microsoft/knowledge/testing/use-library-codeunits-for-test-fixtures.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/performance/pass-var-record-to-preserve-partial-load-enumerator.md"
+      ]
+    },
+    {
+      "id": "versioned-upgrade-plan-guidance",
+      "title": "Select guidance for a versioned data upgrade",
+      "expectedKind": "upgrade",
+      "development-plan": {
+        "kind": "upgrade",
+        "request": "Migrate existing customer tier text values to a new enum field in an app upgrade.",
+        "root-cause": "The new schema needs an explicit, rerunnable migration for existing tenant data.",
+        "affected-files": [
+          "src/Upgrade/CustomerTierUpgrade.Codeunit.al",
+          "test/Upgrade/CustomerTierUpgradeTests.Codeunit.al"
+        ],
+        "proposed-changes": [
+          "Add a tagged upgrade step that copies existing values without validation triggers.",
+          "Add upgrade tests from multiple historical data versions."
+        ],
+        "test-strategy": "Run upgrade tests from two prior data versions and verify a second invocation makes no further changes.",
+        "acceptance-criteria": [
+          "Existing values are preserved.",
+          "The migration is rerunnable.",
+          "Fresh installation does not execute upgrade migration."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/upgrade/use-upgrade-tags-not-version-checks.md",
+        "microsoft/knowledge/upgrade/check-only-triggers-do-not-migrate-data.md",
+        "microsoft/knowledge/upgrade/install-code-does-not-run-on-version-upgrade.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/upgrade/datatransfer-skips-triggers-and-subscribers.md",
+        "microsoft/knowledge/upgrade/appversion-meaning-depends-on-execution-context.md"
+      ]
+    }
+  ]
+}

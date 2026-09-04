@@ -13,8 +13,10 @@ For the high-level framing and repo structure, start with the [README](README.md
   - **Layer content** in `/microsoft/`, `/community/`, and `/custom/` — knowledge files and action skills grouped by authority.
 
 When BCQuality is installed as a standalone plugin, it additionally exposes
-`skills/al-code-review/SKILL.md`. This is a host-format adapter, not another
-action skill: it creates the task context and enters the same flow at Entry.
+`skills/al-code-review/SKILL.md` and
+`skills/al-development/SKILL.md`. These are host-format adapters, not
+additional action skills: each creates the task context and enters the same
+flow at Entry.
 
 ## The flow
 
@@ -25,7 +27,7 @@ flowchart LR
     E -->|3 dispatch record| A
     A -->|4 invoke dispatched skill| S[Action skill<br/>e.g. al-code-review]
     S -->|5 execute| P[Source → Relevance<br/>→ Worklist → Action<br/>reading READ · DO on demand]
-    P -->|6 emit| R[Findings · Domain labels<br/>· References · Confidence]
+    P -->|6 emit| R[Findings report<br/>or implementation report]
     R -->|7 integrate| O
 ```
 
@@ -35,14 +37,18 @@ The orchestrator has a URL setting that points at BCQuality (default: `github.co
 ### 2. Agent invokes Entry
 The agent reads `/skills/entry.md` and runs it against the task context. Entry applies its Source → Relevance → Worklist → Action steps over the action skills under `*/skills/**/*.md` and returns a **dispatch record**: the set of action skills to invoke, plus a list of candidates it skipped (with reasons). Routing is a skill, not orchestrator logic.
 
-For a standalone plugin installation, the host activates the
-`skills/al-code-review/SKILL.md` adapter first. That adapter preserves the
-caller's actual goal, constructs the task context, and invokes Entry. It does
-not select the internal `microsoft/skills/review/al-code-review.md` action skill
-itself or duplicate Entry's preparation, routing, and failure semantics.
+For a standalone plugin installation, the host activates the matching adapter
+first. The adapter preserves the caller's actual goal, constructs the task
+context, and invokes Entry. It does not select the internal review or
+development action skill itself or duplicate Entry's preparation, routing, and
+failure semantics.
 
 ### 3. Agent consumes the dispatch record
-The dispatch record names one or more action skills and the subset of inputs each should receive. If the outcome is `no-match` or `failed`, the agent returns the record to the orchestrator unchanged.
+The dispatch record names one or more action skills, the subset of inputs each
+should receive, and each skill's output kind. The output kind identifies
+read-only review or planning work versus repository-changing implementation
+before invocation. If the outcome is `no-match` or `failed`, the agent returns
+the record to the orchestrator unchanged.
 
 ### 4. Agent invokes each dispatched action skill
 Action skills live inside the layers — `/microsoft/skills/`, `/community/skills/`, `/custom/skills/` — so their authority is carried by their location. For a PR review, Entry typically dispatches `microsoft/skills/review/al-code-review.md`. The agent reads the file and executes it.
@@ -71,19 +77,44 @@ The index is **owned and produced by BCQuality**, not by each consumer: its gene
 The index changes only *how candidates are discovered*, never *which are selected*. The Worklist predicate is unchanged — `keywords` still drive selection — and the agent still opens each worklisted article **in full** to read its `## Best Practice` / `## Anti Pattern` rule bodies; the index is discovery metadata only and never substitutes for the article body. When no index is present, skills fall back to path-based discovery (collect by domain folder), so review still works.
 
 ### 6. Agent emits structured output
-The output contract is defined in the DO meta-skill so that every action skill — today's and next year's — produces the same shape:
+The output contracts are defined in the DO meta-skill:
 
-- **Outcome** — `completed`, `not-applicable`, `no-knowledge`, `partial`, or `failed`. An orchestrator can distinguish a clean run from a no-op from a failure without guessing.
-- **Findings** — what the skill observed (severity, message, optional location).
-- **Domain** — the producer-owned, human-readable display label on each review finding.
-- **References** — structured objects (`path` plus optional commit `sha`) pointing to the knowledge files that informed each finding.
-- **Confidence** — per-finding evidence strength.
-- **Suppressed** — knowledge files that were discarded by layer precedence or configuration, so reviewers can see what was overridden.
+- A **findings report** carries review findings, domain labels, references, confidence, and suppressions.
+- A **development guidance report** carries read-only knowledge constraints and validation considerations for an existing plan.
+- An **implementation report** carries the development plan, classified mode, knowledge applied, changed files, validation results, final review, and remaining work.
 
 The orchestrator parses this **without skill-specific logic**. This is the point of the contract: orchestrators and action skills evolve independently.
 
+For development, the action happens before the report: the skill
+first invokes the read-only planning skill to select applicable knowledge, then
+changes the target repository, runs its native validation, and invokes the
+configured review quality-skill over the resulting diff. A specialized
+repository orchestrator may invoke only the planning skill and feed its
+guidance report into its own implementation phases. The implementation report
+is a machine-readable record of persisted work, not a code proposal for the
+orchestrator to apply later.
+
 ### 7. Orchestrator integrates
-The orchestrator turns findings into PR comments, build gates, or IDE diagnostics, and links the references back to the knowledge files so the PR author — human or agent — can read the guidance.
+The orchestrator turns findings into PR comments, build gates, or IDE diagnostics. For implementation it presents the changed files and validation state, while the agent has already persisted the requested change in the target repository.
+
+## Repository-specific development orchestrators
+
+A repository-specific workflow can keep ownership of implementation and consume
+BCQuality only for planning and review:
+
+1. Produce its normal development plan after repository investigation.
+2. Invoke Entry with `inputs-available: [development-plan, repository]` plus
+   the resolved applicability dimensions.
+3. Execute the dispatched `al-development-plan` skill and preserve its
+   `development-guidance-report`.
+4. Pass the selected article references, constraints, samples, and validation
+   considerations into its own test, implementation, and critique phases.
+5. Run its existing BCQuality-backed review gate over the completed diff.
+
+This is the integration model for specialized bug-fix or release workflows.
+They keep environment provisioning, retries, state, commits, propagation, and
+pull-request delivery; BCQuality supplies shared product knowledge before and
+after the code change.
 
 ## Knowledge-backed and agent findings
 

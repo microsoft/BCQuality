@@ -56,7 +56,7 @@ Skills define how agents consume knowledge. They come in three flavors:
 
   READ and DO are read on demand — typically when the first dispatched action skill runs. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
 
-- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md) (super-skill), which composes the AL review leaf skills under [`microsoft/skills/review/`](microsoft/skills/review/) — one per knowledge domain.
+- **Action skills** — concrete skills that follow the Action Skill template to do real work. Review skills emit findings reports; read-only planning skills emit development-guidance reports; implementation skills emit implementation reports. Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). [`microsoft/skills/development/al-development-plan.md`](microsoft/skills/development/al-development-plan.md) turns an existing plan into knowledge constraints, [`microsoft/skills/development/al-development.md`](microsoft/skills/development/al-development.md) consumes those constraints while implementing features, bugs, refactors, upgrades, and maintenance, and [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md) provides the final quality gate.
 
 ### Agent bootstrapping
 
@@ -64,10 +64,10 @@ An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides
 
 ### Standalone plugin installation
 
-BCQuality can also be installed directly as a plugin. The plugin registers one
-host-native skill,
-[`al-code-review`](skills/al-code-review/SKILL.md), which adapts the caller's
-request to the same Entry protocol used by orchestrators.
+BCQuality can also be installed directly as a plugin. The plugin registers
+host-native adapters for [`al-code-review`](skills/al-code-review/SKILL.md) and
+[`al-development`](skills/al-development/SKILL.md). Both adapt
+the caller's request to the same Entry protocol used by orchestrators.
 
 For GitHub Copilot CLI:
 
@@ -81,32 +81,37 @@ must be updated. The name remains distinct from BC-ALAgents' public
 `al-review` skill because current hosts may load plugin skill names into one
 shared inventory.
 
-The adapter is intentionally not a second review implementation:
+Plugin version `0.3.0` adds `al-development`, the knowledge-backed
+implementation adapter for features, bugs, refactors, upgrades, and maintenance.
+
+The adapters are intentionally not second implementations:
 
 ```text
 standalone host skill: skills/al-code-review/SKILL.md
   -> routing contract: skills/entry.md
     -> review coordinator: microsoft/skills/review/al-code-review.md
       -> domain review leaves
+
+standalone host skill: skills/al-development/SKILL.md
+  -> routing contract: skills/entry.md
+    -> implementation skill: microsoft/skills/development/al-development.md
+      -> knowledge-guided implementation + AL review quality gate
 ```
 
-Only the first file follows the host's `SKILL.md` packaging format. The
-remaining files are BCQuality's internal protocol and layered action skills.
-Entry remains the single owner of routing and index preparation;
-`al-code-review.md` remains the single owner of broad-review composition. This
-separation keeps standalone installation available without duplicating those
-policies in the plugin adapter.
+Only the files under `skills/*/SKILL.md` follow the host's packaging format.
+The remaining files are BCQuality's internal protocol and layered action
+skills. Entry remains the single owner of routing and index preparation. This
+separation keeps standalone installation available without duplicating policy
+in either adapter.
 
 Note that a plugin install ships the entire tree, so `BCQUALITY_ENABLED_LAYERS`
 narrows discovery without removing any files. Layer selection is a filter here,
 not a deny mechanism — see [the adapter](skills/al-code-review/SKILL.md) for the
 difference from the pruned-clone model.
 
-The host adapter and internal action skill intentionally share the
-`al-code-review` name: they expose the same operation in two different skill
-formats. Their paths make the boundary explicit. The adapter lives under
-`skills/al-code-review/SKILL.md`; the internal Microsoft-layer coordinator
-lives at `microsoft/skills/review/al-code-review.md`.
+Each host adapter and internal action skill intentionally share a name: they
+expose the same operation in two different skill formats. Their paths make the
+boundary explicit.
 
 ## Knowledge file format
 
@@ -138,9 +143,33 @@ Code examples belong in separate files, not in the knowledge file itself. Knowle
 
 ## Scope
 
-The current curated corpus is focused on **technical AL code review**: Agents, AppSource and compatibility, data modeling, error handling, events, interfaces, performance, privacy, Query objects, security, style, telemetry, testing, UI, upgrade, and web services. These are the domains backed by knowledge files and registered review leaves today.
+The current curated corpus covers technical AL concerns across Agents, AppSource and compatibility, data modeling, error handling, events, interfaces, performance, privacy, Query objects, security, style, telemetry, testing, UI, upgrade, and web services. Review skills evaluate existing changes against those domains. The `al-development` skill applies them before and during implementation, then runs the review coordinator as a final gate.
+
+Repository-specific orchestrators do not need to delegate implementation to
+`al-development`. They can invoke `al-development-plan` with their existing
+plan, feed its read-only guidance report into their own phases, and retain their
+specialized environment, test, propagation, and delivery gates.
+
+`al-development` does not silently fall back to generic generation when no
+article applies. It returns `no-knowledge` without changing code, making corpus
+coverage visible; callers can use their normal repository workflow or
+contribute the missing Business Central-specific guidance.
 
 Business Central functional domains (Finance, Supply Chain Management, Manufacturing, Jobs, Warehousing, Service), PowerShell, pipelines, and Power Platform remain valid future repository scope, but they are **not current coverage claims** until corresponding knowledge and action skills exist. Consumers should derive supported review scope from the live knowledge index and dispatched skills, not from roadmap breadth.
+
+## Tracking developer coverage
+
+BCQuality tracks source ingestion and implementation capability separately:
+
+- [`coverage/microsoft-learn-developer-catalog.json`](coverage/microsoft-learn-developer-catalog.json) is the generated inventory of Business Central developer training.
+- [`coverage/learn-coverage.json`](coverage/learn-coverage.json) records editorial progress and the disposition of each extracted concern.
+- [`coverage/development-capabilities.json`](coverage/development-capabilities.json) tracks representative development capabilities and their evaluation fixtures.
+
+Run `pwsh ./tools/Test-LearnCoverage.ps1` for current source progress and
+`pwsh ./tools/Test-DevelopmentFixtures.ps1` for capability coverage. Article
+count alone is not a completion metric: a capability becomes `validated` only
+after its generated implementation passes compilation, tests, and the review
+quality gate.
 
 ## How agents consume BCQuality
 
@@ -151,7 +180,7 @@ Action skills follow a four-step pattern:
 3. **Worklist** — narrow from N candidates to the M that apply to the current task
 4. **Action** — apply the relevant knowledge and produce structured output
 
-Every action skill produces output in a common format that orchestrators can consume without skill-specific parsing. The format is JSON and includes an `outcome` (so a clean run, a not-applicable skill, and a partial failure are all distinguishable), `findings` (what the skill observed), structured `references` back to the knowledge files that informed each finding, per-finding `confidence`, and a `suppressed` list recording any knowledge files overridden by layer precedence. This contract is defined in the Action Skill meta-skill so that orchestrators and action skills remain independently evolvable.
+Every action skill declares one structured JSON output. Review skills emit a `findings-report`; planning skills emit a read-only `development-guidance-report`; implementation skills emit an `implementation-report` containing the plan, knowledge used, changed files, real validation results, and post-implementation review. All contracts are defined in the Action Skill meta-skill so orchestrators and action skills remain independently evolvable.
 
 BCQuality is an **additive** knowledge layer: it augments the agent's review judgement, it does not replace it. Super-skills (such as `al-code-review`) run a self-review pass alongside their sub-skills and surface concerns the agent identified on its own, marked with `from-sub-skill: "agent"` and an empty `references: []` so consumers can render them distinctly from knowledge-backed findings. See [agent-consumption.md](agent-consumption.md) and [`skills/do.md`](skills/do.md) for the full contract.
 
@@ -163,7 +192,8 @@ For the end-to-end flow — from orchestrator trigger through to how output reac
 
 ```
 ├── /skills/              # Global: entry-point skill + meta-skill contracts (READ, DO, WRITE)
-├── /evaluation/          # Neutral good/bad review fixtures and scoring contract
+├── /coverage/            # Source-ingestion ledger and development capability matrix
+├── /evaluation/          # Review and development evaluation fixtures
 ├── /.github/             # Actions and workflows
 ├── /microsoft/           # Microsoft-endorsed layer
 │   ├── /knowledge/       # Knowledge files by domain

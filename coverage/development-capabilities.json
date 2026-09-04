@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "minimumFixtureCoverage": 0.5,
+  "capabilities": [
+    {
+      "id": "setup-and-master-data",
+      "title": "Setup and master data",
+      "status": "fixture",
+      "domains": [
+        "data-modeling",
+        "security",
+        "testing",
+        "ui"
+      ],
+      "fixtureIds": [
+        "setup-backed-master-data"
+      ]
+    },
+    {
+      "id": "document-workflows",
+      "title": "Document header and lines workflows",
+      "status": "fixture",
+      "domains": [
+        "data-modeling",
+        "events",
+        "performance",
+        "testing",
+        "ui"
+      ],
+      "fixtureIds": [
+        "document-header-and-lines"
+      ]
+    },
+    {
+      "id": "api-integrations",
+      "title": "Versioned API integrations",
+      "status": "fixture",
+      "domains": [
+        "security",
+        "testing",
+        "web-services"
+      ],
+      "fixtureIds": [
+        "versioned-master-data-api"
+      ]
+    },
+    {
+      "id": "bug-diagnosis-and-fix",
+      "title": "Bug diagnosis and surgical repair",
+      "status": "fixture",
+      "domains": [
+        "performance",
+        "testing"
+      ],
+      "fixtureIds": [
+        "fix-filtered-batch-processing"
+      ]
+    },
+    {
+      "id": "journals-and-posting",
+      "title": "Journals and posting routines",
+      "status": "planned",
+      "domains": [
+        "data-modeling",
+        "error-handling",
+        "events",
+        "performance",
+        "testing"
+      ],
+      "fixtureIds": []
+    },
+    {
+      "id": "reports-and-documents",
+      "title": "Reports and document layouts",
+      "status": "planned",
+      "domains": [
+        "performance",
+        "testing",
+        "ui"
+      ],
+      "fixtureIds": []
+    },
+    {
+      "id": "install-and-upgrade",
+      "title": "Installation and data upgrade",
+      "status": "fixture",
+      "domains": [
+        "breaking-changes",
+        "testing",
+        "upgrade"
+      ],
+      "fixtureIds": [
+        "versioned-data-upgrade"
+      ]
+    },
+    {
+      "id": "external-services",
+      "title": "Outbound services and authentication",
+      "status": "planned",
+      "domains": [
+        "error-handling",
+        "privacy",
+        "security",
+        "telemetry"
+      ],
+      "fixtureIds": []
+    },
+    {
+      "id": "role-centers-and-onboarding",
+      "title": "Role Centers, setup, and onboarding",
+      "status": "planned",
+      "domains": [
+        "security",
+        "testing",
+        "ui"
+      ],
+      "fixtureIds": []
+    },
+    {
+      "id": "appsource-lifecycle",
+      "title": "AppSource packaging and lifecycle",
+      "status": "planned",
+      "domains": [
+        "appsource",
+        "breaking-changes",
+        "testing",
+        "upgrade"
+      ],
+      "fixtureIds": []
+    }
+  ]
+}

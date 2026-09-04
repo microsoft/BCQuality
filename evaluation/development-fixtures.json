@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "skill": "microsoft/skills/development/al-development.md",
+  "maximumReviewRounds": 3,
+  "minimumKnowledgeRecall": 1.0,
+  "minimumKnowledgePrecision": 0.5,
+  "cases": [
+    {
+      "id": "setup-backed-master-data",
+      "title": "Build setup-backed loyalty member master data",
+      "capabilities": [
+        "setup-and-master-data"
+      ],
+      "expectedKind": "feature",
+      "development-request": {
+        "kind": "feature",
+        "description": "Add a Loyalty Member feature to an existing Business Central AL app. Administrators configure the member number series on a singleton setup card. Users create members through list and card pages, the table assigns numbers, and blocked members cannot be selected by consuming records. Include least-privilege permission sets and automated tests.",
+        "acceptance-criteria": [
+          "The setup is a blank-key singleton surfaced by a Card page.",
+          "Member numbers use the current No. Series codeunit and support manual numbers according to setup.",
+          "Blocked validation occurs where a member is consumed, not only on the member table.",
+          "The feature includes assignable least-privilege permissions and automated tests."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/data-modeling/setup-table-is-a-singleton.md",
+        "microsoft/knowledge/data-modeling/master-table-no-from-number-series-in-oninsert.md",
+        "microsoft/knowledge/data-modeling/check-blocked-in-referencing-code-not-in-master.md",
+        "microsoft/knowledge/security/permission-set-avoid-wildcard-grants.md",
+        "microsoft/knowledge/testing/use-library-codeunits-for-test-fixtures.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/data-modeling/use-no-series-codeunit-not-noseriesmanagement.md",
+        "microsoft/knowledge/security/compose-permission-sets-with-included-sets.md",
+        "microsoft/knowledge/style/applicationarea-required-on-page-controls.md",
+        "microsoft/knowledge/style/tooltip-required-on-page-fields.md",
+        "microsoft/knowledge/ui/showmandatory-on-code-required-page-fields.md"
+      ],
+      "requiredChecks": [
+        "compile",
+        "tests",
+        "review"
+      ]
+    },
+    {
+      "id": "document-header-and-lines",
+      "title": "Build a document header and lines workflow",
+      "capabilities": [
+        "document-workflows"
+      ],
+      "expectedKind": "feature",
+      "development-request": {
+        "kind": "feature",
+        "description": "Implement a Service Quote feature with a header, lines, document page, number series, posting and document dates, calculated totals, and tests. Line edits must refresh the total shown on the header. Structure initialization so API, UI, and test creation paths behave consistently.",
+        "acceptance-criteria": [
+          "The header assigns its number before InitRecord establishes document defaults.",
+          "The document page links lines correctly and refreshes parent totals after edits.",
+          "Tests exercise creation outside the UI as well as the document-page behavior.",
+          "The implementation contains no obsolete NoSeriesManagement dependency."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "service"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/data-modeling/initialize-document-defaults-in-initrecord.md",
+        "microsoft/knowledge/data-modeling/use-no-series-codeunit-not-noseriesmanagement.md",
+        "microsoft/knowledge/ui/updatepropagation-both-refreshes-main-page.md",
+        "microsoft/knowledge/testing/use-library-codeunits-for-test-fixtures.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/events/publish-thin-onbefore-onafter-integration-events.md",
+        "microsoft/knowledge/style/applicationarea-required-on-page-controls.md",
+        "microsoft/knowledge/style/tooltip-required-on-page-fields.md"
+      ],
+      "requiredChecks": [
+        "compile",
+        "tests",
+        "review"
+      ]
+    },
+    {
+      "id": "versioned-master-data-api",
+      "title": "Expose master data through a versioned API",
+      "capabilities": [
+        "api-integrations"
+      ],
+      "expectedKind": "feature",
+      "development-request": {
+        "kind": "auto",
+        "plan": "Expose Loyalty Member master data through a Business Central API page. Use a stable v1.0 contract, address records by SystemId, support insert and update, use conventional entity naming, and include permissions and automated API-oriented tests.",
+        "acceptance-criteria": [
+          "The API declares all routing properties and a stable APIVersion.",
+          "ODataKeyFields uses SystemId and the exposed SystemId field is not editable.",
+          "EntityName is singular, EntitySetName is plural, and both are lower camel case.",
+          "The API is covered by least-privilege permissions and automated tests."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/web-services/set-required-api-page-properties.md",
+        "microsoft/knowledge/web-services/expose-systemid-as-the-api-key.md",
+        "microsoft/knowledge/style/api-page-delayedinsert-true.md",
+        "microsoft/knowledge/style/api-page-entity-naming-singular-plural.md",
+        "microsoft/knowledge/security/permission-set-avoid-wildcard-grants.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/style/api-page-camelcase-properties.md",
+        "microsoft/knowledge/web-services/version-apis-by-adding-not-mutating-published-versions.md"
+      ],
+      "requiredChecks": [
+        "compile",
+        "tests",
+        "review"
+      ]
+    },
+    {
+      "id": "fix-filtered-batch-processing",
+      "title": "Fix a batch routine that processes only one record",
+      "capabilities": [
+        "bug-diagnosis-and-fix"
+      ],
+      "expectedKind": "bug",
+      "development-request": {
+        "kind": "bug",
+        "description": "Users report that an existing filtered batch routine updates only the first matching record. Reproduce the defect, identify why iteration stops, make the smallest safe correction, and add a regression test that selects multiple records and proves every selected record is processed.",
+        "acceptance-criteria": [
+          "The defect is reproduced or demonstrated by a failing regression test before the fix.",
+          "The root cause is corrected without widening the supplied record filters.",
+          "The routine processes every selected record with the appropriate update locking behavior.",
+          "A regression test covers more than one selected record."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/performance/pair-findset-with-next-loop.md",
+        "microsoft/knowledge/testing/use-library-codeunits-for-test-fixtures.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/performance/findset-true-applies-updlock-on-read.md",
+        "microsoft/knowledge/performance/pass-var-record-to-preserve-partial-load-enumerator.md"
+      ],
+      "requiredChecks": [
+        "compile",
+        "tests",
+        "review"
+      ]
+    },
+    {
+      "id": "versioned-data-upgrade",
+      "title": "Implement a rerunnable data upgrade",
+      "capabilities": [
+        "install-and-upgrade"
+      ],
+      "expectedKind": "upgrade",
+      "development-request": {
+        "kind": "upgrade",
+        "description": "Upgrade an existing app from a text-based Customer Tier field to a new enum-backed Tier field. Preserve existing customer data, support tenants that skip intermediate app versions, keep fresh installation separate from migration, and add upgrade tests.",
+        "acceptance-criteria": [
+          "Existing tier values are migrated without running field validation triggers.",
+          "The migration is guarded by an upgrade tag and is safe when the upgrade runs again.",
+          "Check and validation triggers do not write data.",
+          "Fresh installation does not run version-upgrade migration.",
+          "Tests cover more than one historical source data version."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/upgrade/appversion-meaning-depends-on-execution-context.md",
+        "microsoft/knowledge/upgrade/install-and-upgrade-codeunits-have-no-order.md",
+        "microsoft/knowledge/upgrade/use-upgrade-tags-not-version-checks.md",
+        "microsoft/knowledge/upgrade/check-only-triggers-do-not-migrate-data.md",
+        "microsoft/knowledge/upgrade/install-code-does-not-run-on-version-upgrade.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/upgrade/datatransfer-skips-triggers-and-subscribers.md",
+        "microsoft/knowledge/upgrade/datatransfer-for-bulk-init.md",
+        "microsoft/knowledge/upgrade/register-upgrade-tags-with-subscribers.md",
+        "microsoft/knowledge/testing/transactionmodel-attribute-governs-test-transactions.md"
+      ],
+      "requiredChecks": [
+        "compile",
+        "tests",
+        "review"
+      ]
+    }
+  ]
+}

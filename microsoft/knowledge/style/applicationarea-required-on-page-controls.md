@@ -1,28 +1,32 @@
 ---
 bc-version: [all]
 domain: style
-keywords: [application-area, page-control, as0062, appsourcecop, hidden-control, web-client]
+keywords: [application-area, page-control, inheritance, as0062, appsourcecop, web-client]
 technologies: [al]
 countries: [w1]
 application-area: [all]
 ---
 
-# Every page control needs an `ApplicationArea` (AppSourceCop AS0062)
+# Page-level `ApplicationArea` inheritance does not apply to extensions
 
 ## Description
 
-A field control on a page or pageextension that has no `ApplicationArea` property is silently hidden in the Web client for every profile whose enabled application areas do not cover it. There is no error and no warning at runtime — the field simply does not appear, which reads as data loss to the user. AppSourceCop AS0062 flags any page control or action that is missing the `ApplicationArea` property, and AppSource technical validation rejects the app until it is set.
+A page control or action needs an effective `ApplicationArea` to appear in cloud experiences. From runtime 10.0, controls on a page object inherit the page-level value, so repeating it on every child is unnecessary when the parent defines a suitable default. This inheritance does not apply to controls added or modified by page and report extensions: extension controls must still set the property explicitly.
 
-Set the property to an area the app actually enables. `All` makes the control visible under every profile and is the common default; if the app declares narrower areas in `app.json`, use one of those. The property applies to field controls and to actions. This is a sibling concern to `caption-required-on-page-fields.md` and `tooltip-required-on-page-fields.md`; note that the ToolTip requirement is the separate CodeCop rule AA0218, not AS0062.
+For targets before runtime 10.0, child controls do not inherit and must also set the property. AppSourceCop AS0062 and PTE0008 account for page-level inheritance on runtime 10.0 and later but continue to require explicit values in extensions.
 
 ## Best Practice
 
-Every field control and action carries `ApplicationArea = All;` (or a declared area of the app). The value is set once per control and keeps the control visible in the Web client.
+On runtime 10.0 or later, set a suitable page-level default and override only controls that belong to a narrower area. Set `ApplicationArea` explicitly on every control or action introduced by a page or report extension.
 
 See sample: `applicationarea-required-on-page-controls.good.al`.
 
 ## Anti Pattern
 
-A field control with no `ApplicationArea`. AS0062 flags it, and the control is invisible in the Web client for any profile that does not already enable a matching area.
+A page object that defines neither a parent nor child value, or an extension control that assumes it inherits from the base page. The control has no effective application area and can be hidden or rejected by analyzer validation.
 
 See sample: `applicationarea-required-on-page-controls.bad.al`.
+
+## Reference
+
+[Set different control properties](https://learn.microsoft.com/en-us/training/modules/work-with-pages/8-controls)
