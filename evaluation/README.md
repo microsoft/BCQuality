@@ -54,3 +54,50 @@ This credential-free check proves every selected leaf maps to a same-named knowl
    For a single combined stress-test result, use `-ResultsPath` instead.
 
 The committed gate requires full expected recall, the exact convention-derived article ID, and no findings on clean controls.
+
+## AL development evaluation
+
+`development-fixtures.json` defines end-to-end development requests rather than
+prewritten good/bad snippets. Each case declares its execution mode, the
+Business Central capabilities it exercises, the knowledge that should shape
+the implementation, acceptance criteria, and the real checks an external
+runner must perform.
+
+Validate the fixture and capability manifests and prepare opaque requests:
+
+```powershell
+pwsh ./tools/Test-DevelopmentFixtures.ps1 -Root . -PrepareDirectory ./.development-evaluation
+```
+
+Each request runs `al-development` in a fresh writable AL repository. Cases
+may exercise feature, bug, refactor, upgrade, or maintenance mode.
+The runner compiles the generated project, runs its tests, invokes the review
+quality gate, and stores the resulting implementation report using the opaque
+`caseId` from its request, for example `result-case-a1b2c3d4.json`. It keeps the
+generated repository available at the wrapper's `workspaceRoot` so scoring can
+verify reported changed paths. Score all results with:
+
+```powershell
+pwsh ./tools/Test-DevelopmentFixtures.ps1 -Root . -ResultsDirectory ./.development-evaluation
+```
+
+The initial fixtures cover setup-backed master data, document header/line
+workflows, versioned API integrations, and surgical diagnosis and repair of a
+batch-processing bug. The broader capability roadmap lives in
+`coverage/development-capabilities.json`.
+
+### Read-only plan guidance
+
+`development-guidance-fixtures.json` evaluates the planning interface used by
+specialized orchestrators. It supplies an existing development plan and expects
+a referenced set of implementation constraints without any target-repository
+changes.
+
+```powershell
+pwsh ./tools/Test-DevelopmentGuidanceFixtures.ps1 -Root . -PrepareDirectory ./.development-guidance-evaluation
+```
+
+An external runner stores `result-<case-id>.json` beside the generated request
+and retains the clean fixture repository at `workspaceRoot`. Score the result
+with `-ResultsDirectory`; the scorer verifies knowledge recall and precision
+and fails if the planning pass changed the repository.

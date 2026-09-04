@@ -39,6 +39,7 @@ ACTION_SKILL_REQUIRED_KEYS = {
 }
 ACTION_SKILL_OPTIONAL_KEYS = {
     "bc-version", "technologies", "countries", "application-area", "sub-skills",
+    "quality-skill", "guidance-skill",
 }
 META_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
@@ -46,8 +47,11 @@ HOST_SKILL_REQUIRED_KEYS = {"name", "description"}
 
 STANDARD_INPUTS = {
     "pr-diff", "object-list", "file-path", "repository", "telemetry-query",
+    "development-request", "development-plan",
 }
-ALLOWED_OUTPUTS = {"findings-report"}
+ALLOWED_OUTPUTS = {
+    "findings-report", "implementation-report", "development-guidance-report",
+}
 VALID_SAMPLE_KINDS = {"good", "bad"}
 
 ACTION_SKILL_SECTIONS = ["Source", "Relevance", "Worklist", "Action", "Output"]
@@ -340,9 +344,11 @@ def validate_action_skill(path: Path, parsed: Parsed, report: Report) -> None:
         if not is_non_empty_list_of_str(out):
             report.error(path, "R18", "outputs must be a non-empty list of strings", 1)
         else:
+            if len(out) != 1:
+                report.error(path, "R18", "outputs must contain exactly one output kind", 1)
             bad = [x for x in out if x not in ALLOWED_OUTPUTS]
             if bad:
-                report.error(path, "R18", f"outputs contains non-allowed values {bad}; currently only {sorted(ALLOWED_OUTPUTS)} is defined", 1)
+                report.error(path, "R18", f"outputs contains non-allowed values {bad}; allowed values are {sorted(ALLOWED_OUTPUTS)}", 1)
 
     # R19 optional filter dimensions, if present
     if "bc-version" in fm:
@@ -381,6 +387,20 @@ def validate_action_skill(path: Path, parsed: Parsed, report: Report) -> None:
             bad = [x for x in ss if not x.endswith(".md")]
             if bad:
                 report.error(path, "R20", f"sub-skills entries must end in '.md': {bad}", 1)
+
+    if "quality-skill" in fm:
+        quality_skill = fm["quality-skill"]
+        if not isinstance(quality_skill, str) or not quality_skill.endswith(".md"):
+            report.error(path, "R31", "quality-skill must be one repo-relative .md path", 1)
+        if fm.get("outputs") != ["implementation-report"]:
+            report.error(path, "R31", "quality-skill is valid only with outputs: [implementation-report]", 1)
+
+    if "guidance-skill" in fm:
+        guidance_skill = fm["guidance-skill"]
+        if not isinstance(guidance_skill, str) or not guidance_skill.endswith(".md"):
+            report.error(path, "R32", "guidance-skill must be one repo-relative .md path", 1)
+        if fm.get("outputs") != ["implementation-report"]:
+            report.error(path, "R32", "guidance-skill is valid only with outputs: [implementation-report]", 1)
 
     # R21 five required sections, in order, each exactly once
     heads = [h for h, _ in headings_in_order(parsed.body)]
@@ -603,6 +623,58 @@ def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, rep
         report.error(path, "R26", f"leaf not registered in sub-skills: {leaf}", 1)
 
 
+def validate_quality_skill(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
+    """R30: implementation quality-skill paths resolve to a findings producer."""
+    quality_skill = fm.get("quality-skill")
+    if not isinstance(quality_skill, str) or not quality_skill.endswith(".md"):
+        return
+
+    normalized = quality_skill.lstrip("./")
+    target = root / normalized
+    if not target.is_file():
+        report.error(path, "R30", f"quality-skill does not exist on disk: {normalized}", 1)
+        return
+    if target.resolve() == path.resolve():
+        report.error(path, "R30", "quality-skill must not reference the implementation skill itself", 1)
+        return
+
+    try:
+        target_parsed = parse_markdown(target.read_text(encoding="utf-8"))
+    except UnicodeDecodeError as e:
+        report.error(path, "R30", f"quality-skill is not valid UTF-8: {e}", 1)
+        return
+    target_outputs = (target_parsed.frontmatter or {}).get("outputs")
+    if target_outputs != ["findings-report"]:
+        report.error(path, "R30", f"quality-skill must emit findings-report: {normalized}", 1)
+
+
+def validate_guidance_skill(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
+    """R33: implementation guidance-skill paths resolve to a read-only planner."""
+    guidance_skill = fm.get("guidance-skill")
+    if not isinstance(guidance_skill, str) or not guidance_skill.endswith(".md"):
+        return
+
+    normalized = guidance_skill.lstrip("./")
+    target = root / normalized
+    if not target.is_file():
+        report.error(path, "R33", f"guidance-skill does not exist on disk: {normalized}", 1)
+        return
+    if target.resolve() == path.resolve():
+        report.error(path, "R33", "guidance-skill must not reference the implementation skill itself", 1)
+        return
+
+    try:
+        target_parsed = parse_markdown(target.read_text(encoding="utf-8"))
+    except UnicodeDecodeError as e:
+        report.error(path, "R33", f"guidance-skill is not valid UTF-8: {e}", 1)
+        return
+    target_fm = target_parsed.frontmatter or {}
+    if target_fm.get("outputs") != ["development-guidance-report"]:
+        report.error(path, "R33", f"guidance-skill must emit development-guidance-report: {normalized}", 1)
+    if "development-plan" not in (target_fm.get("inputs") or []):
+        report.error(path, "R33", f"guidance-skill must accept development-plan: {normalized}", 1)
+
+
 def run(root: Path) -> Report:
     report = Report()
     skill_records: list[SkillRecord] = []
@@ -670,9 +742,11 @@ def run(root: Path) -> Report:
                     others = [q.relative_to(root).as_posix() for q in paths if q != p]
                     report.error(p, "R24", f"skill id '{sid}' ({kind}) is not unique; also defined in: {others}")
 
-    # Fourth pass: R26 sub-skills registry matches leaf files on disk
+    # Fourth pass: cross-skill references
     for path, fm in action_skill_fms:
         validate_sub_skills_registry(path, fm, root, report)
+        validate_quality_skill(path, fm, root, report)
+        validate_guidance_skill(path, fm, root, report)
 
     return report
 

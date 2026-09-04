@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "skill": "microsoft/skills/development/al-development-plan.md",
+  "minimumKnowledgeRecall": 1.0,
+  "minimumKnowledgePrecision": 0.5,
+  "cases": [
+    {
+      "id": "bcapps-filtered-batch-bug-plan",
+      "title": "Select guidance for a filtered batch bug fix",
+      "development-plan": {
+        "kind": "bug",
+        "request": "Fix a filtered batch routine that updates only the first matching record.",
+        "root-cause": "The routine calls FindFirst and updates the current record without entering an enumerator loop.",
+        "affected-files": [
+          "src/Batch/UpdateSelectedEntries.Codeunit.al",
+          "test/Batch/UpdateSelectedEntries.Codeunit.al"
+        ],
+        "proposed-changes": [
+          "Iterate the supplied filtered record set and update every selected entry.",
+          "Add a regression test with multiple selected entries."
+        ],
+        "test-strategy": "Establish a red test where only one of several selected records is updated, then require all selected records to be updated after the fix.",
+        "acceptance-criteria": [
+          "The supplied filters are preserved.",
+          "Every selected record is updated.",
+          "The regression test demonstrates red-to-green behavior."
+        ]
+      },
+      "context": {
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/performance/pair-findset-with-next-loop.md",
+        "microsoft/knowledge/performance/findset-true-applies-updlock-on-read.md",
+        "microsoft/knowledge/testing/use-library-codeunits-for-test-fixtures.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/performance/pass-var-record-to-preserve-partial-load-enumerator.md"
+      ]
+    }
+  ]
+}

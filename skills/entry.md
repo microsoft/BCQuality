@@ -21,6 +21,9 @@ The agent invokes Entry with a **task context** supplied by the orchestrator:
 task-context:
   goal: string            # free-text description of what needs doing
   inputs-available:       # values the orchestrator has ready to pass to a chosen skill
+    - development-request
+    - development-plan
+    - repository
     - pr-diff
     - file-path
   technologies: [al]
@@ -174,7 +177,7 @@ Populated example (PR review on a repo where only `al-performance-review` is ena
 
 1. Invoke Entry with the orchestrator-supplied task context.
 2. Receive the dispatch record.
-3. For each entry in `dispatch[]`, read the referenced action skill, execute its Source → Relevance → Worklist → Action steps per DO, and produce a findings-report.
-4. Return the findings-reports to the orchestrator. When `outcome` is `no-match` or `failed`, return the dispatch record itself so the orchestrator can log the reason.
+3. For each entry in `dispatch[]`, read the referenced action skill, execute its Source → Relevance → Worklist → Action steps per DO, and produce the report kind declared by that skill's single `outputs` value.
+4. Return the action-skill reports to the orchestrator. When Entry's `outcome` is `no-match` or `failed`, return the dispatch record itself so the orchestrator can log the reason.
 
 READ and DO are the contracts that govern what the dispatched skills do. An agent that has not yet read READ and DO reads them when it executes the first dispatched skill — they are not prerequisites for invoking Entry.

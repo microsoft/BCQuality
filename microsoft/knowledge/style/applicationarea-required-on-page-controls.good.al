@@ -2,6 +2,8 @@ page 50374 "Sample App Area Good"
 {
     PageType = Card;
     SourceTable = Customer;
+    ApplicationArea = All;
+
     layout
     {
         area(Content)
@@ -10,12 +12,10 @@ page 50374 "Sample App Area Good"
             {
                 field("No."; Rec."No.")
                 {
-                    ApplicationArea = All;
                     ToolTip = 'Specifies the number that identifies the customer.';
                 }
                 field(Name; Rec.Name)
                 {
-                    ApplicationArea = All;
                     ToolTip = 'Specifies the customer''s name.';
                 }
             }
@@ -27,13 +27,27 @@ page 50374 "Sample App Area Good"
         {
             action(Refresh)
             {
-                ApplicationArea = All;
                 ToolTip = 'Reloads the current record.';
 
                 trigger OnAction()
                 begin
                     CurrPage.Update(false);
                 end;
+            }
+        }
+    }
+}
+
+pageextension 50376 "Customer App Area Good" extends "Customer Card"
+{
+    layout
+    {
+        addlast(General)
+        {
+            field("Language Code Sample"; Rec."Language Code")
+            {
+                ApplicationArea = All;
+                ToolTip = 'Specifies the language used for the customer.';
             }
         }
     }
