@@ -9,12 +9,12 @@ table 50252 "Sample Caption Source"
         field(1; "No."; Code[20])
         {
             Caption = 'No.';
-            ToolTip = 'Specifies the customer number.';
+            ToolTip = 'Specifies the unique number used to distinguish this customer record from other records.';
         }
         field(2; Name; Text[100])
         {
             Caption = 'Name';
-            ToolTip = 'Specifies the customer name.';
+            ToolTip = 'Specifies the name used to identify the customer alongside the unique customer number.';
         }
     }
 
@@ -52,7 +52,7 @@ page 50252 "Sample Caption Good"
                 {
                     ApplicationArea = All;
                     Caption = 'Display Value';
-                    ToolTip = 'Specifies the value to display.';
+                    ToolTip = 'Specifies temporary text for this page; the text is not saved in the customer record.';
                 }
             }
         }

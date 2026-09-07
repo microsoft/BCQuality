@@ -19,7 +19,7 @@ page 50253 "Sample Caption Bad"
                 {
                     ApplicationArea = All;
                     Caption = '';
-                    ToolTip = 'Specifies the customer name.';
+                    ToolTip = 'Specifies the customer name shown on sales documents.';
                 }
             }
         }

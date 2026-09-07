@@ -13,6 +13,8 @@ application-area: [all]
 
 A page field bound to a table field inherits the source field's `Caption` unless the page overrides it. An inherited caption is valid, user-facing, and translatable; omitting a page-level `Caption` does not mean the control displays an internal identifier or loses translations. CodeCop AA0225/AA0226 concern missing or empty captions, not a requirement to duplicate a caption already supplied by the source table field.
 
+Redundant page-level captions compile successfully, so compiler-error recovery does not prevent an agent from adding them. This guidance prevents that false positive rather than replacing analyzer diagnostics.
+
 Controls bound to variables or expressions cannot rely on table-field caption inheritance. For user-facing fields that need a label, supply a `Caption` or a `CaptionClass` that resolves to the intended caption. API pages are not human-facing UI; do not apply this UI-label guidance to their API contract names.
 
 ## Best Practice

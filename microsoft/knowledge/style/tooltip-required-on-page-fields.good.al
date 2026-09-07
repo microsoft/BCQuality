@@ -9,12 +9,12 @@ table 50250 "Sample Tooltip Source"
         field(1; "No."; Code[20])
         {
             Caption = 'No.';
-            ToolTip = 'Specifies the number that identifies the entry.';
+            ToolTip = 'Specifies the unique number used to distinguish this entry from other entries.';
         }
         field(2; Amount; Decimal)
         {
             Caption = 'Amount';
-            ToolTip = 'Specifies the entry amount.';
+            ToolTip = 'Specifies the monetary value recorded for this entry; changing it updates the saved entry.';
         }
     }
 
@@ -45,13 +45,13 @@ page 50250 "Sample Tooltip Good"
                 field(Amount; Rec.Amount)
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Specifies the entry amount to use in the preview.';
+                    ToolTip = 'Specifies the recorded amount to compare with the temporary preview amount.';
                 }
                 field(PreviewAmount; PreviewAmount)
                 {
                     ApplicationArea = All;
                     Caption = 'Preview Amount';
-                    ToolTip = 'Specifies the amount to preview before saving.';
+                    ToolTip = 'Specifies a temporary amount to compare with the recorded entry amount; this value is not saved.';
                 }
             }
         }
