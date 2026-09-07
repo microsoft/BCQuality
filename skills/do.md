@@ -7,7 +7,7 @@ title: Action Skill — the template every action skill follows
 
 # DO
 
-An action skill is a markdown file that tells an agent how to do one concrete job — review a pull request, audit telemetry usage, generate a skeleton — using knowledge files from BCQuality. This document is the template every action skill follows. Orchestrators rely on the template to consume any skill without skill-specific parsing.
+An action skill is a markdown file that tells an agent how to do one concrete job — review a pull request, audit telemetry usage, enrich an existing plan — using knowledge files from BCQuality. This document is the template every action skill follows. Orchestrators rely on the template to consume any skill without skill-specific parsing.
 
 This contract is stable. Changes require a PR approved by both maintainers.
 
@@ -56,19 +56,14 @@ application-area: [all]
 
 `bc-version`, `technologies`, `countries`, `application-area` are optional filters that let an orchestrator pre-select applicable skills for a task. They follow the same semantics as in READ.
 
-`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`, `development-request`, `development-plan`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`.
+`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`, `development-plan`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`.
 
 `outputs` is always a single-element list naming the output kind:
 
 - `findings-report` — evaluates an input and reports defects or observations.
-- `implementation-report` — changes a repository to satisfy a development request and reports the plan, knowledge used, changed files, validation, and post-implementation review.
 - `development-guidance-report` — selects and summarizes applicable BCQuality knowledge for an existing development plan without changing the target repository.
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
-
-`quality-skill` is optional on an action skill that emits an `implementation-report`. It names one repo-relative review action skill to run over the completed diff. It is a post-implementation gate, not a composed sub-skill: Entry does not route through it, and its final complete findings-report is returned in `review`. `quality-round-limit` is the required positive maximum number of review/fix rounds when a quality skill is declared. Consumer configuration still applies; if the named quality skill is disabled or unavailable, record its validation as `not-run` and do not claim `completed`.
-
-`guidance-skill` is optional on an action skill that emits an `implementation-report`. It names one repo-relative read-only action skill that accepts a `development-plan` and emits a `development-guidance-report`. The implementation skill invokes it after forming its plan and before editing product code. Consumer configuration still applies; when guidance is disabled or unavailable, the implementation skill must not claim knowledge-backed development.
 
 ## Required sections
 
@@ -86,13 +81,15 @@ Every action skill MUST contain these five sections, in order:
 
 **Relevance.** Apply frontmatter filters to the candidates. Typical filters: match `bc-version` against the target environment, match `technologies` against the languages in scope, match `countries` and `application-area` against the consuming codebase's context. The exact matching rules are defined in READ (*Frontmatter matching semantics*). Files that do not match are discarded.
 
-**Worklist.** Narrow the relevant candidates to the subset that applies to the current task. This is where the task-specific signal enters: the objects changed in the PR, the queries being audited, the skeleton being generated. Typical moves: match `keywords` against task vocabulary, match file topics against changed objects, deduplicate by concern.
+**Worklist.** Narrow the relevant candidates to the subset that applies to the current task. This is where the task-specific signal enters: the objects changed in the PR, the queries being audited, the existing plan being enriched. Typical moves: match `keywords` against task vocabulary, match file topics against changed objects, deduplicate by concern.
 
 **Action.** Execute the skill's work against the worklist. Evaluate each item in the worklist against the task input and emit findings. The action step is where skill behavior differs; the preceding three steps are uniform.
 
+<a id="output-contract"></a>
+
 ## Findings-report contract
 
-Every action skill emits a single JSON document that conforms to this schema:
+An action skill with `outputs: [findings-report]` emits a single JSON document that conforms to this schema:
 
 ```json
 {
@@ -300,96 +297,27 @@ An action skill with `outputs: [development-guidance-report]` emits one JSON doc
 }
 ```
 
-The skill is read-only with respect to the target repository. `completed` means every selected article was opened and converted into faithful implementation constraints. `no-knowledge` means no applicable article survived filtering; `knowledge` is empty. `partial` means candidate evaluation stopped early, with the gap named in `outcome-reason` and `unresolved`.
+The skill is read-only with respect to the target repository: no edits, generated files, staging, commits, or publication. Keep index, report, and scratch artifacts outside that repository. The report is strict JSON with no surrounding commentary. The caller supplies an existing plan and repository; consumer-specific input normalization and workflow state are outside this contract.
 
-`knowledge[].constraints` summarizes only normative `## Best Practice` and `## Anti Pattern` content from the referenced article. It must not introduce a Business Central fact absent from that article. `sample-paths` contains only sibling samples that exist and were opened. Every path is subject to the reference-integrity gate.
+### Guidance outcome semantics
 
-`validation-considerations` states evidence the implementation workflow should obtain; it does not claim that a command or test has run. `unresolved` records missing repository context or plan decisions that prevent a reliable constraint. Unknown applicability dimensions must appear in both `context.unknown` and a relevant unresolved entry.
+- `completed` — evaluation finished, at least one article was selected, every selected article was opened and faithfully converted into constraints, and no materially unresolved conditional guidance remains.
+- `not-applicable` — the required existing plan or readable repository is absent, or the task is outside the skill's applicability. No constraints are claimed.
+- `no-knowledge` — evaluation finished and there are **no additional applicable BCQuality constraints** for this plan. `knowledge` is empty. This is not a statement that the work is unsafe or unimplementable; the consuming workflow can proceed under its ordinary gates. Do not add generic or filler articles to avoid this outcome.
+- `partial` — evaluation is incomplete or conditional guidance remains materially unresolved. Name each gap in `outcome-reason` and `unresolved`; do not silently treat an unknown dimension as a match.
+- `failed` — retrieval, reference integrity, or another error prevents a reliable report. Set `outcome-reason`; consumers must not treat the result as reliable constraints or as `no-knowledge`.
 
-## Implementation-report contract
+`outcome-reason` is required for `partial` and `failed`, optional otherwise. These outcomes describe enrichment only, not permission to implement or deliver. The consumer owns handling of partial, failed, and unresolved guidance, including escalation, clarification, and re-enrichment; BCQuality does not impose a universal implementation gate.
 
-An action skill with `outputs: [implementation-report]` emits one JSON document:
+### Guidance field semantics
 
-```json
-{
-  "skill": { "id": "string", "version": 1 },
-  "outcome": "completed | not-applicable | no-knowledge | partial | failed",
-  "outcome-reason": "string",
-  "summary": {
-    "request": "string",
-    "files-created": 0,
-    "files-modified": 0,
-    "files-deleted": 0
-  },
-  "plan": {
-    "kind": "feature | bug | refactor | upgrade | maintenance",
-    "assumptions": ["string"],
-    "decisions": ["string"],
-    "objects": ["string"]
-  },
-  "knowledge": [
-    { "path": "string", "sha": "string", "used-for": "string" }
-  ],
-  "changes": [
-    {
-      "path": "string",
-      "action": "created | modified | deleted",
-      "purpose": "string"
-    }
-  ],
-  "validation": [
-    {
-      "id": "string",
-      "command": "string",
-      "status": "passed | failed | not-run",
-      "details": "string"
-    }
-  ],
-  "review": { "...full findings-report from the post-implementation review..." : null },
-  "review-rounds": [
-    {
-      "round": 1,
-      "outcome": "clean | fixing | stalled | limit-reached",
-      "gating-finding-ids": ["string"]
-    }
-  ],
-  "suppressed": [
-    {
-      "reference": { "path": "string", "sha": "string" },
-      "reason": "layer-precedence | configuration"
-    }
-  ],
-  "remaining": ["string"]
-}
-```
+`summary.request` preserves the planned intent and `kind` classifies it without replacing the plan. `candidates` and `selected` are non-negative integer counts: selected equals the number of unique `knowledge` entries and cannot exceed candidates. Counts are retrieval diagnostics, not capability or authoring-quality scores.
 
-### Implementation outcome semantics
+`knowledge[].constraints` is a non-empty list summarizing only normative `## Best Practice` and `## Anti Pattern` content from the referenced article. It must not introduce a Business Central fact absent from that article. `used-for` names the concrete plan decision. `sample-paths` contains only sibling samples that exist and were opened. All paths use forward slashes, are repository-relative, and must resolve inside the recorded BCQuality checkout; absolute paths, traversal, and links escaping that checkout are invalid. Every reference is subject to the reference-integrity gate.
 
-- `completed` — the requested change is persisted in the repository, required validation passed, and the post-implementation review has no unresolved `blocker` or `major` finding.
-- `not-applicable` — the request is not an implementation task accepted by the skill, or the supplied repository does not contain the required technology.
-- `no-knowledge` — no applicable BCQuality knowledge survived filtering and the skill cannot safely implement the Business Central-specific request. No request changes are made.
-- `partial` — useful changes were persisted, but part of the requested scope, validation, or post-implementation review could not be completed. `outcome-reason` and `remaining` identify the unfinished work.
-- `failed` — the skill could not produce a reliable implementation. `outcome-reason` is required. Any working-tree changes remain visible and MUST still be listed in `changes`.
+`validation-considerations` states evidence the implementation workflow should obtain; it does not claim that a command or test has run. `suppressed` has the same shape and semantics as in a findings-report. `unresolved` records missing repository context or plan decisions that prevent a reliable constraint. Unknown applicability dimensions must appear in both `context.unknown` and a relevant unresolved entry, explaining whether they materially affect a candidate. An unknown dimension is not itself a failure or proof that relevant knowledge exists.
 
-### Implementation field semantics
-
-**`summary.request`** is a concise statement of the implemented change. File counts describe only changes made by this skill; pre-existing user changes are excluded.
-
-**`plan`** records the implementation decisions needed to understand the result. `kind` is the classified development mode: `feature`, `bug`, `refactor`, `upgrade`, or `maintenance`. `assumptions` contains only assumptions actually made; `decisions` captures consequential design choices; `objects` names the Business Central objects or other artifacts created or changed.
-
-**`knowledge`** lists every knowledge file whose normative guidance materially shaped the implementation. `path` and optional `sha` follow the same reference format as a findings-report. `used-for` briefly names the design or implementation decision. The reference-integrity gate applies: every path must exist in the live checkout, be copied verbatim from discovery, and have been opened in full. Applicability alone is not enough to list an article.
-
-**`changes`** is an exhaustive list of files created, modified, or deleted by the skill. Paths are repository-relative and use forward slashes. Do not include unrelated pre-existing changes.
-
-**`validation`** records commands actually run. `passed` and `failed` require a real command result; unavailable tooling or an intentionally skipped check is `not-run` with `details`. A skill MUST NOT manufacture a successful check or replace a failed command with a success-shaped fallback.
-
-**`review`** is optional for generic implementation skills and required when a skill's instructions mandate post-implementation review. When present, it is the complete findings-report returned by that review skill, not a rewritten summary.
-
-**`review-rounds`** records every quality-skill invocation in order. `gating-finding-ids` contains the `blocker` and `major` IDs from that round. `clean` ends successfully; `fixing` means the skill applied justified fixes before another round; `stalled` means the same gating set persisted or no safe progress was possible; `limit-reached` means the configured round cap was exhausted. The array length MUST NOT exceed `quality-round-limit`. `stalled` or `limit-reached` requires implementation outcome `partial`, the final findings-report in `review`, and every unresolved gating item in `remaining`.
-
-**`suppressed`** has the same semantics as in a findings-report and records applicable knowledge excluded by layer precedence or configuration.
-
-**`remaining`** contains concrete unfinished work only. It is empty for `completed`.
+Reference SHAs, when present, identify the files read; they do not prove runtime pinning on their own. The consumer records and verifies the actual immutable BCQuality checkout used for both enrichment and final review, plus its filtering policy and run provenance outside the target repository. See [agent-consumption.md](../agent-consumption.md).
 
 ## Composition (super-skills)
 
@@ -465,4 +393,4 @@ Conforms to the DO output contract.
 
 ## How orchestrators consume output
 
-An orchestrator invokes an action skill with an input appropriate to the skill's declared `inputs` and uses the single output kind declared in frontmatter. It maps a `findings-report` to PR comments, build gates, or IDE diagnostics; a `development-guidance-report` to constraints for a downstream implementation workflow; and an `implementation-report` to a coding-session summary, changed-file view, validation status, and any remaining work. The orchestrator MUST NOT interpret fields beyond the three schemas above.
+An orchestrator invokes an action skill with an input appropriate to the skill's declared `inputs` and uses the single output kind declared in frontmatter. It maps a `findings-report` to PR comments, build gates, or IDE diagnostics, and a `development-guidance-report` to additional constraints for its existing implementation workflow. These are the two output schemas defined by this contract; the consumer retains ownership of implementation and delivery.

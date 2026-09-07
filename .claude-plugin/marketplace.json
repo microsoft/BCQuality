@@ -8,7 +8,7 @@
     {
       "name": "bcquality",
       "source": "./",
-      "description": "Business Central AL quality knowledge base and skills, packaged as an installable plugin. Exposes development and review adapters while preserving BCQuality's internal Entry and action-skill protocols.",
+      "description": "Business Central AL quality knowledge base and skills, packaged as an installable plugin. Exposes read-only plan enrichment and review adapters through BCQuality's Entry protocol.",
       "version": "0.3.0",
       "skills": [
         "./skills/"

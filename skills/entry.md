@@ -21,7 +21,6 @@ The agent invokes Entry with a **task context** supplied by the orchestrator:
 task-context:
   goal: string            # free-text description of what needs doing
   inputs-available:       # values the orchestrator has ready to pass to a chosen skill
-    - development-request
     - development-plan
     - repository
     - pr-diff
@@ -38,7 +37,7 @@ task-context:
 
 ## Preparation — knowledge index
 
-Before routing, ensure the knowledge index is current for the **live** clone. The dispatched review skills read `knowledge-index.json` (at the clone root) at their Source step instead of opening every knowledge file — see READ's [Retrieval workflow](read.md). When a consumer prunes its clone to policy *before* the agent runs, the index MUST be built over the clone as it exists now, so it lists exactly the articles that survived pruning and never an article the consumer denied:
+Before routing, ensure the knowledge index is current for the **live** clone. The dispatched skills read `knowledge-index.json` (by default at the clone root) at their Source step instead of opening every knowledge file — see READ's [Retrieval workflow](read.md). When a consumer prunes its clone to policy *before* the agent runs, the index MUST be built over the clone as it exists now, so it lists exactly the articles that survived pruning and never an article the consumer denied:
 
 - If `knowledge-index.json` is absent — or you cannot confirm it reflects the current knowledge tree — regenerate it by running, from the checkout root:
 
@@ -48,6 +47,7 @@ Before routing, ensure the knowledge index is current for the **live** clone. Th
 
   It defaults to indexing this checkout and writes `knowledge-index.json` at the root in well under a second. When in doubt, rebuild: a sub-second rebuild is always cheaper than a stale or over-listing index, which is a correctness risk.
 - The paths above assume the checkout root is the current directory. A caller that enters Entry from elsewhere — a plugin host, whose working directory is the user's own project — MUST resolve them against the BCQuality root it already knows instead. The generator resolves its own root, so invoking it by absolute path indexes and writes the right tree.
+- For read-only plan enrichment, generated artifacts MUST remain outside the target repository. When the target contains the BCQuality checkout, or that checkout is immutable, pass the generator's `-IndexPath` to an external runner-owned artifact location and supply that resolved index path to the dispatched skill. Do not regenerate inside the target or modify the immutable checkout. If generation is unavailable, use READ's path-based discovery; retrieval failure is not an empty corpus.
 - Pruning is the consumer's job, not Entry's, and not every consumer does it: an installation that ships the whole tree gets no deny guarantee from this step. There, `enabled-layers` narrows discovery only, and the unlisted layers' files remain on disk.
 - This is a side step. It MUST NOT change Entry's output — the dispatch record below is the only thing Entry emits, and build logs are never part of the dispatch JSON.
 
@@ -123,11 +123,11 @@ Emit a single JSON document conforming to the output contract below. Entry does 
 
 **`dispatch[]`** — each entry names one action skill to invoke.
 
-- `skill.path` — repo-relative, forward slashes. The agent fetches and executes the file directly from this path.
+- `skill.path` — repo-relative, forward slashes, copied from discovery. Resolve it inside the live BCQuality checkout; reject absolute paths, traversal, and links escaping that checkout. The agent reads the action skill at this exact path rather than constructing a plausible filename.
 - `skill.version` — copied from the dispatched skill's frontmatter so the orchestrator can detect drift between dispatch time and execution.
 - `rationale` — short human-readable string, for logs and traceability.
 - `inputs` — the intersection of `task-context.inputs-available` and the skill's declared `inputs`. The agent MUST pass exactly this subset when invoking the skill. Sending a strict intersection avoids accidental information leakage between skills.
-- `outputs` — the dispatched skill's complete, single-element `outputs` value copied from frontmatter. This lets an orchestrator distinguish read-only `findings-report` and `development-guidance-report` work from repository-changing `implementation-report` work before invoking the skill. An orchestrator MAY require an additional write confirmation for `implementation-report`; it MUST NOT infer side effects from the skill ID or title.
+- `outputs` — the dispatched skill's complete, single-element `outputs` value copied from frontmatter. This lets an orchestrator distinguish `findings-report` from read-only `development-guidance-report` before invocation. Check the declared contract and actual skill; output metadata is not a sandbox or proof of side effects. Unknown output kinds must not be silently treated as a supported report.
 
 Ordering of `dispatch[]` is not significant.
 
@@ -180,7 +180,7 @@ Populated example (PR review on a repo where only `al-performance-review` is ena
 
 1. Invoke Entry with the orchestrator-supplied task context.
 2. Receive the dispatch record.
-3. For each entry in `dispatch[]`, inspect `outputs` before invocation, read the referenced action skill, execute its Source → Relevance → Worklist → Action steps per DO, and produce the declared report kind. Verify the file's frontmatter output still equals the dispatch value; return `failed` on drift rather than executing an unexpectedly mutating skill.
+3. For each entry in `dispatch[]`, inspect `outputs` before invocation, read the referenced action skill, execute its Source → Relevance → Worklist → Action steps per DO, and produce the declared report kind. Verify the file's frontmatter output still equals the dispatch value; return `failed` on drift rather than executing a different contract.
 4. Return the action-skill reports to the orchestrator. When Entry's `outcome` is `no-match` or `failed`, return the dispatch record itself so the orchestrator can log the reason.
 
 READ and DO are the contracts that govern what the dispatched skills do. An agent that has not yet read READ and DO reads them when it executes the first dispatched skill — they are not prerequisites for invoking Entry.

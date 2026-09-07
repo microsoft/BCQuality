@@ -1,6 +1,6 @@
 {
   "name": "bcquality",
-  "description": "Quality skills and knowledge for Business Central development. Exposes AL development and code-review adapters backed by BCQuality's Entry protocol.",
+  "description": "Quality skills and knowledge for Business Central. Exposes read-only AL plan enrichment and code-review adapters backed by BCQuality's Entry protocol.",
   "version": "0.3.0",
   "author": {
     "name": "microsoft/BCQuality",
@@ -13,7 +13,7 @@
     "al",
     "business-central",
     "code-review",
-    "development",
+    "plan-guidance",
     "quality"
   ],
   "skills": [

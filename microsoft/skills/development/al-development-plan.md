@@ -18,9 +18,11 @@ Selects the BCQuality knowledge that should constrain an existing AL development
 
 Both a readable `repository` and a non-empty `development-plan` are required. The plan may be structured data or text, but it must identify the intended change. Return `not-applicable` without changing files when either input is absent or the repository is not an AL project.
 
+The caller supplies its existing plan, not a request to generate one. Consumer-specific formats must be normalized by the consumer before invocation. This skill does not interpret issue records, continuation markers, batons, retries, or workflow state. A serialized document containing plan metadata and a markdown body is acceptable when it states the intended change, affected surfaces, proposed approach, test strategy, and acceptance criteria. Missing details remain unknown; do not invent them.
+
 ## Source
 
-Read the BCQuality knowledge index once. Use entries from every enabled layer and domain. The index supplies candidate paths, applicability dimensions, keywords, titles, and descriptions; it never substitutes for opening selected articles in full.
+Read the BCQuality knowledge index once, using the external path supplied by Entry when present. If no index is available, use READ's path-based discovery across enabled layers; inability to read the corpus is `failed`, not `no-knowledge`. Use entries from every enabled layer and domain. The index supplies candidate paths, applicability dimensions, keywords, titles, and descriptions; it never substitutes for opening selected articles in full.
 
 Inspect the target repository read-only for `app.json`, affected files and symbols named by the plan, relevant tests, permission sets, dependencies, target/runtime versions, countries, application areas, and repository conventions. Do not create scratch or generated files inside the target repository.
 
@@ -37,8 +39,7 @@ When a dimension cannot be resolved, retain conditionally applicable candidates 
 
 ## Worklist
 
-1. Normalize the plan into: request summary, development kind, assumptions, root cause or design intent, affected files and symbols, proposed changes, test strategy, and acceptance criteria. When the plan has no normalized kind, apply the same categories as `al-development`: new or expanded behavior is `feature`, a defect correction is `bug`, behavior-preserving restructuring is `refactor`, migration is `upgrade`, and other bounded work is `maintenance`. A repository-specific additive event or extensibility request maps to `feature`; retain its original work-item type in the request summary. Do not redesign the repository-specific workflow.
-   - For a `BCFIX-HANDOFF` v1 payload, map `rootCause` to root cause, `harnessMap` to test context, `filesCommitted` to affected files, `lastTestResult` to existing test evidence, `deadEnds` to rejected approaches, and `nextStep` to the immediate proposed change. Preserve `issue`, `phase`, `status`, `baton`, and `iterationsUsed` as workflow context only; they do not create Business Central constraints. A handoff with a non-empty root cause is `bug` unless the surrounding plan identifies an additive Event Request, which maps to `feature`.
+1. Read the supplied plan for its request summary, development kind, assumptions, root cause or design intent, affected files and symbols, proposed changes, test strategy, and acceptance criteria. Preserve its intent; do not generate a replacement plan. If kind is not explicit, classify the stated intent: new or expanded behavior is `feature`, a defect correction is `bug`, behavior-preserving restructuring is `refactor`, migration is `upgrade`, and other bounded work is `maintenance`. Do not redesign the consumer's workflow.
 2. Build retrieval vocabulary from the plan and confirmed repository symbols. Give exact object types, properties, methods, analyzers, errors, and affected domains more weight than broad business nouns.
 3. Search the index in separate passes:
    - data ownership, keys, setup, numbering, validation, transactions, and upgrade;
@@ -66,4 +67,6 @@ Do not change the target repository. Before emitting, verify every knowledge and
 
 ## Output
 
-Return one `development-guidance-report` conforming to DO. `completed` requires that every selected article was opened and faithfully converted into constraints. `no-knowledge` is valid when the plan is applicable but BCQuality contains no relevant article. `partial` names every unevaluated candidate or unresolved applicability gap.
+Return one `development-guidance-report` conforming to DO. `completed` requires that every selected article was opened and faithfully converted into constraints, with no material unresolved applicability. `no-knowledge` means there are no additional applicable BCQuality constraints for this plan; emit empty `knowledge`. It does not mean the work is unsafe or unimplementable, and the consumer can proceed under its ordinary gates. Never add generic or filler guidance to avoid this outcome.
+
+Return `partial` for incomplete evaluation or materially unresolved conditional guidance, naming every gap. Failed retrieval or reference-integrity checks are `failed`, never `no-knowledge`. Consumers own handling of partial, failed, and unresolved results, including clarification and re-enrichment; this read-only interface does not define a universal implementation gate.

@@ -31,7 +31,7 @@ READ and DO are read on demand — typically by the first action skill the agent
 | Path | Role |
 |---|---|
 | [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Exposes BCQuality through the standard `SKILL.md` format when this repository is installed as a plugin. |
-| [`al-development/SKILL.md`](al-development/SKILL.md) | Exposes knowledge-backed AL development through the standard `SKILL.md` format. |
+| [`al-development-plan/SKILL.md`](al-development-plan/SKILL.md) | Enriches an existing AL plan read-only through the standard `SKILL.md` format; does not generate a plan or implement code. |
 
 Each adapter is deliberately thin. It translates the caller's request into an
 Entry task context, then follows Entry's dispatch without owning routing,
@@ -42,15 +42,13 @@ by Entry, and should not accumulate behavior already defined by `entry.md`,
 This gives the two skill formats distinct roles:
 
 - `skills/al-code-review/SKILL.md` and
-  `skills/al-development/SKILL.md` are the public host integration
+  `skills/al-development-plan/SKILL.md` are the public host integration
   surfaces for a standalone plugin installation.
 - `microsoft/skills/review/al-code-review.md` is BCQuality's internal
   Microsoft-layer super-skill for coordinating a broad AL review.
-- `microsoft/skills/development/al-development.md` is the internal
-  Microsoft-layer implementation skill for all supported development modes.
 - `microsoft/skills/development/al-development-plan.md` is the read-only
-  planning interface for repository-specific orchestrators that retain
-  implementation ownership.
+  knowledge-enrichment interface for existing plans. Consumers own format
+  normalization, planning, implementation, and delivery.
 
 Each host adapter deliberately shares its name with the internal action skill
 for the same operation. Their locations distinguish the host integration from

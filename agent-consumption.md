@@ -14,7 +14,7 @@ For the high-level framing and repo structure, start with the [README](README.md
 
 When BCQuality is installed as a standalone plugin, it additionally exposes
 `skills/al-code-review/SKILL.md` and
-`skills/al-development/SKILL.md`. These are host-format adapters, not
+`skills/al-development-plan/SKILL.md`. These are host-format adapters, not
 additional action skills: each creates the task context and enters the same
 flow at Entry.
 
@@ -27,7 +27,7 @@ flowchart LR
     E -->|3 dispatch record| A
     A -->|4 invoke dispatched skill| S[Action skill<br/>e.g. al-code-review]
     S -->|5 execute| P[Source → Relevance<br/>→ Worklist → Action<br/>reading READ · DO on demand]
-    P -->|6 emit| R[Findings report<br/>or implementation report]
+    P -->|6 emit| R[Findings report<br/>or read-only guidance report]
     R -->|7 integrate| O
 ```
 
@@ -40,14 +40,14 @@ The agent reads `/skills/entry.md` and runs it against the task context. Entry a
 For a standalone plugin installation, the host activates the matching adapter
 first. The adapter preserves the caller's actual goal, constructs the task
 context, and invokes Entry. It does not select the internal review or
-development action skill itself or duplicate Entry's preparation, routing, and
+plan-enrichment action skill itself or duplicate Entry's preparation, routing, and
 failure semantics.
 
 ### 3. Agent consumes the dispatch record
 The dispatch record names one or more action skills, the subset of inputs each
-should receive, and each skill's output kind. The output kind identifies
-read-only review or planning work versus repository-changing implementation
-before invocation. If the outcome is `no-match` or `failed`, the agent returns
+should receive, and each skill's output kind. The output kind distinguishes
+findings from read-only plan guidance before invocation; it is not proof of
+runtime side effects. If the outcome is `no-match` or `failed`, the agent returns
 the record to the orchestrator unchanged.
 
 ### 4. Agent invokes each dispatched action skill
@@ -81,40 +81,78 @@ The output contracts are defined in the DO meta-skill:
 
 - A **findings report** carries review findings, domain labels, references, confidence, and suppressions.
 - A **development guidance report** carries read-only knowledge constraints and validation considerations for an existing plan.
-- An **implementation report** carries the development plan, classified mode, knowledge applied, changed files, validation results, final review, and remaining work.
 
 The orchestrator parses this **without skill-specific logic**. This is the point of the contract: orchestrators and action skills evolve independently.
 
-For development, the action happens before the report: the skill
-first invokes the read-only planning skill to select applicable knowledge, then
-changes the target repository, runs its native validation, and invokes the
-configured review quality-skill over the resulting diff. A specialized
-repository orchestrator may invoke only the planning skill and feed its
-guidance report into its own implementation phases. The implementation report
-is a machine-readable record of persisted work, not a code proposal for the
-orchestrator to apply later.
+For plan enrichment, the skill reads the existing plan and target repository,
+selects applicable knowledge, and returns constraints without changing the
+target. It does not generate a replacement plan, run tests, implement code, or
+drive a review/fix loop. Implementation stays in the consuming workflow.
 
 ### 7. Orchestrator integrates
-The orchestrator turns findings into PR comments, build gates, or IDE diagnostics. For implementation it presents the changed files and validation state, while the agent has already persisted the requested change in the target repository.
+The orchestrator turns findings into PR comments, build gates, or IDE diagnostics. It can feed read-only guidance into its own implementation phases, preserving all existing approvals and delivery gates.
 
 ## Repository-specific development orchestrators
 
-A repository-specific workflow can keep ownership of implementation and consume
-BCQuality only for planning and review:
+A repository-specific workflow can consume this read-only foundation before
+authoring while retaining its independent final review. This is the intended
+integration boundary, not a shipped consumer integration:
 
-1. Produce its normal development plan after repository investigation.
-2. Invoke Entry with `inputs-available: [development-plan, repository]` plus
-   the resolved applicability dimensions.
-3. Execute the dispatched `al-development-plan` skill and preserve its
-   `development-guidance-report`.
-4. Pass the selected article references, constraints, samples, and validation
-   considerations into its own test, implementation, and critique phases.
-5. Run its existing BCQuality-backed review gate over the completed diff.
+1. Investigate and produce the consumer's normal initial plan. Normalize any
+   consumer-specific format outside BCQuality. A full serialized plan document
+   containing metadata plus a markdown body (root cause or design intent,
+   proposed changes, affected files, test strategy, acceptance criteria) is a
+   valid boundary. A continuation/checkpoint payload is not a substitute for
+   initial-plan coverage; workflow identifiers and state stay with the consumer.
+2. Resolve and record an immutable BCQuality checkout and filtering policy.
+   Invoke Entry with a read-only enrichment goal, the existing
+   `development-plan`, `repository`, and established applicability dimensions.
+   Keep index, guidance, and runner artifacts outside the target repository.
+3. Execute the dispatched `al-development-plan` skill. Persist the unchanged
+   report and provenance **after** any consumer state initialization or cleanup
+   that could erase them. BCQuality does not own the state directory or lifecycle.
+4. Inject relevant constraints and validation considerations into the existing
+   Baseline, Implement, propagation (such as MiApp), and Critique phases, or
+   equivalents. Re-enrich on material plan or applicability changes; preserve
+   the relationship between plan version, guidance, and implementation attempt.
+5. Run an independent final BCQuality review against the completed diff using
+   the **same recorded immutable checkout** used for enrichment. Review the
+   actual changes, not the guidance report as proof of correctness, then apply
+   the consumer's ordinary delivery gates.
 
-This is the integration model for specialized bug-fix or release workflows.
-They keep environment provisioning, retries, state, commits, propagation, and
-pull-request delivery; BCQuality supplies shared product knowledge before and
-after the code change.
+The consumer owns analysis, normalization, persistence, per-phase injection,
+approvals, TDD and runtime execution, propagation, retries, commits, and PR
+delivery. BCQuality supplies additional referenced product knowledge, not a
+replacement orchestrator.
+
+### Outcomes are additive, not a universal coding gate
+
+`no-knowledge` with empty `knowledge` means no additional applicable BCQuality
+constraints. The consumer may proceed under its ordinary gates. It must not be
+conflated with failed retrieval/reference integrity (`failed`), incomplete
+evaluation or materially unresolved conditional guidance (`partial`), or absent
+required inputs (`not-applicable`). Consumers own the policy for handling those
+outcomes and recorded unknowns: seek missing context, re-enrich, escalate, or
+apply their existing risk controls without relabeling the report as successful.
+Do not fill gaps with generic articles simply to unlock implementation.
+
+### Pinning and pilot evidence
+
+A configured tag or ref alone does not establish runtime pinning. Record the
+resolved commit and actual checkout/content identity used at invocation, along
+with enabled layers, pruning policy, index identity, plan version, and runner
+provenance. Verify that identity at both enrichment and final review; fetching
+default HEAD into an explicitly supplied checkout can bypass a configured ref.
+Use an isolated checkout that cannot drift during the run.
+
+Consumer rollout and an external pilot remain follow-up work. A pilot must
+compare a pinned independent baseline run of the existing workflow without
+enrichment against a matched enriched run, keeping starting code, task, model,
+tools, runtime, and gates controlled and recording the actual BCQuality
+checkout. Retain external logs, diffs, test/compile outcomes, and independent
+final reviews, including failures and unresolved results. Credential-free
+fixture preparation and scorer regressions do not demonstrate improved repair
+quality, compilation, runtime success, or production integration.
 
 ## Knowledge-backed and agent findings
 
