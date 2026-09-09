@@ -48,8 +48,6 @@ This gives the two skill formats distinct roles:
 The host adapter and internal coordinator deliberately share the
 `al-code-review` name because they represent the same user-facing operation in
 their respective formats. Their locations distinguish their roles. The
-adapter remains distinct from BC-ALAgents' separately installed `al-review`
-skill, avoiding a collision in hosts that use one shared skill inventory. The
 reference from the adapter to Entry, and from a dispatched super-skill to its
 leaf skills, is intentional progressive disclosure. It avoids registering
 every internal BCQuality protocol file as an ambient host skill while allowing

@@ -22,7 +22,8 @@ A file that *prevents* a false positive — documenting why a pattern is legitim
 
 ## What's in this repo
 
-BCQuality contains **knowledge** and **skills**. It does not contain agents. Agents that consume BCQuality ship with [AL-Go](https://github.com/microsoft/AL-Go) and other orchestrators.
+BCQuality contains **knowledge** and **skills**. It does not contain agents.
+Agents that consume BCQuality are supplied by the host or orchestrator.
 
 ### Knowledge files
 
@@ -60,13 +61,17 @@ Skills define how agents consume knowledge. They come in three flavors:
 
 ### Agent bootstrapping
 
-An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s) to invoke. The agent then invokes the dispatched skills, reading READ and DO on demand. No prior knowledge of BCQuality's structure is baked into the orchestrator — only the convention *"invoke `/skills/entry.md` first."*
+A host or orchestrator points the agent at BCQuality and provides a task
+context. The agent's first call is `/skills/entry.md`, which returns a dispatch
+record naming the action skill(s) to invoke. The agent then invokes the
+dispatched skills, reading READ and DO on demand. No prior knowledge of
+BCQuality's structure is required beyond the convention *"invoke
+`/skills/entry.md` first."*
 
 ### Standalone plugin installation
 
-BCQuality can also be installed directly as a plugin to review a complete AL
-app folder, a change set, or an individual file. The plugin registers one
-host-native skill,
+BCQuality can also be installed directly as a plugin so supported hosts can
+discover and invoke its host-native skills. The plugin currently registers
 [`al-code-review`](skills/al-code-review/SKILL.md), which adapts the caller's
 request to the same Entry protocol used by orchestrators.
 
@@ -76,7 +81,11 @@ For GitHub Copilot CLI:
 copilot plugin install microsoft/BCQuality
 ```
 
-#### Review a complete app folder
+#### Example: Review a complete app folder
+
+This example demonstrates the walk-up pattern with the currently exposed
+review skill. Future host-native skills follow the same discovery and
+invocation pattern; they do not each require a dedicated README walkthrough.
 
 1. Open the Business Central app folder in GitHub Copilot and start a fresh
    session after installing the plugin.
@@ -93,12 +102,6 @@ a newer BCQuality release later, run:
 ```shell
 copilot plugin update bcquality
 ```
-
-Plugin version `0.2.0` renamed the former `bcquality-al-review` skill to
-`al-code-review`; explicit invocations and allowlists using the old skill name
-must be updated. The name remains distinct from BC-ALAgents' public
-`al-review` skill because current hosts may load plugin skill names into one
-shared inventory.
 
 The adapter is intentionally not a second review implementation:
 

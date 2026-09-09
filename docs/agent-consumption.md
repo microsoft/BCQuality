@@ -1,13 +1,16 @@
 # How agents consume BCQuality
 
-BCQuality is content — knowledge files and skills. It is consumed by agents that live elsewhere (AL-Go, a VS Code extension, a GitHub Agent invocation, etc.). This document explains the end-to-end flow, so that skill authors, orchestrator maintainers, and contributors share one mental model.
+BCQuality is content — knowledge files and skills. It is consumed by agents
+supplied by a host or orchestrator. This document explains the end-to-end flow
+so that skill authors, orchestrator maintainers, and contributors share one
+mental model.
 
 For the high-level framing and repo structure, start with the
 [README](../README.md). This document is the operational view.
 
 ## The actors
 
-- **Orchestrator** — the tool that triggers work (e.g. AL-Go on a pull request, or a VS Code extension on save). Lives *outside* BCQuality. Knows *when* to run something, not *what* to run.
+- **Orchestrator** — the tool that triggers work. Lives *outside* BCQuality. Knows *when* to run something, not *what* to run.
 - **Agent** — an LLM-driven process spawned by the orchestrator. The agent has no built-in knowledge of BC or of BCQuality's conventions. It knows how to read instructions and call tools.
 - **BCQuality repo** — two kinds of content:
   - **Global skills** in `/skills/` — the `entry.md` entry-point skill plus the READ · DO · WRITE contracts that govern the rest of the repo.
@@ -21,7 +24,7 @@ action skill: it creates the task context and enters the same flow at Entry.
 
 ```mermaid
 flowchart LR
-    O[Orchestrator<br/>AL-Go] -->|1 trigger + task context| A[Agent]
+    O[Host or orchestrator] -->|1 trigger + task context| A[Agent]
     A -->|2 invoke entry.md| E[Entry<br/>routing skill]
     E -->|3 dispatch record| A
     A -->|4 invoke dispatched skill| S[Action skill<br/>e.g. al-code-review]

@@ -97,7 +97,6 @@ A compatible runner:
 - preserves knowledge paths verbatim and verifies references before publishing;
 - records the BCQuality commit or release used for the run.
 
-BC-ALAgents, AL-Go, a Copilot custom agent, or a small host-native plugin can
-all implement this runner contract. They remain optional consumers:
-BCQuality's knowledge and skills stay independent of their orchestration
-choices.
+A CI integration, custom agent, or small host-native plugin can implement this
+runner contract. These remain optional consumers: BCQuality's knowledge and
+skills stay independent of their orchestration choices.
