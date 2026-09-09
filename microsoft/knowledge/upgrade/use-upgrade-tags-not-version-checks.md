@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: upgrade
-keywords: [upgrade-tag, version-check, dataversion, has-upgrade-tag, set-upgrade-tag, control-flow]
+keywords: [upgrade-tag, version-check, dataversion, has-upgrade-tag, set-upgrade-tag, control-flow, dynamic-check, runtime-function, always-log-table, non-persisted-state]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -12,6 +12,10 @@ application-area: [all]
 ## Description
 
 Each piece of upgrade logic must run exactly once per company (or database) across the lifetime of an extension. The platform mechanism for that is the `Upgrade Tag` codeunit: a procedure asks `HasUpgradeTag(MyTag())` at entry, performs its work, then calls `SetUpgradeTag(MyTag())` to record completion. Subsequent upgrades on the same tenant see the tag and skip the work. Hand-rolled `if MyApp.DataVersion().Major < N then ...` chains are the wrong tool: they are version-coupled, accumulate stale branches over time, and break when a tenant skips a version.
+
+## Scope
+
+Upgrade tags guard one-time work that mutates persisted, per-company state (data, setup records, or a stored schema baseline) so it runs exactly once. They do not apply to a hard-coded list or condition inside an ordinary runtime function that is evaluated fresh on every call and never persists its result — for example, a function that decides live whether a given table is in the "always log changes" set for the change-log feature. Adding or removing an entry from such a list is a normal behavior change: it only affects future evaluations of the function, there is no stored per-company flag or record whose absence would leave old data stranded, so no upgrade tag, upgrade codeunit, or migration step is needed.
 
 ## Best Practice
 
