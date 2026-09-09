@@ -76,6 +76,24 @@ For GitHub Copilot CLI:
 copilot plugin install microsoft/BCQuality
 ```
 
+#### Review a complete app folder
+
+1. Open the Business Central app folder in GitHub Copilot and start a fresh
+   session after installing the plugin.
+2. Ask:
+
+   > Use the installed `al-code-review` skill to review the complete Business
+   > Central app in this folder. Execute every dispatched review domain and
+   > return the complete BCQuality findings report.
+
+That is the complete walk-up flow. The folder does not need to be a Git
+repository; BCQuality reviews `app.json` and the AL source below it. To pick up
+a newer BCQuality release later, run:
+
+```shell
+copilot plugin update bcquality
+```
+
 Plugin version `0.2.0` renamed the former `bcquality-al-review` skill to
 `al-code-review`; explicit invocations and allowlists using the old skill name
 must be updated. The name remains distinct from BC-ALAgents' public
