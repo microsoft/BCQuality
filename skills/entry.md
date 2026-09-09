@@ -23,6 +23,7 @@ task-context:
   inputs-available:       # values the orchestrator has ready to pass to a chosen skill
     - pr-diff
     - file-path
+    - folder-path
   technologies: [al]
   bc-version: 28
   countries: [w1]

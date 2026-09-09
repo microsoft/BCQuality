@@ -4,7 +4,7 @@ id: al-appsource-review
 version: 1
 title: AL AppSource review
 description: Performs an AL AppSource review against source and app metadata guidance from BCQuality.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al]
@@ -16,7 +16,7 @@ application-area: [all]
 
 Reviews AL source and app metadata changes against the `appsource` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-An orchestrator invokes this skill with either a `pr-diff` (the standard PR-review entry point) or a `file-path` (single-file review). AppSource findings are narrow by design — they apply when the diff touches AppSourceCop configuration, AL object or extension-member names, or AppSource-facing `app.json` metadata. The skill returns `not-applicable` when none of those apply.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. AppSource findings are narrow by design — they apply when the review scope contains AppSourceCop configuration, AL object or extension-member names, or AppSource-facing `app.json` metadata. The skill returns `not-applicable` when none of those apply.
 
 ## Source
 

@@ -4,7 +4,7 @@ id: al-ui-review
 version: 1
 title: AL UI and accessibility review
 description: Reviews AL page and control add-in UI files against UI text, caption, tooltip, and accessibility guidance from BCQuality.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al, javascript]
@@ -18,7 +18,7 @@ Reviews AL page source and control add-in UI files against the `ui` knowledge do
 
 UI findings apply to page files — files that declare `PageType = ...`, including `*.Page.al` under the standard file-naming convention — and to JavaScript/CSS/HTML files that implement Business Central control add-ins, including their client-service communication. The skill returns `not-applicable` when the diff contains no page or control add-in changes.
 
-An orchestrator invokes this skill with either a `pr-diff` or a `file-path`. The skill produces a single JSON document conforming to the DO output contract.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. The skill produces a single JSON document conforming to the DO output contract.
 
 ## Source
 

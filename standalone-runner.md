@@ -23,6 +23,24 @@ A runner that reads BCQuality from a checkout should pin a commit or release
 and upgrade it deliberately. Do not copy knowledge files or action-skill prose
 into the runner; doing so creates a second, drifting quality policy.
 
+## Review a complete app folder
+
+For a committed app, generated fixture, or source tree that has no meaningful
+diff, supply the app's root directory as `folder-path`. The review scope is
+every relevant file below that directory, including `app.json` and AL source.
+The folder does not need to be a Git repository.
+
+With the standalone plugin installed, start a fresh Copilot session in the app
+folder and ask:
+
+> Use the installed `al-code-review` skill to review the complete Business
+> Central app in this folder. Execute every dispatched review domain and return
+> the complete BCQuality findings report.
+
+The adapter maps this request to `folder-path`; Entry routes it to the broad
+review super-skill. Because a folder is a current-state snapshot, the review
+must not invent a previous app version when evaluating comparison-only rules.
+
 ## Minimal runner flow
 
 1. Give the agent the review input and a task context containing the user's

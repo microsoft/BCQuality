@@ -64,7 +64,8 @@ An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides
 
 ### Standalone plugin installation
 
-BCQuality can also be installed directly as a plugin. The plugin registers one
+BCQuality can also be installed directly as a plugin to review a complete AL
+app folder, a change set, or an individual file. The plugin registers one
 host-native skill,
 [`al-code-review`](skills/al-code-review/SKILL.md), which adapts the caller's
 request to the same Entry protocol used by orchestrators.

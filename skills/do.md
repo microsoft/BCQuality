@@ -56,7 +56,24 @@ application-area: [all]
 
 `bc-version`, `technologies`, `countries`, `application-area` are optional filters that let an orchestrator pre-select applicable skills for a task. They follow the same semantics as in READ.
 
-`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`. `outputs` is always a single-element list naming the output kind; today only `findings-report` is defined.
+`inputs` is a list of abstract input types the skill **accepts**. Standard values:
+`pr-diff`, `object-list`, `file-path`, `folder-path`, `repository`, and
+`telemetry-query`. Semantics are any-of: the orchestrator supplies whichever
+listed input types it has, and the skill is invoked with a non-empty subset of
+its declared `inputs`. A skill that cannot proceed with the supplied subset
+MUST return `outcome: "not-applicable"`. `outputs` is always a single-element
+list naming the output kind; today only `findings-report` is defined.
+
+`file-path` is one file. `folder-path` is a directory whose recursively
+contained files form the complete current-state input, such as a Business
+Central app folder containing `app.json` and AL source. The input value is the
+actual path, not merely the name of the input type. The agent MUST enumerate
+the folder rather than reducing it to one representative file.
+
+Review skills use terms such as "diff", "changed files", and "changed code" as
+shorthand for the supplied review scope. For `folder-path`, every relevant file
+under the folder is in scope. A folder supplies no historical baseline:
+comparison-only rules MUST NOT infer a prior state that was not provided.
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
