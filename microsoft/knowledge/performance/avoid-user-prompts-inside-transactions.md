@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-A `Confirm`, `StrMenu`, modal page, or other user prompt issued from inside a write transaction stalls the transaction — and therefore every lock it holds — until the user responds. Per the upstream guidance, "Avoid user interactions (Confirm, StrMenu) inside transactions — they hold locks while waiting for user input." The wait is bounded only by the user; meanwhile other sessions block on whatever this transaction has acquired.
+A `Confirm`, `StrMenu`, or other user prompt issued from inside a write transaction stalls the transaction — and therefore every lock it holds — until the user responds. Per the upstream guidance, "Avoid user interactions (Confirm, StrMenu) inside transactions — they hold locks while waiting for user input." The wait is bounded only by the user; meanwhile other sessions block on whatever this transaction has acquired.
 
 ## Best Practice
 
