@@ -1,6 +1,6 @@
 # Build a lightweight standalone review runner
 
-BCQuality contains review knowledge, routing, execution instructions, and
+BCQuality provides review knowledge, routing, execution instructions, and
 structured output contracts. It intentionally does not choose models, schedule
 agents, retry failures, or collect usage telemetry. A standalone runner can add
 those host-specific capabilities without copying Business Central rules out of

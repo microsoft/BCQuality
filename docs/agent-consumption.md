@@ -2,7 +2,8 @@
 
 BCQuality is content — knowledge files and skills. It is consumed by agents that live elsewhere (AL-Go, a VS Code extension, a GitHub Agent invocation, etc.). This document explains the end-to-end flow, so that skill authors, orchestrator maintainers, and contributors share one mental model.
 
-For the high-level framing and repo structure, start with the [README](README.md). This document is the operational view.
+For the high-level framing and repo structure, start with the
+[README](../README.md). This document is the operational view.
 
 ## The actors
 

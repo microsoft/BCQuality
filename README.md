@@ -129,8 +129,9 @@ lives at `microsoft/skills/review/al-code-review.md`.
 
 Partners that want model selection, parallel leaf execution, retries, or usage
 telemetry can add a thin runner outside BCQuality. See
-[Build a lightweight standalone review runner](standalone-runner.md) for the
-integration contract and a minimal implementation checklist.
+[Build a lightweight standalone review runner](docs/standalone-runner.md) for the
+integration contract and a minimal implementation checklist. Architecture and
+partner guides are collected in the [documentation index](docs/README.md).
 
 ## Knowledge file format
 
@@ -177,16 +178,17 @@ Action skills follow a four-step pattern:
 
 Every action skill produces output in a common format that orchestrators can consume without skill-specific parsing. The format is JSON and includes an `outcome` (so a clean run, a not-applicable skill, and a partial failure are all distinguishable), `findings` (what the skill observed), structured `references` back to the knowledge files that informed each finding, per-finding `confidence`, and a `suppressed` list recording any knowledge files overridden by layer precedence. This contract is defined in the Action Skill meta-skill so that orchestrators and action skills remain independently evolvable.
 
-BCQuality is an **additive** knowledge layer: it augments the agent's review judgement, it does not replace it. Super-skills (such as `al-code-review`) run a self-review pass alongside their sub-skills and surface concerns the agent identified on its own, marked with `from-sub-skill: "agent"` and an empty `references: []` so consumers can render them distinctly from knowledge-backed findings. See [agent-consumption.md](agent-consumption.md) and [`skills/do.md`](skills/do.md) for the full contract.
+BCQuality is an **additive** knowledge layer: it augments the agent's review judgement, it does not replace it. Super-skills (such as `al-code-review`) run a self-review pass alongside their sub-skills and surface concerns the agent identified on its own, marked with `from-sub-skill: "agent"` and an empty `references: []` so consumers can render them distinctly from knowledge-backed findings. See [How agents consume BCQuality](docs/agent-consumption.md) and [`skills/do.md`](skills/do.md) for the full contract.
 
 The meta-skills in `/skills/` define this pattern. Every concrete action skill follows it.
 
-For the end-to-end flow — from orchestrator trigger through to how output reaches developers — see [agent-consumption.md](agent-consumption.md).
+For the end-to-end flow — from orchestrator trigger through to how output reaches developers — see [How agents consume BCQuality](docs/agent-consumption.md).
 
 ## Repository structure
 
 ```
 ├── /skills/              # Global: entry-point skill + meta-skill contracts (READ, DO, WRITE)
+├── /docs/                # Architecture and partner integration guides
 ├── /evaluation/          # Neutral good/bad review fixtures and scoring contract
 ├── /.github/             # Actions and workflows
 ├── /microsoft/           # Microsoft-endorsed layer

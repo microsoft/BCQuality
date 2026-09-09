@@ -57,4 +57,4 @@ each review domain to run in an isolated context.
 
 These contracts are stable. Changes require a PR approved by both maintainers.
 
-For the end-to-end flow — from orchestrator trigger through to findings integration — see [`../agent-consumption.md`](../agent-consumption.md). For the high-level project framing, see [`../README.md`](../README.md).
+For the end-to-end flow — from orchestrator trigger through to findings integration — see [How agents consume BCQuality](../docs/agent-consumption.md). For the high-level project framing, see [`../README.md`](../README.md).
