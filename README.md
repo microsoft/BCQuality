@@ -60,7 +60,7 @@ Skills define how agents consume knowledge. They come in three flavors:
 
 ### Agent bootstrapping
 
-An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s) to invoke. The agent then invokes each dispatched skill in turn, reading READ and DO on demand. No prior knowledge of BCQuality's structure is baked into the orchestrator — only the convention *"invoke `/skills/entry.md` first."*
+An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s) to invoke. The agent then invokes the dispatched skills, reading READ and DO on demand. No prior knowledge of BCQuality's structure is baked into the orchestrator — only the convention *"invoke `/skills/entry.md` first."*
 
 ### Standalone plugin installation
 
@@ -107,6 +107,11 @@ The host adapter and internal action skill intentionally share the
 formats. Their paths make the boundary explicit. The adapter lives under
 `skills/al-code-review/SKILL.md`; the internal Microsoft-layer coordinator
 lives at `microsoft/skills/review/al-code-review.md`.
+
+Partners that want model selection, parallel leaf execution, retries, or usage
+telemetry can add a thin runner outside BCQuality. See
+[Build a lightweight standalone review runner](standalone-runner.md) for the
+integration contract and a minimal implementation checklist.
 
 ## Knowledge file format
 

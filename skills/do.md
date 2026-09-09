@@ -231,7 +231,7 @@ Omit `suggested-code` only when the appropriate fix depends on context the skill
 - `reference` — the suppressed file (same object shape as `findings[].references`).
 - `reason` — `layer-precedence` when another layer won under READ's precedence rules; `configuration` when the consumer disabled the file's layer.
 
-**`sub-results`** — super-skills only. Array of complete findings-reports, one per sub-skill that was invoked (i.e., every sub-skill not listed in `skipped-sub-skills`). Each entry MUST itself conform to this output contract. Leaf skills MUST NOT emit `sub-results`.
+**`sub-results`** — super-skills only. Array of complete findings-reports, one per sub-skill that was invoked (i.e., every sub-skill not listed in `skipped-sub-skills`). Each entry MUST itself conform to this output contract. Entries MUST appear in the worklist's declared order, regardless of invocation or completion order. Leaf skills MUST NOT emit `sub-results`.
 
 **`skipped-sub-skills`** — super-skills only. Array of sub-skills that were declared in frontmatter but not invoked. `reason` is `configuration` when the orchestrator disabled the sub-skill, or `not-applicable` when the super-skill's Relevance step ruled it out.
 
@@ -247,6 +247,20 @@ Severity taxonomy:
 A **super-skill** is an action skill whose frontmatter declares a non-empty `sub-skills: [...]`. A super-skill does not evaluate knowledge files directly; it invokes other action skills and composes their output.
 
 Composition is flat: a super-skill MAY list only leaf skills (skills without their own `sub-skills`). Nested super-skills are not permitted in v1.
+
+### Scheduling boundary
+
+The super-skill defines which leaves must run, the input and output contracts,
+and how their results are composed. It does not prescribe a model, concurrency
+limit, retry policy, or telemetry system. Those choices belong to the
+orchestrator.
+
+Each leaf invocation MUST remain a discrete evaluation with its own complete
+findings-report. An orchestrator MAY execute independent leaves serially or
+concurrently, but MUST invoke every worklisted leaf, preserve `sub-results` in
+the declared worklist order, and wait for every invocation to finish before
+performing any super-skill self-review or final rollup. Scheduling MUST NOT
+change relevance, coverage, failure, reference-integrity, or output semantics.
 
 ### Section interpretation for super-skills
 
@@ -274,7 +288,13 @@ When the worklist is empty (every sub-skill was skipped), `outcome` is `not-appl
 
 ### Rolled-up summary
 
-`summary.counts` is the sum of sub-skill counts. `summary.coverage.worklist-size` and `items-evaluated` are the sums across invoked sub-skills.
+`summary.counts` counts the findings in the super-skill's final top-level
+`findings[]`, after failed sub-results have been excluded and duplicates have
+been merged. It MUST NOT be calculated by summing sub-skill counts, because the
+same concern may appear in more than one sub-result.
+
+`summary.coverage.worklist-size` and `items-evaluated` are the sums across
+invoked sub-skills whose outcomes are not `failed`.
 
 ### Suppression scope
 

@@ -63,18 +63,18 @@ The worklist is the list of sub-skills judged relevant by the previous step. Eve
 
 ### Execution discipline (mandatory)
 
-The Action step is a sequence of **discrete iterations**, not one combined generation. The contract requires the super-skill to invoke each sub-skill in turn and then perform a self-review pass. Concretely this means:
+The Action step consists of **discrete leaf invocations**, not one combined generation. Invocation scheduling belongs to the orchestrator: independent leaves may run serially or concurrently, but their evaluation contexts and findings-reports remain isolated. Concretely this means:
 
 - **Isolate leaf invocations when the host supports it.** For fast/small models, each sub-skill SHOULD run in a fresh model call or child context containing only the task input, READ/DO contracts, the leaf instructions, a domain-filtered slice of the current knowledge index, and articles that leaf worklists. Preserve each index row's exact `path`; the leaf must copy references from that slice. The coordinator then collects the resulting JSON. This is the preferred fast-model profile: it bounds context, prevents later leaves from being skipped as attention is exhausted, and removes any reason to synthesize article paths.
-- Treat each sub-skill in the worklist as its own pass: read the sub-skill's instructions, apply its Source → Relevance → Worklist → Action steps to the orchestrator-supplied inputs, and produce that sub-skill's complete findings-report before moving on.
+- Treat each sub-skill in the worklist as its own pass: read the sub-skill's instructions, apply its Source → Relevance → Worklist → Action steps to the orchestrator-supplied inputs, and produce that sub-skill's complete findings-report independently.
 - Do not collapse multiple sub-skills into one shared reasoning step. Each sub-skill has a distinct knowledge subset and a distinct evaluation procedure; sharing one rolled-up scan dilutes per-skill attention and causes leaves to silently underreport (this has been observed in production: leaf skills returned empty `findings[]` while their standalone runs against the same diff produced multiple matches).
 - The agent self-review pass is its own final iteration. Begin it only after every sub-skill in the worklist has completed and its sub-result is recorded.
-- Sub-skills are independent: re-walking the diff once per sub-skill is correct and expected. The output schema accommodates this — `sub-results` carries one entry per sub-skill, each a complete findings-report.
+- Sub-skills are independent: re-walking the diff once per sub-skill is correct and expected. The output schema accommodates this — `sub-results` carries one entry per sub-skill, each a complete findings-report, in the frontmatter `sub-skills` order regardless of completion order.
 - When isolated calls are unavailable and the current model cannot finish every leaf within its budget, return `partial` with completed `sub-results` and name the first unevaluated sub-skill in `outcome-reason`. Never silently mark the remaining leaves clean.
 
 ### Roll up sub-skill findings
 
-For each sub-skill in the worklist, executed one at a time per the discipline above:
+For each sub-skill in the worklist:
 
 1. Invoke the sub-skill with the orchestrator's inputs, passing only the subset each sub-skill declares in its `inputs`.
 2. Capture the sub-skill's complete findings-report verbatim and append it to `sub-results`.
@@ -116,7 +116,7 @@ Sub-skills MAY also emit `suggested-code` when their knowledge file unambiguousl
 
 ### Summary and rollup
 
-Aggregate `summary.counts` and `summary.coverage` as the sums across invoked sub-skills whose `outcome` is not `failed`. Agent findings emitted by the super-skill itself contribute to `summary.counts` but not to `summary.coverage` (coverage is a sub-skill worklist metric and is undefined for self-review).
+Calculate `summary.counts` from the final top-level `findings[]`, after failed sub-results have been excluded and duplicates have been merged. Aggregate `summary.coverage` as the sums across invoked sub-skills whose `outcome` is not `failed`. Agent findings emitted by the super-skill itself contribute to `summary.counts` but not to `summary.coverage` (coverage is a sub-skill worklist metric and is undefined for self-review).
 
 `suppressed[]` at the super-skill level remains empty. Knowledge-file-level suppression is reported by each sub-skill within its own entry in `sub-results`.
 
