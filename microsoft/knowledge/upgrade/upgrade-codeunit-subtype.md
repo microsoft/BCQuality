@@ -17,10 +17,10 @@ A codeunit only participates in the upgrade pipeline when it sets `Subtype = Upg
 
 Place every piece of upgrade logic in a codeunit declared with `Subtype = Upgrade;` and expose entry points via the two triggers `OnUpgradePerCompany` and `OnUpgradePerDatabase`. Helper procedures may live in normal codeunits, but they inherit the upgrade-context rules (guarded reads, no external calls, upgrade tags, etc.) when called from an upgrade trigger.
 
-See sample: `upgrade-codeunit-subtype.good.al`.
+See sample: [`upgrade-codeunit-subtype.good.al`](upgrade-codeunit-subtype.good.al).
 
 ## Anti Pattern
 
 Putting upgrade-style logic in a regular codeunit that the platform never invokes during upgrade — for example a normal codeunit with a manually invented "RunUpgrade" procedure that nothing wires to the upgrade pipeline. The migration code will simply not run.
 
-See sample: `upgrade-codeunit-subtype.bad.al`.
+See sample: [`upgrade-codeunit-subtype.bad.al`](upgrade-codeunit-subtype.bad.al).

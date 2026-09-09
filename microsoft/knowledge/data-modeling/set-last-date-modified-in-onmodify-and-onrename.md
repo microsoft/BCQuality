@@ -19,10 +19,10 @@ The reason is a BC-specific trap: renaming a record changes its primary key and 
 
 Both `OnModify` and `OnRename` set `"Last Date Modified" := Today();`, and the field is declared `Editable = false` so only the triggers maintain it.
 
-See sample: `set-last-date-modified-in-onmodify-and-onrename.good.al`.
+See sample: [`set-last-date-modified-in-onmodify-and-onrename.good.al`](set-last-date-modified-in-onmodify-and-onrename.good.al).
 
 ## Anti Pattern
 
 Only `OnModify` assigns `Last Date Modified`. After a rename the value is stale, and any process that trusts it to detect changes misses the record.
 
-See sample: `set-last-date-modified-in-onmodify-and-onrename.bad.al`.
+See sample: [`set-last-date-modified-in-onmodify-and-onrename.bad.al`](set-last-date-modified-in-onmodify-and-onrename.bad.al).

@@ -27,7 +27,7 @@ See also `owning-table-must-delete-dependents-in-ondelete.md` for the delete hal
 
 Leave `ValidateTableRelation` at its default wherever the stored value must stay correct across a rename. When it must be disabled, or when the relationship cannot be expressed as a `TableRelation` at all, the table owning the referenced key carries an explicit `OnRename` that repoints the dependents itself.
 
-See sample: `validate-table-relation-false-suppresses-rename-propagation.good.al`.
+See sample: [`validate-table-relation-false-suppresses-rename-propagation.good.al`](validate-table-relation-false-suppresses-rename-propagation.good.al).
 
 ## Anti Pattern
 
@@ -35,4 +35,4 @@ See sample: `validate-table-relation-false-suppresses-rename-propagation.good.al
 
 Detection signal: any `ValidateTableRelation = false` on a field that also declares a `TableRelation`. Ask what repoints the value when the target is renamed; if the answer is "the platform", the finding stands.
 
-See sample: `validate-table-relation-false-suppresses-rename-propagation.bad.al`.
+See sample: [`validate-table-relation-false-suppresses-rename-propagation.bad.al`](validate-table-relation-false-suppresses-rename-propagation.bad.al).

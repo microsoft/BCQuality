@@ -17,10 +17,10 @@ CodeCop AA0074 flags `Label` and `TextConst` identifiers that do not end with an
 
 Pick the suffix that matches the call where the label is consumed: `UpdateCompleteMsg` for `Message(...)`, `CustomerNotFoundErr` for `Error(...)`, `DeleteRecordQst` for `Confirm(...)`, `CustomerNameLbl` for tooltips and captions, `GetMethodTok` for locked tokens, `TelemetryDataTxt` for telemetry payloads. Suffix choices between `Tok`, `Lbl`, `Txt`, and `Msg` are judgment calls when the suffix is valid for the usage — what matters is that the suffix is on the approved list and matches the actual call.
 
-See sample: `label-suffix-approved-list.good.al`.
+See sample: [`label-suffix-approved-list.good.al`](label-suffix-approved-list.good.al).
 
 ## Anti Pattern
 
 A `Label` declared with no suffix (`CannotDeleteLine: Label '…';`), a generic name (`Text000: Label '…';`), or a suffix that contradicts the usage (`WrongSuffixTok: Label 'Customer %1 not found.'` then passed to `Error()`). All three trip AA0074 or its reviewers and obscure the call-site contract.
 
-See sample: `label-suffix-approved-list.bad.al`.
+See sample: [`label-suffix-approved-list.bad.al`](label-suffix-approved-list.bad.al).

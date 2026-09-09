@@ -17,10 +17,10 @@ A temporary record copies data out of the source table into session memory. The 
 
 Validate the caller's read permission on the source table before populating the temporary buffer. Keep the buffer's lifetime as short as the work requires, and prefer local temporary variables over globals for anything carrying sensitive data — a local buffer's contents are discarded automatically when the procedure returns. When a buffer must be global or is passed back to callers, delete its contents on every exit path — including error paths — so sensitive values do not linger.
 
-See sample: `protect-sensitive-data-in-temporary-tables.good.al`.
+See sample: [`protect-sensitive-data-in-temporary-tables.good.al`](protect-sensitive-data-in-temporary-tables.good.al).
 
 ## Anti Pattern
 
 Copying records into a temporary buffer without a preceding permission check, and relying on procedure-exit to clean up. An exception before the explicit cleanup leaves the data in the buffer; a global or var-parameter buffer carries the data back to callers that may have no right to see it.
 
-See sample: `protect-sensitive-data-in-temporary-tables.bad.al`.
+See sample: [`protect-sensitive-data-in-temporary-tables.bad.al`](protect-sensitive-data-in-temporary-tables.bad.al).

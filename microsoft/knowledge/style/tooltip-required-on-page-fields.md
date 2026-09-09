@@ -25,7 +25,7 @@ Make the text answer a question the caption does not: what the value is used for
 
 Before raising a `medium`-severity finding, check the target runtime, the control's binding, and the source field's tooltip, including dependency symbols when needed. Report a field with neither an explicit nor an inherited tooltip independently of whether AA0218 is active. If the source definition or target runtime is unavailable, do not assume a missing page property means missing tooltip text.
 
-See sample: `tooltip-required-on-page-fields.good.al` (BC24/runtime 13.0 or later).
+See sample: [`tooltip-required-on-page-fields.good.al`](tooltip-required-on-page-fields.good.al) (BC24/runtime 13.0 or later).
 
 ## Anti Pattern
 
@@ -35,7 +35,7 @@ Flagging a bound field that already inherits its tooltip, or adding the same too
 
 Treating a non-empty tooltip that merely repeats the caption as useful help is a separate quality issue, not a missing-tooltip finding. Point out the concrete information users need rather than demanding longer wording or a page-level override for its own sake.
 
-See sample: `tooltip-required-on-page-fields.bad.al`.
+See sample: [`tooltip-required-on-page-fields.bad.al`](tooltip-required-on-page-fields.bad.al).
 
 ## References
 

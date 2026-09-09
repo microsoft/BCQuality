@@ -25,7 +25,7 @@ Publish the context as a query and let the binding itself be the state. One proc
 
 Bind a fresh instance per run rather than reusing one: the platform refuses to bind the same instance twice but accepts several instances of the same codeunit, so nesting and re-entrancy need no counter. The binding is session-scoped, so work the process starts in another session — a background session, a page background task, a job queue entry — cannot see it; pass the context explicitly there.
 
-See sample: `expose-process-context-via-manually-bound-flag.good.al`.
+See sample: [`expose-process-context-via-manually-bound-flag.good.al`](expose-process-context-via-manually-bound-flag.good.al).
 
 ## Anti Pattern
 
@@ -37,4 +37,4 @@ Second, the context kept private: the driving app arranges its own marker — ty
 
 The mirror-image anti-pattern belongs to the reviewer: flagging the `BindSubscription` here as a leaked binding because no `UnbindSubscription` follows it. Scope release is the mechanism, not an omission — see `microsoft/knowledge/events/choose-static-vs-manual-subscribers-deliberately.md`, whose leak case is an instance parked on a `SingleInstance` global that never leaves scope.
 
-See sample: `expose-process-context-via-manually-bound-flag.bad.al`.
+See sample: [`expose-process-context-via-manually-bound-flag.bad.al`](expose-process-context-via-manually-bound-flag.bad.al).

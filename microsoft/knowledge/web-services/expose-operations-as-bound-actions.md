@@ -17,10 +17,10 @@ An API consumer that needs to *do* something to a record — post it, ship it, r
 
 Declare the operation as `[ServiceEnabled] procedure Post(var ActionContext: WebServiceActionContext)` on the API page. Inside, perform the operation against `Rec`, then call a `SetActionResponse` helper that writes the result — the bound record and its id — back into the `WebServiceActionContext` so the caller receives a well-formed response. The operation is now an explicit, named endpoint action separate from ordinary field writes.
 
-See sample: `expose-operations-as-bound-actions.good.al`.
+See sample: [`expose-operations-as-bound-actions.good.al`](expose-operations-as-bound-actions.good.al).
 
 ## Anti Pattern
 
 Exposing a writable Boolean (for example `posted`) whose `OnValidate` performs the posting. A client that PATCHes the field to `true` — an action indistinguishable from any other data edit — silently triggers a side-effecting business operation. The detection signal: an API page field whose `OnValidate` posts, ships, or releases, instead of a `[ServiceEnabled]` bound action.
 
-See sample: `expose-operations-as-bound-actions.bad.al`.
+See sample: [`expose-operations-as-bound-actions.bad.al`](expose-operations-as-bound-actions.bad.al).

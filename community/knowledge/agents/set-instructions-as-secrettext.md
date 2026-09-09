@@ -17,10 +17,10 @@ Instructions are instance data, not an enum caption. `Agent.SetInstructions` tak
 
 Load instruction text from a resource or builder into a `SecretText` variable and call `Agent.SetInstructions(AgentUserSecurityId, Instructions)` after `Create`. Keep one instruction document per instance.
 
-See sample: `set-instructions-as-secrettext.good.al`.
+See sample: [`set-instructions-as-secrettext.good.al`](set-instructions-as-secrettext.good.al).
 
 ## Anti Pattern
 
 Passing a `Label` or `Text` to `SetInstructions`, storing instructions in a setup Text field without wrapping as `SecretText`, or putting the prompt only in a code comment. Detection signal: `SetInstructions` with a non-`SecretText` argument, or no `SetInstructions` after `Create`.
 
-See sample: `set-instructions-as-secrettext.bad.al`.
+See sample: [`set-instructions-as-secrettext.bad.al`](set-instructions-as-secrettext.bad.al).

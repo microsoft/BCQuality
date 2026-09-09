@@ -19,10 +19,10 @@ application-area: [all]
 
 On report objects and `PageType = API` pages with `Editable = false` that never write, set `DataAccessIntent = ReadOnly`. For query objects, set it when the query is consumed via OData or an API endpoint. Keep the default on objects that insert, modify, or call a write codeunit from a processing-only report.
 
-See sample: `dataaccessintent-readonly-on-analytical-objects.good.al`.
+See sample: [`dataaccessintent-readonly-on-analytical-objects.good.al`](dataaccessintent-readonly-on-analytical-objects.good.al).
 
 ## Anti Pattern
 
 A listing report or API query with no `DataAccessIntent` that scans G/L or sales lines. The object is read-only in practice and still loads the primary.
 
-See sample: `dataaccessintent-readonly-on-analytical-objects.bad.al`.
+See sample: [`dataaccessintent-readonly-on-analytical-objects.bad.al`](dataaccessintent-readonly-on-analytical-objects.bad.al).

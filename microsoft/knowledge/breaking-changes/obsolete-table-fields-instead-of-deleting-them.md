@@ -17,10 +17,10 @@ A shipped table field carries both a source-level contract and persisted data. R
 
 Keep the old field's ID, name, and type unchanged. Add the replacement as a separate field under an unused ID, then mark the old field `ObsoleteState = Pending` with an `ObsoleteReason` that names the replacement and an `ObsoleteTag` recording the obsoletion version. Keep the old field readable so an upgrade codeunit can copy its data during the deprecation window. Move it to `ObsoleteState = Removed` only in a later release, after the window has passed and data has migrated.
 
-See sample: `obsolete-table-fields-instead-of-deleting-them.good.al`.
+See sample: [`obsolete-table-fields-instead-of-deleting-them.good.al`](obsolete-table-fields-instead-of-deleting-them.good.al).
 
 ## Anti Pattern
 
 Renaming published `Email` to `Contact Email` with the same ID violates the compatibility contract and AS0005, even though the retained ID does not itself imply a fresh empty column. Deleting `Email` or changing its ID additionally risks losing its stored values. Detection: any previously shipped field whose name changes at the same ID, or whose original ID disappears without the unchanged field being retained as `Pending` and its data migrated to a separate replacement field.
 
-See sample: `obsolete-table-fields-instead-of-deleting-them.bad.al`.
+See sample: [`obsolete-table-fields-instead-of-deleting-them.bad.al`](obsolete-table-fields-instead-of-deleting-them.bad.al).

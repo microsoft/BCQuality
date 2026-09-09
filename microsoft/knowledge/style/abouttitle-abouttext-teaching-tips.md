@@ -19,10 +19,10 @@ The reviewer signal is "this is a new top-level card or list page in an app whos
 
 Set `AboutTitle` and `AboutText` on every new top-level card, list, and document page in an app that already uses them. Keep `AboutText` to two or three short sentences. Describe what the page does, not the navigation steps to use it — teaching tips explain WHAT, not HOW.
 
-See sample: `abouttitle-abouttext-teaching-tips.good.al`.
+See sample: [`abouttitle-abouttext-teaching-tips.good.al`](abouttitle-abouttext-teaching-tips.good.al).
 
 ## Anti Pattern
 
 A new top-level page in an app whose siblings have `AboutTitle`/`AboutText`, but with no teaching tips defined. Equally wrong is filling `AboutText` with step-by-step instructions ("Click New, then enter…") — the property is for orientation, not procedural help.
 
-See sample: `abouttitle-abouttext-teaching-tips.bad.al`.
+See sample: [`abouttitle-abouttext-teaching-tips.bad.al`](abouttitle-abouttext-teaching-tips.bad.al).

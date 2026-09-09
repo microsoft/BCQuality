@@ -17,10 +17,10 @@ Report dataitem field selection is calculated at compile time and once per datai
 
 When a dataitem trigger needs an extra field, add that field in `OnPreDataItem` before iteration starts. This supplements the compiler-selected fields and avoids the first just-in-time load and enumerator update when the trigger reads the extra field.
 
-See sample: `addloadfields-in-report-onpredataitem.good.al`.
+See sample: [`addloadfields-in-report-onpredataitem.good.al`](addloadfields-in-report-onpredataitem.good.al).
 
 ## Anti Pattern
 
 Listing every dataset column in `AddLoadFields`, or omitting a known trigger-only field because the dataset already uses other fields. The former is redundant; the latter causes a just-in-time load on first access and can cause repeated loads when the record is copied or passed by value.
 
-See sample: `addloadfields-in-report-onpredataitem.bad.al`.
+See sample: [`addloadfields-in-report-onpredataitem.bad.al`](addloadfields-in-report-onpredataitem.bad.al).

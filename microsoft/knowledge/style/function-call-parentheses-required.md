@@ -17,10 +17,10 @@ AL allows a parameterless procedure to be called without parentheses — `Custom
 
 Always write `()` on a procedure call, even when it takes no arguments: `Customer.Init();`, `TempBuffer.DeleteAll();`, `if Customer.FindFirst() then …`. The same applies inside expressions and as a condition.
 
-See sample: `function-call-parentheses-required.good.al`.
+See sample: [`function-call-parentheses-required.good.al`](function-call-parentheses-required.good.al).
 
 ## Anti Pattern
 
 `Customer.Init;`, `TempBuffer.DeleteAll;`, `if Customer.FindFirst then …`. Every one of those is an AA0008 violation. Reviewers should treat a parameterless procedure name appearing without parentheses as a defect, even though the compiler accepts it.
 
-See sample: `function-call-parentheses-required.bad.al`.
+See sample: [`function-call-parentheses-required.bad.al`](function-call-parentheses-required.bad.al).

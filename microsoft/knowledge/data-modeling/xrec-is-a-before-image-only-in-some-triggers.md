@@ -25,7 +25,7 @@ See also `validate-table-relation-false-suppresses-rename-propagation.md`, which
 
 Use `xRec` for the previous key in `OnRename`, and for the record being removed in `OnDelete`. In `OnModify`, obtain the before-image by re-reading the stored row rather than trusting `xRec`, so the logic behaves identically whether a page, a job queue or an API drove the write.
 
-See sample: `xrec-is-a-before-image-only-in-some-triggers.good.al`.
+See sample: [`xrec-is-a-before-image-only-in-some-triggers.good.al`](xrec-is-a-before-image-only-in-some-triggers.good.al).
 
 ## Anti Pattern
 
@@ -33,4 +33,4 @@ Comparing `Rec` against `xRec` inside `OnModify` (or `OnInsert`) to detect a cha
 
 Detection signal: any read of `xRec` inside `OnModify` or `OnInsert`. Treat "but it works when I test it on the page" as confirmation of the defect rather than a refutation.
 
-See sample: `xrec-is-a-before-image-only-in-some-triggers.bad.al`.
+See sample: [`xrec-is-a-before-image-only-in-some-triggers.bad.al`](xrec-is-a-before-image-only-in-some-triggers.bad.al).

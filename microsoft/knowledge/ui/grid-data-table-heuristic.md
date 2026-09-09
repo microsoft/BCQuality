@@ -25,4 +25,4 @@ Any grid or fixed layout that does not meet all three conditions renders as a la
 
 If you intend a grid or fixed layout to render as a data table, satisfy all three conditions and verify the resulting markup matches your intent. If you do not need tabular semantics, prefer simple groups over grid or fixed layouts — they reflow better and produce correct semantic markup automatically.
 
-See sample: `grid-data-table-heuristic.good.al`.
+See sample: [`grid-data-table-heuristic.good.al`](grid-data-table-heuristic.good.al).

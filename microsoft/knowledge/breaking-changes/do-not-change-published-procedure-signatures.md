@@ -19,10 +19,10 @@ This rule governs procedures that dependents *call*. An event publisher — a pr
 
 Treat a published signature as frozen. When new behavior needs more inputs, add a new procedure or overload alongside the original — for example a `CalculateDiscountWithRate(Amount; Rate)` next to the unchanged `CalculateDiscount(Amount)` — and let the old one delegate to the new one. Existing callers keep compiling; new callers opt into the richer entry point. Naming an unnamed return value is the one in-place change that is always safe.
 
-See sample: `do-not-change-published-procedure-signatures.good.al`.
+See sample: [`do-not-change-published-procedure-signatures.good.al`](do-not-change-published-procedure-signatures.good.al).
 
 ## Anti Pattern
 
 Editing the existing public procedure's parameter list — here, adding a `Rate` parameter to `CalculateDiscount` — so every dependent extension that called the old form fails to compile. Detection: a parameter added, removed, reordered, retyped, or flipped to/from `var`, or a changed return type, on any non-`local` procedure that already shipped. Add a new overload instead. Exclude event publishers whose only change is an added parameter: subscribers bind by parameter name, not position, so that edit is additive and reporting it here is a false positive.
 
-See sample: `do-not-change-published-procedure-signatures.bad.al`.
+See sample: [`do-not-change-published-procedure-signatures.bad.al`](do-not-change-published-procedure-signatures.bad.al).

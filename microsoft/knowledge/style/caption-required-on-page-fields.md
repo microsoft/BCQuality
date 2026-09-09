@@ -23,7 +23,7 @@ Define the shared caption on the table field and let bound page fields inherit i
 
 Before reporting a missing caption, inspect the binding and source field, including dependency symbols when needed. If the source definition is unavailable, do not treat an omitted page property as proof that the caption is missing. Caption and tooltip requirements are separate: do not add a `ToolTip` just because a caption is being reviewed; see [tooltip inheritance guidance](tooltip-required-on-page-fields.md).
 
-See sample: `caption-required-on-page-fields.good.al`. Caption inheritance applies across BC versions; the sample uses BC24/runtime 13.0 or later to also define tooltips on its table fields.
+See sample: [`caption-required-on-page-fields.good.al`](caption-required-on-page-fields.good.al). Caption inheritance applies across BC versions; the sample uses BC24/runtime 13.0 or later to also define tooltips on its table fields.
 
 ## Anti Pattern
 
@@ -31,7 +31,7 @@ A user-facing field that needs a label but has no non-empty explicit or inherite
 
 The opposite review defect is flagging a bound field solely because it omits a page-level `Caption`, or inserting a copy of the table field's caption to satisfy AA0225/AA0226. That adds redundant text and prevents subsequent table-caption changes from flowing through to the page.
 
-See sample: `caption-required-on-page-fields.bad.al`.
+See sample: [`caption-required-on-page-fields.bad.al`](caption-required-on-page-fields.bad.al).
 
 ## References
 

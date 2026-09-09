@@ -17,10 +17,10 @@ application-area: [all]
 
 Review the dedicated error arguments as telemetry payload. Capture `GetLastErrorText(true)` when scrubbed platform error text is sufficient, and pass `GetLastErrorCallStack()` only as a call stack. Keep custom dimensions non-personal too.
 
-See sample: `featuretelemetry-logerror-implicit-errortext.good.al`.
+See sample: [`featuretelemetry-logerror-implicit-errortext.good.al`](featuretelemetry-logerror-implicit-errortext.good.al).
 
 ## Anti Pattern
 
 Approving a `LogError` call because its explicit dictionary contains only safe values while it passes unsanitized `GetLastErrorText()` or arbitrary context through `ErrorText` or `ErrorCallStack`. Those arguments become telemetry dimensions outside the dictionary.
 
-See sample: `featuretelemetry-logerror-implicit-errortext.bad.al`.
+See sample: [`featuretelemetry-logerror-implicit-errortext.bad.al`](featuretelemetry-logerror-implicit-errortext.bad.al).

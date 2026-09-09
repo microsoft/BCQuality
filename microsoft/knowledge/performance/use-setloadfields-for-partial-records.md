@@ -17,7 +17,7 @@ application-area: [all]
 
 Before a `Get`, `FindSet`, or `FindFirst` that the procedure follows by reading only a handful of the table's fields, call `SetLoadFields` listing exactly those fields. The pattern `SetLoadFields(...); if Record.Get(...) then ...` is the upstream-endorsed shape. Place the call immediately before the read, after any `SetRange`/`SetFilter`, so a reader can see at a glance which read the selection governs and any projection-changing operation is easy to spot. Skip `SetLoadFields` when the table has few fields (under ten), when the code reads most of them (above 60 %), when the loop runs ten or fewer iterations, or when the table is exempt for other reasons (`singleton-setup-tables-need-no-access-optimization.md`, `temporary-tables-have-no-database-cost.md`). For report dataitems, use `AddLoadFields` in `OnPreDataItem` instead (see `addloadfields-in-report-onpredataitem.md`).
 
-See sample: `use-setloadfields-for-partial-records.good.al`.
+See sample: [`use-setloadfields-for-partial-records.good.al`](use-setloadfields-for-partial-records.good.al).
 
 ## Anti Pattern
 
@@ -25,4 +25,4 @@ Loading a wide table and reading one field per row in a loop. The bytes transfer
 
 Statement order is not part of this anti pattern. `SetLoadFields` placed ahead of `SetRange`/`SetFilter` materializes exactly the same columns as the reverse order, so a reviewer reports it as a readability observation at most — never as a performance defect.
 
-See sample: `use-setloadfields-for-partial-records.bad.al`.
+See sample: [`use-setloadfields-for-partial-records.bad.al`](use-setloadfields-for-partial-records.bad.al).

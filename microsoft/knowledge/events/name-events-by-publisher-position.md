@@ -17,10 +17,10 @@ An event name should tell a subscriber where in the publisher the event fires. T
 
 Name by position: `OnBeforePostSalesLine` and `OnAfterPostSalesLine` at the routine boundaries, and `OnPostSalesLineOnAfterCalcAmounts` for an event raised partway through `PostSalesLine` after an amount calculation. The name alone then tells a subscriber both the host routine and the exact point it runs.
 
-See sample: `name-events-by-publisher-position.good.al`.
+See sample: [`name-events-by-publisher-position.good.al`](name-events-by-publisher-position.good.al).
 
 ## Anti Pattern
 
 Ad-hoc event names that omit the host routine or the before/after position (`MyCustomSalesEvent`, `BeforePost`, `SalesLineEvent`), leaving subscribers unable to tell when the event fires relative to the publisher's logic. Detection: publisher names that do not follow the `OnBefore`/`OnAfter<Routine>` or `On<Routine>OnBefore`/`OnAfter<Context>` patterns.
 
-See sample: `name-events-by-publisher-position.bad.al`.
+See sample: [`name-events-by-publisher-position.bad.al`](name-events-by-publisher-position.bad.al).

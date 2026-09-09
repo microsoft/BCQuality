@@ -17,10 +17,10 @@ Parameterless `GetLastErrorText()` can contain customer content such as field va
 
 Use a generic label when the user does not need the underlying detail. If showing unsanitized detail is appropriate, put `%1` in a label and pass parameterless `GetLastErrorText()` as a separate argument. This preserves a useful static telemetry message while keeping the dynamic value out of the telemetry message field.
 
-See sample: `getlasterrortext-customer-content-in-errors.good.al`.
+See sample: [`getlasterrortext-customer-content-in-errors.good.al`](getlasterrortext-customer-content-in-errors.good.al).
 
 ## Anti Pattern
 
 `Error(StrSubstNo(AttachmentFailedErr, GetLastErrorText()))` or `Error(AttachmentPrefixErr + GetLastErrorText())`. Both lose the static first argument and trigger AA0231; neither causes the composed text to be logged verbatim as the Error telemetry message.
 
-See sample: `getlasterrortext-customer-content-in-errors.bad.al`.
+See sample: [`getlasterrortext-customer-content-in-errors.bad.al`](getlasterrortext-customer-content-in-errors.bad.al).

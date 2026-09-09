@@ -17,13 +17,13 @@ Each agent type needs a `Copilot Capability` enum value that the factory links a
 
 Extend `Copilot Capability` with a unique value. In `OnInstallAppPerDatabase`, call `Copilot Capability.IsCapabilityRegistered` and, if false, `RegisterCapability` with availability, billing type, and a learn-more URL. Point `IAgentFactory` at that capability.
 
-See sample: `register-copilot-capability-for-the-agent.good.al`.
+See sample: [`register-copilot-capability-for-the-agent.good.al`](register-copilot-capability-for-the-agent.good.al).
 
 ## Anti Pattern
 
 Shipping the agent enum without a `Copilot Capability` value, or adding the enum but never calling `RegisterCapability`. Duplicate ordinals across extensions also collide. Detection signal: agent metadata provider with no matching capability registration in an install codeunit.
 
-See sample: `register-copilot-capability-for-the-agent.bad.al`.
+See sample: [`register-copilot-capability-for-the-agent.bad.al`](register-copilot-capability-for-the-agent.bad.al).
 
 ## See also
 

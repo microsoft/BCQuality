@@ -17,10 +17,10 @@ Error method trace telemetry includes the AL error string only when the first `E
 
 Declare the complete message as a `Label` or `TextConst` and pass it directly to `Error`, followed by substitution values. The client receives the formatted message while telemetry retains the static message template without using the dynamic values as its message. Independently review whether each substitution value is appropriate to show to the current user.
 
-See sample: `avoid-strsubstno-prebuild-before-error.good.al`.
+See sample: [`avoid-strsubstno-prebuild-before-error.good.al`](avoid-strsubstno-prebuild-before-error.good.al).
 
 ## Anti Pattern
 
 `Error(StrSubstNo(CustomerInvalidErr, Customer."No."))` and `Error(HeaderErr + DetailErr)` both make the first argument dynamic. They reduce error telemetry quality; they do not cause that composed string to be logged verbatim as the telemetry message.
 
-See sample: `avoid-strsubstno-prebuild-before-error.bad.al`.
+See sample: [`avoid-strsubstno-prebuild-before-error.bad.al`](avoid-strsubstno-prebuild-before-error.bad.al).

@@ -17,10 +17,10 @@ When designing a new publisher, setting `IncludeSender` to `true` on `[Integrati
 
 For a new event, declare the publisher `[IntegrationEvent(false, false)]` with an explicit `Sender: Codeunit "…"` parameter and raise it with `this`, for example `OnBeforeProcessOrder(OrderNo, this);`. Subscribers then receive a typed sender they can call directly.
 
-See sample: `prefer-this-over-includesender-in-codeunit-events.good.al`.
+See sample: [`prefer-this-over-includesender-in-codeunit-events.good.al`](prefer-this-over-includesender-in-codeunit-events.good.al).
 
 ## Anti Pattern
 
 Designing a new codeunit event with `[IntegrationEvent(true, …)]` solely to hand subscribers the publisher instance, where `this` could be passed explicitly as a typed parameter. Do not apply this rule by mutating a shipped event's attribute flags.
 
-See sample: `prefer-this-over-includesender-in-codeunit-events.bad.al`.
+See sample: [`prefer-this-over-includesender-in-codeunit-events.bad.al`](prefer-this-over-includesender-in-codeunit-events.bad.al).

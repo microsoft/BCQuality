@@ -17,13 +17,13 @@ The runtime treats instructions as the agent's standing prompt. A one-line goal 
 
 Store a document that states responsibilities, then non-negotiable guidelines (when to request a review, when not to post), then numbered steps for each task. Keep that text in the resource you pass to `SetInstructions`.
 
-See sample: `instruction-structure-is-role-rules-steps.good.al`.
+See sample: [`instruction-structure-is-role-rules-steps.good.al`](instruction-structure-is-role-rules-steps.good.al).
 
 ## Anti Pattern
 
 A single sentence such as Check customer credit for the sales order. Detection signal: instruction resource or `SetInstructions` payload with no responsibilities / guidelines / steps sections.
 
-See sample: `instruction-structure-is-role-rules-steps.bad.al`.
+See sample: [`instruction-structure-is-role-rules-steps.bad.al`](instruction-structure-is-role-rules-steps.bad.al).
 
 ## See also
 

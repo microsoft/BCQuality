@@ -19,10 +19,10 @@ A field whose `Editable` property is a Boolean expression (e.g. `Editable = IsEd
 
 Leave `ShowCaption` at its default on editable fields. If a caption would be visually redundant, rely on one of the documented magic patterns (group-labeled first child, repeater column, PromptDialog prompt input) rather than removing the caption.
 
-See sample: `show-caption-on-editable-fields.good.al`.
+See sample: [`show-caption-on-editable-fields.good.al`](show-caption-on-editable-fields.good.al).
 
 ## Anti Pattern
 
 The `InstructionalText` property on a field renders as HTML placeholder text and is **not** a substitute for a caption — it disappears once the user types and is not reliably announced by screen readers.
 
-See sample: `show-caption-on-editable-fields.bad.al`.
+See sample: [`show-caption-on-editable-fields.bad.al`](show-caption-on-editable-fields.bad.al).

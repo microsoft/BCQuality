@@ -17,10 +17,10 @@ application-area: [all]
 
 Pick the singular noun for `EntityName` and its grammatical plural for `EntitySetName`, both in camelCase. For compound nouns, only the trailing noun is pluralized: `EntityName = 'salesOrder'`, `EntitySetName = 'salesOrders'`. For nouns whose plural is irregular, use the natural English form — `EntitySetName = 'people'` for `EntityName = 'person'`.
 
-See sample: `api-page-entity-naming-singular-plural.good.al`.
+See sample: [`api-page-entity-naming-singular-plural.good.al`](api-page-entity-naming-singular-plural.good.al).
 
 ## Anti Pattern
 
 `EntityName = 'customers'`, `EntitySetName = 'customer'` — singular and plural swapped. Equally wrong is reusing the same form for both — `EntityName = 'customer'`, `EntitySetName = 'customer'` — which breaks OData metadata parsers and client codegen.
 
-See sample: `api-page-entity-naming-singular-plural.bad.al`.
+See sample: [`api-page-entity-naming-singular-plural.bad.al`](api-page-entity-naming-singular-plural.bad.al).

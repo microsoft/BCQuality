@@ -1,5 +1,7 @@
 # Build a lightweight standalone review runner
 
+[Documentation](README.md) | [Architecture](agent-consumption.md)
+
 BCQuality provides review knowledge, routing, execution instructions, and
 structured output contracts. It intentionally does not choose models, schedule
 agents, retry failures, or collect usage telemetry. A standalone runner can add
@@ -12,12 +14,9 @@ concurrency, or integration with another review surface.
 
 ## Keep BCQuality current
 
-Install or update the plugin with GitHub Copilot CLI:
-
-```shell
-copilot plugin install microsoft/BCQuality
-copilot plugin update bcquality
-```
+For plugin installation, use the [quick start](../README.md#quick-start).
+For version identifiers, forks, and reproducible snapshots, see
+[updates and versions](customizing-bcquality.md#updates-and-versions).
 
 A runner that reads BCQuality from a checkout should pin a commit or release
 and upgrade it deliberately. Do not copy knowledge files or action-skill prose
@@ -30,16 +29,13 @@ diff, supply the app's root directory as `folder-path`. The review scope is
 every relevant file below that directory, including `app.json` and AL source.
 The folder does not need to be a Git repository.
 
-With the standalone plugin installed, start a fresh Copilot session in the app
-folder and ask:
-
-> Use the installed `al-code-review` skill to review the complete Business
-> Central app in this folder. Execute every dispatched review domain and return
-> the complete BCQuality findings report.
-
-The adapter maps this request to `folder-path`; Entry routes it to the broad
-review super-skill. Because a folder is a current-state snapshot, the review
-must not invent a previous app version when evaluating comparison-only rules.
+The [app-review example](../README.md#example-review-a-complete-app-folder)
+uses this input through the standalone adapter. Because a folder is a
+current-state snapshot, the review must not invent a previous app version
+when evaluating comparison-only rules. Entry can return more than one
+top-level skill; preserve all reports, including separately dispatched
+Community reviews, rather than assuming the Microsoft coordinator is the
+only result.
 
 ## Minimal runner flow
 

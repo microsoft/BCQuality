@@ -17,10 +17,10 @@ Event parameter names are part of the public contract a subscriber codes against
 
 Use full, unabbreviated names: `(SalesHeader: Record "Sales Header"; DocumentNo: Code[20]; Amount: Decimal)`. Record parameters mirror the table name without spaces, and value parameters read as whole words so the contract is unambiguous.
 
-See sample: `name-event-parameters-without-abbreviations.good.al`.
+See sample: [`name-event-parameters-without-abbreviations.good.al`](name-event-parameters-without-abbreviations.good.al).
 
 ## Anti Pattern
 
 Abbreviated parameter names (`SalesHdr`, `DocNo`, `Amt`) that obscure meaning and vary across publishers, so subscribers must guess what each one holds. Detection: event parameters whose names are truncated forms of the table name or contracted words rather than the full term.
 
-See sample: `name-event-parameters-without-abbreviations.bad.al`.
+See sample: [`name-event-parameters-without-abbreviations.bad.al`](name-event-parameters-without-abbreviations.bad.al).

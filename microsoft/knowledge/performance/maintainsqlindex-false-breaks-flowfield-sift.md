@@ -17,7 +17,7 @@ application-area: [all]
 
 When changing a key property to `MaintainSQLIndex = false`, find every FlowField whose `CalcFormula` filters on that key and verify another key covers the same fields. When adding a FlowField whose source table has only a `MaintainSQLIndex = false` key for its filter columns, add a fully-indexed key (or accept that the FlowField cannot ride SIFT and reshape the design — see `flowfield-source-key-needs-sumindexfields.md`).
 
-See sample: `maintainsqlindex-false-breaks-flowfield-sift.bad.al`.
+See sample: [`maintainsqlindex-false-breaks-flowfield-sift.bad.al`](maintainsqlindex-false-breaks-flowfield-sift.bad.al).
 
 ## Anti Pattern
 

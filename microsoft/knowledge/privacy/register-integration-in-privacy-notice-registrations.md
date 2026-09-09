@@ -17,7 +17,7 @@ The current extension point is `Codeunit "Privacy Notice"`. Extensions can subsc
 
 Choose a stable ID owned by the extension. Register it through `OnRegisterPrivacyNotices`, or call `PrivacyNotice.CreatePrivacyNotice` during an intentional setup or upgrade path. Use that same ID for consent checks described in `privacy-notice-consent-for-external-data-transfer.md`.
 
-See sample: `register-integration-in-privacy-notice-registrations.good.al`.
+See sample: [`register-integration-in-privacy-notice-registrations.good.al`](register-integration-in-privacy-notice-registrations.good.al).
 
 ## Anti Pattern
 

@@ -19,10 +19,10 @@ Set the property to an area the app actually enables. `All` makes the control vi
 
 Every field control and action carries `ApplicationArea = All;` (or a declared area of the app). The value is set once per control and keeps the control visible in the Web client.
 
-See sample: `applicationarea-required-on-page-controls.good.al`.
+See sample: [`applicationarea-required-on-page-controls.good.al`](applicationarea-required-on-page-controls.good.al).
 
 ## Anti Pattern
 
 A field control with no `ApplicationArea`. AS0062 flags it, and the control is invisible in the Web client for any profile that does not already enable a matching area.
 
-See sample: `applicationarea-required-on-page-controls.bad.al`.
+See sample: [`applicationarea-required-on-page-controls.bad.al`](applicationarea-required-on-page-controls.bad.al).

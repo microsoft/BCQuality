@@ -23,13 +23,13 @@ For an `or`-shaped condition, do not nest: nesting `if A then if B then Action` 
 
 Where a chain of `and`-guards runs past about three conditions, stop nesting and use a `case` statement instead — see `case-true-of-for-long-condition-chains.md`. Keep `and` and `or` for operands that are independently safe and cheap — in-memory field comparisons, enum tests, bound checks — where combining them reads better and costs nothing.
 
-See sample: `boolean-operators-do-not-short-circuit.good.al`.
+See sample: [`boolean-operators-do-not-short-circuit.good.al`](boolean-operators-do-not-short-circuit.good.al).
 
 ## Anti Pattern
 
 A single condition that joins a guard with an operand depending on that guard, or with an expensive operand, using `and` or `or`. The consequence is either wasted work on every evaluation — a database call or validation procedure invoked even when the outcome is already decided — or a runtime error or silently wrong result that the guard was written to prevent. Applying the `and` fix to an `or` condition is a distinct mistake: rewriting `A or B` as nested `if`s drops the `A`-true/`B`-false case instead of preserving it. Detection signals: an operand that indexes an array or list with a variable whose bounds are checked in a sibling operand; `Record.Get(...)` or a `Find`/`IsEmpty` call as one operand of `and` with a field read of the same record as another; an expensive or unsafe operand combined with `or` next to a condition that alone already makes the result true; a boolean-returning procedure call combined with a cheap field test. The pattern is common in code ported from a language that does short-circuit, and in conditions grown by appending a clause to an existing `if`.
 
-See sample: `boolean-operators-do-not-short-circuit.bad.al`.
+See sample: [`boolean-operators-do-not-short-circuit.bad.al`](boolean-operators-do-not-short-circuit.bad.al).
 
 ## See also
 

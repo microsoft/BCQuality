@@ -17,13 +17,13 @@ Tables that can contain more than 300,000 records, and any newly added field on 
 
 For a bulk update use a `DataTransfer` variable: call `SetTables(Database::"...", Database::"...")` (source and destination may be the same table), add filters with `AddSourceFilter`, set the target value with `AddConstantValue` (or copy a source field with `AddFieldValue`), and execute with `CopyFields()`. To express multiple distinct updates against the same table, `Clear` the `DataTransfer` between executions and configure the next one.
 
-See sample: `datatransfer-for-bulk-init.good.al`.
+See sample: [`datatransfer-for-bulk-init.good.al`](datatransfer-for-bulk-init.good.al).
 
 ## Anti Pattern
 
 Iterating with `FindSet(true) ... repeat ... Modify() ... until Next() = 0` to set a single field across an entire large table. On 300k+ rows this is the canonical slow-upgrade footgun.
 
-See sample: `datatransfer-for-bulk-init.bad.al`.
+See sample: [`datatransfer-for-bulk-init.bad.al`](datatransfer-for-bulk-init.bad.al).
 
 ## See also
 

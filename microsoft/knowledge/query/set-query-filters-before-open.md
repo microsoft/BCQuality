@@ -17,10 +17,10 @@ application-area: [all]
 
 Apply every filter before `Open()`, then read the dataset to completion and call `Close()`. When a later branch needs different filters, close or clear the query, set the new filters, and open a new dataset deliberately.
 
-See sample: `set-query-filters-before-open.good.al`.
+See sample: [`set-query-filters-before-open.good.al`](set-query-filters-before-open.good.al).
 
 ## Anti Pattern
 
 `Query.Open()` followed by `SetFilter` or `SetRange` and then `Read()` under the assumption that the filter updates the open cursor. Refiltering after `Open()` is valid only when the code intentionally opens a fresh dataset afterward.
 
-See sample: `set-query-filters-before-open.bad.al`.
+See sample: [`set-query-filters-before-open.bad.al`](set-query-filters-before-open.bad.al).

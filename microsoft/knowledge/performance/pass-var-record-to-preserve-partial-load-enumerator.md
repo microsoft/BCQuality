@@ -19,10 +19,10 @@ A `FindSet`/`Next` loop builds an enumerator from the fields selected for load. 
 
 Helpers that read extra fields on an in-flight iterator must take the record as `var`, or the caller must `AddLoadFields` those fields before the loop. Prefer declaring the extra fields up front so no JIT is needed.
 
-See sample: `pass-var-record-to-preserve-partial-load-enumerator.good.al`.
+See sample: [`pass-var-record-to-preserve-partial-load-enumerator.good.al`](pass-var-record-to-preserve-partial-load-enumerator.good.al).
 
 ## Anti Pattern
 
 A `SetLoadFields` loop that passes the iterator by value into a helper which then reads a field that was not loaded. The first row pays one JIT; every subsequent row pays it again because the enumerator never learned the extra field.
 
-See sample: `pass-var-record-to-preserve-partial-load-enumerator.bad.al`.
+See sample: [`pass-var-record-to-preserve-partial-load-enumerator.bad.al`](pass-var-record-to-preserve-partial-load-enumerator.bad.al).

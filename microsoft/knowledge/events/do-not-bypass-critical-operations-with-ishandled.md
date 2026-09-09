@@ -17,10 +17,10 @@ The IsHandled override pattern lets a subscriber skip the guarded code entirely.
 
 Scope IsHandled to a safe value-calculation block and run the critical operations unconditionally afterwards; or expose a positive `OnAfter…` event for subscribers to adjust results, rather than a bypass around the commit.
 
-See sample: `do-not-bypass-critical-operations-with-ishandled.good.al`.
+See sample: [`do-not-bypass-critical-operations-with-ishandled.good.al`](do-not-bypass-critical-operations-with-ishandled.good.al).
 
 ## Anti Pattern
 
 An `OnBefore…` IsHandled guard wrapping a posting or ledger routine — `if IsHandled then exit;` around the code that creates ledger entries and updates document status — letting subscribers skip the commit. Detection: an `if IsHandled then exit;` whose skipped body performs posting, ledger writes, number-series consumption, or integrity and permission validation.
 
-See sample: `do-not-bypass-critical-operations-with-ishandled.bad.al`.
+See sample: [`do-not-bypass-critical-operations-with-ishandled.bad.al`](do-not-bypass-critical-operations-with-ishandled.bad.al).

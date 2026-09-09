@@ -19,10 +19,10 @@ Role-center cues and CardPart totals that run `CalcFields`, scans, or HTTP on th
 
 Bind the cue to a page variable, enqueue a read-only calculation from `OnAfterGetCurrRecord` (not `OnAfterGetRecord` on a list), and apply the result in `OnPageBackgroundTaskCompleted`. Show a placeholder until then.
 
-See sample: `page-background-tasks-for-expensive-cues.good.al`.
+See sample: [`page-background-tasks-for-expensive-cues.good.al`](page-background-tasks-for-expensive-cues.good.al).
 
 ## Anti Pattern
 
 `CalcFields` or a ledger `Count` in `OnOpenPage` / `OnAfterGetCurrRecord` of a CueGroup CardPart with no background task. The Role Center waits on SQL the user may never look at.
 
-See sample: `page-background-tasks-for-expensive-cues.bad.al`.
+See sample: [`page-background-tasks-for-expensive-cues.bad.al`](page-background-tasks-for-expensive-cues.bad.al).

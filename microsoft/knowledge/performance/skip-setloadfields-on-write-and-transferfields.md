@@ -19,10 +19,10 @@ application-area: [all]
 
 Omit `SetLoadFields` on loops whose body performs a documented full-load operation (`Insert`, `Delete`, `Rename`, `TransferFields`, or assignment into a temporary record) on the same record variable, so the initial read already materializes every field those operations need.
 
-See sample: `skip-setloadfields-on-write-and-transferfields.good.al`.
+See sample: [`skip-setloadfields-on-write-and-transferfields.good.al`](skip-setloadfields-on-write-and-transferfields.good.al).
 
 ## Anti Pattern
 
 Calling `SetLoadFields` immediately before a `FindSet` whose body performs `Delete`, `Rename`, `TransferFields`, or copies the record into a temporary table. The review signal is a partial-record setup on a record variable that feeds one of these documented full-load operations in the same iteration.
 
-See sample: `skip-setloadfields-on-write-and-transferfields.bad.al`.
+See sample: [`skip-setloadfields-on-write-and-transferfields.bad.al`](skip-setloadfields-on-write-and-transferfields.bad.al).

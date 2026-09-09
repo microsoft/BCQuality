@@ -19,10 +19,10 @@ application-area: [all]
 
 Group work by company. Call `ChangeCompany` once per distinct company, then `FindSet`/`Get` that company's rows. If the record variable is reused afterward, call `ChangeCompany()` without a company name to redirect it back to the current company.
 
-See sample: `changecompany-in-loop-drops-caches.good.al`.
+See sample: [`changecompany-in-loop-drops-caches.good.al`](changecompany-in-loop-drops-caches.good.al).
 
 ## Anti Pattern
 
 `repeat Rec.ChangeCompany(Buffer.Company); Rec.Get(Buffer."No."); until Buffer.Next() = 0` when `Buffer` is not ordered by company, or even when it is — if `ChangeCompany` still runs every row. The signal is `ChangeCompany` inside `repeat`/`while` keyed by a document line rather than by a company loop.
 
-See sample: `changecompany-in-loop-drops-caches.bad.al`.
+See sample: [`changecompany-in-loop-drops-caches.bad.al`](changecompany-in-loop-drops-caches.bad.al).

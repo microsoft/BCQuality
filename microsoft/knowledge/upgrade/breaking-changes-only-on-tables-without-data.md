@@ -17,10 +17,10 @@ Primary-key changes and field-type changes (for example widening `Integer` to `B
 
 Treat primary-key and field-type changes as restricted to tables introduced in the same change. For changes on tables with existing data, design and ship the corresponding upgrade procedure (typically backed by `DataTransfer` and an upgrade tag) that guarantees the new layout is achievable for every row, and verify with concrete evidence that the existing values fit the new constraint (no PK collisions, no value-range overflow).
 
-See sample: `breaking-changes-only-on-tables-without-data.good.al`.
+See sample: [`breaking-changes-only-on-tables-without-data.good.al`](breaking-changes-only-on-tables-without-data.good.al).
 
 ## Anti Pattern
 
 Changing the primary key on a base-app table, or widening / narrowing a field type on a table that has been shipping for releases, with no accompanying upgrade plan. The change compiles cleanly and may even deploy on an empty-ish tenant, then fails on customers who actually have data.
 
-See sample: `breaking-changes-only-on-tables-without-data.bad.al`.
+See sample: [`breaking-changes-only-on-tables-without-data.bad.al`](breaking-changes-only-on-tables-without-data.bad.al).

@@ -19,10 +19,10 @@ The Business Central server caches primary-key `Get` calls within a transaction.
 
 Keep `Record.Get` for repeated lookups of the same primary keys in one transaction. Use a Query when the work is a true join or aggregation that the record API would express as nested scans. Do not flag a guarded `Get` on a repeating key as an N+1 solely because a Query could express the same columns.
 
-See sample: `query-results-bypass-primary-key-cache.good.al`.
+See sample: [`query-results-bypass-primary-key-cache.good.al`](query-results-bypass-primary-key-cache.good.al).
 
 ## Anti Pattern
 
 Rewriting a helper that `Get`s Customer by `No.` on every sales line into a Query opened inside that helper. Distinct line customers still need a lookup; repeating customers were already served from the PK cache. The Query pays SQL every time.
 
-See sample: `query-results-bypass-primary-key-cache.bad.al`.
+See sample: [`query-results-bypass-primary-key-cache.bad.al`](query-results-bypass-primary-key-cache.bad.al).

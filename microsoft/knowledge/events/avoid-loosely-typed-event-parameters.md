@@ -17,10 +17,10 @@ Passing `RecordRef` or `xRec` as event parameters weakens the contract. A `Recor
 
 Give events concrete record types and explicit values, such as `(SalesLine: Record "Sales Line"; PreviousQuantity: Decimal)`, instead of a `RecordRef` or an `xRec` parameter. Subscribers then get type safety, field access, and an unambiguous contract.
 
-See sample: `avoid-loosely-typed-event-parameters.good.al`.
+See sample: [`avoid-loosely-typed-event-parameters.good.al`](avoid-loosely-typed-event-parameters.good.al).
 
 ## Anti Pattern
 
 Event parameters typed as `RecordRef` (no table type) or an `xRec`-style "previous record" (ambiguous, possibly stale) without strong justification. Detection: an event signature containing a `RecordRef` parameter, or a passed-through `xRec` record, where a concrete typed record and explicit values would serve.
 
-See sample: `avoid-loosely-typed-event-parameters.bad.al`.
+See sample: [`avoid-loosely-typed-event-parameters.bad.al`](avoid-loosely-typed-event-parameters.bad.al).

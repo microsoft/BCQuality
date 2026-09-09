@@ -19,10 +19,10 @@ A `TableRelation` lookup opens the table's `LookupPageId`. If that is the full l
 
 Give master tables a slim lookup page (`PageType = List`, few columns, no FactBoxes, no heavy `OnAfterGetRecord`) and assign it to `LookupPageId`. Keep the full list for `DrillDownPageId` and the role-explorer entry.
 
-See sample: `use-dedicated-lookup-pages-not-full-lists.good.al`.
+See sample: [`use-dedicated-lookup-pages-not-full-lists.good.al`](use-dedicated-lookup-pages-not-full-lists.good.al).
 
 ## Anti Pattern
 
 `LookupPageId = Page::"... List"` on a table that already has (or should have) a lookup page. Opening a field lookup then pays list-page cost. The signal is `LookupPageId` pointing at a page that declares FactBoxes or a wide repeater.
 
-See sample: `use-dedicated-lookup-pages-not-full-lists.bad.al`.
+See sample: [`use-dedicated-lookup-pages-not-full-lists.bad.al`](use-dedicated-lookup-pages-not-full-lists.bad.al).

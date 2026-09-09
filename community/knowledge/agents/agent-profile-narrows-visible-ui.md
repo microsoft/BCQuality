@@ -17,13 +17,13 @@ The agent only sees what its profile shows. Extra actions, views, and Role Cente
 
 Ship an agent-specific profile and page customizations: hide unrelated actions, keep descriptive tooltips, add Role Center links to the few pages the agent should open. Prefer fewer navigation hops.
 
-See sample: `agent-profile-narrows-visible-ui.good.al`.
+See sample: [`agent-profile-narrows-visible-ui.good.al`](agent-profile-narrows-visible-ui.good.al).
 
 ## Anti Pattern
 
 Assigning `BUSINESS MANAGER` or `ORDER PROCESSOR` as `GetDefaultProfile` so the agent can do anything. Detection signal: default profile equal to a full-user role with no agent page customizations.
 
-See sample: `agent-profile-narrows-visible-ui.bad.al`.
+See sample: [`agent-profile-narrows-visible-ui.bad.al`](agent-profile-narrows-visible-ui.bad.al).
 
 ## See also
 

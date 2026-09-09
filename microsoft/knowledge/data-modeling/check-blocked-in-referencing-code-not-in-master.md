@@ -19,10 +19,10 @@ Putting the block check inside the master's own `OnInsert`/`OnModify` does nothi
 
 The referencing line validates `Master.TestField(Blocked, false)` in `OnValidate` of the reference field and re-checks before posting. The master table stays logic-free on `Blocked`.
 
-See sample: `check-blocked-in-referencing-code-not-in-master.good.al`.
+See sample: [`check-blocked-in-referencing-code-not-in-master.good.al`](check-blocked-in-referencing-code-not-in-master.good.al).
 
 ## Anti Pattern
 
 The block check sits in the master's own `OnModify`/`OnInsert` (so referencing and posting proceed unchecked), or there is no check at all on the referencing side.
 
-See sample: `check-blocked-in-referencing-code-not-in-master.bad.al`.
+See sample: [`check-blocked-in-referencing-code-not-in-master.bad.al`](check-blocked-in-referencing-code-not-in-master.bad.al).

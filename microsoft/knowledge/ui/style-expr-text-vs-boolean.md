@@ -22,4 +22,4 @@ When `StyleExpr` is Text, you must trace the variable's assignments — typicall
 
 Inspect the declared type of the symbol referenced by `StyleExpr` before drawing conclusions. If it is Boolean, evaluate the `Style` property. If it is Text, follow every assignment to the variable and check the full set of possible style values against `cosmetic-styles-need-no-textual-context.md` and `semantic-styles-need-independent-textual-meaning.md`.
 
-See sample: `style-expr-text-vs-boolean.good.al`.
+See sample: [`style-expr-text-vs-boolean.good.al`](style-expr-text-vs-boolean.good.al).

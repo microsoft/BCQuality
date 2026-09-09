@@ -15,8 +15,8 @@ application-area: [all]
 
 ## Best Practice
 
-Keep the default validation when values must exist in the related table. When free-form values are intentional, set both `ValidateTableRelation = false` and `TestTableRelation = false`, then add compensating `OnValidate` logic that normalizes, validates, creates, or otherwise handles unmatched input. Document that downstream code must not assume the relation exists. See sample: `validatetablerelation-false-on-user-input.good.al`.
+Keep the default validation when values must exist in the related table. When free-form values are intentional, set both `ValidateTableRelation = false` and `TestTableRelation = false`, then add compensating `OnValidate` logic that normalizes, validates, creates, or otherwise handles unmatched input. Document that downstream code must not assume the relation exists. See sample: [`validatetablerelation-false-on-user-input.good.al`](validatetablerelation-false-on-user-input.good.al).
 
 ## Anti Pattern
 
-`ValidateTableRelation = false` on a user-facing field with no intentional handling for unmatched values, or leaving `TestTableRelation = true` so database relation tests reject values the UI deliberately accepts. See sample: `validatetablerelation-false-on-user-input.bad.al`.
+`ValidateTableRelation = false` on a user-facing field with no intentional handling for unmatched values, or leaving `TestTableRelation = true` so database relation tests reject values the UI deliberately accepts. See sample: [`validatetablerelation-false-on-user-input.bad.al`](validatetablerelation-false-on-user-input.bad.al).

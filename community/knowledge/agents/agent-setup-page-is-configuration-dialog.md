@@ -17,10 +17,10 @@ Instance setup is not a Card or StandardDialog. The toolkit expects `PageType = 
 
 Declare `PageType = ConfigurationDialog`, host `part(...; "Agent Setup Part")`, and put agent-specific fields in another group. Keep system OK/Cancel. Use a temporary source record and defer persistence until Update, as described in `agent-setup-source-table-is-temporary.md`. Following Microsoft's agent setup samples, set `Extensible = false`.
 
-See sample: `agent-setup-page-is-configuration-dialog.good.al`.
+See sample: [`agent-setup-page-is-configuration-dialog.good.al`](agent-setup-page-is-configuration-dialog.good.al).
 
 ## Anti Pattern
 
 A Card or StandardDialog setup page with no `Agent Setup Part`. Detection signal: setup page ID from `IAgentFactory` / `IAgentMetadata` whose page is not `ConfigurationDialog` or has no `Agent Setup Part`.
 
-See sample: `agent-setup-page-is-configuration-dialog.bad.al`.
+See sample: [`agent-setup-page-is-configuration-dialog.bad.al`](agent-setup-page-is-configuration-dialog.bad.al).

@@ -17,10 +17,10 @@ CodeCop AA0248 recommends prefixing self-references inside a codeunit with `this
 
 Inside a codeunit, prefix calls to procedures and accesses to global variables on the same codeunit with `this.`, and pass `this` when an external codeunit needs a reference to the running instance.
 
-See sample: `this-keyword-in-codeunits.good.al`.
+See sample: [`this-keyword-in-codeunits.good.al`](this-keyword-in-codeunits.good.al).
 
 ## Anti Pattern
 
 Calling a codeunit-local procedure as a bare identifier (`ValidateCustomer(Customer)`) when other readings are possible. The ambiguity costs reading time on every encounter and grows with codeunit size.
 
-See sample: `this-keyword-in-codeunits.bad.al`.
+See sample: [`this-keyword-in-codeunits.bad.al`](this-keyword-in-codeunits.bad.al).

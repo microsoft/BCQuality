@@ -17,10 +17,10 @@ application-area: [all]
 
 Have check triggers call query-only helpers that raise an error when an invariant fails. Put every `Insert`, `Modify`, `Delete`, `Rename`, `DataTransfer`, and other migration write behind helpers called from the matching `OnUpgrade...` trigger.
 
-See sample: `check-only-triggers-do-not-migrate-data.good.al`.
+See sample: [`check-only-triggers-do-not-migrate-data.good.al`](check-only-triggers-do-not-migrate-data.good.al).
 
 ## Anti Pattern
 
 Repairing data in `OnCheckPreconditions...` or finishing migration in `OnValidateUpgrade...`. Those writes blur the phase contract and make a check alter the state it is supposed to assess.
 
-See sample: `check-only-triggers-do-not-migrate-data.bad.al`.
+See sample: [`check-only-triggers-do-not-migrate-data.bad.al`](check-only-triggers-do-not-migrate-data.bad.al).

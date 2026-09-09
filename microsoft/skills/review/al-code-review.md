@@ -300,7 +300,9 @@ Output conforms to the DO output contract, extended with `sub-results` and `skip
 }
 ```
 
-The empty-corpus case — BCQuality's state until knowledge files land — rolls up to `no-knowledge`:
+When the selected leaves find no applicable knowledge, the result rolls up to
+`no-knowledge`. This example shows two leaf results; a full run includes every
+invoked leaf:
 
 ```json
 {

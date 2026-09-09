@@ -21,7 +21,7 @@ LLMs treat one carrier as universal. Some assume the caption is serialised and r
 
 Establish which schema versions the field is served under before changing anything about its enum. Under schema 2.0 (Microsoft's API v2.0, an explicit `$schemaversion=2.0` in the consumer contract, or another reliable context signal) the member name is the contract: keep names stable, put wording changes in `Caption`, add a value by appending a new name with an ordinal above every existing one, and retire a value through `ObsoleteState` rather than by deleting it. For a custom API that clients may still call as schema 1.0, any install of BC 17 to 23 or a caller that pins 1.0, the caption is a contract as well: change neither name nor caption in place, or publish the change as a new `APIVersion` on a new page object. A rename is out in every case: AppSourceCop AS0082 rejects it against a baseline, and dependent extensions bind to the name.
 
-See sample: `api-enum-values-are-a-contract-by-name-not-ordinal.good.al`.
+See sample: [`api-enum-values-are-a-contract-by-name-not-ordinal.good.al`](api-enum-values-are-a-contract-by-name-not-ordinal.good.al).
 
 ## Anti Pattern
 
@@ -31,7 +31,7 @@ Detection signal: a diff hunk that changes the name in a `value(...)` line while
 
 The mirror image is a review defect: suppressing a caption-change finding because "the API serialises names". That holds only under schema 2.0. Do not flag a `Caption` change when the reviewer can establish schema 2.0 for every consumer; on a custom API where clients may select schema 1.0, report a caption change on an exposed value as a consumer-visible change and ask for versioning. A value appended at the end changes no contract under either schema and is never a finding.
 
-See sample: `api-enum-values-are-a-contract-by-name-not-ordinal.bad.al`.
+See sample: [`api-enum-values-are-a-contract-by-name-not-ordinal.bad.al`](api-enum-values-are-a-contract-by-name-not-ordinal.bad.al).
 
 ## See also
 

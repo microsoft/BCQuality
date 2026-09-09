@@ -19,10 +19,10 @@ An AL helper that accepts a `var Rec: Record X` parameter and performs a bulk op
 
 Any helper designed to operate on a temporary record, and that performs `DeleteAll`, `ModifyAll`, or similar bulk writes on its parameter, should call `Rec.IsTemporary()` at the top and raise a descriptive error when the assumption is violated. The error message should name the parameter so the misuse is easy to locate.
 
-See sample: `guard-bulk-operations-with-istemporary.good.al`.
+See sample: [`guard-bulk-operations-with-istemporary.good.al`](guard-bulk-operations-with-istemporary.good.al).
 
 ## Anti Pattern
 
 Trusting documentation or naming conventions alone to signal that a `var Rec` parameter is expected to be temporary. A future refactor or a copy-paste caller can pass the real table; the bulk operation then executes against production rows silently.
 
-See sample: `guard-bulk-operations-with-istemporary.bad.al`.
+See sample: [`guard-bulk-operations-with-istemporary.bad.al`](guard-bulk-operations-with-istemporary.bad.al).

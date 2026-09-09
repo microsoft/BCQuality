@@ -17,10 +17,10 @@ Business Central prefixes AL custom-dimension keys with `al` in Application Insi
 
 Choose stable PascalCase keys such as `Operation`, `Result`, and `RecordCount`. Keep the key set and meaning stable for a shipped event ID; add a new event ID or coordinate a schema migration when the meaning must change. Privacy guidance separately governs whether a dimension value may contain customer data.
 
-See sample: `keep-custom-dimension-schema-stable.good.al`.
+See sample: [`keep-custom-dimension-schema-stable.good.al`](keep-custom-dimension-schema-stable.good.al).
 
 ## Anti Pattern
 
 Keys such as `'order no'` or `'result_code'`, or renaming/removing a key while retaining the same shipped event ID. A naming-only issue is advisory; changing an existing event's schema is the material compatibility defect. New keys on a new event ID are not a breaking change.
 
-See sample: `keep-custom-dimension-schema-stable.bad.al`.
+See sample: [`keep-custom-dimension-schema-stable.bad.al`](keep-custom-dimension-schema-stable.bad.al).

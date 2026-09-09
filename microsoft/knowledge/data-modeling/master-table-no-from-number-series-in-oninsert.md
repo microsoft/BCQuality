@@ -19,10 +19,10 @@ This is not an `Integer` `AutoIncrement` key, a GUID, or the `SystemId`. Those a
 
 `No.` `Code[20]` is the sole primary key; a non-editable `No. Series` `Code[20]` field records the source series. `OnInsert` checks `if "No." = ''`, reads the setup table, `TestField`s the configured series, stores it in `No. Series`, and assigns `No.` from the series.
 
-See sample: `master-table-no-from-number-series-in-oninsert.good.al`.
+See sample: [`master-table-no-from-number-series-in-oninsert.good.al`](master-table-no-from-number-series-in-oninsert.good.al).
 
 ## Anti Pattern
 
 An `Integer` `AutoIncrement` (or GUID / `SystemId`) primary key used as the business key, with no `OnInsert` number assignment. Records get an opaque identifier no user can reference, and the master no longer participates in the standard numbering and manual-entry behavior every other BC master follows.
 
-See sample: `master-table-no-from-number-series-in-oninsert.bad.al`.
+See sample: [`master-table-no-from-number-series-in-oninsert.bad.al`](master-table-no-from-number-series-in-oninsert.bad.al).

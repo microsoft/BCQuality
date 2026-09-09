@@ -134,7 +134,7 @@ Output conforms to the DO output contract. Every finding this skill emits MUST s
 }
 ```
 
-The empty-corpus case — BCQuality's state until performance knowledge files land — produces:
+When no applicable performance knowledge is available, the report is:
 
 ```json
 {

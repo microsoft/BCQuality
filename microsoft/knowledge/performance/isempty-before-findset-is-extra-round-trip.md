@@ -19,10 +19,10 @@ application-area: [all]
 
 When the body iterates, open with `if Rec.FindSet() then repeat ... until Next() = 0`. Do not flag a bare `FindSet` loop as missing an `IsEmpty` precondition. Reserve `IsEmpty` for branches that never materialize the row set.
 
-See sample: `isempty-before-findset-is-extra-round-trip.good.al`.
+See sample: [`isempty-before-findset-is-extra-round-trip.good.al`](isempty-before-findset-is-extra-round-trip.good.al).
 
 ## Anti Pattern
 
 `if not Rec.IsEmpty() then if Rec.FindSet() then repeat`. Also a false-positive review comment that asks to add that guard. The second read does not avoid the first; it duplicates it.
 
-See sample: `isempty-before-findset-is-extra-round-trip.bad.al`.
+See sample: [`isempty-before-findset-is-extra-round-trip.bad.al`](isempty-before-findset-is-extra-round-trip.bad.al).

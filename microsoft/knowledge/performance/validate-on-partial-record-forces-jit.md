@@ -19,10 +19,10 @@ application-area: [all]
 
 In a partial-record loop, assign fields directly when trigger side effects are not required. If `Validate` is required, do not use `SetLoadFields` on that iterator, or `AddLoadFields` every field the validate path can touch before the read.
 
-See sample: `validate-on-partial-record-forces-jit.good.al`.
+See sample: [`validate-on-partial-record-forces-jit.good.al`](validate-on-partial-record-forces-jit.good.al).
 
 ## Anti Pattern
 
 `SetLoadFields` on a handful of columns, then `Validate` inside the loop. The load list looks optimal; runtime JIT and TableRelation I/O dominate. The signal is `Validate(` on a record that still has a `SetLoadFields` in the same procedure.
 
-See sample: `validate-on-partial-record-forces-jit.bad.al`.
+See sample: [`validate-on-partial-record-forces-jit.bad.al`](validate-on-partial-record-forces-jit.bad.al).

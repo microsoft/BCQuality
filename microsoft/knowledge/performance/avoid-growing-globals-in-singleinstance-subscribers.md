@@ -19,10 +19,10 @@ A codeunit with `SingleInstance = true` is allocated once per session and lives 
 
 Keep the global footprint on a SingleInstance subscriber bounded and intentional: a handful of flags, a setup record, a bounded cache with a maximum size. When cross-event state is genuinely needed, define an explicit reset point — end of a business process, arrival of a specific terminal event — that clears the growing collection.
 
-See sample: `avoid-growing-globals-in-singleinstance-subscribers.good.al`.
+See sample: [`avoid-growing-globals-in-singleinstance-subscribers.good.al`](avoid-growing-globals-in-singleinstance-subscribers.good.al).
 
 ## Anti Pattern
 
 A SingleInstance subscriber that appends each event's payload to a global list, dictionary, or temporary record without a cap or cleanup trigger. The list grows for hours, memory pressure builds quietly, and debugging the root cause on a live environment is substantially harder than noticing the unbounded append in code review.
 
-See sample: `avoid-growing-globals-in-singleinstance-subscribers.bad.al`.
+See sample: [`avoid-growing-globals-in-singleinstance-subscribers.bad.al`](avoid-growing-globals-in-singleinstance-subscribers.bad.al).

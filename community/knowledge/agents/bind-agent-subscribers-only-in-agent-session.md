@@ -17,10 +17,10 @@ Page-filter tweaks, extra validation, and prompt dialogs for the agent should no
 
 On `OnAfterInitialization`, exit unless `Agent Session.IsAgentSession`. Then `BindSubscription` a single-instance codeunit that holds the current task id. Keep those subscribers internal.
 
-See sample: `bind-agent-subscribers-only-in-agent-session.good.al`.
+See sample: [`bind-agent-subscribers-only-in-agent-session.good.al`](bind-agent-subscribers-only-in-agent-session.good.al).
 
 ## Anti Pattern
 
 Event subscribers on `Sales Header` OnAfterInsert that always `Message` the agent, with no `IsAgentSession` guard. Detection signal: agent-only behaviour in a static subscriber that is not bind-gated.
 
-See sample: `bind-agent-subscribers-only-in-agent-session.bad.al`.
+See sample: [`bind-agent-subscribers-only-in-agent-session.bad.al`](bind-agent-subscribers-only-in-agent-session.bad.al).

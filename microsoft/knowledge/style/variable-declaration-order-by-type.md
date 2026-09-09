@@ -17,10 +17,10 @@ CodeCop AA0021 requires that variable declarations inside a `var` block follow a
 
 Declare all `Record` variables first, then other complex types, then primitives. A consistent order makes diffs review-friendly and matches the convention enforced by the AL formatter and CodeCop.
 
-See sample: `variable-declaration-order-by-type.good.al`.
+See sample: [`variable-declaration-order-by-type.good.al`](variable-declaration-order-by-type.good.al).
 
 ## Anti Pattern
 
 A `var` block where records and primitives are interleaved — `CustomerNo: Code[20];` between two `Record` variables, or `Amount: Decimal;` declared above the `Customer: Record Customer;` it is computed from. AA0021 flags it and the block is harder to scan; readers expect composite types at the top.
 
-See sample: `variable-declaration-order-by-type.bad.al`.
+See sample: [`variable-declaration-order-by-type.bad.al`](variable-declaration-order-by-type.bad.al).

@@ -17,10 +17,10 @@ Inside an upgrade codeunit (or any procedure transitively invoked from `OnUpgrad
 
 Wrap every read in an `if`. `if Item.Get(No) then ...`, `if Customer.FindSet() then;`, `if not Vendor.FindLast() then exit;`. The empty-then form `if Customer.FindSet() then;` is the idiomatic way to attempt a read whose only purpose is to position a record, while swallowing the "not found" case.
 
-See sample: `guard-database-reads.good.al`.
+See sample: [`guard-database-reads.good.al`](guard-database-reads.good.al).
 
 ## Anti Pattern
 
 Calling `Item.Get()`, `Customer.FindSet()`, or `Vendor.FindLast()` bare in upgrade code. The first tenant whose data does not match the upgrade's assumptions will fail to upgrade.
 
-See sample: `guard-database-reads.bad.al`.
+See sample: [`guard-database-reads.bad.al`](guard-database-reads.bad.al).

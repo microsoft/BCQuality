@@ -16,9 +16,9 @@ Use `TestField` when the condition is a simple presence-or-equality check on a s
 
 A page action's `OnAction` trigger is a different case: a page action is only invocable through its own UI control, so when the action's `Enabled` property is already bound to the same condition the trigger would otherwise `TestField`, the control cannot be clicked while the field is blank and the field can never reach the trigger empty. Adding a `TestField` there is redundant defensive code, not a missing check — flag it only when the trigger can run through a path `Enabled` does not cover (a shared procedure, an API, or a condition broader than what gates the action).
 
-See sample: `fielderror-vs-testfield.good.al`.
+See sample: [`fielderror-vs-testfield.good.al`](fielderror-vs-testfield.good.al).
 
 ## Anti Pattern
 Calling `FieldError` to "test" a field — placing it on a path that is reached unconditionally and expecting it to validate — terminates execution every time because `FieldError` never evaluates a condition. The inverse smell is reaching for `TestField` when the rule needs a tailored message, then bolting a vague generic string onto a check that cannot express the real business reason. A reviewer can spot the first by a `FieldError` that is not guarded by a preceding `if`, and the second by a `TestField` whose intent comment describes a condition more complex than presence or equality.
 
-See sample: `fielderror-vs-testfield.bad.al`.
+See sample: [`fielderror-vs-testfield.bad.al`](fielderror-vs-testfield.bad.al).

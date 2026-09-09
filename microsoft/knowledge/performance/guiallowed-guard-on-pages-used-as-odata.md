@@ -19,10 +19,10 @@ Pages exposed as OData, including Edit in Excel, still run AL page triggers for 
 
 Wrap UI-only work — FactBox refresh, notifications, defaulting that is not part of the web-service contract — in `if GuiAllowed then`. Keep the OData path to field values the API actually returns.
 
-See sample: `guiallowed-guard-on-pages-used-as-odata.good.al`.
+See sample: [`guiallowed-guard-on-pages-used-as-odata.good.al`](guiallowed-guard-on-pages-used-as-odata.good.al).
 
 ## Anti Pattern
 
 Unconditional FactBox or calculation logic in `OnAfterGetRecord` / `OnAfterGetCurrRecord` on a page that is published as a web service or used with Edit in Excel. The signal is trigger work that calls `CurrPage` parts or extra queries without a `GuiAllowed` guard.
 
-See sample: `guiallowed-guard-on-pages-used-as-odata.bad.al`.
+See sample: [`guiallowed-guard-on-pages-used-as-odata.bad.al`](guiallowed-guard-on-pages-used-as-odata.bad.al).

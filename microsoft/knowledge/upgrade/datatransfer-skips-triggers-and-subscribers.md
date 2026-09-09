@@ -19,10 +19,10 @@ For *new fields and tables added in the same change* this is fine: nothing yet d
 
 Use `DataTransfer` when set-based transfer is safe and row-level business logic is intentionally unnecessary — initial population of a new field is the canonical case. When an existing field's validation must run, loop through records and call `Validate(Field, Value)`; if the table's modify trigger must also run, follow with `Modify(true)`. If performance requires `DataTransfer`, document exactly which field-validation and row-modification triggers or subscribers are intentionally bypassed and verify that derived data remains correct.
 
-See sample: `datatransfer-skips-triggers-and-subscribers.good.al`.
+See sample: [`datatransfer-skips-triggers-and-subscribers.good.al`](datatransfer-skips-triggers-and-subscribers.good.al).
 
 ## Anti Pattern
 
 Reaching for `DataTransfer` to update an existing field with non-trivial `OnValidate` or `OnModify` logic, without confirming that both validation and row-modification subscribers can be skipped. Replacing it with only `Modify(true)` is also incomplete when field validation is required; call `Validate` for that field first.
 
-See sample: `datatransfer-skips-triggers-and-subscribers.bad.al`.
+See sample: [`datatransfer-skips-triggers-and-subscribers.bad.al`](datatransfer-skips-triggers-and-subscribers.bad.al).

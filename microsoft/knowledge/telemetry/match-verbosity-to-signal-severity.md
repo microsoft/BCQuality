@@ -17,10 +17,10 @@ application-area: [all]
 
 Use `Error` for failed operations that need investigation and `Critical` only for abnormal termination or equivalent loss of service. Use `Warning` for degraded but completed behavior, `Normal` for successful business events, and `Verbose` for detailed diagnostics. Judge the outcome, not the procedure name: an expected optional lookup miss can legitimately remain `Normal` or `Verbose`.
 
-See sample: `match-verbosity-to-signal-severity.good.al`.
+See sample: [`match-verbosity-to-signal-severity.good.al`](match-verbosity-to-signal-severity.good.al).
 
 ## Anti Pattern
 
 A `Session.LogMessage` in a failed `TryFunction`, failed `Codeunit.Run`, unsuccessful HTTP response, or other explicit failure branch that uses `Verbosity::Normal` or `Verbose` without evidence that the failure is expected and benign.
 
-See sample: `match-verbosity-to-signal-severity.bad.al`.
+See sample: [`match-verbosity-to-signal-severity.bad.al`](match-verbosity-to-signal-severity.bad.al).

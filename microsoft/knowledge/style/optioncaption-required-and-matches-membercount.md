@@ -17,10 +17,10 @@ CodeCop AA0221 requires an `OptionCaption` on every option-type field that is no
 
 `OptionMembers = Open,Released,Pending;` and `OptionCaption = 'Open,Released,Pending';` — same count, same order. When adding a new member, update both lines in the same commit.
 
-See sample: `optioncaption-required-and-matches-membercount.good.al`.
+See sample: [`optioncaption-required-and-matches-membercount.good.al`](optioncaption-required-and-matches-membercount.good.al).
 
 ## Anti Pattern
 
 `OptionMembers = Open,Released,Pending;` with no `OptionCaption` at all (the user sees the raw English members and translation is impossible), or `OptionMembers = Low,Medium,High,Critical;` paired with `OptionCaption = 'Low,Medium,High';` — count mismatch, `Critical` displays as blank or carries the wrong caption depending on platform version.
 
-See sample: `optioncaption-required-and-matches-membercount.bad.al`.
+See sample: [`optioncaption-required-and-matches-membercount.bad.al`](optioncaption-required-and-matches-membercount.bad.al).

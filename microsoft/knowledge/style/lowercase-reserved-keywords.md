@@ -19,10 +19,10 @@ Test codeunits that retain legacy uppercase forms (`OPENEDIT`, `ASSERTERROR`, `V
 
 Write keywords lowercase: `if Condition then begin … end;`, `repeat … until Found;`, `for i := 1 to N do …`. The standard AL formatter normalizes casing automatically.
 
-See sample: `lowercase-reserved-keywords.good.al`.
+See sample: [`lowercase-reserved-keywords.good.al`](lowercase-reserved-keywords.good.al).
 
 ## Anti Pattern
 
 `IF Condition THEN BEGIN DoSomething(); END;`, `REPEAT GetNext(); UNTIL Found;`. Uppercase keywords trip AA0241 and signal C/AL-era code that has not been modernized.
 
-See sample: `lowercase-reserved-keywords.bad.al`.
+See sample: [`lowercase-reserved-keywords.bad.al`](lowercase-reserved-keywords.bad.al).

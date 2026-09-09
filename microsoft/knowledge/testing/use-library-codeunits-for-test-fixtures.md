@@ -17,10 +17,10 @@ BC ships a layer of test Library codeunits — `LibrarySales`, `LibraryPurchase`
 
 Reach for the matching Library codeunit before writing manual record setup: `LibrarySales.CreateCustomer`, `LibrarySales.CreateSalesHeader`/`CreateSalesLine`, `LibraryInventory.CreateItem`, `LibraryERM.CreateGLAccount`, and `LibraryRandom.RandInt`/`RandDec` for values. Create the prerequisite parents first and reference their primary keys from dependent records, and `Validate` the foreign-key field so the `TableRelation` — and any field-validation logic — runs exactly as it would in production. Pass the records they return into the code under test. The fixtures stay valid across upgrades because the library — not your test — owns the knowledge of what a well-formed record requires.
 
-See sample: `use-library-codeunits-for-test-fixtures.good.al`.
+See sample: [`use-library-codeunits-for-test-fixtures.good.al`](use-library-codeunits-for-test-fixtures.good.al).
 
 ## Anti Pattern
 
 `Customer.Init(); Customer."No." := 'X'; Customer.Insert();` — a record with a hand-picked primary key, no number-series entry, and none of the mandatory fields a real customer needs. It compiles and may even insert, but it bypasses setup the production code assumes, and it breaks the first time the schema gains a required field the test does not know about.
 
-See sample: `use-library-codeunits-for-test-fixtures.bad.al`.
+See sample: [`use-library-codeunits-for-test-fixtures.bad.al`](use-library-codeunits-for-test-fixtures.bad.al).

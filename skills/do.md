@@ -19,7 +19,12 @@ An action skill is a single markdown file with YAML frontmatter. It lives inside
 - `/community/skills/` — community-contributed action skills.
 - `/custom/skills/` — partner or customer action skills (typically in a consumer repo, not in BCQuality itself).
 
-Action skills do not live at the repo root. The files in `/skills/` — the three meta-skill contracts (READ, DO, WRITE) and the entry-point skill (`entry.md`, `kind: entry-point`) — are the only skills that sit outside a layer. The entry-point skill structurally follows this same four-step pattern but produces a dispatch record rather than a findings-report; see `skills/entry.md` for its contract.
+Action skills do not live at the repo root. Layer-independent files in
+`/skills/` contain the three meta-skill contracts (READ, DO, WRITE), the
+entry-point skill (`entry.md`, `kind: entry-point`), and host-format adapters.
+Adapters are not action skills. Entry structurally follows the same
+four-step pattern but produces a dispatch record rather than a findings-report;
+see [entry.md](entry.md) for its contract.
 
 ## Skills hold mechanics; knowledge files hold BC facts
 
@@ -319,15 +324,16 @@ A super-skill's top-level `suppressed[]` remains knowledge-file-only and is typi
 
 ## Worked example
 
-A minimal action skill that cites applicable guidance for a changed AL file, without generating findings of its own:
+A minimal action skill that reviews a changed AL file against applicable
+guidance. Relevance alone never produces a finding:
 
 ```yaml
 ---
 kind: action-skill
-id: cite-applicable-guidance
+id: review-applicable-guidance
 version: 1
-title: Cite applicable guidance
-description: Lists knowledge files relevant to a changed AL file.
+title: Review applicable guidance
+description: Reviews a changed AL file against applicable knowledge.
 inputs: [file-path]
 outputs: [findings-report]
 technologies: [al]
@@ -345,7 +351,12 @@ Filter by `technologies: [al]` and `bc-version` matching the target environment.
 Intersect `keywords` with tokens derived from the target file's object name and changed members.
 
 ## Action
-For each worklist entry, emit one finding with severity `info`, a message naming the concern, and a reference object pointing to the knowledge file.
+Read each worklisted article in full and compare its normative guidance to the
+input. Emit a finding only for a concrete violation or an observation the
+article explicitly defines, with justified severity, evidence, and a reference
+copied from the discovered article path. Do not report an article merely
+because it was relevant. If every item was evaluated and none warrants a
+finding, return `completed` with an empty `findings` array.
 
 ## Output
 Conforms to the DO output contract.

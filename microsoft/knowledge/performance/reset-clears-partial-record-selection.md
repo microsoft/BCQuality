@@ -19,10 +19,10 @@ application-area: [all]
 
 Call `Reset` (or empty `SetLoadFields()`) first when the variable must be reused, then call `SetLoadFields` with the fields the next read actually uses, then apply filters and read. After `Reset`, a new `SetLoadFields` is required; the previous list is gone.
 
-See sample: `reset-clears-partial-record-selection.good.al`.
+See sample: [`reset-clears-partial-record-selection.good.al`](reset-clears-partial-record-selection.good.al).
 
 ## Anti Pattern
 
 `SetLoadFields(...)` followed by `Reset()` (or by parameterless `SetLoadFields()`) and then `FindSet` without restoring the load list. The filters look correct; the SQL still selects every column.
 
-See sample: `reset-clears-partial-record-selection.bad.al`.
+See sample: [`reset-clears-partial-record-selection.bad.al`](reset-clears-partial-record-selection.bad.al).

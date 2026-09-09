@@ -132,7 +132,7 @@ Output conforms to the DO output contract. Every finding this skill emits MUST s
 }
 ```
 
-The empty-corpus case — BCQuality's state until error-handling knowledge files land — produces:
+When no applicable error-handling knowledge is available, the report is:
 
 ```json
 {

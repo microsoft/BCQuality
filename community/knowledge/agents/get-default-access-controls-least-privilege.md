@@ -17,13 +17,13 @@ application-area: [all]
 
 Insert only the permission sets the agent needs. For an AL `permissionset` object, use `Scope::System` and the ID of the app that defines it. Recreate permission sets that exist only as user-defined configuration in Business Central as AL objects first. Prefer a dedicated permission set over a full-user role.
 
-See sample: `get-default-access-controls-least-privilege.good.al`.
+See sample: [`get-default-access-controls-least-privilege.good.al`](get-default-access-controls-least-privilege.good.al).
 
 ## Anti Pattern
 
 Empty `GetDefaultAccessControls`, or inserting `SUPER` / `D365 BUS FULL ACCESS` because it made the demo work. Detection signal: Role ID on the default buffer that is a full-user role, or a set that is not in the app.
 
-See sample: `get-default-access-controls-least-privilege.bad.al`.
+See sample: [`get-default-access-controls-least-privilege.bad.al`](get-default-access-controls-least-privilege.bad.al).
 
 ## See also
 
