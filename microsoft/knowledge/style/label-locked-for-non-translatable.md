@@ -24,3 +24,7 @@ See sample: `label-locked-for-non-translatable.good.al`.
 `HttpsUrl: Label 'https://example.com';` or `ContentTypeTok: Label 'application/json';` declared without `Locked = true`. The translator localizes them, the integration fails in production for the affected tenant, and the failure is invisible in the developer's English-locale tests.
 
 See sample: `label-locked-for-non-translatable.bad.al`.
+
+## Exception: seeded master-data codes (e.g. posting group codes)
+
+Do not flag a Label as needing `Locked = true` just because its value is later written into a `Code` field with a `TableRelation`, such as `Default VAT Bus. Posting Group`, `Gen. Bus. Posting Group`, or a dimension code. Across the codebase (see `DemoTool` install/upgrade codeunits per country layer), seed values like `DOMESTIC` are declared as ordinary translatable Labels on purpose: each localization layer/company ships its own translated code, and the matching master-data record (e.g. the `VAT Business Posting Group`) is created with that same translated code in the same locale. Because creation and lookup happen together in the same tenant language, translating the code does not break referential integrity. Locking such a Label would instead diverge it from the localized master data it is meant to match. Only require `Locked = true` when the string crosses a locale boundary on its own (URLs, HTTP verbs, JSON/XML/API contract literals, GUIDs) — not for domestic seed/default codes that are created and consumed within the same tenant.
