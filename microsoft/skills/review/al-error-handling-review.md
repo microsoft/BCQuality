@@ -47,6 +47,8 @@ A file enters the candidate worklist when its `keywords` intersect the extracted
 The following targeted checks cover every current `error-handling` article:
 
 - `[ErrorBehavior(ErrorBehavior::Collect)]`, `ErrorInfo.Collectible`, `HasCollectedErrors`, `GetCollectedErrors`, or `ClearCollectedErrors` is added or changed, especially when errors are collected without later surfacing/clearing them — `collect-validation-errors-with-errorbehavior`.
+- New or changed code calls `Session.StartSession` from within error/duration logging around a web-service call, background job, or other operation expected to fail — `log-writes-must-survive-rollback`.
+- A guarded lookup (`if Record.Get(...) then ... else` or similar) sets a value used later, and the same guard shape (with the same blank/zero fallback style) is applied to a field that feeds a posted amount, a tax/VAT calculation, a quantity or price actually used in a transaction, or a legally/compliance-facing output — `defensive-vs-offensive-code-must-match-blast-radius`. The signal is a posting-critical or compliance-facing field guarded defensively with a silent fallback, not the mere presence of a guarded lookup.
 - Developer-only invariant text is raised with default client visibility, or a user-actionable validation is hidden as `ErrorType::Internal` — `errortype-internal-vs-client-for-diagnostics`.
 - `FieldError` receives a complete capitalized sentence, repeats the field caption/value, or ends the predicate with punctuation — `fielderror-default-message-logic`.
 - An unguarded `FieldError` is used as though it performed a comparison, or `TestField` is forced onto a complex rule needing a tailored predicate — `fielderror-vs-testfield`.
