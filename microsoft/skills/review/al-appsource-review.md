@@ -51,6 +51,7 @@ The following targeted checks cover every current `appsource` article across the
 
 Before emitting an affix finding, compare every owned object name and every member added to another publisher's object against the configured `mandatoryAffixes`/`mandatoryPrefix`. A matching prefix or suffix is compliant. Do not flag an `ABC`-prefixed object or an `ABC`-suffixed extension member when `ABC` is the configured affix.
 - For BC v27 or later, `app.json` adds or changes the `help` URL to a path deeper than two levels, or a changed Copilot/context-sensitive help arrangement would ground the app under an overly broad truncated parent — `keep-copilot-help-url-to-two-path-levels`.
+- Changed code declares or calls `File.Open`/`File.Create`/`File.Read`/`File.Write` in an app targeting Business Central Online — `file-datatype-saas`.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 

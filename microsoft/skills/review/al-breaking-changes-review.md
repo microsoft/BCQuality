@@ -52,6 +52,7 @@ The following targeted checks cover every current `breaking-changes` article:
 - Code already marked obsolete is expanded with new behavior instead of routing new callers to its replacement — `do-not-modify-code-already-marked-obsolete`.
 - A shipped table field is deleted, renamed, renumbered, or replaced without retaining the original field as `ObsoleteState = Pending` and migrating its data — `obsolete-table-fields-instead-of-deleting-them`. This owns AS0005 field-name changes; do not substitute the namespace article.
 - A published object's namespace changes between the base and changed source while its identity otherwise remains — `namespace-is-part-of-published-object-identity`. Do not apply it to a new, unshipped object or to an ordinary object-name change with no namespace change.
+- New or changed code calls `Codeunit Mail`'s `CreateMessage`/`Send`/`GetErrorDesc` instead of `Codeunit Email`/`Codeunit "Email Message"` — `prefer-email-module`.
 
 For `obsolete-table-fields-instead-of-deleting-them`, compare the baseline ID and name before emitting. When the original field remains under the same ID and name with `ObsoleteState = Pending`, and the replacement uses a new ID, the change follows the rule and must not be flagged.
 
