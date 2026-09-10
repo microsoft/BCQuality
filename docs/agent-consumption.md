@@ -10,6 +10,65 @@ mental model.
 This is the operational reference for integration authors. Partners using
 the installed plugin do not need to implement this flow themselves.
 
+## Try a minimal integration
+
+**"Invoke `skills/entry.md`" means ask your agent to read and follow that
+instruction document.** It is not a shell command, HTTP endpoint, or executable
+library. Your host must be able to read files, enumerate directories, and
+execute the selected skills as instructed. Merely mentioning BCQuality does
+not make its content available to the model.
+
+For a first integration, create or reuse a dedicated BCQuality checkout.
+For example, in PowerShell:
+
+```powershell
+git clone https://github.com/microsoft/BCQuality.git "C:\Knowledge\BCQuality"
+```
+
+Give the host access to **both** that content directory and your own app
+directory. The plugin is not required for this route. Replace the paths and
+BC version below with your actual values, then send this prompt to the agent:
+
+```text
+BCQuality root: C:\Knowledge\BCQuality
+Review input: folder-path = C:\Repos\MyBusinessCentralApp
+
+Read BCQuality's skills\entry.md and follow it with this task context:
+task-context:
+  goal: Review the complete AL app without changing its source files.
+  inputs-available: [folder-path]
+  technologies: [al]
+  bc-version: 28
+  enabled-layers: [microsoft, community, custom]
+  disabled-skills: []
+
+Resolve BCQuality instructions, knowledge, and index preparation against the
+BCQuality root, not the app directory. Pass the actual review-input path above
+when a dispatched skill accepts folder-path.
+Follow Entry's preparation and dispatch instructions. Execute every dispatched
+action skill with its exact input subset, reading READ and DO on demand.
+Return each complete findings report unchanged. If Entry returns no-match or
+failed, return that dispatch record unchanged instead of inventing a review.
+```
+
+`inputs-available` lists input **types**; the `Review input` line binds the type
+to the actual app directory. It is not an extra Entry schema field. Omit
+`bc-version` when unknown rather than guessing it; add localization or
+application-area context only when known. Keep the two roots distinct so index
+preparation operates on BCQuality, not your app.
+
+Expect Entry to select the action skills and the agent to execute them.
+A broad review normally returns the Microsoft coordinator's report with
+domain `sub-results`, plus any separately dispatched reports. Each report
+must retain its outcome, including incomplete or failed work; see
+[reading results](using-bcquality.md#reading-your-results). A dispatch record
+alone is not a completed review.
+
+This prompt delegates the existing protocol rather than implementing new
+routing logic. For repeatable runs, [pin the checkout](customizing-bcquality.md#updates-and-versions).
+Add scheduling, retries, and rendering only when needed, using the
+[runner contract](standalone-runner.md).
+
 ## The actors
 
 - **Orchestrator** — the tool that triggers work. Lives *outside* BCQuality. Knows *when* to run something, not *what* to run.

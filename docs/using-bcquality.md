@@ -2,10 +2,55 @@
 
 [Documentation](README.md) | [Quick start](../README.md#quick-start) | [Troubleshooting](troubleshooting.md)
 
-BCQuality supplies knowledge and reusable skills to your AI host. The plugin
-currently exposes `al-code-review`; the examples below use that skill. The
-host supplies authentication, model access, tools, permissions, and rendering.
-Installing BCQuality does not install a Business Central extension or an agent.
+BCQuality is knowledge you can read and reuse, plus skills that tell an agent
+how to apply it. You do not need an AI tool to read the articles. When using
+an agent, your host supplies authentication, model access, tools, permissions,
+and rendering; BCQuality does not install a BC extension or an agent.
+
+## Choose how to use BCQuality
+
+| Path | What to do |
+| --- | --- |
+| Read the knowledge yourself | Browse [knowledge by domain](#knowledge-by-domain), or search the repository for an AL concept. Read the article and its samples. No installation required. |
+| Use a supplied skill | Follow the [plugin quick start](../README.md#quick-start). The currently exposed skill, `al-code-review`, performs reviews and returns findings. |
+| Use your own agent or workflow | Supply selected articles as context, as described below, or use the [integration bootstrap](agent-consumption.md#try-a-minimal-integration) to execute BCQuality action skills without the plugin. |
+
+### Read and reuse an article
+
+Start with a concern, such as `SetLoadFields`, and search within
+`microsoft/BCQuality` on GitHub or open its domain folder. For example,
+[partial-record guidance](../microsoft/knowledge/performance/use-setloadfields-for-partial-records.md)
+explains the concern and links good/bad samples.
+
+Before applying an article, read its frontmatter, the small metadata block at
+the top:
+
+| Field | How to read it |
+| --- | --- |
+| `bc-version` | `[24..]` means BC 24 and later; `[26..28]` means BC 26 through 28; `[all]` means every version. Use your target BC major version, not your extension's version. |
+| `technologies` | `[al]` means the guidance applies to AL; multiple values identify the technologies the article covers. |
+| `countries` | `[w1]` means worldwide; a code such as `[dk]` limits the guidance to that localization. |
+| `application-area` | `[all]` means any application area; a named area narrows applicability. |
+| `domain` and `keywords` | Help you find the topic; they are not instructions or additional requirements. |
+
+Read `Description` for context, then `Best Practice` and `Anti Pattern` for the
+rule and its exceptions. Follow any sample and source links. Do not turn a
+sample into a production implementation without considering your own context.
+The [READ reference](../skills/read.md) defines the precise matching rules.
+
+To use an article with your own agent, give it access to the full article and
+relevant samples, not just a title or index row. For example, replace the
+bracketed values in this prompt:
+
+> Read [article URL or local path] and its linked samples. Apply the relevant
+> guidance while implementing [task] for BC [major version]. Explain which
+> guidance you used, cite the article, and identify any missing context.
+
+A URL only works if the host can retrieve it; otherwise provide the files
+directly. This is ordinary reuse of knowledge for explanation or code writing,
+**not a packaged code-generation skill or a complete BCQuality review**.
+For the structured review process, invoke a supplied skill or follow the
+integration protocol. The remaining sections describe the review workflow.
 
 ## Hosts and prerequisites
 

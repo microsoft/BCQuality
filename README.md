@@ -62,12 +62,13 @@ the review can still discover knowledge by reading the folders.
 
 | I want to... | Start here |
 | --- | --- |
+| Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](docs/using-bcquality.md#choose-how-to-use-bcquality) |
 | Review a file, changes, a branch, or a particular concern | [Using BCQuality](docs/using-bcquality.md) |
 | Resolve setup problems, incomplete reviews, or incorrect findings | [Troubleshooting and support](docs/troubleshooting.md) |
 | Browse the available guidance | [Knowledge by domain](docs/using-bcquality.md#knowledge-by-domain) |
 | Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |
-| Contribute knowledge or improve a rule | [Contributing](docs/contributing.md) |
-| Connect a host, agent, or CI integration | [How agents consume BCQuality](docs/agent-consumption.md) |
+| Contribute knowledge or improve a rule | [Your first contribution](docs/contributing.md#your-first-contribution) |
+| Connect a host, agent, or CI integration | [Minimal integration example](docs/agent-consumption.md#try-a-minimal-integration) |
 
 [All documentation and technical references](docs/README.md).
 

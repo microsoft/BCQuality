@@ -12,6 +12,9 @@ Use the built-in standalone plugin when the host's default execution is
 sufficient. Build a runner when you need explicit control over cost, latency,
 concurrency, or integration with another review surface.
 
+Start with the [minimal integration example](agent-consumption.md#try-a-minimal-integration)
+to connect your agent to the content before adding runner-specific behavior.
+
 ## Keep BCQuality current
 
 For plugin installation, use the [quick start](../README.md#quick-start).

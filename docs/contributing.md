@@ -6,6 +6,34 @@ Partners are welcome to contribute shared knowledge, examples, skills, and
 documentation. To report an incorrect finding without preparing a change,
 use the [support guide](troubleshooting.md#reporting-a-problem).
 
+## Your first contribution
+
+You can propose shared guidance without write access to the upstream
+repository. Use this path for a correction or a new article:
+
+1. Search the [existing knowledge](using-bcquality.md#knowledge-by-domain) and
+   [open issues](https://github.com/microsoft/BCQuality/issues). Correct or
+   extend an existing article when it already owns the concern; add a new
+   article only for a distinct concern that meets the admission test below.
+2. [Fork BCQuality](https://github.com/microsoft/BCQuality/fork) into your GitHub
+   account or organization, clone your fork, and create a working branch from
+   the current upstream `main`. Make edits in that branch, not the plugin cache.
+3. Choose the [owning layer and domain](#choose-the-right-destination), then
+   edit the article or use the [shared-article starter](#shared-article-starter).
+   A contribution intended for everyone does not belong in `custom/`.
+4. Add supporting sources and relevant good/bad samples. For a false positive,
+   explain the valid pattern and the mistaken finding the rule should prevent.
+5. Run the [documented checks](#before-opening-a-pr), then commit and push
+   your branch to your fork.
+6. On GitHub, open a pull request with **base repository
+   `microsoft/BCQuality`, base branch `main`**, and your fork's working branch
+   as the head. Explain why the change is needed and respond to review by
+   pushing further commits to the same branch.
+
+Merged content is not automatically loaded into an existing agent session.
+Consumers must pick up the updated content through their installation or
+checkout; see [updates and versions](customizing-bcquality.md#updates-and-versions).
+
 ## What belongs here
 
 BCQuality is a remedial knowledge base. A knowledge file exists because a
@@ -68,6 +96,20 @@ ideally under 50 lines and no more than 100.
 to catch in `Anti Pattern`; those are the normative sections. Explain
 legitimate exceptions so a reviewer does not turn a useful rule into a false
 positive. Code fences are not allowed in knowledge articles.
+
+### Shared-article starter
+
+Use [caption-required-on-page-fields.md](../microsoft/knowledge/style/caption-required-on-page-fields.md)
+as a complete shared-knowledge example. It demonstrates all six metadata
+fields, a clear concern, normative guidance and exceptions, linked good/bad
+samples, and authoritative sources.
+
+For a new concern, follow that structure but choose your own descriptive
+filename, domain, applicability, keywords, and guidance. Replace its sources
+and sample links with ones supporting your concern; do not duplicate the
+caption rule. If you are correcting caption guidance itself, edit the
+existing article instead. Use a company-only rule only in your fork's Custom
+layer, following the separate [customization example](customizing-bcquality.md#add-an-organization-specific-rule).
 
 ### Sources and examples
 
