@@ -17,9 +17,9 @@ application-area: [all]
 
 ## Best Practice
 
-Use `ChangeCompany` to read. Access rights in the target company are still enforced, so reads are safe. When the goal is business data in another company, run the code in that company: `StartSession` takes a company name and runs a codeunit there, so triggers, validation, and subscribers all execute with the target company as their context. Learn notes that a background session costs as much as a user session to start, so batch the work rather than starting one session per row, or let the target company process a hand-off row on its own schedule. A direct cross-company write is acceptable only as such a hand-off into a table the writing extension owns, whose triggers do not read company data and whose trigger-event subscribers exit when `RunTrigger` is false, using `Insert(false)`, `Modify(false)`, or `Delete(false)`, and never `Validate`.
+Use `ChangeCompany` to read. Access rights in the target company are still enforced, so reads are safe. When the goal is business data in another company, run the code in that company: `StartSession` takes a company name and runs a codeunit there, so triggers, validation, and subscribers all execute with the target company as their context. `StartSession` is a background session, not a synchronous call: the `Ok` return value reports only whether the session started, not whether the codeunit's work inside it succeeded, the caller's transaction does not extend into it, and an error raised there does not come back to the caller — it has to be logged or telemetered from inside that session. Reach for `StartSession` only for work the caller does not need to confirm before it continues; a write whose success the caller must know synchronously needs a durable status or error channel (a field the caller polls, a job queue with retry) rather than a bare `StartSession` call. Learn notes that a background session costs as much as a user session to start, so batch the work rather than starting one session per row, or let the target company process a hand-off row on its own schedule. A direct cross-company write is acceptable only as such a hand-off into a table the writing extension owns, whose triggers do not read company data and whose trigger-event subscribers exit when `RunTrigger` is false, using `Insert(false)`, `Modify(false)`, or `Delete(false)`, and never `Validate`.
 
-See sample: `changecompany-runs-triggers-in-the-calling-company.good.al`.
+See sample: [`changecompany-runs-triggers-in-the-calling-company.good.al`](changecompany-runs-triggers-in-the-calling-company.good.al).
 
 ## Anti Pattern
 
@@ -27,7 +27,7 @@ An `Insert`, `Modify`, `Delete`, or `Validate` on a record variable after `Chang
 
 Detection signal: a record variable that has had `ChangeCompany` called on it with a company name and is later used with `Insert`, `Modify`, `Delete`, or `Validate`, where the table is not owned by the extension, or has triggers that read company data, or has trigger-event subscribers that do not exit on `RunTrigger = false`. Do not flag reads after `ChangeCompany`; writes with `RunTrigger = false` into an owned table whose triggers do not read company data and whose subscribers exit on `RunTrigger = false`; or `ChangeCompany()` without an argument, which points the variable back at the current company.
 
-See sample: `changecompany-runs-triggers-in-the-calling-company.bad.al`.
+See sample: [`changecompany-runs-triggers-in-the-calling-company.bad.al`](changecompany-runs-triggers-in-the-calling-company.bad.al).
 
 ## See also
 
@@ -37,4 +37,6 @@ See sample: `changecompany-runs-triggers-in-the-calling-company.bad.al`.
 - OnInsert (Table) trigger, Remarks — https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/triggers-auto/table/devenv-oninsert-table-trigger
 - Event types, Database trigger events and order of event execution — https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-event-types
 - OnAfterInsertEvent trigger event, RunTrigger parameter — https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/triggers-auto/events/table/devenv-onafterinsertevent-table-trigger
-- Session.StartSession method, Company parameter and Remarks — https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/methods-auto/session/session-startsession-integer-integer-string-table-method
+- Session.StartSession method, Company parameter, Remarks (background session, no UI), and Return Value (`Ok` reports whether the session started, not whether the codeunit's work succeeded) — https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/methods-auto/session/session-startsession-integer-integer-string-table-method
+- AL error handling, error handling strategies: an error inside a rolled-back transaction is logged from a background session or telemetry, it does not return to the caller — https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-al-error-handling
+- AutoIncrement property, Remarks: "if several transactions are performed at the same time, they will each be assigned a different number" — https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/properties/devenv-autoincrement-property
