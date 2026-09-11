@@ -142,12 +142,15 @@ foreach ($path in $paths) {
         $target = $context[$field]
         $matched = $false
         if ($field -eq 'bc-version') {
+            # Compare as bigint on both sides: metadata validation accepts bounds
+            # wider than Int32, and an int left operand would coerce them down.
+            $targetVersion = [bigint]$target
             if ($values.Count -eq 1 -and $values[0] -match '^(\d+)\.\.(\d+)?$') {
-                $matched = $target -ge [bigint]::Parse($Matches[1]) -and
-                    (-not $Matches[2] -or $target -le [bigint]::Parse($Matches[2]))
+                $matched = $targetVersion -ge [bigint]::Parse($Matches[1]) -and
+                    (-not $Matches[2] -or $targetVersion -le [bigint]::Parse($Matches[2]))
             }
             else {
-                $matched = @($values | Where-Object { [bigint]::Parse($_) -eq $target }).Count -gt 0
+                $matched = @($values | Where-Object { [bigint]::Parse($_) -eq $targetVersion }).Count -gt 0
             }
         }
         else {

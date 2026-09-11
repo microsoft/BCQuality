@@ -622,6 +622,21 @@ try {
     Assert-Sequence $versioned.countries @('dk') 'non-default country survives'
     Assert-Sequence $versioned.'application-area' @('finance') 'non-default application area survives'
 
+    # Metadata validation accepts range bounds wider than Int32, so version
+    # matching must compare as bigint rather than coercing the bound down.
+    $wideRoot = Join-Path $tmp 'wide-version'
+    New-NeutralArticle -FixtureRoot $wideRoot -Layer microsoft -Slug wide-closed -Version '"1..99999999999"'
+    New-NeutralArticle -FixtureRoot $wideRoot -Layer microsoft -Slug wide-open -Version '"99999999999.."'
+    $wideIndex = Join-Path $tmp 'wide-version-index.json'
+    & $generator -BCQualityRoot $wideRoot -IndexPath $wideIndex | Out-Null
+    $wide = Invoke-CatalogPages -Arguments @{
+        BCQualityRoot = $wideRoot
+        IndexPath = $wideIndex
+        Domain = 'neutral'
+        BCVersion = 28
+    } -MaxBytes 16000
+    Assert-Sequence $wide.candidates.path @('microsoft/knowledge/neutral/wide-closed.md') 'bc-version bounds beyond Int32 compare without overflow'
+
     $conditional = Invoke-CatalogPages -Arguments @{
         BCQualityRoot = $fixtureRoot
         IndexPath = $fixtureIndex
@@ -665,6 +680,20 @@ try {
     Assert-Throws {
         & $search -BCQualityRoot $largeRoot -IndexPath $largeIndex -Domain neutral -MaxBytes 1024
     } 'One complete candidates row|Page envelope exceeds' 'oversized catalog row fails without clipping'
+
+    # The shared pager reports the oversized row's identity for any row shape;
+    # a row without a path must still reach its explicit offset-based failure.
+    . (Join-Path $Root 'tools/Bounded-Results.ps1')
+    $pagerHeader = [ordered]@{ version = 2; snapshot = ('0' * 64) }
+    foreach ($shape in @(
+        @{ name = 'dictionary'; row = [ordered]@{ blob = ('x' * 3000) } },
+        @{ name = 'object'; row = [pscustomobject]@{ blob = ('x' * 3000) } }
+    )) {
+        Assert-Throws {
+            ConvertTo-BoundedPage -Header $pagerHeader `
+                -Groups ([ordered]@{ rows = @($shape.row) }) -MaxBytes 1024
+        } 'One complete rows row plus envelope exceeds MaxBytes=1024 at Offset=0' "oversized pathless $($shape.name) row fails with its offset identity"
+    }
 
     $bodyRoot = Join-Path $tmp 'body-failures'
     New-NeutralArticle -FixtureRoot $bodyRoot -Layer microsoft -Slug huge-body -Description ('x' * 3000)

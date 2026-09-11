@@ -98,7 +98,14 @@ function ConvertTo-BoundedPage {
                     snapshot = $Header.snapshot
                 }
                 if ($page.returnedCount -eq 0) {
-                    $identity = if ($row.path) { " at $($row.path)" } else { " at Offset=$Offset" }
+                    $rowPath = $null
+                    if ($row -is [Collections.IDictionary]) {
+                        if ($row.Contains('path')) { $rowPath = $row['path'] }
+                    }
+                    elseif ($null -ne $row -and $row.PSObject.Properties['path']) {
+                        $rowPath = $row.PSObject.Properties['path'].Value
+                    }
+                    $identity = if ($rowPath) { " at $rowPath" } else { " at Offset=$Offset" }
                     throw "One complete $name row plus envelope exceeds MaxBytes=$MaxBytes$identity. No row was clipped."
                 }
                 return $json
