@@ -7,9 +7,6 @@
     "agents": {
       "article": "wire-all-three-agent-interfaces"
     },
-    "appsource": {
-      "context": "AppSourceCop mandatoryAffixes is configured to ABC."
-    },
     "breaking-changes": {
       "article": "do-not-expose-sensitive-data-through-public-api"
     },

@@ -39,7 +39,7 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 - The changed AL object names and types — especially codeunits, tables, and table extensions that expose procedures, fields, or events to other apps, and any member whose access is being widened.
 - The changed procedures, fields, and triggers, weighted toward non-`local` procedures, published table fields, event publishers, and any member whose signature, access modifier, or obsolete state is being altered.
-- Tokens extracted from the diff that relate to API stability and deprecation (`signature`, `parameter`, `return`, `var`, `Obsolete`, `ObsoleteState`, `ObsoleteReason`, `ObsoleteTag`, `Pending`, `Removed`, `CLEAN`, `SecretText`, `token`, `internal`, `local`, `public`, `protected`, `Scope`, `namespace`, `using`, `AS0007`).
+- Tokens extracted from the diff that relate to API stability and deprecation (`signature`, `parameter`, `return`, `var`, `Obsolete`, `ObsoleteState`, `ObsoleteReason`, `ObsoleteTag`, `Pending`, `Removed`, `CLEAN`, `SecretText`, `token`, `internal`, `local`, `public`, `protected`, `Scope`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -50,8 +50,7 @@ The following targeted checks cover every current `breaking-changes` article:
 - A published procedure changes parameter count/order/type/name, `var`, return type, or array shape instead of preserving the old signature and adding an overload — `do-not-change-published-procedure-signatures`.
 - A public procedure/event/interface exposes a credential or other sensitive value through `Text` or an externally callable contract — `do-not-expose-sensitive-data-through-public-api`.
 - Code already marked obsolete is expanded with new behavior instead of routing new callers to its replacement — `do-not-modify-code-already-marked-obsolete`.
-- A shipped table field is deleted, renamed, renumbered, or replaced without retaining the original field as `ObsoleteState = Pending` and migrating its data — `obsolete-table-fields-instead-of-deleting-them`. This owns AS0005 field-name changes; do not substitute the namespace article.
-- A published object's namespace changes between the base and changed source while its identity otherwise remains — `namespace-is-part-of-published-object-identity`. Do not apply it to a new, unshipped object or to an ordinary object-name change with no namespace change.
+- A shipped table field is deleted, renamed, renumbered, or replaced without retaining the original field as `ObsoleteState = Pending` and migrating its data — `obsolete-table-fields-instead-of-deleting-them`.
 
 For `obsolete-table-fields-instead-of-deleting-them`, compare the baseline ID and name before emitting. When the original field remains under the same ID and name with `ObsoleteState = Pending`, and the replacement uses a new ID, the change follows the rule and must not be flagged.
 
