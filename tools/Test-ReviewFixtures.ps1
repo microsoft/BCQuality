@@ -434,6 +434,7 @@ if ($PrepareDirectory) {
 }
 
 if (-not $ResultsPath -and -not $ResultsDirectory) {
+    & (Join-Path $PSScriptRoot 'Test-ReviewContract.ps1') -Root $Root
     Write-Host "Review fixture validation PASSED: $($cases.Count) cases cover $($leafDomains.Count) leaf domains." -ForegroundColor Green
     exit 0
 }
