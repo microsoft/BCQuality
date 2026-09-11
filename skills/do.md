@@ -106,6 +106,12 @@ Every action skill MUST contain these five sections, in order:
 
 Every action skill emits a single JSON document that conforms to this schema:
 
+The machine-readable structural schema is
+[`schemas/findings-report.schema.json`](../schemas/findings-report.schema.json).
+The rules below remain authoritative for semantic checks that JSON Schema
+cannot perform by itself, including summary arithmetic, reference existence,
+source-scope locations, and article-body retrieval.
+
 ```json
 {
   "skill": { "id": "string", "version": 1 },
@@ -313,6 +319,12 @@ concurrently, but MUST invoke every worklisted leaf, preserve `sub-results` in
 the declared worklist order, and wait for every invocation to finish before
 performing any super-skill self-review or final rollup. Scheduling MUST NOT
 change relevance, coverage, failure, reference-integrity, or output semantics.
+
+Orchestrators SHOULD generate `skill-index.json` with
+`tools/Build-SkillIndex.ps1` and consume the super-skill's ordered `subSkills`
+from that index instead of parsing Markdown. Action-skill frontmatter remains
+the source of truth; the generated index conforms to
+`schemas/skill-index.schema.json`.
 
 ### Section interpretation for super-skills
 

@@ -41,6 +41,11 @@ An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-pat
 
 The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`. Additional leaf skills are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
 
+Hosts that orchestrate leaves mechanically SHOULD run
+`tools/Build-SkillIndex.ps1` and resolve this skill by `id: al-code-review`.
+The generated `subSkills` array preserves the frontmatter order and avoids
+host-specific Markdown parsing.
+
 ## Relevance
 
 A sub-skill is relevant when both of the following hold:
