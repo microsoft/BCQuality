@@ -159,6 +159,36 @@ The emitted document MUST be strict, valid JSON per [RFC 8259](https://www.rfc-e
 
 AL source is the common failure case. Quoted identifiers (for example `Rec."No."`) and multi-line snippets routinely appear in `message`, `suggested-code`, and `suggested-code-omission-reason`, and each embedded quote or newline MUST be escaped when placed in a string value. A `suggested-code` payload that spans several lines is a single JSON string with `\n` separators, not a literal multi-line block. Emit the document as one JSON value with no trailing commentary, and do not rely on the consumer to repair unescaped output.
 
+### Consumer acceptance gate
+
+The exact action-skill return is the primary report transport. Before accepting
+it as a findings-report, a coordinator or host MUST validate it
+deterministically:
+
+1. Parse the exact return as strict JSON and validate every required field,
+   enum, type, conditional requirement, summary count, coverage value, and
+   leaf/super-skill constraint against this output contract.
+2. For every knowledge-backed finding, verify each `references[].path` is an
+   exact repo-relative knowledge path that exists in the live BCQuality
+   snapshot, and verify `findings[].id` exactly equals
+   `references[0].path`. Verify each path is also present in the coordinator's
+   recorded set of complete article bodies retrieved for that leaf; catalog
+   membership alone is insufficient. Keep optional `references[].sha`
+   separate: it is commit provenance, not an article content hash.
+3. For every `location`, verify `file` is an exact source path in the supplied
+   review scope, the file exists in that source snapshot, and `line` and any
+   inclusive range identify existing lines with `start-line == line` and
+   `end-line >= start-line`.
+
+Validation failure invalidates the complete return; consumers MUST NOT salvage
+individual findings, infer missing fields, reconstruct JSON, clamp ranges,
+rewrite paths, or otherwise silently repair model output. Preserve the invalid
+raw payload unchanged in private run artifacts or host logs. Record a separate
+failed validation result for that leaf with no findings, and derive the
+super-skill outcome as `partial` or `failed` using the normal rollup rules.
+Worker-side report-file persistence is optional and never replaces validation
+of the exact return.
+
 ### Field semantics
 
 **`outcome`** (required) —

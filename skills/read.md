@@ -149,3 +149,58 @@ The standard workflow for finding applicable files:
 4. Resolve conflicts via layer precedence.
 
 Steps 1–3 are deterministic; step 4 is applied only when conflicts are detected.
+
+### Bounded retrieval for review skills
+
+Resolve `$root` to the BCQuality root, not the reviewed source. Entry prepares
+the index once before dispatch; that prepared index is the catalog snapshot and
+leaves use it read-only. Catalog retrieval validates the complete index metadata
+and returned paths without reopening or rehashing article bodies. Post-Entry
+body changes therefore take effect only after Entry rebuilds the index; exact
+body retrieval rejects a selected article whose content hash differs from its
+prepared row. In one PowerShell tool session, invoke the helpers with `&` so
+array arguments remain arrays:
+
+```powershell
+& (Join-Path $root 'tools\Search-Knowledge.ps1') -Domain $domain -Technologies @('al')
+& (Join-Path $root 'tools\Get-KnowledgeArticles.ps1') -Paths @($exactPath)
+```
+
+Pass enabled layers and only task dimensions that are actually known. Catalog
+retrieval returns every domain and READ-applicable row: it does not rank,
+sample, apply top-k, deduplicate by basename, or omit rows based on query text.
+Consume every page by passing `continuation.offset` as `-Offset` and
+`continuation.snapshot` as `-Snapshot` with the unchanged request until
+`complete` is `true`. Each page repeats request context, defaults, and totals.
+An omitted applicability field on a row inherits that page's `defaults`; it
+does not mean unknown task context. Preserve every row's exact `path`, `layer`,
+complete `keywords`, `title`, one-line `description`, non-default applicability
+fields, explicit `applicability`, and `unknownDimensions`.
+
+Apply the leaf's existing Relevance and Worklist to the complete catalog union.
+Split the resulting exact paths into stable chunks of at most eight; never pass
+more paths than `-MaxArticles` (whose maximum is eight). Request article bodies
+only by one such chunk. Consume every
+returned `body`, then request `remainingPaths` with
+`continuation.snapshot` as `-Snapshot` until `complete` is `true`, preserving
+the other request settings. Continuation is confined to that chunk. Bodies are
+original strict UTF-8 text with source byte counts and SHA-256 content hashes;
+they are never summarized or truncated. Samples are not loaded unless
+requested explicitly with `-Samples` and exact sibling paths; their sibling
+article must match its prepared hash and contain the exact READ link.
+
+The default serialized response limit is 16,000 bytes including its output
+newline. Never combine pages or bodies into an unbounded prompt. A malformed or
+internally inconsistent prepared index, changed continuation snapshot, selected
+article hash mismatch, invalid continuation, unsafe or missing path, invalid
+UTF-8, broken sample link, oversized path chunk, or row/envelope that cannot fit
+fails explicitly. Entry is the only index preparation point: a leaf does not
+rebuild. If PowerShell, a helper, or a valid prepared index is unavailable,
+discover exact paths across the enabled domain folders and use native bounded
+reads through EOF, validating frontmatter per READ and never treating retrieval
+failure as an empty result.
+
+The helpers' `sha256` and `bytes` fields describe the retrieved file content.
+They are not citation provenance. Optional findings `references[].sha` is the
+BCQuality commit SHA the skill reviewed; omit it when that provenance is not
+available or would misrepresent uncommitted content.

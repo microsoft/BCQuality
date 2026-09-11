@@ -18,7 +18,7 @@ Reviews AL source changes against the `query` knowledge domain in BCQuality. Thi
 
 ## Source
 
-Read `knowledge-index.json` once and take entries whose `domain` is `query` across enabled layers. Open an article body only after it enters the Worklist. If the index is unavailable, discover `*/knowledge/query/*.md` by path.
+Use READ's **Bounded retrieval for review skills** workflow with `-Domain query`. Consume every catalog page across enabled layers before applying this leaf's Relevance and Worklist; preserve each exact catalog path and open complete bodies only for exact paths selected by the Worklist. If the helper or prepared index is unavailable or invalid, use READ's explicit path-discovery and bounded native-read fallback.
 
 ## Relevance
 
