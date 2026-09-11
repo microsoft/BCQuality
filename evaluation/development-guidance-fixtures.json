@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "skill": "microsoft/skills/development/al-development-plan.md",
+  "minimumKnowledgeRecall": 1.0,
+  "minimumKnowledgePrecision": 0.67,
+  "cases": [
+    {
+      "id": "synthetic-normal-initial-plan",
+      "title": "Anonymized normal initial-plan consumer boundary",
+      "evidenceType": "integration-shaped-synthetic",
+      "boundary": "A synthetic consumer produces metadata plus a markdown plan body, serializes the full document, and passes that document as the generic existing development-plan. This is not an external real pilot and contains no consumer workflow-state schema.",
+      "expectedKind": "bug",
+      "expectedOutcome": "completed",
+      "expectedUnknown": [],
+      "requiresUnresolved": false,
+      "requiresMaterialUnresolved": false,
+      "development-plan": "{\"metadata\":{\"kind\":\"bug\",\"request\":\"Update every entry in the supplied filtered record set while preserving the caller's selection.\",\"origin\":\"anonymized synthetic initial plan\"},\"body\":\"## Root cause and design\\nThe routine reads and updates only the first record rather than iterating the supplied filtered set. Preserve the supplied filters and update each selected row.\\n\\n## Proposed fix\\nUse an update-safe FindSet/Next loop with an explicit update on each selected entry.\\n\\n## Affected files\\n- src/Batch/UpdateSelectedEntries.Codeunit.al\\n- test/Batch/UpdateSelectedEntriesTests.Codeunit.al\\n\\n## Test strategy\\nUse existing AL test library codeunits to arrange three selected rows and an excluded row. Assert all selected rows are updated and the excluded row is unchanged. This is a proposed test, not a reported result.\\n\\n## Acceptance criteria\\n- Every selected entry is updated exactly once.\\n- The supplied filters remain effective.\\n- No excluded entry changes.\\n- Empty selections cause no changes.\\n\"}",
+      "context": {
+        "bc-version": "28",
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ],
+        "unknown": []
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/performance/pair-findset-with-next-loop.md",
+        "microsoft/knowledge/performance/findset-true-applies-updlock-on-read.md",
+        "microsoft/knowledge/testing/use-library-codeunits-for-test-fixtures.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/performance/pass-var-record-to-preserve-partial-load-enumerator.md"
+      ]
+    },
+    {
+      "id": "versioned-upgrade-plan-guidance",
+      "title": "Select guidance for a versioned data upgrade",
+      "expectedKind": "upgrade",
+      "expectedOutcome": "completed",
+      "expectedUnknown": [],
+      "requiresUnresolved": false,
+      "requiresMaterialUnresolved": false,
+      "development-plan": {
+        "kind": "upgrade",
+        "request": "Migrate existing customer tier text values to a new enum field in an app upgrade.",
+        "root-cause": "The new schema needs an explicit, rerunnable migration for existing tenant data.",
+        "affected-files": [
+          "src/Upgrade/CustomerTierUpgrade.Codeunit.al",
+          "test/Upgrade/CustomerTierUpgradeTests.Codeunit.al"
+        ],
+        "proposed-changes": [
+          "Add a tagged upgrade step that copies existing values without validation triggers.",
+          "Add upgrade tests from multiple historical data versions."
+        ],
+        "test-strategy": "Run upgrade tests from two prior data versions and verify a second invocation makes no further changes.",
+        "acceptance-criteria": [
+          "Existing values are preserved.",
+          "The migration is rerunnable.",
+          "Fresh installation does not execute upgrade migration."
+        ]
+      },
+      "context": {
+        "bc-version": "28",
+        "technologies": [
+          "al"
+        ],
+        "countries": [
+          "w1"
+        ],
+        "application-area": [
+          "all"
+        ],
+        "unknown": []
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/upgrade/use-upgrade-tags-not-version-checks.md",
+        "microsoft/knowledge/upgrade/check-only-triggers-do-not-migrate-data.md",
+        "microsoft/knowledge/upgrade/install-code-does-not-run-on-version-upgrade.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/upgrade/datatransfer-skips-triggers-and-subscribers.md",
+        "microsoft/knowledge/upgrade/appversion-meaning-depends-on-execution-context.md"
+      ]
+    },
+    {
+      "id": "no-additional-knowledge",
+      "title": "Honest empty enrichment does not prohibit ordinary work",
+      "expectedKind": "maintenance",
+      "expectedOutcome": "no-knowledge",
+      "expectedUnknown": [],
+      "requiresUnresolved": false,
+      "requiresMaterialUnresolved": false,
+      "development-plan": {
+        "kind": "maintenance",
+        "request": "Correct a spelling error in an existing internal explanatory comment in an AL procedure. Do not change the explanation, executable code, UI captions, schema, diagnostic text, configuration or behavior.",
+        "affected-files": ["src/Batch/EntryProcessor.Codeunit.al"],
+        "proposed-changes": ["Replace the misspelled word in the existing comment; add no new advice."],
+        "test-strategy": "Inspect the diff to confirm that only the comment spelling changes.",
+        "acceptance-criteria": ["Only the intended comment spelling changes; executable AL remains identical."]
+      },
+      "context": {
+        "bc-version": "28",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": []
+      },
+      "requiredKnowledge": [],
+      "optionalKnowledge": []
+    },
+    {
+      "id": "unknown-material-version",
+      "title": "Materially unresolved version-sensitive guidance stays partial",
+      "expectedKind": "feature",
+      "expectedOutcome": "partial",
+      "expectedUnknown": ["bc-version"],
+      "requiresUnresolved": true,
+      "requiresMaterialUnresolved": true,
+      "development-plan": {
+        "kind": "feature",
+        "request": "Add an expensive Sum FlowField as the source of a usually-hidden page control. The proposed design relies on visibility suppressing calculation.",
+        "affected-files": ["src/Pages/EntryOverview.Page.al"],
+        "proposed-changes": ["Bind the page control directly to the FlowField and set Visible to a conditional expression."],
+        "test-strategy": "Verify aggregate queries are not executed while the control is hidden.",
+        "acceptance-criteria": ["Hidden controls do not cause expensive aggregate queries."],
+        "unknown": ["The deployment BC version and visible-only calculation feature state cannot be established from this fixture. Do not invent either."]
+      },
+      "context": {
+        "bc-version": "unknown",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": ["bc-version"]
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/performance/hidden-flowfields-still-calculate-before-bc26-opt-in.md"
+      ],
+      "optionalKnowledge": []
+    },
+    {
+      "id": "partial-plan-decision",
+      "title": "Known platform context does not resolve an incomplete plan decision",
+      "expectedKind": "refactor",
+      "expectedOutcome": "partial",
+      "expectedUnknown": [],
+      "requiresUnresolved": true,
+      "requiresMaterialUnresolved": true,
+      "development-plan": {
+        "kind": "refactor",
+        "request": "Refactor a record read helper currently using FindFirst followed by Next. The caller contract does not establish whether to return one row or enumerate the entire filtered set.",
+        "affected-files": ["src/Queries/EntryReader.Codeunit.al"],
+        "proposed-changes": ["Choose the read method consistent with the intended cardinality after that decision is clarified."],
+        "test-strategy": "Add cardinality assertions after the caller contract is decided.",
+        "acceptance-criteria": ["The method and enumeration agree with the clarified caller contract."],
+        "unknown": ["Single-record versus multi-record caller intent remains materially unresolved."]
+      },
+      "context": {
+        "bc-version": "28",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": []
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/performance/pair-findset-with-next-loop.md"
+      ],
+      "optionalKnowledge": []
+    }
+  ]
+}
