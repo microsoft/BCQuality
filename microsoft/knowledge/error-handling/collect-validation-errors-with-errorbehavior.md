@@ -17,10 +17,10 @@ By default a procedure stops on the first `Error`, so a user fixing ten bad rows
 
 Mark the orchestrating procedure `[ErrorBehavior(ErrorBehavior::Collect)]` and run each item's validation so one failure doesn't abandon the rest — typically by calling the per-item routine through `Codeunit.Run`. When the run finishes, inspect `HasCollectedErrors()`, retrieve and clear the list with `GetCollectedErrors(true)`, and fail the operation with the collected messages. The sample intentionally produces a text aggregate and does not claim to retain record/field metadata in the final error. If that metadata is needed, map each `ErrorInfo` to a custom error UI before clearing, following the Microsoft Learn pattern. Do not replace validation failure with `Message`: clearing collected errors suppresses the platform failure, so the custom handler must still block the invalid operation.
 
-See sample: `collect-validation-errors-with-errorbehavior.good.al`.
+See sample: [`collect-validation-errors-with-errorbehavior.good.al`](collect-validation-errors-with-errorbehavior.good.al).
 
 ## Anti Pattern
 
 Three shapes signal trouble. Hand-rolled accumulation reimplements collection and prevents the handler from receiving individual `ErrorInfo` values. A `Collect` procedure that never handles the collection falls back to the concatenated platform dialog. Finally, code that calls parameterless `GetCollectedErrors()`, assumes it cleared the list, and only shows a `Message` can both leave the errors collected and allow invalid processing to continue.
 
-See sample: `collect-validation-errors-with-errorbehavior.bad.al`.
+See sample: [`collect-validation-errors-with-errorbehavior.bad.al`](collect-validation-errors-with-errorbehavior.bad.al).

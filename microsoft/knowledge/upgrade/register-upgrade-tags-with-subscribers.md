@@ -19,10 +19,10 @@ Registration is not install-time seeding. When an extension is installed into an
 
 In the upgrade codeunit, guard work with `HasUpgradeTag` and call `SetUpgradeTag` only after successful completion. Seed the same tag explicitly from `OnInstallAppPerCompany` when first-install logic should not run as a later upgrade. Also add historical per-company tags to `OnGetPerCompanyUpgradeTags` so `SetAllUpgradeTags` marks them complete for newly created companies. Keep the tag definition shared so all paths use the exact same value.
 
-See sample: `register-upgrade-tags-with-subscribers.good.al`.
+See sample: [`register-upgrade-tags-with-subscribers.good.al`](register-upgrade-tags-with-subscribers.good.al).
 
 ## Anti Pattern
 
 Assuming an `OnGetPerCompanyUpgradeTags` subscriber sets tags during extension installation, or omitting the subscriber and allowing old upgrade steps to run when `SetAllUpgradeTags` initializes a new company. The subscriber supplies a list; only `SetAllUpgradeTags` or an explicit `SetUpgradeTag` call persists it.
 
-See sample: `register-upgrade-tags-with-subscribers.bad.al`.
+See sample: [`register-upgrade-tags-with-subscribers.bad.al`](register-upgrade-tags-with-subscribers.bad.al).

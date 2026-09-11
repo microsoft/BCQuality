@@ -17,10 +17,10 @@ A `Record` variable declared with the `temporary` modifier behaves nothing like 
 
 Every local or global variable of type `Record X temporary` must start with `Temp`. Ordinary procedure parameters follow the same convention. Event publisher parameters are owned by the events-domain rule `prefix-temporary-record-event-parameters-with-temp.md`; the style leaf must not emit a second finding for the same event parameter.
 
-See sample: `temporary-variable-temp-prefix.good.al`.
+See sample: [`temporary-variable-temp-prefix.good.al`](temporary-variable-temp-prefix.good.al).
 
 ## Anti Pattern
 
 `WIPBuffer: Record "Job WIP Buffer" temporary;` as a local, global, or ordinary procedure parameter reads at the call site as if it were a database operation. Exclude event publisher parameters here so the events leaf remains their single owner.
 
-See sample: `temporary-variable-temp-prefix.bad.al`.
+See sample: [`temporary-variable-temp-prefix.bad.al`](temporary-variable-temp-prefix.bad.al).

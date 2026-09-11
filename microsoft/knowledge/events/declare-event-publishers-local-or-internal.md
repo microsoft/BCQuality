@@ -29,7 +29,7 @@ Give an event publisher the narrowest access modifier that still lets the code o
 
 Subscribers are unaffected by any of these choices. A non-public publisher also keeps the freedom to add a parameter later, which a public publisher gives up — see `add-new-event-parameters-at-the-end`.
 
-See sample: `declare-event-publishers-local-or-internal.good.al`.
+See sample: [`declare-event-publishers-local-or-internal.good.al`](declare-event-publishers-local-or-internal.good.al).
 
 ## Anti Pattern
 
@@ -39,4 +39,4 @@ Detection: an `[IntegrationEvent]` or `[BusinessEvent]` publisher that is public
 
 The mirror-image anti-pattern belongs to the reviewer, human or agent: recommending that a publisher be made public so extensions can subscribe, or reporting a `local`/`internal` publisher as unreachable dead code. Both readings mistake raising for subscribing. Neither should be raised as a finding.
 
-See sample: `declare-event-publishers-local-or-internal.bad.al`.
+See sample: [`declare-event-publishers-local-or-internal.bad.al`](declare-event-publishers-local-or-internal.bad.al).

@@ -419,3 +419,6 @@ try {
         Remove-Item -LiteralPath $scratch -Recurse -Force
     }
 }
+
+# Intentional negative native-command probes leave LASTEXITCODE nonzero.
+exit 0

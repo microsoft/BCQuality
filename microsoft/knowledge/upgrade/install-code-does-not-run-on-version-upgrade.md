@@ -17,10 +17,10 @@ An install codeunit runs when an extension is installed for the first time or an
 
 Use `Subtype = Install` for first-install and reinstall initialization. Put version migration in a separate `Subtype = Upgrade` codeunit and enter it from `OnUpgradePerCompany` or `OnUpgradePerDatabase`.
 
-See sample: `install-code-does-not-run-on-version-upgrade.good.al`.
+See sample: [`install-code-does-not-run-on-version-upgrade.good.al`](install-code-does-not-run-on-version-upgrade.good.al).
 
 ## Anti Pattern
 
 Putting a schema or data migration only in an install trigger and expecting it to run when a higher app version is upgraded. The migration is never invoked on that path.
 
-See sample: `install-code-does-not-run-on-version-upgrade.bad.al`.
+See sample: [`install-code-does-not-run-on-version-upgrade.bad.al`](install-code-does-not-run-on-version-upgrade.bad.al).

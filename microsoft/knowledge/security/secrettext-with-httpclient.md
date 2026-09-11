@@ -15,8 +15,8 @@ The secret URI API belongs to `HttpRequestMessage`, not `HttpClient`. `HttpReque
 
 ## Best Practice
 
-Compose a secret URI with `SecretStrSubstNo`, call `Request.SetSecretRequestUri(SecretUri)`, set the request method, and send the request with `HttpClient.Send(Request, Response)`. For authorization, get the request headers, add a `SecretText` value, and use `ContainsSecret` when checking for that header. See sample: `secrettext-with-httpclient.good.al`.
+Compose a secret URI with `SecretStrSubstNo`, call `Request.SetSecretRequestUri(SecretUri)`, set the request method, and send the request with `HttpClient.Send(Request, Response)`. For authorization, get the request headers, add a `SecretText` value, and use `ContainsSecret` when checking for that header. See sample: [`secrettext-with-httpclient.good.al`](secrettext-with-httpclient.good.al).
 
 ## Anti Pattern
 
-Holding a credential in `Text`, interpolating it with `StrSubstNo` or concatenation, and passing that plain text to `HttpClient.Get` or `HttpHeaders.Add`. The secret-aware request and header APIs remove the need to materialize the value as `Text`. This HTTP-sink rule supersedes the generic `secrettext-for-credentials.md` rule at the same location. See sample: `secrettext-with-httpclient.bad.al`.
+Holding a credential in `Text`, interpolating it with `StrSubstNo` or concatenation, and passing that plain text to `HttpClient.Get` or `HttpHeaders.Add`. The secret-aware request and header APIs remove the need to materialize the value as `Text`. This HTTP-sink rule supersedes the generic `secrettext-for-credentials.md` rule at the same location. See sample: [`secrettext-with-httpclient.bad.al`](secrettext-with-httpclient.bad.al).

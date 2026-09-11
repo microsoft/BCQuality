@@ -17,13 +17,13 @@ On the first install of an extension on a tenant the platform records a zero dat
 
 In `OnInstallAppPerCompany`, fetch the current `ModuleInfo` via `NavApp.GetCurrentModuleInfo`, compare `AppInfo.DataVersion()` to `Version.Create('0.0.0.0')`, and run first-install seed logic only when they match. On a non-zero data version, follow the reinstall path or exit.
 
-See sample: `first-install-dataversion-zero-check.good.al`.
+See sample: [`first-install-dataversion-zero-check.good.al`](first-install-dataversion-zero-check.good.al).
 
 ## Anti Pattern
 
 Treating `OnInstallAppPerCompany` as if it always implies "fresh tenant". The trigger also fires when reinstalling over an existing data set; without the `0.0.0.0` guard, first-install seed code can run again and duplicate rows.
 
-See sample: `first-install-dataversion-zero-check.bad.al`.
+See sample: [`first-install-dataversion-zero-check.bad.al`](first-install-dataversion-zero-check.bad.al).
 
 ## See also
 

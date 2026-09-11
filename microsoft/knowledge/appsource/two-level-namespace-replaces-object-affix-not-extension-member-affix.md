@@ -19,10 +19,10 @@ The requirement comes from AppSourceCop rule AS0011, which only runs when the ap
 
 Choose one collision strategy for owned objects: a registered affix or a globally meaningful namespace with at least two levels. Regardless of that choice, apply the registered affix to every member added to a base or third-party object. Keep the affix configured for AppSourceCop so member validation remains deterministic. Do not raise a missing member affix against an app that does not enable AppSourceCop with a mandatory affix; there AS0011 never fires, and the app's namespace is not the reason — the absent configuration is.
 
-See sample: `two-level-namespace-replaces-object-affix-not-extension-member-affix.good.al`.
+See sample: [`two-level-namespace-replaces-object-affix-not-extension-member-affix.good.al`](two-level-namespace-replaces-object-affix-not-extension-member-affix.good.al).
 
 ## Anti Pattern
 
 Using `namespace Contoso;` as though one level satisfied the AppSource alternative, or declaring `namespace Contoso.Rentals;` and then adding an unaffixed `Loyalty Points` field to `Customer` in an app that does configure a mandatory affix. The namespace distinguishes the extension's own objects; it cannot disambiguate members on Customer. The mirror-image mistake is reporting an unaffixed extension member in an app that enables no mandatory affix at all — AS0011 does not apply there, and the finding is a false positive.
 
-See sample: `two-level-namespace-replaces-object-affix-not-extension-member-affix.bad.al`.
+See sample: [`two-level-namespace-replaces-object-affix-not-extension-member-affix.bad.al`](two-level-namespace-replaces-object-affix-not-extension-member-affix.bad.al).

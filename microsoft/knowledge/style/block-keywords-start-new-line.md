@@ -17,10 +17,10 @@ CodeCop AA0018 requires that the block-introducing keywords `if`, `repeat`, `unt
 
 Each `if`, `else if`, `repeat`, `for`, `while`, and `case` starts a line. Each `end;` (the closing of a `begin … end` block or a `case`) starts a line. Branch bodies are on their own line, indented.
 
-See sample: `block-keywords-start-new-line.good.al`.
+See sample: [`block-keywords-start-new-line.good.al`](block-keywords-start-new-line.good.al).
 
 ## Anti Pattern
 
 `if IsContactName then ValidateContactName() else if IsSalespersonCode then ValidateSalespersonCode();` collapses an `if/else if` chain onto a single line; AA0018 flags both the `else` and the second `if`. The same applies to `for i := 1 to 10 do begin DoX(i); DoY(i); end;` — `end` is not at the start of its line.
 
-See sample: `block-keywords-start-new-line.bad.al`.
+See sample: [`block-keywords-start-new-line.bad.al`](block-keywords-start-new-line.bad.al).

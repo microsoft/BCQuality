@@ -17,10 +17,10 @@ application-area: [all]
 
 When sharing media between different tables, iterate the source `MediaSet` and call `Target.MediaSetField.Insert(Source.MediaSetField.Item(Index))`, then modify the target record. Direct field assignment is safe only when source and target are the same record subtype and use the same field ID. This concern is about reference/delete integrity, not the separate performance cost of `ModifyAll` on tables with media fields.
 
-See sample: `share-mediaset-items-with-insert-not-field-assignment.good.al`.
+See sample: [`share-mediaset-items-with-insert-not-field-assignment.good.al`](share-mediaset-items-with-insert-not-field-assignment.good.al).
 
 ## Anti Pattern
 
 `Target.Picture := Source.Picture;` where the two variables refer to different table types or different media-field IDs. The code copies an opaque ID, but the platform does not know that two independent fields now share the media object.
 
-See sample: `share-mediaset-items-with-insert-not-field-assignment.bad.al`.
+See sample: [`share-mediaset-items-with-insert-not-field-assignment.bad.al`](share-mediaset-items-with-insert-not-field-assignment.bad.al).

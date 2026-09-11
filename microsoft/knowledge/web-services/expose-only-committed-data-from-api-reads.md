@@ -17,10 +17,10 @@ This is about the data-consistency contract of an API endpoint: what a consumer 
 
 For an API page that must expose only committed data, set the endpoint's read isolation once as the page opens: in the `OnOpenPage` trigger write `Rec.ReadIsolation := IsolationLevel::ReadCommitted;`. Every read the endpoint then serves ignores uncommitted writes from concurrent transactions, so a consumer never receives a row that another transaction might still roll back.
 
-See sample: `expose-only-committed-data-from-api-reads.good.al`.
+See sample: [`expose-only-committed-data-from-api-reads.good.al`](expose-only-committed-data-from-api-reads.good.al).
 
 ## Anti Pattern
 
 An API intended to return committed-only data that sets no isolation level, leaving reads at the default that can observe in-flight, uncommitted writes. A consumer can fetch a row created by a concurrent transaction that is later rolled back — a dirty read that surfaces data which never durably existed. The detection signal: a committed-only read API with no `Rec.ReadIsolation := IsolationLevel::ReadCommitted` in `OnOpenPage`.
 
-See sample: `expose-only-committed-data-from-api-reads.bad.al`.
+See sample: [`expose-only-committed-data-from-api-reads.bad.al`](expose-only-committed-data-from-api-reads.bad.al).

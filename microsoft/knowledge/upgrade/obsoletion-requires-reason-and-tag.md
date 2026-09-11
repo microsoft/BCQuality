@@ -22,13 +22,13 @@ In both forms, the reason should name the replacement and the tag should identif
 
 For an object or field, set all three properties together. For a method, variable, or event, provide both `[Obsolete]` arguments. Keep the original tag stable through the lifecycle rather than changing it to a planned removal version.
 
-See sample: `obsoletion-requires-reason-and-tag.good.al`.
+See sample: [`obsoletion-requires-reason-and-tag.good.al`](obsoletion-requires-reason-and-tag.good.al).
 
 ## Anti Pattern
 
 Setting only `ObsoleteState = Pending`/`Removed` on an object or field, or using `[Obsolete('', '')]` on a method, variable, or event. Both forms produce deprecation metadata without useful replacement guidance or traceability.
 
-See sample: `obsoletion-requires-reason-and-tag.bad.al`.
+See sample: [`obsoletion-requires-reason-and-tag.bad.al`](obsoletion-requires-reason-and-tag.bad.al).
 
 ## See also
 

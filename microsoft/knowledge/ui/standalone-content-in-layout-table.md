@@ -19,4 +19,4 @@ Layout tables have no `<th>` column headers, so a captionless field that is mean
 
 Reserve `ShowCaption = false` in a layout-table grid for non-editable, free-standing content cells. If a field's role is to label or annotate another field in the same grid, restructure the grid to meet the data-table conditions (see `grid-data-table-heuristic.md`) instead of hiding the caption.
 
-See sample: `standalone-content-in-layout-table.good.al`.
+See sample: [`standalone-content-in-layout-table.good.al`](standalone-content-in-layout-table.good.al).

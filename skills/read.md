@@ -7,7 +7,9 @@ title: Schema + Use — how to read a knowledge file
 
 # READ
 
-Every consumer of BCQuality — an agent, an action skill, a human reviewer — reads this file first. It defines what a knowledge file is, what fields it contains, what they mean, and how to reconcile multiple files.
+Read this contract before interpreting knowledge files. Task execution starts
+at [Entry](entry.md); READ is loaded on demand when a dispatched skill needs
+it. It defines knowledge fields, their meaning, and how to reconcile files.
 
 This contract is stable. Changes require a PR approved by both maintainers.
 
@@ -131,7 +133,7 @@ Rules:
 
 - A sample file is identified by the article's slug followed by a `.<kind>.<ext>` suffix. The supported kinds are `good` and `bad`. Additional kinds MAY be introduced by a layer; consumers MUST ignore unknown kinds without failing.
 - The extension matches the technology (`al`, `ps1`, `js`, `kql`, …). A single article MAY carry samples in multiple technologies if the article's frontmatter `technologies` lists them.
-- Articles MAY have a `good` sample only, a `bad` sample only, both, or neither. The article text SHOULD reference each sample it ships, using a relative path like `` `<slug>.good.al` ``.
+- Articles MAY have a `good` sample only, a `bad` sample only, both, or neither. The article text SHOULD reference each sample it ships with a relative Markdown link whose label retains the backticked filename, like `` [`<slug>.good.al`](<slug>.good.al) ``.
 - Samples are **demonstration-only**. They are not deployed, not compiled as part of a published app, and not derived from the Business Central base application source. Each sample is self-contained and exists purely to make the accompanying article concrete for humans and agents.
 - Layer precedence applies to sample files the same way it applies to articles: a `/custom/knowledge/<domain>/<slug>.good.al` overrides a `/microsoft/knowledge/<domain>/<slug>.good.al` for the same article in the same layer hierarchy.
 

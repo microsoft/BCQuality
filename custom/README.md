@@ -12,6 +12,17 @@ custom/
 
 ## How to use
 
-Fork or clone BCQuality into your own repository and add your content here. Knowledge files in `/custom/knowledge/` follow the same frontmatter schema and section requirements as every other layer. Action skills in `/custom/skills/` follow the Action Skill template defined in `/skills/`.
+Use a fork or organization-controlled copy of BCQuality, not the upstream
+repository or your AL app's source folder. Confirm `git remote get-url origin`
+points at your repository before adding custom content. Upstream does not
+accept custom rules.
 
-When agents consume BCQuality, the custom layer is loaded alongside Microsoft and Community — your overrides apply automatically.
+Follow [Customizing BCQuality](../docs/customizing-bcquality.md) for a worked
+rule, plugin configuration, installing your fork, and keeping it up to date.
+Adding a rule here does not update an existing upstream plugin installation;
+your host must consume your copy.
+
+Knowledge files follow [READ](../skills/read.md) and action skills follow
+[DO](../skills/do.md). With the Custom layer enabled, applicable custom
+knowledge overrides contradictory Community or Microsoft guidance. The report
+records the displaced article; non-conflicting guidance remains additive.

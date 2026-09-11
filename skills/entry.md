@@ -25,6 +25,7 @@ task-context:
     - repository
     - pr-diff
     - file-path
+    - folder-path
   technologies: [al]
   bc-version: 28
   countries: [w1]

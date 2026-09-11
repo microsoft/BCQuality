@@ -15,8 +15,8 @@ application-area: [all]
 
 ## Best Practice
 
-Use the `SecretText` overloads of `IsolatedStorage.SetEncrypted` and `IsolatedStorage.Get` for values that meet the definition of a secret. Check the optional Boolean result when storage failure needs a controlled error; encrypted values are subject to the documented storage-size limit. See sample: `isolatedstorage-setencrypted-for-sensitive-values.good.al`.
+Use the `SecretText` overloads of `IsolatedStorage.SetEncrypted` and `IsolatedStorage.Get` for values that meet the definition of a secret. Check the optional Boolean result when storage failure needs a controlled error; encrypted values are subject to the documented storage-size limit. See sample: [`isolatedstorage-setencrypted-for-sensitive-values.good.al`](isolatedstorage-setencrypted-for-sensitive-values.good.al).
 
 ## Anti Pattern
 
-`IsolatedStorage.Set('ApiKey', ApiKeyValue, DataScope::Module)` — the key is now sitting in storage unencrypted, and any future incident that exposes the underlying storage exposes the key. Reviewers should flag any `IsolatedStorage.Set` whose key name or surrounding context suggests a secret (`ApiKey`, `Token`, `Password`, `Secret`, `ClientSecret`). See sample: `isolatedstorage-setencrypted-for-sensitive-values.bad.al`.
+`IsolatedStorage.Set('ApiKey', ApiKeyValue, DataScope::Module)` — the key is now sitting in storage unencrypted, and any future incident that exposes the underlying storage exposes the key. Reviewers should flag any `IsolatedStorage.Set` whose key name or surrounding context suggests a secret (`ApiKey`, `Token`, `Password`, `Secret`, `ClientSecret`). See sample: [`isolatedstorage-setencrypted-for-sensitive-values.bad.al`](isolatedstorage-setencrypted-for-sensitive-values.bad.al).

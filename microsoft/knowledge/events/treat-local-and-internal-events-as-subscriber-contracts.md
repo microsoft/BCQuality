@@ -17,10 +17,10 @@ The `local` and `internal` access modifiers on Business and Integration event pu
 
 Preserve a shipped Business or Integration event's identity and every existing parameter's name, type/subtype, and passing mode regardless of the procedure access modifier. AS0025 protects names and types, while AS0063 and AS0077 protect removal and addition of `var`. New parameters may be added at any position on a `local` or `internal` event because subscribers can omit them; public event procedures follow the stricter caller contract described by `add-new-event-parameters-at-the-end`.
 
-See sample: `treat-local-and-internal-events-as-subscriber-contracts.good.al`.
+See sample: [`treat-local-and-internal-events-as-subscriber-contracts.good.al`](treat-local-and-internal-events-as-subscriber-contracts.good.al).
 
 ## Anti Pattern
 
 Renaming or removing an existing parameter, changing its type/subtype, or adding/removing its `var` modifier because the event publisher procedure is `local` or `internal`. AppSourceCop checks these subscriber-breaking changes because dependent event subscribers can still bind to the event. Reordering unchanged parameters, or inserting a new parameter among them, is not this anti-pattern.
 
-See sample: `treat-local-and-internal-events-as-subscriber-contracts.bad.al`.
+See sample: [`treat-local-and-internal-events-as-subscriber-contracts.bad.al`](treat-local-and-internal-events-as-subscriber-contracts.bad.al).

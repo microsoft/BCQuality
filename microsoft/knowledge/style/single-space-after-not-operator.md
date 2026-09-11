@@ -17,10 +17,10 @@ CodeCop AA0003 requires exactly one space between the `not` operator and the exp
 
 `if not Condition then`, `if not Customer.IsEmpty() then`, `exit(not Result)`. One space, lowercase keyword, no parentheses around the bare boolean.
 
-See sample: `single-space-after-not-operator.good.al`.
+See sample: [`single-space-after-not-operator.good.al`](single-space-after-not-operator.good.al).
 
 ## Anti Pattern
 
 `if NOT condition then`, `if not  condition then`, `if !condition then` (which is not even AL — `!` is not a negation operator in AL). All three either trip AA0003 / AA0241 or fail to compile.
 
-See sample: `single-space-after-not-operator.bad.al`.
+See sample: [`single-space-after-not-operator.bad.al`](single-space-after-not-operator.bad.al).

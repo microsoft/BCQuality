@@ -19,7 +19,12 @@ An action skill is a single markdown file with YAML frontmatter. It lives inside
 - `/community/skills/` — community-contributed action skills.
 - `/custom/skills/` — partner or customer action skills (typically in a consumer repo, not in BCQuality itself).
 
-Action skills do not live at the repo root. The files in `/skills/` — the three meta-skill contracts (READ, DO, WRITE) and the entry-point skill (`entry.md`, `kind: entry-point`) — are the only skills that sit outside a layer. The entry-point skill structurally follows this same four-step pattern but produces a dispatch record rather than an action-skill report; see `skills/entry.md` for its contract.
+Action skills do not live at the repo root. Layer-independent files in
+`/skills/` contain the three meta-skill contracts (READ, DO, WRITE), the
+entry-point skill (`entry.md`, `kind: entry-point`), and host-format adapters.
+Adapters are not action skills. Entry structurally follows the same
+four-step pattern but produces a dispatch record rather than an action-skill report;
+see [entry.md](entry.md) for its contract.
 
 ## Skills hold mechanics; knowledge files hold BC facts
 
@@ -56,12 +61,28 @@ application-area: [all]
 
 `bc-version`, `technologies`, `countries`, `application-area` are optional filters that let an orchestrator pre-select applicable skills for a task. They follow the same semantics as in READ.
 
-`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`, `development-plan`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`.
+`inputs` is a list of abstract input types the skill **accepts**. Standard values:
+`pr-diff`, `object-list`, `file-path`, `folder-path`, `repository`,
+`telemetry-query`, and `development-plan`. Semantics are any-of: the
+orchestrator supplies whichever listed input types it has, and the skill is
+invoked with a non-empty subset of its declared `inputs`. A skill that cannot
+proceed with the supplied subset MUST return `outcome: "not-applicable"`.
 
 `outputs` is always a single-element list naming the output kind:
 
 - `findings-report` — evaluates an input and reports defects or observations.
 - `development-guidance-report` — selects and summarizes applicable BCQuality knowledge for an existing development plan without changing the target repository.
+
+`file-path` is one file. `folder-path` is a directory whose recursively
+contained files form the complete current-state input, such as a Business
+Central app folder containing `app.json` and AL source. The input value is the
+actual path, not merely the name of the input type. The agent MUST enumerate
+the folder rather than reducing it to one representative file.
+
+Review skills use terms such as "diff", "changed files", and "changed code" as
+shorthand for the supplied review scope. For `folder-path`, every relevant file
+under the folder is in scope. A folder supplies no historical baseline:
+comparison-only rules MUST NOT infer a prior state that was not provided.
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
@@ -238,7 +259,7 @@ Omit `suggested-code` only when the appropriate fix depends on context the skill
 - `reference` — the suppressed file (same object shape as `findings[].references`).
 - `reason` — `layer-precedence` when another layer won under READ's precedence rules; `configuration` when the consumer disabled the file's layer.
 
-**`sub-results`** — super-skills only. Array of complete findings-reports, one per sub-skill that was invoked (i.e., every sub-skill not listed in `skipped-sub-skills`). Each entry MUST itself conform to this output contract. Leaf skills MUST NOT emit `sub-results`.
+**`sub-results`** — super-skills only. Array of complete findings-reports, one per sub-skill that was invoked (i.e., every sub-skill not listed in `skipped-sub-skills`). Each entry MUST itself conform to this output contract. Entries MUST appear in the worklist's declared order, regardless of invocation or completion order. Leaf skills MUST NOT emit `sub-results`.
 
 **`skipped-sub-skills`** — super-skills only. Array of sub-skills that were declared in frontmatter but not invoked. `reason` is `configuration` when the orchestrator disabled the sub-skill, or `not-applicable` when the super-skill's Relevance step ruled it out.
 
@@ -325,6 +346,20 @@ A **super-skill** is an action skill whose frontmatter declares a non-empty `sub
 
 Composition is flat: a super-skill MAY list only leaf skills (skills without their own `sub-skills`). Nested super-skills are not permitted in v1.
 
+### Scheduling boundary
+
+The super-skill defines which leaves must run, the input and output contracts,
+and how their results are composed. It does not prescribe a model, concurrency
+limit, retry policy, or telemetry system. Those choices belong to the
+orchestrator.
+
+Each leaf invocation MUST remain a discrete evaluation with its own complete
+findings-report. An orchestrator MAY execute independent leaves serially or
+concurrently, but MUST invoke every worklisted leaf, preserve `sub-results` in
+the declared worklist order, and wait for every invocation to finish before
+performing any super-skill self-review or final rollup. Scheduling MUST NOT
+change relevance, coverage, failure, reference-integrity, or output semantics.
+
 ### Section interpretation for super-skills
 
 The five required sections still apply. Their meaning shifts from knowledge files to sub-skills:
@@ -351,7 +386,13 @@ When the worklist is empty (every sub-skill was skipped), `outcome` is `not-appl
 
 ### Rolled-up summary
 
-`summary.counts` is the sum of sub-skill counts. `summary.coverage.worklist-size` and `items-evaluated` are the sums across invoked sub-skills.
+`summary.counts` counts the findings in the super-skill's final top-level
+`findings[]`, after failed sub-results have been excluded and duplicates have
+been merged. It MUST NOT be calculated by summing sub-skill counts, because the
+same concern may appear in more than one sub-result.
+
+`summary.coverage.worklist-size` and `items-evaluated` are the sums across
+invoked sub-skills whose outcomes are not `failed`.
 
 ### Suppression scope
 
@@ -359,15 +400,16 @@ A super-skill's top-level `suppressed[]` remains knowledge-file-only and is typi
 
 ## Worked example
 
-A minimal action skill that cites applicable guidance for a changed AL file, without generating findings of its own:
+A minimal action skill that reviews a changed AL file against applicable
+guidance. Relevance alone never produces a finding:
 
 ```yaml
 ---
 kind: action-skill
-id: cite-applicable-guidance
+id: review-applicable-guidance
 version: 1
-title: Cite applicable guidance
-description: Lists knowledge files relevant to a changed AL file.
+title: Review applicable guidance
+description: Reviews a changed AL file against applicable knowledge.
 inputs: [file-path]
 outputs: [findings-report]
 technologies: [al]
@@ -385,7 +427,12 @@ Filter by `technologies: [al]` and `bc-version` matching the target environment.
 Intersect `keywords` with tokens derived from the target file's object name and changed members.
 
 ## Action
-For each worklist entry, emit one finding with severity `info`, a message naming the concern, and a reference object pointing to the knowledge file.
+Read each worklisted article in full and compare its normative guidance to the
+input. Emit a finding only for a concrete violation or an observation the
+article explicitly defines, with justified severity, evidence, and a reference
+copied from the discovered article path. Do not report an article merely
+because it was relevant. If every item was evaluated and none warrants a
+finding, return `completed` with an empty `findings` array.
 
 ## Output
 Conforms to the DO output contract.

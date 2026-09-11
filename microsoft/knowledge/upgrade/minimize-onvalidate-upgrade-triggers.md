@@ -17,10 +17,10 @@ Triggers such as `OnValidateUpgradePerCompany` run on every upgrade pass. A full
 
 Filter directly to invalid rows and use `IsEmpty` or another bounded existence check where possible. If a broad validation is unavoidable, document the invariant that requires it and keep all data changes in `OnUpgrade...`.
 
-See sample: `minimize-onvalidate-upgrade-triggers.good.al`.
+See sample: [`minimize-onvalidate-upgrade-triggers.good.al`](minimize-onvalidate-upgrade-triggers.good.al).
 
 ## Anti Pattern
 
 Reading every record in `OnValidateUpgradePerCompany` when a filtered existence check can prove the same invariant. The scan repeats on every upgrade.
 
-See sample: `minimize-onvalidate-upgrade-triggers.bad.al`.
+See sample: [`minimize-onvalidate-upgrade-triggers.bad.al`](minimize-onvalidate-upgrade-triggers.bad.al).

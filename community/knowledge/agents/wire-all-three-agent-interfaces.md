@@ -17,13 +17,13 @@ An AL agent type is registered by extending `Agent Metadata Provider`. The platf
 
 On the enum value, set `Implementation` for all three interfaces, each pointing at a dedicated codeunit. Keep factory (create, defaults, first-time setup), metadata (setup page, summary, annotations), and task execution (message analysis, intervention suggestions) in separate objects.
 
-See sample: `wire-all-three-agent-interfaces.good.al`.
+See sample: [`wire-all-three-agent-interfaces.good.al`](wire-all-three-agent-interfaces.good.al).
 
 ## Anti Pattern
 
 An `Agent Metadata Provider` value with no `Implementation`, only one interface mapped, or all three interfaces pointing at one catch-all codeunit that cannot satisfy the contracts. Detection signal: enumextension of `Agent Metadata Provider` whose value does not list `IAgentFactory`, `IAgentMetadata`, and `IAgentTaskExecution`.
 
-See sample: `wire-all-three-agent-interfaces.bad.al`.
+See sample: [`wire-all-three-agent-interfaces.bad.al`](wire-all-three-agent-interfaces.bad.al).
 
 ## See also
 

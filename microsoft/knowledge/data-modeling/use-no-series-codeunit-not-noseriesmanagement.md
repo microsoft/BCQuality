@@ -19,10 +19,10 @@ LLMs reproduce the legacy `NoSeriesManagement` pattern because it dominates pre-
 
 `OnInsert` assigns the number with `NoSeries.GetNextNo("No. Series")` where `NoSeries` is `Codeunit "No. Series"`. The `No.` field's `OnValidate` guards manual entry by calling `NoSeries.IsManual(...)` (or `TestManual`) before clearing `No. Series`.
 
-See sample: `use-no-series-codeunit-not-noseriesmanagement.good.al`.
+See sample: [`use-no-series-codeunit-not-noseriesmanagement.good.al`](use-no-series-codeunit-not-noseriesmanagement.good.al).
 
 ## Anti Pattern
 
 `NoSeriesMgt.InitSeries(...)` for assignment and `NoSeriesMgt.TestManual(...)` for the manual check, where `NoSeriesMgt` is `Codeunit NoSeriesManagement`. Both are obsolete-pending and emit compiler warnings.
 
-See sample: `use-no-series-codeunit-not-noseriesmanagement.bad.al`.
+See sample: [`use-no-series-codeunit-not-noseriesmanagement.bad.al`](use-no-series-codeunit-not-noseriesmanagement.bad.al).

@@ -15,7 +15,7 @@ It is tempting to flag any code that calls `GetLastErrorText()` and writes the r
 
 ## Best Practice
 
-When auditing AL changes for security, ignore patterns where `GetLastErrorText()` is captured into a table or shown to users — leave those to the privacy review. Security findings on error text should be limited to the construction of the `Error()` call itself: secrets, paths, or technical internals being interpolated into the error before it is raised. See sample: `getlasterrortext-storage-is-privacy-not-security.bad.al` for the pattern that is *not* a security finding.
+When auditing AL changes for security, ignore patterns where `GetLastErrorText()` is captured into a table or shown to users — leave those to the privacy review. Security findings on error text should be limited to the construction of the `Error()` call itself: secrets, paths, or technical internals being interpolated into the error before it is raised. See sample: [`getlasterrortext-storage-is-privacy-not-security.bad.al`](getlasterrortext-storage-is-privacy-not-security.bad.al) for the pattern that is *not* a security finding.
 
 ## Anti Pattern
 

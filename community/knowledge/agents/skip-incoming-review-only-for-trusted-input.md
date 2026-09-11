@@ -17,10 +17,10 @@ Incoming task messages default to requiring user approval before the agent runs.
 
 Leave the default review-on for anything that originated outside your extension. Call `SetRequiresReview(false)` only on messages you constructed from already-authorized BC data.
 
-See sample: `skip-incoming-review-only-for-trusted-input.good.al`.
+See sample: [`skip-incoming-review-only-for-trusted-input.good.al`](skip-incoming-review-only-for-trusted-input.good.al).
 
 ## Anti Pattern
 
 `SetRequiresReview(false)` on simulated email, incoming webhooks, or user-free text. Detection signal: `SetRequiresReview(false)` next to external content with no prior validation.
 
-See sample: `skip-incoming-review-only-for-trusted-input.bad.al`.
+See sample: [`skip-incoming-review-only-for-trusted-input.bad.al`](skip-incoming-review-only-for-trusted-input.bad.al).

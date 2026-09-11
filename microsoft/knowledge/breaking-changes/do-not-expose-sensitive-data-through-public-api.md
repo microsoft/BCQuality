@@ -17,10 +17,10 @@ Every member you make publicly reachable becomes a contract you must keep — an
 
 Keep secrets in `internal` or `local` members, and prefer the `SecretText` type so the value cannot be read back or logged. Where callers genuinely need a credential, pass it inward (a setter) rather than handing it outward (a getter). Public API should return only non-sensitive data — a masked reference, a status, a business identifier — never the raw secret. Treat each public member as a lasting commitment and keep the security-sensitive surface as small as possible.
 
-See sample: `do-not-expose-sensitive-data-through-public-api.good.al`.
+See sample: [`do-not-expose-sensitive-data-through-public-api.good.al`](do-not-expose-sensitive-data-through-public-api.good.al).
 
 ## Anti Pattern
 
 A public `GetAccessToken()` that returns the raw token (or an event parameter carrying a credential to all subscribers), turning a secret into a de-facto public API any dependent can consume. Detection: a non-`local` procedure, event parameter, or global variable that surfaces a token, password, key, or other credential. Keep the secret internal and expose only non-sensitive data.
 
-See sample: `do-not-expose-sensitive-data-through-public-api.bad.al`.
+See sample: [`do-not-expose-sensitive-data-through-public-api.bad.al`](do-not-expose-sensitive-data-through-public-api.bad.al).

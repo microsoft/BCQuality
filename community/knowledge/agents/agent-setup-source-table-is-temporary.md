@@ -17,13 +17,13 @@ ConfigurationDialog setup is a draft: the user can Cancel without writing. That 
 
 Mark the page `SourceTableTemporary = true`. Copy into the temp record on open. Persist the Agent Setup buffer and custom fields only from the close path when the action is not Cancel, using `Agent Setup.GetChangesMade` / `SaveChanges`.
 
-See sample: `agent-setup-source-table-is-temporary.good.al`.
+See sample: [`agent-setup-source-table-is-temporary.good.al`](agent-setup-source-table-is-temporary.good.al).
 
 ## Anti Pattern
 
 A non-temporary source table, or `Insert`/`Modify` on the persisted setup row from field OnValidate. Detection signal: agent `ConfigurationDialog` without `SourceTableTemporary = true`, or database writes before Update.
 
-See sample: `agent-setup-source-table-is-temporary.bad.al`.
+See sample: [`agent-setup-source-table-is-temporary.bad.al`](agent-setup-source-table-is-temporary.bad.al).
 
 ## See also
 

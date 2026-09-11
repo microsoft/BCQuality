@@ -19,13 +19,13 @@ Reach for `[TryFunction]` when you want to catch a failure without unwinding the
 
 Use `[TryFunction]` sparingly. Each caught error writes to the session-wide `GetLastErrorText` and `GetLastErrorCallStack` buffers, and every subsequent catch overwrites the earlier state — a helper that reads `GetLastErrorText` later may see a different error than the one it intended to inspect. Prefer explicit checks (non-throwing predicates, guard conditions, upfront validation) for operations with predictable failure modes; reserve `[TryFunction]` for genuinely unpredictable failures such as network calls, third-party interop, or evaluation of user-supplied expressions. When you do catch, read `GetLastErrorText` immediately after the failed call, and call `ClearLastError` before the call if an earlier catch in the same scope could have left state behind — per the platform reference, "If you call the GetLastErrorText method immediately after you call the ClearLastError method, then an empty string is returned."
 
-See sample: `use-tryfunction-for-error-catching-not-rollback.good.al`.
+See sample: [`use-tryfunction-for-error-catching-not-rollback.good.al`](use-tryfunction-for-error-catching-not-rollback.good.al).
 
 ## Anti Pattern
 
 Wrapping database writes in `[TryFunction]` and expecting successful writes before the error to roll back. They remain, the caller receives `false`, and partially applied state can escape. Defensive sprinkling is also unsafe: every catch overwrites the session error buffer and can hide the failure a later helper intended to inspect.
 
-See sample: `use-tryfunction-for-error-catching-not-rollback.bad.al`.
+See sample: [`use-tryfunction-for-error-catching-not-rollback.bad.al`](use-tryfunction-for-error-catching-not-rollback.bad.al).
 
 ## See also
 

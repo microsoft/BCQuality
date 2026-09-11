@@ -21,10 +21,10 @@ Beyond that wiring guarantee, the test must verify the behavior it cares about. 
 
 List the handlers the scenario triggers, keep an optional notification handler listed for a notification the scenario may conditionally raise, and make each executed handler contribute meaningful evidence. For a single modal page, reset a capture variable before the action, capture a concrete value from the page in the handler, and assert the expected value after `RunModal`. For ordered or repeated interactions, let the test enqueue expectations, let handlers dequeue and verify them, clear storage during initialization, and finish with `AssertEmpty`.
 
-See sample: `ui-handlers-in-tests.good.al`.
+See sample: [`ui-handlers-in-tests.good.al`](ui-handlers-in-tests.good.al).
 
 ## Anti Pattern
 
 Omitting a handler for a UI call, listing a nonoptional handler the path never reaches, or claiming action success from a Boolean set before the action runs. A handler that only closes a page can also leave the test without a semantic assertion. Do not flag the absence of queue storage by itself; require it only when the test needs to prove interaction order, count, text, replies, or a scripted sequence. Do not flag a listed `[SendNotificationHandler(true)]` or `[RecallNotificationHandler(true)]` that the run does not reach, and never propose removing one: the entry is what keeps the test passing on the runs where the notification does fire.
 
-See sample: `ui-handlers-in-tests.bad.al`.
+See sample: [`ui-handlers-in-tests.bad.al`](ui-handlers-in-tests.bad.al).

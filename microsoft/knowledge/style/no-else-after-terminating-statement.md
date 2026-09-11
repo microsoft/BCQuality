@@ -17,10 +17,10 @@ When the `then` branch of an `if` ends in a terminating statement — `exit`, `b
 
 Drop the `else` when the `then` branch unconditionally exits the procedure or the enclosing loop. The body that would have been inside `else` becomes the unindented continuation.
 
-See sample: `no-else-after-terminating-statement.good.al`.
+See sample: [`no-else-after-terminating-statement.good.al`](no-else-after-terminating-statement.good.al).
 
 ## Anti Pattern
 
 An `if … then Error(…) else Error(…)` pair where both branches terminate. The `else` is structural noise — the reader cannot tell at a glance whether it exists to handle an actual continuation or simply mirrors the `then`. The fix is to drop `else` and let the second `Error` fall through naturally.
 
-See sample: `no-else-after-terminating-statement.bad.al`.
+See sample: [`no-else-after-terminating-statement.bad.al`](no-else-after-terminating-statement.bad.al).

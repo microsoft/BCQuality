@@ -17,13 +17,13 @@ application-area: [all]
 
 Send byte-bounded chunks and invoke the next AL event only from the previous call's completion callback. Handle the error callback and stop until the caller explicitly retries or discards the failed chunk. There is no universal safe threshold, so measure the serialized argument array, reserve transport headroom below the server's `ClientServicesMaxUploadSize`, and reject an individual item that exceeds the configured budget.
 
-See sample: `control-addin-throttle-al-calls-and-payload-size.good.js`.
+See sample: [`control-addin-throttle-al-calls-and-payload-size.good.js`](control-addin-throttle-al-calls-and-payload-size.good.js).
 
 ## Anti Pattern
 
 Calling `InvokeExtensibilityMethod` on an interval without tracking completion, recursively creating intervals, or serializing an entire unbounded dataset into one call. These patterns can overwhelm the client-service channel or exceed the upload limit.
 
-See sample: `control-addin-throttle-al-calls-and-payload-size.bad.js`.
+See sample: [`control-addin-throttle-al-calls-and-payload-size.bad.js`](control-addin-throttle-al-calls-and-payload-size.bad.js).
 
 ## Source
 

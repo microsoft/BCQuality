@@ -19,7 +19,7 @@ Noun-phrase captions (object names, field labels such as `'Source Document No.'`
 
 For an action `Caption` that reads as a sentence or verb phrase, capitalize only the first word and proper nouns (sentence case). Do not require every significant word to be capitalized. Before flagging a caption as "should be title case", confirm it is a noun phrase; leave imperative/sentence-phrase action captions in sentence case.
 
-See sample: `caption-capitalization-noun-phrase-vs-sentence-phrase.good.al`.
+See sample: [`caption-capitalization-noun-phrase-vs-sentence-phrase.good.al`](caption-capitalization-noun-phrase-vs-sentence-phrase.good.al).
 
 ## Anti Pattern
 

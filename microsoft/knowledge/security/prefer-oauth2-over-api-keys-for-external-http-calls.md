@@ -17,10 +17,10 @@ External HTTP integrations from AL can authenticate using OAuth 2.0 (client-cred
 
 When the partner supports OAuth, use the platform `OAuth2` codeunit (`AcquireTokenWithClientCredentials` for service-to-service, `AcquireAuthorizationCodeTokenFromCache` for user-delegated flows) rather than hand-rolled token acquisition. Carry tokens and client secrets as `SecretText`, persist them only in IsolatedStorage, and refresh tokens proactively — on a buffer before the documented expiry — so routine calls never block on a token refresh.
 
-See sample: `prefer-oauth2-over-api-keys-for-external-http-calls.good.al`.
+See sample: [`prefer-oauth2-over-api-keys-for-external-http-calls.good.al`](prefer-oauth2-over-api-keys-for-external-http-calls.good.al).
 
 ## Anti Pattern
 
 Accepting an API-key or basic-auth integration because it is the first option documented, even when the partner supports OAuth. The shared secret usually ends up in a setup-table `Text` field, rotation becomes a manual operation that rarely happens, and a single disclosure exposes every tenant using the extension.
 
-See sample: `prefer-oauth2-over-api-keys-for-external-http-calls.bad.al`.
+See sample: [`prefer-oauth2-over-api-keys-for-external-http-calls.bad.al`](prefer-oauth2-over-api-keys-for-external-http-calls.bad.al).

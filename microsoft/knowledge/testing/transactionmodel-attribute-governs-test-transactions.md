@@ -17,10 +17,10 @@ application-area: [all]
 
 Default to `AutoRollback`: it opens a write transaction at the start of the test, runs the test body, and rolls back at the end, leaving the database in its original state. Pick `AutoCommit` only when the code under test genuinely calls `Commit` — posting routines, job-queue handlers, integration flows — and make the test exercise that commit path. Pair the test codeunit with a `TestIsolation`-enabled test runner so committed changes are reverted at a higher scope. Pick `None` only for read-only tests or tests that drive UI code without writing from the test method itself.
 
-See sample: `transactionmodel-attribute-governs-test-transactions.good.al`.
+See sample: [`transactionmodel-attribute-governs-test-transactions.good.al`](transactionmodel-attribute-governs-test-transactions.good.al).
 
 ## Anti Pattern
 
 Applying `AutoRollback` to every test method without checking whether the tested business logic calls `Commit`. The test throws at the first Commit, leaving no verdict on the behavior it intended to verify; in a CI run this looks like a flake or a setup bug, not a specification mismatch. The mirror-image anti-pattern is defaulting to `AutoCommit` across the suite "to avoid the error" — without a `TestIsolation` runner this permanently dirties the test database between runs and produces order-dependent test outcomes.
 
-See sample: `transactionmodel-attribute-governs-test-transactions.bad.al`.
+See sample: [`transactionmodel-attribute-governs-test-transactions.bad.al`](transactionmodel-attribute-governs-test-transactions.bad.al).

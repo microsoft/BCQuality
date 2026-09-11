@@ -23,10 +23,10 @@ The convention used by Microsoft first-party AL code is a short prefix identifyi
 
 Assign each `Session.LogMessage` call a real, registered event ID drawn from the extension's catalogue. Treat the ID as part of the public contract of the event — renaming it is a breaking change for consumers. Keep IDs short, deterministic, and free of personal or environment-specific tokens.
 
-See sample: `telemetry-event-id-stable-unique.good.al`.
+See sample: [`telemetry-event-id-stable-unique.good.al`](telemetry-event-id-stable-unique.good.al).
 
 ## Anti Pattern
 
 Calling `Session.LogMessage('0000', ...)` (or `'1234'`, `'TODO'`, an empty string, a GUID generated at runtime, or any other placeholder) leaves the event unsearchable and indistinguishable from every other event using the same placeholder. The catalogue entry never gets created because the developer "will fix it later", and the placeholder ships.
 
-See sample: `telemetry-event-id-stable-unique.bad.al`.
+See sample: [`telemetry-event-id-stable-unique.bad.al`](telemetry-event-id-stable-unique.bad.al).

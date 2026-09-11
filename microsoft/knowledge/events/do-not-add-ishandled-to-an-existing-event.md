@@ -17,10 +17,10 @@ Adding a `var IsHandled: Boolean` parameter to an event that already shipped wit
 
 Keep the existing event as-is and add a separate `OnBeforeX(…; var IsHandled: Boolean)` before the logic you want to make overridable. Two events with distinct, stable contracts are safer than one event whose meaning and signature were changed under its subscribers.
 
-See sample: `do-not-add-ishandled-to-an-existing-event.good.al`.
+See sample: [`do-not-add-ishandled-to-an-existing-event.good.al`](do-not-add-ishandled-to-an-existing-event.good.al).
 
 ## Anti Pattern
 
 Mutating a shipped event — for example adding `var IsHandled` to `OnAfterCalculateTotal` — to retrofit override behaviour, which overloads the event's meaning and undermines existing subscribers. Detection: an `IsHandled` parameter added to a pre-existing event signature rather than introduced through a new dedicated `OnBefore` publisher.
 
-See sample: `do-not-add-ishandled-to-an-existing-event.bad.al`.
+See sample: [`do-not-add-ishandled-to-an-existing-event.bad.al`](do-not-add-ishandled-to-an-existing-event.bad.al).

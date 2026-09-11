@@ -17,10 +17,10 @@ application-area: [all]
 
 If a page or record was declared temporary on purpose — to buffer payloads, accept synthetic rows, or expose computed data through an API surface without persisting it — keep it temporary. When removing the property looks necessary, audit the call sites first: a temporary API page is often consumed by integrations that issue many calls per minute, and the round-trip cost is paid per call. If persistence is genuinely required, weigh storage and lock cost against alternatives (a regular table the API page reads from, an event-driven write).
 
-See sample: `do-not-remove-sourcetabletemporary-from-api-page.good.al`.
+See sample: [`do-not-remove-sourcetabletemporary-from-api-page.good.al`](do-not-remove-sourcetabletemporary-from-api-page.good.al).
 
 ## Anti Pattern
 
 Dropping `SourceTableTemporary = true` from an API page to "simplify" it, without revisiting the access pattern. The page begins issuing real SQL on every request; locks now contend with other writers; bulk integrations slow proportionally. The same trap exists for a record that was `TableType = Temporary` and gets demoted to a persistent table to make a debugger view easier.
 
-See sample: `do-not-remove-sourcetabletemporary-from-api-page.bad.al`.
+See sample: [`do-not-remove-sourcetabletemporary-from-api-page.bad.al`](do-not-remove-sourcetabletemporary-from-api-page.bad.al).

@@ -25,7 +25,7 @@ See also `validate-table-relation-false-suppresses-rename-propagation.md` for th
 
 The owning table implements `OnDelete` and deletes its dependents there, filtered on the foreign key. Declare `Permissions = tabledata <dependent> = rd` on the owning table — granting delete rights only on the parent is a common miss that makes the trigger fail for a non-`SUPER` user. This mirrors the base application, where every header table deletes its own lines.
 
-See sample: `owning-table-must-delete-dependents-in-ondelete.good.al`.
+See sample: [`owning-table-must-delete-dependents-in-ondelete.good.al`](owning-table-must-delete-dependents-in-ondelete.good.al).
 
 ## Anti Pattern
 
@@ -33,4 +33,4 @@ A parent table with dependent rows and no `OnDelete` trigger, where the dependen
 
 Detection signal: a table declares `TableRelation` to table X, and table X has no `OnDelete` trigger. Whether a delete path currently exists in the UI is irrelevant to the finding.
 
-See sample: `owning-table-must-delete-dependents-in-ondelete.bad.al`.
+See sample: [`owning-table-must-delete-dependents-in-ondelete.bad.al`](owning-table-must-delete-dependents-in-ondelete.bad.al).

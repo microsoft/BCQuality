@@ -40,11 +40,12 @@ jobs:
             // Known, intended repository root. Anything else added at the root
             // is flagged for a human to eyeball.
             const ALLOWED_DIRS = new Set([
-              '.claude-plugin', '.github', 'community', 'custom', 'microsoft', 'skills', 'tools',
+              '.claude-plugin', '.github', 'community', 'custom', 'docs', 'evaluation',
+              'microsoft', 'skills', 'tools',
             ]);
             const ALLOWED_FILES = new Set([
               '.gitignore', 'CODEOWNERS', 'LICENSE', 'README.md',
-              'SECURITY.md', 'agent-consumption.md',
+              'SECURITY.md', 'plugin.json',
             ]);
 
             const MARKER = '<!-- guard:new-top-level -->';

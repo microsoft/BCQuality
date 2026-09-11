@@ -19,10 +19,10 @@ AL documentation does not guarantee that a `case` statement uses a linear compar
 
 After profiling confirms the comparison path matters and the runtime frequency is known, list common branches first without changing the set of handled values, fallback behavior, or branch bodies.
 
-See sample: `order-case-branches-by-frequency.good.al`.
+See sample: [`order-case-branches-by-frequency.good.al`](order-case-branches-by-frequency.good.al).
 
 ## Anti Pattern
 
 Reordering branches based on assumed frequency without profiling, or changing an `else` arm or handled value while making the optimization. The good and bad forms must differ only in branch order.
 
-See sample: `order-case-branches-by-frequency.bad.al`.
+See sample: [`order-case-branches-by-frequency.bad.al`](order-case-branches-by-frequency.bad.al).

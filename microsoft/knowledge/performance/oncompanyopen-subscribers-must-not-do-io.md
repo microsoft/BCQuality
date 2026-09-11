@@ -19,10 +19,10 @@ application-area: [all]
 
 Keep company-open subscribers to cheap in-memory work: set a flag, enqueue a job-queue entry, or `TaskScheduler.CreateTask`. Perform HTTP and large SQL after the session is running, in that background work.
 
-See sample: `oncompanyopen-subscribers-must-not-do-io.good.al`.
+See sample: [`oncompanyopen-subscribers-must-not-do-io.good.al`](oncompanyopen-subscribers-must-not-do-io.good.al).
 
 ## Anti Pattern
 
 An `OnAfterLogin` / `OnCompanyOpenCompleted` subscriber that calls `HttpClient` or scans a ledger. Detection signal: `HttpClient`, `FindSet`, or `CalcFields` inside a subscriber bound to those events.
 
-See sample: `oncompanyopen-subscribers-must-not-do-io.bad.al`.
+See sample: [`oncompanyopen-subscribers-must-not-do-io.bad.al`](oncompanyopen-subscribers-must-not-do-io.bad.al).

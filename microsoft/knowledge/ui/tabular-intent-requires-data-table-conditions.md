@@ -24,4 +24,4 @@ Both manifestations have the same root cause: tabular semantics were intended bu
 
 A single field that keeps its visible caption is enough to demote an entire would-be data-table grid into a layout table — and silently strip the labels off its sibling captionless fields. Either restructure to meet all three conditions, or restore captions on every editable field.
 
-See sample: `tabular-intent-requires-data-table-conditions.bad.al`.
+See sample: [`tabular-intent-requires-data-table-conditions.bad.al`](tabular-intent-requires-data-table-conditions.bad.al).

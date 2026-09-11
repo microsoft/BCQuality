@@ -17,10 +17,10 @@ When a record passed to an event is a temporary record — an in-memory buffer n
 
 Name temporary record parameters with a `Temp` prefix, for example `var TempSalesLineBuffer: Record "Sales Line" temporary`, so every subscriber sees immediately that the record is an in-memory buffer and treats writes accordingly.
 
-See sample: `prefix-temporary-record-event-parameters-with-temp.good.al`.
+See sample: [`prefix-temporary-record-event-parameters-with-temp.good.al`](prefix-temporary-record-event-parameters-with-temp.good.al).
 
 ## Anti Pattern
 
 A temporary record parameter named without the `Temp` prefix (`var SalesLineBuffer: Record "Sales Line" temporary`), so subscribers cannot tell the record is non-persistent and may rely on writes that are silently discarded. Detection: an event parameter declared `temporary` whose name does not start with `Temp`.
 
-See sample: `prefix-temporary-record-event-parameters-with-temp.bad.al`.
+See sample: [`prefix-temporary-record-event-parameters-with-temp.bad.al`](prefix-temporary-record-event-parameters-with-temp.bad.al).

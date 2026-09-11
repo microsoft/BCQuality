@@ -17,10 +17,10 @@ Adding a method to a shipped interface changes the contract every implementing c
 
 On BC25 or later, declare a new interface that `extends` the published interface and add the new method there. Existing implementers remain valid for the original contract, while new implementers opt in to the extended contract. For targets BC16 through BC24, where interface inheritance is unavailable, publish a new or versioned sibling interface instead.
 
-See sample: `extend-published-interfaces-dont-edit-them.good.al`.
+See sample: [`extend-published-interfaces-dont-edit-them.good.al`](extend-published-interfaces-dont-edit-them.good.al).
 
 ## Anti Pattern
 
 Adding a procedure directly to an interface that has already shipped. Every dependent implementation must immediately add that procedure, so an otherwise compatible app update breaks its implementers.
 
-See sample: `extend-published-interfaces-dont-edit-them.bad.al`.
+See sample: [`extend-published-interfaces-dont-edit-them.bad.al`](extend-published-interfaces-dont-edit-them.bad.al).

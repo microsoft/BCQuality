@@ -21,10 +21,10 @@ This rule scopes to Marketplace ISV extensions, which is what AppSourceCop valid
 
 Own objects use the registered affix (for example `ABC Loyalty Tier`) or, when targeting BC23 or later, a qualifying namespace. Every field or action added to a standard object remains individually affixed (for example `Loyalty Points ABC` on a `Customer` tableextension).
 
-See sample: `object-affixes-prevent-collisions.good.al`.
+See sample: [`object-affixes-prevent-collisions.good.al`](object-affixes-prevent-collisions.good.al).
 
 ## Anti Pattern
 
 An owned object with neither a qualifying namespace nor an affix, an unaffixed extension member, or the common half-measure where the extension object carries the affix but a field it adds to a standard table does not. AS0011 flags the missing collision protection and the field can still collide with another app.
 
-See sample: `object-affixes-prevent-collisions.bad.al`.
+See sample: [`object-affixes-prevent-collisions.bad.al`](object-affixes-prevent-collisions.bad.al).

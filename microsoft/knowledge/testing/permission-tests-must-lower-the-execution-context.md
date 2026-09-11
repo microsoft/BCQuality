@@ -19,10 +19,10 @@ What matters is the effective permission context at the moment the protected ope
 
 Use `TestPermissions::Restrictive` for a permission-sensitive test and lower the current test user with the test framework's `"Permissions Mock"` or `"Library - Lower Permissions"` before invoking the protected operation. Assign a permission context that actually contains the rights the scenario tests — either the permission set itself or a role that includes it — and restore or stop the mock afterward. Use `Disabled` only for suites that do not assert permission behavior, or where the test lowers the context explicitly through the test libraries instead of relying on the runner. Do not require a test to apply the permission set under test directly when it reaches the same rights through a composed role and then asserts the boundary.
 
-See sample: `permission-tests-must-lower-the-execution-context.good.al`.
+See sample: [`permission-tests-must-lower-the-execution-context.good.al`](permission-tests-must-lower-the-execution-context.good.al).
 
 ## Anti Pattern
 
 Setting `TestPermissions = Disabled` or leaving the effective D365 Full Access context in place while asserting that a limited user is denied, or adding a `[TestPermissions(...)]` attribute without any runner/test-library code that applies the intended permission set. Do not report the mirror image: a test that lowers the context through a role including the permission set under test, and then asserts the boundary, has exercised that permission set and is not a coverage gap.
 
-See sample: `permission-tests-must-lower-the-execution-context.bad.al`.
+See sample: [`permission-tests-must-lower-the-execution-context.bad.al`](permission-tests-must-lower-the-execution-context.bad.al).

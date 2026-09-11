@@ -17,10 +17,10 @@ Event subscribers fire on every event matching their signature — for `OnAfterV
 
 Open the subscriber with an in-memory predicate that filters out the calls the subscriber does not handle — record type, document type, status, parameter-passed flags. Only after the cheap guard passes should the body issue a database call, and only with `SetLoadFields` for the columns the body actually reads.
 
-See sample: `guard-event-subscribers-before-db-call.good.al`.
+See sample: [`guard-event-subscribers-before-db-call.good.al`](guard-event-subscribers-before-db-call.good.al).
 
 ## Anti Pattern
 
 `[EventSubscriber(...'OnAfterValidateEvent', 'Quantity', ...)] local procedure ... var Item: Record Item; begin Item.Get(Rec."No."); if Item.HasCustomPricing() then ...;` — `Item.Get` runs on every quantity change, including changes to lines whose `Type` is not `Item`. A pre-check `if Rec.Type <> Rec.Type::Item then exit;` ahead of the `Get` removes most of the calls.
 
-See sample: `guard-event-subscribers-before-db-call.bad.al`.
+See sample: [`guard-event-subscribers-before-db-call.bad.al`](guard-event-subscribers-before-db-call.bad.al).

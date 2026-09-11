@@ -1,13 +1,78 @@
 # How agents consume BCQuality
 
-BCQuality is content — knowledge files and skills. It is consumed by agents that live elsewhere (AL-Go, a VS Code extension, a GitHub Agent invocation, etc.). This document explains the end-to-end flow, so that skill authors, orchestrator maintainers, and contributors share one mental model.
+BCQuality is content — knowledge files and skills. It is consumed by agents
+supplied by a host or orchestrator. This document explains the end-to-end flow
+so that skill authors, orchestrator maintainers, and contributors share one
+mental model.
 
-For the high-level framing and repo structure, start with the [README](README.md). This document is the operational view.
+[Documentation](README.md) | [Partner quick start](../README.md#quick-start) | [Runner contract](standalone-runner.md)
+
+This is the operational reference for integration authors. Partners using
+the installed plugin do not need to implement this flow themselves.
+
+## Try a minimal integration
+
+**"Invoke `skills/entry.md`" means ask your agent to read and follow that
+instruction document.** It is not a shell command, HTTP endpoint, or executable
+library. Your host must be able to read files, enumerate directories, and
+execute the selected skills as instructed. Merely mentioning BCQuality does
+not make its content available to the model.
+
+For a first integration, create or reuse a dedicated BCQuality checkout.
+For example, in PowerShell:
+
+```powershell
+git clone https://github.com/microsoft/BCQuality.git "C:\Knowledge\BCQuality"
+```
+
+Give the host access to **both** that content directory and your own app
+directory. The plugin is not required for this route. Replace the paths and
+BC version below with your actual values, then send this prompt to the agent:
+
+```text
+BCQuality root: C:\Knowledge\BCQuality
+Review input: folder-path = C:\Repos\MyBusinessCentralApp
+
+Read BCQuality's skills\entry.md and follow it with this task context:
+task-context:
+  goal: Review the complete AL app without changing its source files.
+  inputs-available: [folder-path]
+  technologies: [al]
+  bc-version: 28
+  enabled-layers: [microsoft, community, custom]
+  disabled-skills: []
+
+Resolve BCQuality instructions, knowledge, and index preparation against the
+BCQuality root, not the app directory. Pass the actual review-input path above
+when a dispatched skill accepts folder-path.
+Follow Entry's preparation and dispatch instructions. Execute every dispatched
+action skill with its exact input subset, reading READ and DO on demand.
+Return each complete findings report unchanged. If Entry returns no-match or
+failed, return that dispatch record unchanged instead of inventing a review.
+```
+
+`inputs-available` lists input **types**; the `Review input` line binds the type
+to the actual app directory. It is not an extra Entry schema field. Omit
+`bc-version` when unknown rather than guessing it; add localization or
+application-area context only when known. Keep the two roots distinct so index
+preparation operates on BCQuality, not your app.
+
+Expect Entry to select the action skills and the agent to execute them.
+A broad review normally returns the Microsoft coordinator's report with
+domain `sub-results`, plus any separately dispatched reports. Each report
+must retain its outcome, including incomplete or failed work; see
+[reading results](using-bcquality.md#reading-your-results). A dispatch record
+alone is not a completed review.
+
+This prompt delegates the existing protocol rather than implementing new
+routing logic. For repeatable runs, [pin the checkout](customizing-bcquality.md#updates-and-versions).
+Add scheduling, retries, and rendering only when needed, using the
+[runner contract](standalone-runner.md).
 
 ## The actors
 
-- **Orchestrator** — the tool that triggers work (e.g. AL-Go on a pull request, or a VS Code extension on save). Lives *outside* BCQuality. Knows *when* to run something, not *what* to run.
-- **Agent** — an LLM-driven process spawned by the orchestrator. The agent has no built-in knowledge of BC or of BCQuality's conventions. It knows how to read instructions and call tools.
+- **Orchestrator** — the tool that triggers work. Lives *outside* BCQuality. Knows *when* to run something, not *what* to run.
+- **Agent** — an LLM-driven process supplied by the host. It brings its own coding knowledge and tools; BCQuality adds curated guidance and execution contracts.
 - **BCQuality repo** — two kinds of content:
   - **Global skills** in `/skills/` — the `entry.md` entry-point skill plus the READ · DO · WRITE contracts that govern the rest of the repo.
   - **Layer content** in `/microsoft/`, `/community/`, and `/custom/` — knowledge files and action skills grouped by authority.
@@ -18,11 +83,30 @@ When BCQuality is installed as a standalone plugin, it additionally exposes
 additional action skills: each creates the task context and enters the same
 flow at Entry.
 
+## Repository structure
+
+| Path | Purpose |
+| --- | --- |
+| `skills/entry.md` | Routes a task to action skills. |
+| `skills/read.md`, `skills/do.md`, `skills/write.md` | Stable knowledge, action-skill, and authoring contracts. |
+| `skills/al-code-review/SKILL.md` | Host-format plugin adapter. |
+| `<layer>/knowledge/<domain>/` | Atomic articles and optional sibling samples. |
+| `<layer>/skills/` | Layer-owned action skills. |
+| `docs/` | Partner guides and integration references. |
+| `evaluation/` | Neutral review fixtures and scoring contract. |
+| `tools/` | Knowledge-index and evaluation tooling. |
+| `.github/` | Validation and repository workflows. |
+
+Layers are `microsoft`, `community`, and `custom`; Custom is a template for
+consumer forks. An action skill either evaluates knowledge directly (a leaf)
+or composes declared leaves (a super-skill). See [global skills](../skills/README.md)
+for the distinction between host-native packaging and these internal formats.
+
 ## The flow
 
 ```mermaid
 flowchart LR
-    O[Orchestrator<br/>AL-Go] -->|1 trigger + task context| A[Agent]
+    O[Host or orchestrator] -->|1 trigger + task context| A[Agent]
     A -->|2 invoke entry.md| E[Entry<br/>routing skill]
     E -->|3 dispatch record| A
     A -->|4 invoke dispatched skill| S[Action skill<br/>e.g. al-code-review]
@@ -72,7 +156,17 @@ At this point the agent reads READ and DO on demand — it needs READ to interpr
 
 Discovering candidates at the Source step naively means opening every file under a domain folder just to read its frontmatter `keywords` — on a large corpus that is hundreds of file reads per review. To avoid this, BCQuality maintains a **knowledge index**: a single artifact (`knowledge-index.json`) that lists every article surviving the consumer's layer/allow-deny filtering and carries, per article, the exact inputs the Source/Worklist steps consume — `path`, `layer`, `domain`, frontmatter dimensions, `keywords`, `title`, and a one-line `description` hint.
 
-The index is **owned and produced by BCQuality**, not by each consumer: its generator (`tools/Build-KnowledgeIndex.ps1`) ships here, next to the skills and knowledge it derives from, so the index schema stays in lockstep with the Source contract and every consumer gets the same faithful index for free instead of re-implementing the parser. The consuming orchestrator does **not** build or invoke the index — it only prunes its clone to policy as it already does. The index is then (re)generated by BCQuality itself: **Entry's preparation step runs `Build-KnowledgeIndex.ps1` over the live, already-pruned clone** at the start of every run (see `skills/entry.md`), and BCQuality CI (`.github/workflows/knowledge-index.yml`) validates that the generator is healthy and deterministic. Building over the *pruned* clone — rather than shipping a committed full-corpus index that consumers trust — keeps the index exact for any consumer policy: it can never list an article the consumer denied, so policy-excluded rules cannot leak into discovery.
+The index is **owned and produced by BCQuality**, not reimplemented by each
+consumer. Its generator, `tools/Build-KnowledgeIndex.ps1`, ships here alongside
+the content. Entry ensures the index reflects the live tree before routing
+and regenerates it when absent or not known to be current. BCQuality CI
+validates that the generator is healthy and deterministic.
+
+Consumers with allow/deny policy must prune their content copy **before**
+Entry runs. Building over that pruned tree prevents removed articles from
+entering discovery. A standalone plugin normally ships the whole tree:
+`enabled-layers` filters discovery but does not remove files or enforce a
+security boundary. See [layer selection](customizing-bcquality.md#select-layers-or-disable-a-review).
 
 The index changes only *how candidates are discovered*, never *which are selected*. The Worklist predicate is unchanged — `keywords` still drive selection — and the agent still opens each worklisted article **in full** to read its `## Best Practice` / `## Anti Pattern` rule bodies; the index is discovery metadata only and never substitutes for the article body. When no index is present, skills fall back to path-based discovery (collect by domain folder), so review still works.
 

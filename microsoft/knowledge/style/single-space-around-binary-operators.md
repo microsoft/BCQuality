@@ -17,10 +17,10 @@ CodeCop AA0001 requires exactly one space on each side of every binary operator:
 
 Write `x := 1 + 2`, `Price := Amount * Quantity`, `if a = b then`, `if a and b then`. The standard AL formatter inserts these spaces automatically; running `Alt+Shift+F` (Format Document) in the AL extension is the simplest way to bring an entire file into compliance.
 
-See sample: `single-space-around-binary-operators.good.al`.
+See sample: [`single-space-around-binary-operators.good.al`](single-space-around-binary-operators.good.al).
 
 ## Anti Pattern
 
 `x:=1+2;`, `Price:=Amount*Quantity;`, `if a=b then`, `if a and b then`. All trip AA0001.
 
-See sample: `single-space-around-binary-operators.bad.al`.
+See sample: [`single-space-around-binary-operators.bad.al`](single-space-around-binary-operators.bad.al).

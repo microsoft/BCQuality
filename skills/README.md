@@ -56,7 +56,9 @@ the layered policy. `al-code-review` remains distinct from BC-ALAgents'
 separately installed `al-review` skill, avoiding a collision in hosts that use
 one shared skill inventory. References from adapters to Entry, and from a
 dispatched super-skill to its leaves, are intentional progressive disclosure.
+This avoids registering every internal protocol file as an ambient host skill
+while allowing each review domain to run in an isolated context.
 
 These contracts are stable. Changes require a PR approved by both maintainers.
 
-For the end-to-end flow — from orchestrator trigger through to findings integration — see [`../agent-consumption.md`](../agent-consumption.md). For the high-level project framing, see [`../README.md`](../README.md).
+For the end-to-end flow — from orchestrator trigger through to findings integration — see [How agents consume BCQuality](../docs/agent-consumption.md). For the high-level project framing, see [`../README.md`](../README.md).

@@ -17,11 +17,11 @@ The base platform avoids this ambiguity by routing batch list actions through Re
 
 ## Best Practice
 
-After calling `SetSelectionFilter`, test `MarkedOnly`. When it is false — meaning the user made no explicit selection, or selected all rows with Ctrl+A — discard the single-row primary key filter by copying the page source record (`Copy(Rec)`), which carries the full page view including all active filter groups. When `MarkedOnly` is true the user made a deliberate selection and that filter should be respected as-is. Refer to `set-selection-filter-list-scope.good.al` for the pattern.
+After calling `SetSelectionFilter`, test `MarkedOnly`. When it is false — meaning the user made no explicit selection, or selected all rows with Ctrl+A — discard the single-row primary key filter by copying the page source record (`Copy(Rec)`), which carries the full page view including all active filter groups. When `MarkedOnly` is true the user made a deliberate selection and that filter should be respected as-is. Refer to [`set-selection-filter-list-scope.good.al`](set-selection-filter-list-scope.good.al) for the pattern.
 
 ## Anti Pattern
 
-Passing the result of `SetSelectionFilter` directly to a processing codeunit without checking `MarkedOnly`. When the user runs the action with the cursor on row three and no rows highlighted, the codeunit receives a filter that matches only row three. The action appears to succeed but processes a fraction of the intended scope. The defect is hard to notice because no error is raised and the single-row run completes without complaint. See `set-selection-filter-list-scope.bad.al`.
+Passing the result of `SetSelectionFilter` directly to a processing codeunit without checking `MarkedOnly`. When the user runs the action with the cursor on row three and no rows highlighted, the codeunit receives a filter that matches only row three. The action appears to succeed but processes a fraction of the intended scope. The defect is hard to notice because no error is raised and the single-row run completes without complaint. See [`set-selection-filter-list-scope.bad.al`](set-selection-filter-list-scope.bad.al).
 
 ## See also
 

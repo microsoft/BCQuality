@@ -17,13 +17,13 @@ The agent runtime looks for specific phrases: ask for assistance, request a revi
 
 In the instruction resource, use those keywords at the decision points: request a review before posting; write an email only after stating that outbound mail is reviewed; memorize values the later steps need. Pair `Reply` / `Write an email` with an explicit review sentence.
 
-See sample: `use-documented-instruction-keywords.good.al`.
+See sample: [`use-documented-instruction-keywords.good.al`](use-documented-instruction-keywords.good.al).
 
 ## Anti Pattern
 
 Inventing tool-like verbs (call Copilot, click Post_Promoted) or omitting request a review before posting. Detection signal: instruction text that says email the customer with no review keyword.
 
-See sample: `use-documented-instruction-keywords.bad.al`.
+See sample: [`use-documented-instruction-keywords.bad.al`](use-documented-instruction-keywords.bad.al).
 
 ## See also
 

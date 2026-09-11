@@ -19,4 +19,4 @@ This is the explicit behaviour of the Business Central client: a repeater render
 
 Inside a repeater, you may set `ShowCaption = false` on fields without losing accessibility. The column header still provides the label for every cell in that column. Outside a repeater, the rules in `show-caption-on-editable-fields.md` apply.
 
-See sample: `show-caption-in-repeater-allowed.good.al`.
+See sample: [`show-caption-in-repeater-allowed.good.al`](show-caption-in-repeater-allowed.good.al).

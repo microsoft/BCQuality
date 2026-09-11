@@ -17,10 +17,10 @@ application-area: [all]
 
 Use `internal` to keep implementation details out of the supported API, but enforce sensitive operations with permissions, entitlements, and explicit authorization checks appropriate to the operation. Treat `internalsVisibleTo` as a same-publisher development/testability relationship, not as a trust grant for secrets or elevated data access.
 
-See sample: `internal-access-is-not-a-security-boundary.good.al`.
+See sample: [`internal-access-is-not-a-security-boundary.good.al`](internal-access-is-not-a-security-boundary.good.al).
 
 ## Anti Pattern
 
 Placing privileged work in an internal codeunit and claiming that other extensions cannot invoke it, or exposing an app to a different publisher through `internalsVisibleTo` because `internal` is assumed to protect the underlying operation. The access modifier narrows supported callers; it does not authenticate runtime callers.
 
-See sample: `internal-access-is-not-a-security-boundary.bad.al`.
+See sample: [`internal-access-is-not-a-security-boundary.bad.al`](internal-access-is-not-a-security-boundary.bad.al).

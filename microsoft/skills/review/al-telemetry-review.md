@@ -4,7 +4,7 @@ id: al-telemetry-review
 version: 1
 title: AL telemetry review
 description: Performs an AL telemetry review against guidance from BCQuality.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al]
@@ -16,7 +16,7 @@ application-area: [all]
 
 Reviews AL source changes against the `telemetry` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-An orchestrator invokes this skill with either a `pr-diff` (the standard PR-review entry point) or a `file-path` (single-file review). Telemetry findings are narrow by design — they apply when the diff emits, wraps, or changes custom telemetry through `Session.LogMessage`, `Session.LogError`, `FeatureTelemetry`, or related telemetry helpers. The skill returns `not-applicable` when none of those apply.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. Telemetry findings are narrow by design — they apply when the review scope emits, wraps, or changes custom telemetry through `Session.LogMessage`, `Session.LogError`, `FeatureTelemetry`, or related telemetry helpers. The skill returns `not-applicable` when none of those apply.
 
 ## Source
 

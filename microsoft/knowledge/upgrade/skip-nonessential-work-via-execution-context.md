@@ -19,10 +19,10 @@ This is the opposite of a load-bearing concern: code that MUST run during the up
 
 In a runtime procedure that performs non-essential side effects, guard the side-effect block with `if GetExecutionContext() = ExecutionContext::Upgrade then exit;` and include a brief comment explaining what is being skipped and why.
 
-See sample: `skip-nonessential-work-via-execution-context.good.al`.
+See sample: [`skip-nonessential-work-via-execution-context.good.al`](skip-nonessential-work-via-execution-context.good.al).
 
 ## Anti Pattern
 
 Using `GetExecutionContext()` to *enable* upgrade behaviour from outside an upgrade codeunit. Upgrade behaviour belongs in a codeunit with `Subtype = Upgrade`; runtime code should only use the check to *suppress* optional work.
 
-See sample: `skip-nonessential-work-via-execution-context.bad.al`.
+See sample: [`skip-nonessential-work-via-execution-context.bad.al`](skip-nonessential-work-via-execution-context.bad.al).

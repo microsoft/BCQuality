@@ -17,13 +17,13 @@ JavaScript in a Business Central control add-in can load a static resource from 
 
 Use an AJAX form that explicitly enables `withCredentials` whenever a control add-in requests a packaged static resource. Keep this rule scoped to resources served from the add-in package; it is not generic advice to attach credentials to arbitrary external requests.
 
-See sample: `control-addin-package-resource-ajax-needs-withcredentials.good.js`.
+See sample: [`control-addin-package-resource-ajax-needs-withcredentials.good.js`](control-addin-package-resource-ajax-needs-withcredentials.good.js).
 
 ## Anti Pattern
 
 Using `$.get(url)` or an `XMLHttpRequest` without `withCredentials = true` to retrieve package content. The request can lack the context and cookies required by the Business Central service.
 
-See sample: `control-addin-package-resource-ajax-needs-withcredentials.bad.js`.
+See sample: [`control-addin-package-resource-ajax-needs-withcredentials.bad.js`](control-addin-package-resource-ajax-needs-withcredentials.bad.js).
 
 ## Source
 

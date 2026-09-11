@@ -17,10 +17,10 @@ Event subscribers bind publisher parameters by name and can omit parameters they
 
 Add a parameter directly only when the shipped event publisher is `local` or `internal`. Place it where the signature is clearest; existing subscribers continue binding the parameters they name. For a public event, keep the original publisher unchanged and introduce a new event with the expanded contract.
 
-See sample: `add-new-event-parameters-at-the-end.good.al`.
+See sample: [`add-new-event-parameters-at-the-end.good.al`](add-new-event-parameters-at-the-end.good.al).
 
 ## Anti Pattern
 
 Appending a parameter to a public event and assuming its position makes the change compatible. Existing external callers still lack the new required argument. Conversely, do not flag a parameter inserted among existing parameters on a `local` or `internal` Business or Integration event merely because it was not appended.
 
-See sample: `add-new-event-parameters-at-the-end.bad.al`.
+See sample: [`add-new-event-parameters-at-the-end.bad.al`](add-new-event-parameters-at-the-end.bad.al).

@@ -17,10 +17,10 @@ application-area: [all]
 
 Log `Discovered` when the user encounters the feature, `Set up` after its setup is completed, and `Used` when the user attempts it. Keep the same feature name throughout the funnel. Review ordering only when the changed repository context shows the feature's lifecycle; a single isolated `Used` call cannot prove that earlier states are absent elsewhere.
 
-See sample: `feature-uptake-transitions-in-order.good.al`.
+See sample: [`feature-uptake-transitions-in-order.good.al`](feature-uptake-transitions-in-order.good.al).
 
 ## Anti Pattern
 
 Introducing a feature whose only uptake call jumps directly to `Set up` or `Used`, or using different feature-name literals for successive states. The calls compile and run, but the funnel silently omits the invalid transition.
 
-See sample: `feature-uptake-transitions-in-order.bad.al`.
+See sample: [`feature-uptake-transitions-in-order.bad.al`](feature-uptake-transitions-in-order.bad.al).

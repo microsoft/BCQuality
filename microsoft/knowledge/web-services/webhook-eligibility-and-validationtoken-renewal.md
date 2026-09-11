@@ -17,13 +17,13 @@ Business Central can subscribe only to eligible API pages, not every endpoint th
 
 Before creating a subscription, confirm the resource appears in `webhookSupportedResources` and that a custom endpoint is an API page with a single stable key over an eligible persistent table. Use one validation path that echoes `validationToken` for both create (`POST`) and renew (`PATCH`) handshakes. Track `expirationDateTime` and renew before expiry: online subscriptions expire after three days, while on-premises lifetime defaults to three days and can be changed with `ApiSubscriptionExpiration`.
 
-See samples: `webhook-eligibility-and-validationtoken-renewal.good.al` and `webhook-eligibility-and-validationtoken-renewal.good.js`.
+See samples: [`webhook-eligibility-and-validationtoken-renewal.good.al`](webhook-eligibility-and-validationtoken-renewal.good.al) and [`webhook-eligibility-and-validationtoken-renewal.good.js`](webhook-eligibility-and-validationtoken-renewal.good.js).
 
 ## Anti Pattern
 
 Attempting to subscribe to an API query, temporary/composite/system-table/Job Queue Entry API page, or assuming a successful create handshake makes renewal automatic. Composite includes an explicit multi-field `ODataKeyFields` and a missing `ODataKeyFields` when the source table's primary key has multiple fields. A renewal issues the same validation challenge; a notification handler that ignores the query-string token cannot create or renew the subscription.
 
-See samples: `webhook-eligibility-and-validationtoken-renewal.bad.al` and `webhook-eligibility-and-validationtoken-renewal.bad.js`.
+See samples: [`webhook-eligibility-and-validationtoken-renewal.bad.al`](webhook-eligibility-and-validationtoken-renewal.bad.al) and [`webhook-eligibility-and-validationtoken-renewal.bad.js`](webhook-eligibility-and-validationtoken-renewal.bad.js).
 
 ## Source
 

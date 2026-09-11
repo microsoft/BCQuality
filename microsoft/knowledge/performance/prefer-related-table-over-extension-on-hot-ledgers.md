@@ -20,10 +20,10 @@ Since v23, all extensions on the same base table share at most one companion-tab
 Put optional, sparse, or integration attributes in a related table with the ledger entry number as primary key. Show them from a FactBox or a FlowField. 
 Use a tableextension stored field only when the value must appear as a native list column and is read on almost every access.
 
-See sample: `prefer-related-table-over-extension-on-hot-ledgers.good.al`.
+See sample: [`prefer-related-table-over-extension-on-hot-ledgers.good.al`](prefer-related-table-over-extension-on-hot-ledgers.good.al).
 
 ## Anti Pattern
 
 `tableextension` on `"G/L Entry"` (or another posting table) that adds several stored `Text`/`Blob` fields used only by one integration. The companion join is paid on every posting and on any AL code path that loads extension fields, even when those columns are not needed for the current operation.
 
-See sample: `prefer-related-table-over-extension-on-hot-ledgers.bad.al`.
+See sample: [`prefer-related-table-over-extension-on-hot-ledgers.bad.al`](prefer-related-table-over-extension-on-hot-ledgers.bad.al).

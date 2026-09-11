@@ -17,7 +17,7 @@ A valid table-level `DataClassification` is the effective default for the Normal
 
 Use a table-level classification when it accurately describes the table's fields, and add a field-level classification only where a field stores a different kind of data. Do not flag a Normal field solely because it omits an explicit property when its own table supplies a valid default; verify whether the inherited value matches the field's data instead. A `tableextension` has no default to inherit, so require an explicit `DataClassification` on every Normal field it adds.
 
-See sample: `table-level-data-classification-cascades.good.al`.
+See sample: [`table-level-data-classification-cascades.good.al`](table-level-data-classification-cascades.good.al).
 
 ## Anti Pattern
 

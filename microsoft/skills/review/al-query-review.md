@@ -4,7 +4,7 @@ id: al-query-review
 version: 1
 title: AL Query review
 description: Reviews AL Query objects and Query instance usage against BCQuality guidance.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al]

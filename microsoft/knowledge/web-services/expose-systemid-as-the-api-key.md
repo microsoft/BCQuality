@@ -17,10 +17,10 @@ Every BC table carries a `SystemId` — an immutable GUID assigned at insert and
 
 Set `ODataKeyFields = SystemId` so OData routes records by the stable GUID, and expose it as `field(id; Rec.SystemId)` marked `Editable = false`. Clients then address a record at `.../customers(<guid>)`, an identity that survives any rename of the business key. Keep the business key (for example `No.`) as an ordinary exposed field, not as the OData key.
 
-See sample: `expose-systemid-as-the-api-key.good.al`.
+See sample: [`expose-systemid-as-the-api-key.good.al`](expose-systemid-as-the-api-key.good.al).
 
 ## Anti Pattern
 
 Setting `ODataKeyFields = "No."` so the endpoint addresses records by a renamable business field. As soon as a user changes that `No.`, every external reference built on the old value points at nothing, silently breaking integrations. The detection signal: `ODataKeyFields` set to a business field rather than `SystemId`, or an API page that exposes no `id` field bound to `Rec.SystemId`.
 
-See sample: `expose-systemid-as-the-api-key.bad.al`.
+See sample: [`expose-systemid-as-the-api-key.bad.al`](expose-systemid-as-the-api-key.bad.al).

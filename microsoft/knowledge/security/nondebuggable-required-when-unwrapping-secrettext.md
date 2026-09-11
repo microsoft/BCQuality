@@ -15,8 +15,8 @@ application-area: [all]
 
 ## Best Practice
 
-In SaaS, keep the value as `SecretText` and use secret-aware APIs instead of unwrapping. For an unavoidable on-premises legacy API that accepts only `Text`, keep the plain-text path as short as possible and mark every procedure in that path `[NonDebuggable]`. Do not return the unwrapped value. See sample: `nondebuggable-required-when-unwrapping-secrettext.good.al`.
+In SaaS, keep the value as `SecretText` and use secret-aware APIs instead of unwrapping. For an unavoidable on-premises legacy API that accepts only `Text`, keep the plain-text path as short as possible and mark every procedure in that path `[NonDebuggable]`. Do not return the unwrapped value. See sample: [`nondebuggable-required-when-unwrapping-secrettext.good.al`](nondebuggable-required-when-unwrapping-secrettext.good.al).
 
 ## Anti Pattern
 
-Calling `Unwrap()` in cloud-targeted code, or calling it in an on-premises procedure that is debuggable or returns the resulting `Text`. Both defeat the protection that `SecretText` provides. See sample: `nondebuggable-required-when-unwrapping-secrettext.bad.al`.
+Calling `Unwrap()` in cloud-targeted code, or calling it in an on-premises procedure that is debuggable or returns the resulting `Text`. Both defeat the protection that `SecretText` provides. See sample: [`nondebuggable-required-when-unwrapping-secrettext.bad.al`](nondebuggable-required-when-unwrapping-secrettext.bad.al).

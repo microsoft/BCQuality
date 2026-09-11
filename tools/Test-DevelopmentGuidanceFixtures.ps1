@@ -20,10 +20,12 @@
     It cannot detect reverted transient writes, prove that articles were opened,
     or validate semantic faithfulness of prose. Files, directories, hashes,
     stable metadata, Git HEAD/refs/index and ignored/untracked files are compared.
-    Links/reparse points, hard links, alternate data streams, external Git
-    storage in targets, submodules and sparse checkouts are rejected rather than
-    followed. Run in quiescent repositories. The knowledge checkout may itself
-    be a linked Git worktree; its Git storage identity is recorded explicitly.
+    Links/reparse points, hard links, external Git storage in targets,
+    submodules and sparse checkouts are rejected rather than followed. Windows
+    alternate data streams are included in the evidence by name, length, and
+    hash; direct stream paths remain rejected. Run in quiescent repositories.
+    The knowledge checkout may itself be a linked Git worktree; its Git storage
+    identity is recorded explicitly.
 #>
 [CmdletBinding()]
 param(

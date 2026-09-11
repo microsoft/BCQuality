@@ -17,10 +17,10 @@ Without read scale-out, `LockTable` causes subsequent reads of that table in the
 
 For a read-only operation that specifically requires committed data, set `Rec.ReadIsolation := IsolationLevel::ReadCommitted` immediately before the read. If the default isolation is sufficient, set neither property. `ReadCommitted` can still block behind writers and does not guarantee that repeated reads stay unchanged; use the isolation level required by the operation. Reserve update locks for read-before-write logic, not read-only helpers.
 
-See sample: `prefer-readisolation-over-locktable-for-reads.good.al`.
+See sample: [`prefer-readisolation-over-locktable-for-reads.good.al`](prefer-readisolation-over-locktable-for-reads.good.al).
 
 ## Anti Pattern
 
 `Rec.LockTable();` at the top of a helper that only reads, perhaps to "make sure the read is consistent". It takes stronger isolation than the helper needs and changes later reads of that table in the surrounding transaction or read-scale-out session.
 
-See sample: `prefer-readisolation-over-locktable-for-reads.bad.al`.
+See sample: [`prefer-readisolation-over-locktable-for-reads.bad.al`](prefer-readisolation-over-locktable-for-reads.bad.al).

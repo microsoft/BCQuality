@@ -19,10 +19,10 @@ Empty `OnUpgradePerCompany` / `OnUpgradePerDatabase` triggers are acceptable —
 
 Each upgrade trigger contains an ordered list of procedure calls, one per feature: `UpgradeFeatureA();` `UpgradeFeatureB();`. Each procedure handles its own upgrade tag, its own data work, and can be added or removed independently.
 
-See sample: `triggers-call-helpers-not-implementations.good.al`.
+See sample: [`triggers-call-helpers-not-implementations.good.al`](triggers-call-helpers-not-implementations.good.al).
 
 ## Anti Pattern
 
 Implementing record loops, `ModifyAll`, or other data work directly in the trigger body. The trigger then mixes orchestration with implementation, and adding a second feature requires editing the trigger rather than appending one line.
 
-See sample: `triggers-call-helpers-not-implementations.bad.al`.
+See sample: [`triggers-call-helpers-not-implementations.bad.al`](triggers-call-helpers-not-implementations.bad.al).

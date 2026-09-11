@@ -27,8 +27,8 @@ The rule applies equally whether `Style` is set to a literal value or to a varia
 
 ## Best Practice
 
-When you reach for `Favorable`, `Unfavorable`, or `Ambiguous`, verify that the caption, value, or an adjacent column already conveys the same meaning. See sample: `semantic-styles-need-independent-textual-meaning.good.al`.
+When you reach for `Favorable`, `Unfavorable`, or `Ambiguous`, verify that the caption, value, or an adjacent column already conveys the same meaning. See sample: [`semantic-styles-need-independent-textual-meaning.good.al`](semantic-styles-need-independent-textual-meaning.good.al).
 
 ## Anti Pattern
 
-Applying a semantic style for purely cosmetic emphasis (e.g. green company name for aesthetics), or using semantic colors where only the color reveals the threshold (e.g. confidence percentages with no qualitative label). See sample: `semantic-styles-need-independent-textual-meaning.bad.al`.
+Applying a semantic style for purely cosmetic emphasis (e.g. green company name for aesthetics), or using semantic colors where only the color reveals the threshold (e.g. confidence percentages with no qualitative label). See sample: [`semantic-styles-need-independent-textual-meaning.bad.al`](semantic-styles-need-independent-textual-meaning.bad.al).

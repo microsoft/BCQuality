@@ -17,10 +17,10 @@ A `Get` (or any other database call) executed before a guard that may exit the p
 
 Read the procedure top-to-bottom and place every condition that can short-circuit ahead of every database call. The check `if SomeNo = '' then exit;` belongs above `Header.Get(...)`, not below. Each guard moved upward saves one wasted query on the path that exits.
 
-See sample: `apply-guards-before-get.good.al`.
+See sample: [`apply-guards-before-get.good.al`](apply-guards-before-get.good.al).
 
 ## Anti Pattern
 
 `Record.Get(...)` at the top of a procedure followed by `if SomeField = '' then exit;`. The code reads top-down as "load the record, then decide whether we needed it" — exactly the order that wastes the query. The pattern is easy to introduce when guards are added later, defensively, without re-checking call ordering.
 
-See sample: `apply-guards-before-get.bad.al`.
+See sample: [`apply-guards-before-get.bad.al`](apply-guards-before-get.bad.al).

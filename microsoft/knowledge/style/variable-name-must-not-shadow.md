@@ -17,10 +17,10 @@ Three CodeCop rules — AA0198, AA0202, AA0204 — together forbid a local varia
 
 Differentiate every local declaration from globals, fields, procedures, and actions on the same object. `Customer` global plus `CustomerName` local; method `GetAmount` plus local `SalesAmount`. The standard pattern is to attach a noun suffix to the local (`CustomerName`, `CustomerRec`, `CustomerNo`) rather than to the global.
 
-See sample: `variable-name-must-not-shadow.good.al`.
+See sample: [`variable-name-must-not-shadow.good.al`](variable-name-must-not-shadow.good.al).
 
 ## Anti Pattern
 
 A procedure that declares a local `Customer: Text` inside a codeunit that already has a global `Customer: Record Customer`. The local wins and the global becomes unreachable inside the procedure. AA0198/AA0202/AA0204 flag this category of conflict whether the colliding entity is a global, a field, a method, or an action.
 
-See sample: `variable-name-must-not-shadow.bad.al`.
+See sample: [`variable-name-must-not-shadow.bad.al`](variable-name-must-not-shadow.bad.al).

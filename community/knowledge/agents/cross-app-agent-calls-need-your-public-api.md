@@ -17,10 +17,10 @@ For isolation, `Agent`, `Agent Task Builder`, and related toolkit codeunits erro
 
 Expose a public codeunit in the agent app (`Access = Public`) whose procedures take `User Security ID` and forward to `Agent` / `Agent Task Builder`. Document that surface as the integration contract. Keep toolkit calls inside that app.
 
-See sample: `cross-app-agent-calls-need-your-public-api.good.al`.
+See sample: [`cross-app-agent-calls-need-your-public-api.good.al`](cross-app-agent-calls-need-your-public-api.good.al).
 
 ## Anti Pattern
 
 From app B, calling `Agent.SetDisplayName` or `Agent.Create` with app A's metadata provider. Detection signal: toolkit agent APIs used with an `Agent Metadata Provider` value not declared in the same app.
 
-See sample: `cross-app-agent-calls-need-your-public-api.bad.al`.
+See sample: [`cross-app-agent-calls-need-your-public-api.bad.al`](cross-app-agent-calls-need-your-public-api.bad.al).

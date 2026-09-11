@@ -17,10 +17,10 @@ application-area: [all]
 
 Validate inbound payloads in analysis: Error when the task must not run; Warning when a human must confirm. For outbound messages, adjust text in this method rather than in a later subscriber. Do not rely on skip-review to bypass warnings.
 
-See sample: `analyze-message-error-stops-warning-forces-review.good.al`.
+See sample: [`analyze-message-error-stops-warning-forces-review.good.al`](analyze-message-error-stops-warning-forces-review.good.al).
 
 ## Anti Pattern
 
 Ignoring analysis entirely, or emitting Warning while documenting that `SetRequiresReview(false)` means unattended run. Detection signal: empty `AnalyzeAgentTaskMessage` plus skip-review on external input.
 
-See sample: `analyze-message-error-stops-warning-forces-review.bad.al`.
+See sample: [`analyze-message-error-stops-warning-forces-review.bad.al`](analyze-message-error-stops-warning-forces-review.bad.al).

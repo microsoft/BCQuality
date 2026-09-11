@@ -17,10 +17,10 @@ application-area: [all]
 
 Use `ShowCanCreateAgent` to decide discovery. If only agent administrators should see the type, return `Agent System Permissions.CurrentUserHasCanManageAllAgentsPermission`. Enforce extra policy inside your own create API. Never assume UI hiding blocks code.
 
-See sample: `show-can-create-agent-does-not-block-code-create.good.al`.
+See sample: [`show-can-create-agent-does-not-block-code-create.good.al`](show-can-create-agent-does-not-block-code-create.good.al).
 
 ## Anti Pattern
 
 Returning `exit(false)` from `ShowCanCreateAgent` and then documenting that instances cannot be created, while page actions or other apps still call `Agent.Create`. Detection signal: `ShowCanCreateAgent` always false with no matching guard on programmatic create.
 
-See sample: `show-can-create-agent-does-not-block-code-create.bad.al`.
+See sample: [`show-can-create-agent-does-not-block-code-create.bad.al`](show-can-create-agent-does-not-block-code-create.bad.al).

@@ -17,13 +17,13 @@ A procedure marked `[TryFunction]` catches errors only when the caller uses its 
 
 Consume the result directly: assign it to a Boolean or use the call in an `if` condition. Handle `false` immediately while the last-error state still describes that failure.
 
-See sample: `ignored-tryfunction-return-disables-try-semantics.good.al`.
+See sample: [`ignored-tryfunction-return-disables-try-semantics.good.al`](ignored-tryfunction-return-disables-try-semantics.good.al).
 
 ## Anti Pattern
 
 Calling a `[TryFunction]` procedure as a standalone statement and assuming the attribute suppresses its errors. The call has ordinary error semantics because its Boolean result is ignored.
 
-See sample: `ignored-tryfunction-return-disables-try-semantics.bad.al`.
+See sample: [`ignored-tryfunction-return-disables-try-semantics.bad.al`](ignored-tryfunction-return-disables-try-semantics.bad.al).
 
 ## See also
 

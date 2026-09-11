@@ -45,12 +45,10 @@ ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 HOST_SKILL_REQUIRED_KEYS = {"name", "description"}
 
 STANDARD_INPUTS = {
-    "pr-diff", "object-list", "file-path", "repository", "telemetry-query",
+    "pr-diff", "object-list", "file-path", "folder-path", "repository", "telemetry-query",
     "development-plan",
 }
-ALLOWED_OUTPUTS = {
-    "findings-report", "development-guidance-report",
-}
+ALLOWED_OUTPUTS = {"findings-report", "development-guidance-report"}
 VALID_SAMPLE_KINDS = {"good", "bad"}
 
 ACTION_SKILL_SECTIONS = ["Source", "Relevance", "Worklist", "Action", "Output"]

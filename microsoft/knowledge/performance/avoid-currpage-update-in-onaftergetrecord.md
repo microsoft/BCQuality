@@ -19,10 +19,10 @@ application-area: [all]
 
 Put display-only results in page variables assigned in `OnAfterGetRecord` without calling `Update`. If the page must refresh after an action, call `CurrPage.Update(false)` from `OnAction` once, not per row.
 
-See sample: `avoid-currpage-update-in-onaftergetrecord.good.al`.
+See sample: [`avoid-currpage-update-in-onaftergetrecord.good.al`](avoid-currpage-update-in-onaftergetrecord.good.al).
 
 ## Anti Pattern
 
 `trigger OnAfterGetRecord() begin ... CurrPage.Update(); end;` on a list. The signal is `CurrPage.Update` inside `OnAfterGetRecord` or `OnAfterGetCurrRecord` without an explicit user action.
 
-See sample: `avoid-currpage-update-in-onaftergetrecord.bad.al`.
+See sample: [`avoid-currpage-update-in-onaftergetrecord.bad.al`](avoid-currpage-update-in-onaftergetrecord.bad.al).

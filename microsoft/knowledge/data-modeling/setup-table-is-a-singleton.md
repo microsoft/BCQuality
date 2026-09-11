@@ -19,10 +19,10 @@ The setup **card** page enforces the singleton: `InsertAllowed = false` and `Del
 
 `Primary Key` `Code[10]` is the sole key; the setup is surfaced through a Card page with `InsertAllowed = false`, `DeleteAllowed = false`, and an open-time guard that inserts the blank row if it is missing.
 
-See sample: `setup-table-is-a-singleton.good.al`.
+See sample: [`setup-table-is-a-singleton.good.al`](setup-table-is-a-singleton.good.al).
 
 ## Anti Pattern
 
 An `Integer` / `AutoIncrement` key, a page that allows insert or delete, or a List page over the setup table. Any of these lets the table hold zero or many rows, so "the setup" becomes ambiguous and `Get()` may fail or read the wrong record.
 
-See sample: `setup-table-is-a-singleton.bad.al`.
+See sample: [`setup-table-is-a-singleton.bad.al`](setup-table-is-a-singleton.bad.al).

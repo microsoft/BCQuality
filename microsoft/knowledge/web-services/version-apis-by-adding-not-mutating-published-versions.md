@@ -17,10 +17,10 @@ Once an API version is published, external clients depend on its exact shape —
 
 Keep the existing page object and its `APIVersion = 'v1.0'` contract unchanged. Copy the page to a new object ID, set that object's `APIVersion = 'v2.0'`, and make the v2-only shape changes there. A multi-value `APIVersion` list is appropriate only when the exact same page shape is supported under each listed version.
 
-See sample: `version-apis-by-adding-not-mutating-published-versions.good.al`.
+See sample: [`version-apis-by-adding-not-mutating-published-versions.good.al`](version-apis-by-adding-not-mutating-published-versions.good.al).
 
 ## Anti Pattern
 
 Editing the published `v1.0` page in place breaks its clients. So does adding `v2.0` to that same page and assuming subsequent field changes apply only to v2: both routes use one object shape. The detection signal is a breaking shape change without a separate API page object retaining the old version.
 
-See sample: `version-apis-by-adding-not-mutating-published-versions.bad.al`.
+See sample: [`version-apis-by-adding-not-mutating-published-versions.bad.al`](version-apis-by-adding-not-mutating-published-versions.bad.al).

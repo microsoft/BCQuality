@@ -15,8 +15,8 @@ application-area: [all]
 
 ## Best Practice
 
-Mark every procedure that touches `IsolatedStorage` as `local` (visible only inside its containing object) or `internal` (visible only inside the owning extension). Provide consumers with a narrow, intent-specific API — for example, "send notification to configured webhook" rather than "give me the webhook secret." See sample: `isolatedstorage-access-must-be-local-or-internal.good.al`.
+Mark every procedure that touches `IsolatedStorage` as `local` (visible only inside its containing object) or `internal` (visible only inside the owning extension). Provide consumers with a narrow, intent-specific API — for example, "send notification to configured webhook" rather than "give me the webhook secret." See sample: [`isolatedstorage-access-must-be-local-or-internal.good.al`](isolatedstorage-access-must-be-local-or-internal.good.al).
 
 ## Anti Pattern
 
-A public `GetApiKey()` returning the stored value, or a public `SetApiKey(NewKey: Text)` that calls `IsolatedStorage.SetEncrypted`. Both turn the extension into a confused deputy that hands out (or accepts overwrites of) its own secrets on behalf of any caller on the tenant. Reviewers should flag any procedure whose body references `IsolatedStorage` and whose declaration omits `local` or `internal`. See sample: `isolatedstorage-access-must-be-local-or-internal.bad.al`.
+A public `GetApiKey()` returning the stored value, or a public `SetApiKey(NewKey: Text)` that calls `IsolatedStorage.SetEncrypted`. Both turn the extension into a confused deputy that hands out (or accepts overwrites of) its own secrets on behalf of any caller on the tenant. Reviewers should flag any procedure whose body references `IsolatedStorage` and whose declaration omits `local` or `internal`. See sample: [`isolatedstorage-access-must-be-local-or-internal.bad.al`](isolatedstorage-access-must-be-local-or-internal.bad.al).

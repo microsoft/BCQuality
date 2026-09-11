@@ -19,13 +19,13 @@ For targets before runtime 10.0, child controls do not inherit and must also set
 
 On runtime 10.0 or later, set a suitable page-level default and override only controls that belong to a narrower area. Set `ApplicationArea` explicitly on every control or action introduced by a page or report extension.
 
-See sample: `applicationarea-required-on-page-controls.good.al`.
+See sample: [`applicationarea-required-on-page-controls.good.al`](applicationarea-required-on-page-controls.good.al).
 
 ## Anti Pattern
 
 A page object that defines neither a parent nor child value, or an extension control that assumes it inherits from the base page. The control has no effective application area and can be hidden or rejected by analyzer validation.
 
-See sample: `applicationarea-required-on-page-controls.bad.al`.
+See sample: [`applicationarea-required-on-page-controls.bad.al`](applicationarea-required-on-page-controls.bad.al).
 
 ## Reference
 

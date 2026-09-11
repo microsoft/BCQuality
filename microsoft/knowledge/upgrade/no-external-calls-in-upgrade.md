@@ -19,10 +19,10 @@ The rule applies inside any codeunit with `Subtype = Upgrade` and to any procedu
 
 Defer external calls to runtime code. If a piece of upgrade work conceptually needs data from an external service, set a flag or write a queue row during upgrade and have the runtime code make the call later (for example on first user sign-in or via job queue), where retries and degraded modes are tractable.
 
-See sample: `no-external-calls-in-upgrade.good.al`.
+See sample: [`no-external-calls-in-upgrade.good.al`](no-external-calls-in-upgrade.good.al).
 
 ## Anti Pattern
 
 Calling `HttpClient.Get`, `HttpClient.Post`, or DotNet interop methods from `OnUpgradePerCompany`, `OnUpgradePerDatabase`, or any procedure they invoke.
 
-See sample: `no-external-calls-in-upgrade.bad.al`.
+See sample: [`no-external-calls-in-upgrade.bad.al`](no-external-calls-in-upgrade.bad.al).

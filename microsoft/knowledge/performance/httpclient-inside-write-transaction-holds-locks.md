@@ -21,10 +21,10 @@ Defer the HTTP call to a separate session. When the external operation must corr
 
 A directly created scheduled task is suitable only when its work is independent of the caller's commit. An immediately ready task can run concurrently with the caller, so it must not assume that the caller's writes are already committed. Do **not** use `Commit()` as a general remedy: it irrevocably commits all prior writes in the current transaction, so any subsequent failure cannot roll them back. `Commit()` is appropriate only at top-level entry points where partial persistence is intentional and understood.
 
-See sample: `httpclient-inside-write-transaction-holds-locks.good.al`.
+See sample: [`httpclient-inside-write-transaction-holds-locks.good.al`](httpclient-inside-write-transaction-holds-locks.good.al).
 
 ## Anti Pattern
 
 `Modify`/`Insert` followed by `HttpClient` in the same procedure with no `Commit` between them. Detection signal: any `HttpClient` use after a write on the same execution path, especially in posting, page actions, or subscribers.
 
-See sample: `httpclient-inside-write-transaction-holds-locks.bad.al`.
+See sample: [`httpclient-inside-write-transaction-holds-locks.bad.al`](httpclient-inside-write-transaction-holds-locks.bad.al).

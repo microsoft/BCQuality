@@ -17,10 +17,10 @@ application-area: [all]
 
 Run independent suites with `TestIsolation = Codeunit` or `Function`, choosing the narrowest boundary the runner supports. Pair this with the appropriate method-level `TransactionModel`: `AutoCommit` permits code under test to commit, while runner isolation still restores the database afterward. Keep isolation disabled only for an intentionally shared-state suite whose ordering and cleanup are explicit.
 
-See sample: `testisolation-belongs-on-the-test-runner.good.al`.
+See sample: [`testisolation-belongs-on-the-test-runner.good.al`](testisolation-belongs-on-the-test-runner.good.al).
 
 ## Anti Pattern
 
 An `AutoCommit` test exercises committed writes under a test runner that omits `TestIsolation` or sets it to `Disabled`, then assumes the database is restored automatically. This article owns runner-level rollback; `transactionmodel-attribute-governs-test-transactions.md` separately owns the method attribute.
 
-See sample: `testisolation-belongs-on-the-test-runner.bad.al`.
+See sample: [`testisolation-belongs-on-the-test-runner.bad.al`](testisolation-belongs-on-the-test-runner.bad.al).

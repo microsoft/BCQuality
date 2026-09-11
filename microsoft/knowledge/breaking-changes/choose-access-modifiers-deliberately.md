@@ -17,10 +17,10 @@ Access is a decision about what you are willing to support forever. The moment a
 
 Start everything `local` or `internal` and promote a member to `public` only when you have decided to support it as a stable contract. Expose a small, intentional surface — the supported entry point — and keep validation, posting, and helper routines `internal` for in-app reuse or `local` when single-object. Do not drop `[Scope('OnPrem')]` without intent, since that too widens the contract. Every public member is a maintenance commitment; spend them deliberately.
 
-See sample: `choose-access-modifiers-deliberately.good.al`.
+See sample: [`choose-access-modifiers-deliberately.good.al`](choose-access-modifiers-deliberately.good.al).
 
 ## Anti Pattern
 
 Declaring every procedure `public` by default, so internal helpers like `ValidateOrder` and `PostOrder` become a de-facto API that consumers bind to and that can no longer be changed freely. Detection: an object where implementation-detail procedures carry no access modifier or are `public` without a reason to support them externally. Default them to `internal`/`local` and make only the intended entry point public.
 
-See sample: `choose-access-modifiers-deliberately.bad.al`.
+See sample: [`choose-access-modifiers-deliberately.bad.al`](choose-access-modifiers-deliberately.bad.al).

@@ -19,4 +19,4 @@ Fields in the `area(Content)` section of the same PromptDialog page are **not** 
 
 In a PromptDialog, give the page a meaningful `Caption` (the dialog heading) and let prompt-area input fields hide their own captions. Treat content-area fields like any other editable field — keep their captions.
 
-See sample: `show-caption-in-promptdialog-prompt-area.good.al`.
+See sample: [`show-caption-in-promptdialog-prompt-area.good.al`](show-caption-in-promptdialog-prompt-area.good.al).

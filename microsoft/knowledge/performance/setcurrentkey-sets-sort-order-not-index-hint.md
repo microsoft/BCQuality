@@ -26,10 +26,10 @@ Decide `SetCurrentKey` on one question only: **do I need the result set in a spe
 
 To make a filtered read fast, ensure a key (index) exists on the table whose leading fields cover the filter, and filter on those fields with `SetRange`/`SetFilter`. That is what lets the optimizer seek. Defining the key creates the index; `SetCurrentKey` is not required to make the optimizer use it.
 
-See sample: `setcurrentkey-sets-sort-order-not-index-hint.good.al`.
+See sample: [`setcurrentkey-sets-sort-order-not-index-hint.good.al`](setcurrentkey-sets-sort-order-not-index-hint.good.al).
 
 ## Anti Pattern
 
 Adding `SetCurrentKey` to a filtered read purely in the belief that it forces SQL Server to seek a particular index, when the code never uses the resulting order. This does nothing for index selection and only appends an `ORDER BY` the query does not need, risking an unnecessary sort. Remove the `SetCurrentKey`; rely on the filters and an existing covering key instead.
 
-See sample: `setcurrentkey-sets-sort-order-not-index-hint.bad.al`.
+See sample: [`setcurrentkey-sets-sort-order-not-index-hint.bad.al`](setcurrentkey-sets-sort-order-not-index-hint.bad.al).

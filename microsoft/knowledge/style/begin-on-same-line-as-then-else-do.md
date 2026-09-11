@@ -17,10 +17,10 @@ When a compound block follows `then`, `else`, or `do`, the `begin` keyword must 
 
 `if Condition then begin … end;`, `else begin … end;`, `for i := 1 to N do begin … end;`. The block body is indented one level below the `if`/`for` line, and `end;` sits at the same indentation as the line that opened the block.
 
-See sample: `begin-on-same-line-as-then-else-do.good.al`.
+See sample: [`begin-on-same-line-as-then-else-do.good.al`](begin-on-same-line-as-then-else-do.good.al).
 
 ## Anti Pattern
 
 A line that ends with `then` (or `else`, or `do`) and is followed by a line whose only content is `begin`. The compiler accepts it but CodeCop AA0005 flags it; the visual cost is a wasted line per block and a layout that looks alien to readers used to current AL style.
 
-See sample: `begin-on-same-line-as-then-else-do.bad.al`.
+See sample: [`begin-on-same-line-as-then-else-do.bad.al`](begin-on-same-line-as-then-else-do.bad.al).

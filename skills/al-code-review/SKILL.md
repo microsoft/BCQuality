@@ -1,6 +1,6 @@
 ---
 name: al-code-review
-description: Review Business Central AL code changes using BCQuality's curated rules. Use for an AL pull request, working-tree diff, branch, or individual AL file when BCQuality is installed as a standalone plugin.
+description: Review Business Central AL code using BCQuality's curated rules. Use for an AL app folder, pull request, working-tree diff, branch, or individual AL file when BCQuality is installed as a standalone plugin.
 ---
 
 # AL code review
@@ -21,8 +21,11 @@ context and execute the resulting dispatch.
    - Copy the caller's actual request verbatim into `goal`; do not replace a
      focused request such as "review performance" with a generic full-review
      goal.
-   - Set `inputs-available` to the inputs actually available to the review,
-     normally `pr-diff` for changes or `file-path` for one file.
+   - Set `inputs-available` to the inputs actually available to the review:
+     `folder-path` for an app or source folder, `pr-diff` for changes, or
+     `file-path` for one file. Pass the caller's actual path with the selected
+     input type; for a whole-app request in the current working directory, use
+     that directory as the `folder-path`.
    - Set `technologies: [al]` when the input is known to be AL.
    - Pass `bc-version`, `countries`, and `application-area` only when supplied
      or reliably determined.
@@ -66,4 +69,3 @@ where a consumer prunes its checkout to policy before the agent runs and the
 index is rebuilt over the pruned tree. Treat `BCQUALITY_ENABLED_LAYERS` as a
 selection filter, never as a security boundary. A host that needs a genuine
 deny mechanism must prune the installed tree itself.
-

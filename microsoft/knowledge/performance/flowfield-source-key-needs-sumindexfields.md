@@ -17,10 +17,10 @@ A FlowField is computed by SQL on demand. CodeCop AA0232 — "FlowFields should 
 
 When introducing or changing a FlowField, walk the `CalcFormula`'s `WHERE` clause field by field and verify the source table has a key whose key fields cover those filters, with the aggregated field in `SumIndexFields`. The same applies when the destination side of the FlowField filter is a list-page column: the page filter triggers the FlowField on every visible row, and only SIFT keeps that affordable.
 
-See sample: `flowfield-source-key-needs-sumindexfields.good.al`.
+See sample: [`flowfield-source-key-needs-sumindexfields.good.al`](flowfield-source-key-needs-sumindexfields.good.al).
 
 ## Anti Pattern
 
 A `sum` FlowField against a large source table with no matching SIFT key. Each calculation aggregates rows directly; on a ledger-sized source the FlowField becomes the slowest column on every page that displays it. Pointing an existing FlowField's `CalcFormula` at a larger source table without verifying the new source's keys is the same trap a step removed — the upstream review guidance flags it as "CalcFormula changed to larger source table".
 
-See sample: `flowfield-source-key-needs-sumindexfields.bad.al`.
+See sample: [`flowfield-source-key-needs-sumindexfields.bad.al`](flowfield-source-key-needs-sumindexfields.bad.al).

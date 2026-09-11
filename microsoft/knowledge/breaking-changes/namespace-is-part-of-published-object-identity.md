@@ -17,10 +17,10 @@ AL resolves an object by namespace and name. Once an app ships and dependent ext
 
 Choose a globally meaningful namespace before first publication and keep it stable. Add new functional areas beneath that structure without moving existing published objects. If an identity must move, use the platform's supported move/obsoletion lifecycle rather than a source-only namespace rename.
 
-See sample: `namespace-is-part-of-published-object-identity.good.al`.
+See sample: [`namespace-is-part-of-published-object-identity.good.al`](namespace-is-part-of-published-object-identity.good.al).
 
 ## Anti Pattern
 
 Changing `namespace Contoso.Rentals;` to `namespace Contoso.RentalManagement;` as a cleanup while leaving the object name and ID untouched. Every dependent `using` directive and qualified reference targets the old identity and stops compiling.
 
-See sample: `namespace-is-part-of-published-object-identity.bad.al`.
+See sample: [`namespace-is-part-of-published-object-identity.bad.al`](namespace-is-part-of-published-object-identity.bad.al).

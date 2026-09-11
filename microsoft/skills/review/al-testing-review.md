@@ -4,7 +4,7 @@ id: al-testing-review
 version: 1
 title: AL testing review
 description: Performs an AL testing review against guidance from BCQuality.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al]
@@ -16,7 +16,7 @@ application-area: [all]
 
 Reviews AL source changes against the `testing` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-An orchestrator invokes this skill with either a `pr-diff` (the standard PR-review entry point) or a `file-path` (single-file review). Testing findings are narrow by design — they apply when the diff touches test codeunits, test runners, test methods, handlers, assertions, or fixture construction. The skill returns `not-applicable` when none of those apply.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. Testing findings are narrow by design — they apply when the review scope contains test codeunits, test runners, test methods, handlers, assertions, or fixture construction. The skill returns `not-applicable` when none of those apply.
 
 ## Source
 

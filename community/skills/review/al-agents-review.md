@@ -4,7 +4,7 @@ id: al-agents-review
 version: 1
 title: AL agents review
 description: Reviews AL source changes against agent guidance from BCQuality.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al]
@@ -18,7 +18,10 @@ Reviews AL source changes against the `agents` knowledge domain in BCQuality and
 
 Agent findings apply to AL files that implement or invoke Agent SDK surfaces, including agent interfaces, setup, creation, task execution, capability registration, profiles, access controls, instructions, and session-bound subscribers. Return `not-applicable` when the diff contains no AL changes or no Agent SDK implementation or usage.
 
-An orchestrator invokes this skill with either a `pr-diff` or a `file-path`. The skill produces one JSON document conforming to the DO output contract.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or
+`folder-path`. For a folder, review all relevant source below it under DO's
+current-state input semantics. The skill produces one JSON document
+conforming to the DO output contract.
 
 ## Source
 

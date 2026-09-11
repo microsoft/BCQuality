@@ -17,10 +17,10 @@ application-area: [all]
 
 Keep every available attribute argument exactly as shipped. If new subscribers need different sender/global exposure, publish a new event with the desired flags. Apply the same rule to `Isolated` only on BC20 or later, where that argument exists. Raise both events while the original contract is supported, and choose preferred flags only when designing a new event.
 
-See sample: `do-not-change-shipped-event-attribute-flags.good.al`.
+See sample: [`do-not-change-shipped-event-attribute-flags.good.al`](do-not-change-shipped-event-attribute-flags.good.al).
 
 ## Anti Pattern
 
 Changing a shipped event's `IncludeSender` or `GlobalVarAccess` to modernize its design, including replacing `IncludeSender` with an explicit parameter. On BC20 or later, adding, removing, or toggling `Isolated` is equally contract-significant. Even a change that leaves old subscribers compiling can alter observable execution or exposure; version the event instead.
 
-See sample: `do-not-change-shipped-event-attribute-flags.bad.al`.
+See sample: [`do-not-change-shipped-event-attribute-flags.bad.al`](do-not-change-shipped-event-attribute-flags.bad.al).

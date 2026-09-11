@@ -23,10 +23,10 @@ When these three conditions hold, the group caption becomes the accessible label
 
 Do not second-guess this exception. If the three conditions are met, the pattern is acceptable — even if the group caption seems generic (e.g. "General Information") or does not exactly match the field name.
 
-See sample: `group-labeled-first-child-exception.good.al`.
+See sample: [`group-labeled-first-child-exception.good.al`](group-labeled-first-child-exception.good.al).
 
 ## Anti Pattern
 
 If the parent group has `ShowCaption = false` or no `Caption`, the first-child exception does not apply: the field has no accessible label anywhere.
 
-See sample: `group-labeled-first-child-exception.bad.al`.
+See sample: [`group-labeled-first-child-exception.bad.al`](group-labeled-first-child-exception.bad.al).

@@ -17,13 +17,13 @@ application-area: [all]
 
 Ship a `profile` object (and page customizations) in the app. In `GetDefaultProfile`, call `Agent.PopulateDefaultProfile` with that profile ID and `NavApp.GetCurrentModuleInfo`. Include UI-exported customizations as AL.
 
-See sample: `get-default-profile-lives-in-the-app.good.al`.
+See sample: [`get-default-profile-lives-in-the-app.good.al`](get-default-profile-lives-in-the-app.good.al).
 
 ## Anti Pattern
 
 Setting `TempAllProfile."Profile ID"` to a client-only profile, or skipping `GetDefaultProfile`. Detection signal: factory default profile ID with no matching `profile` object in the app.
 
-See sample: `get-default-profile-lives-in-the-app.bad.al`.
+See sample: [`get-default-profile-lives-in-the-app.bad.al`](get-default-profile-lives-in-the-app.bad.al).
 
 ## See also
 

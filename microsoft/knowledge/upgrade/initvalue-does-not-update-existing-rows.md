@@ -23,10 +23,10 @@ Several legitimate cases do NOT need upgrade code:
 
 When a new field on an existing table has an `InitValue` that matters, ship an upgrade procedure that walks the existing rows and sets the field to the same value — typically via `DataTransfer.AddConstantValue` for performance — guarded by an upgrade tag.
 
-See sample: `initvalue-does-not-update-existing-rows.good.al`.
+See sample: [`initvalue-does-not-update-existing-rows.good.al`](initvalue-does-not-update-existing-rows.good.al).
 
 ## Anti Pattern
 
 Adding a field with `InitValue = true;` (or any non-default `InitValue`) and shipping no upgrade code. Existing rows silently carry the datatype default, leaving the table in two states: rows created before the upgrade with the wrong value, and rows created after with the right one.
 
-See sample: `initvalue-does-not-update-existing-rows.bad.al`.
+See sample: [`initvalue-does-not-update-existing-rows.bad.al`](initvalue-does-not-update-existing-rows.bad.al).

@@ -15,8 +15,8 @@ application-area: [all]
 
 ## Best Practice
 
-Declare credential-carrying parameters and variables as `SecretText` from the call site that retrieves the secret all the way to the call site that consumes it (typically an HTTP header or URI). Never round-trip through `Text`. On BC 24 and later, use the `SecretText` overload of `IsolatedStorage.Get` when retrieving stored secrets. See sample: `secrettext-for-credentials.good.al`.
+Declare credential-carrying parameters and variables as `SecretText` from the call site that retrieves the secret all the way to the call site that consumes it (typically an HTTP header or URI). Never round-trip through `Text`. On BC 24 and later, use the `SecretText` overload of `IsolatedStorage.Get` when retrieving stored secrets. See sample: [`secrettext-for-credentials.good.al`](secrettext-for-credentials.good.al).
 
 ## Anti Pattern
 
-Holding a credential in a `Text` variable (`BearerToken: Text`) makes it visible in the debugger and in any error that prints the variable, and the compiler offers no help because the type was wrong from the start. Reviewers should flag any local or parameter named like a secret (`ApiKey`, `Token`, `Password`, `ClientSecret`) whose type is `Text` or `Code`. When the same value is visibly sent through an HTTP URI, header, or body, `secrettext-with-httpclient.md` is the more specific primary rule. See sample: `secrettext-for-credentials.bad.al`.
+Holding a credential in a `Text` variable (`BearerToken: Text`) makes it visible in the debugger and in any error that prints the variable, and the compiler offers no help because the type was wrong from the start. Reviewers should flag any local or parameter named like a secret (`ApiKey`, `Token`, `Password`, `ClientSecret`) whose type is `Text` or `Code`. When the same value is visibly sent through an HTTP URI, header, or body, `secrettext-with-httpclient.md` is the more specific primary rule. See sample: [`secrettext-for-credentials.bad.al`](secrettext-for-credentials.bad.al).
