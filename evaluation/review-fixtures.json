@@ -17,7 +17,15 @@
       "article": "set-defaultimplementation-on-enum"
     },
     "performance": {
-      "article": "use-isempty-for-existence-check"
+      "articles": [
+        "use-isempty-for-existence-check",
+        "job-queue-category-code-serializes-conflicting-jobs",
+        "job-queue-external-effects-must-be-idempotent",
+        "job-queue-handlers-must-not-require-ui",
+        "job-queue-handlers-must-propagate-failures",
+        "job-queue-on-hold-does-not-stop-running-work",
+        "store-scheduled-task-id-to-avoid-duplicate-tasks"
+      ]
     },
     "privacy": {
       "article": "no-pii-in-telemetry-message-string"
