@@ -41,7 +41,9 @@ capable LLM **would get something wrong, or miss something, without it**, not
 simply because the topic is important. Apply this admission test:
 
 > If this file did not exist, would a modern LLM reviewing or generating BC
-> code make a mistake this file would have prevented?
+> code make a BC-specific mistake that the configured compiler, analyzers, and
+> tests would not reliably catch, or would it misinterpret or incorrectly
+> remediate one of their diagnostics?
 
 Good candidates encode a BC-specific mechanic that models get wrong, a
 version-dependent behavior, or a misleading interpretation of an analyzer
@@ -55,6 +57,15 @@ Generic advice such as "use HTTPS," "do not hardcode secrets," or "keep
 transactions short" does not earn a separate knowledge file merely by being
 sound advice. Negative clarifications that prevent false positives are as
 valuable as rules that catch defects.
+
+Do not add knowledge whose anti-pattern is fully and deterministically detected
+by the AL compiler or a standard analyzer. This applies to authoring as well as
+review: an authoring agent should compile with the consuming app's actual
+ruleset and correct the resulting diagnostics instead of carrying prose copies
+of analyzer rules in context. Analyzer-related knowledge belongs here only when
+it adds a BC-specific exception, version boundary, cross-object implication, or
+remediation constraint that the diagnostic itself cannot establish. Merely
+explaining why a deterministic rule exists is not sufficient.
 
 **Skills hold discovery and execution mechanics; knowledge files hold BC
 facts.** Correct or extend a knowledge article when a BC fact is missing or

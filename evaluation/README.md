@@ -36,7 +36,7 @@ This credential-free check proves every selected leaf maps to a same-named knowl
        {
          "id": "case-a1b2c3d4",
          "findings": [
-           { "id": "microsoft/knowledge/appsource/object-affixes-prevent-collisions.md" }
+           { "id": "microsoft/knowledge/appsource/permission-sets-cover-setup-and-usage-without-super.md" }
          ]
        }
      ]

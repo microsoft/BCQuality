@@ -196,6 +196,12 @@ removal or another comparison-only regression requires an actual baseline.
 The corpus is technical AL guidance, not exhaustive functional validation or
 AppSource certification.
 
+BCQuality intentionally does not duplicate mechanical diagnostics already
+enforced by the AL compiler or standard analyzers. Run the consuming app's
+normal compiler and analyzer pipeline alongside review and authoring. Knowledge
+may still discuss a diagnostic when BC-specific context is needed to avoid a
+false positive or choose a correct remediation.
+
 ### Knowledge by domain
 
 Each article describes one concern. Where samples exist, use its linked

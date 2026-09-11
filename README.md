@@ -108,6 +108,8 @@ the agent's judgment; it is not an exhaustive BC manual or a substitute for
 compilation, analyzers, tests, or human review. See
 [coverage and limits](docs/using-bcquality.md#coverage-and-limits) for the
 available domains and the difference between a folder review and a comparison.
+Mechanical issues already enforced by the AL compiler or standard analyzers are
+intentionally left to those deterministic tools rather than duplicated here.
 
 The read-only `al-development-plan` interface selects relevant constraints
 before the consumer implements its own existing plan.
