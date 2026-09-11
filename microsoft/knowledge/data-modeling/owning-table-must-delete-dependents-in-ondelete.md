@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: data-modeling
-keywords: [ondelete, cascade, table-relation, orphan-records, header-line, dependent-records, referential-integrity]
+keywords: [ondelete, cascade, table-relation, orphan-records, header-line, dependent-records, referential-integrity, activity-log, retention]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -18,6 +18,8 @@ What makes this specifically missable is an asymmetry. The platform *does* keep 
 Orphaned rows are usually invisible, because a dependent table rarely has a page of its own. They inflate the table, break later reconciliation, and are re-encountered by duplicate checks when the parent key is reused.
 
 This applies to internal, staging and `SystemMetadata` tables too. A table having no delete action in the UI today is not protection: a permission set that grants `D` on the table is evidence that deletion is anticipated.
+
+This also applies to log, activity, comment and history tables that are lifecycle-owned by a source document (for example an approval/activity log keyed by the source record's `SystemId`). Deleting those rows in the owning document's `OnDelete` is not a loss of audit trail to flag as a defect — it is the same cascade-delete obligation described above, and it avoids leaving orphaned personal data (who acted, comments, timestamps) behind after the document itself is gone. Longer retention or independent archival of that history is a distinct, deliberate feature (its own retention/archival design), not something the presence of a cascading `OnDelete` is missing by default.
 
 See also `validate-table-relation-false-suppresses-rename-propagation.md` for the two preconditions on the rename half of this asymmetry.
 
