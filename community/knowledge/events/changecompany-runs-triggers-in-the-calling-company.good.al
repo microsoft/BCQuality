@@ -20,17 +20,8 @@ codeunit 50102 "Transfer Request Create Good"
 
     trigger OnRun()
     begin
-        Rec."Entry No." := NextEntryNo();
+        // "Entry No." is AutoIncrement, so concurrent background sessions in TargetCompany never race on the same value.
         Rec.Insert(true);
-    end;
-
-    local procedure NextEntryNo(): Integer
-    var
-        LastRequest: Record "Transfer Request Good";
-    begin
-        if LastRequest.FindLast() then
-            exit(LastRequest."Entry No." + 1);
-        exit(1);
     end;
 }
 
@@ -40,7 +31,7 @@ table 50100 "Transfer Request Good"
 
     fields
     {
-        field(1; "Entry No."; Integer) { }
+        field(1; "Entry No."; Integer) { AutoIncrement = true; }
         field(2; "Item No."; Code[20]) { }
         field(3; Quantity; Decimal) { }
         field(4; "Location Code"; Code[10]) { }
