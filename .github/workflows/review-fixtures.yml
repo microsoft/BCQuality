@@ -16,3 +16,7 @@ jobs:
       - name: Validate review evaluation corpus
         shell: pwsh
         run: ./tools/Test-ReviewFixtures.ps1 -Root . -PrepareDirectory "$env:RUNNER_TEMP/bcquality-review-fixtures"
+
+      - name: Validate review contracts
+        shell: pwsh
+        run: ./tools/Test-ReviewContract.ps1 -Root .
