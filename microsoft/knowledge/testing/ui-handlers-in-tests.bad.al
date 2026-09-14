@@ -13,7 +13,6 @@ codeunit 50401 "Test UI Handler Proof Bad"
 
         Page.RunModal(Page::"Customer Card", Customer);
 
-        // This only proves a value assigned before the action stayed true.
         Assert.IsTrue(ActionSucceeded, 'The customer card action failed.');
     end;
 
@@ -49,6 +48,32 @@ codeunit 50401 "Test UI Handler Proof Bad"
         LibrarySales.CreateCustomer(Customer);
 
         Page.RunModal(Page::"Customer Card", Customer);
+    end;
+
+    [Test]
+    [HandlerFunctions('ConfirmHandler,PostMessageHandler')]
+    procedure ConfirmPostingAndShowMessage()
+    begin
+        Assert.IsTrue(RunPostingThatConfirmsAndMessages(), 'The posting confirmation was declined.');
+    end;
+
+    local procedure RunPostingThatConfirmsAndMessages(): Boolean
+    begin
+        if not Confirm('Post this document?', false) then
+            exit(false);
+        Message('Posting completed.');
+        exit(true);
+    end;
+
+    [ConfirmHandler]
+    procedure ConfirmHandler(Question: Text[1024]; var Reply: Boolean)
+    begin
+        Reply := true;
+    end;
+
+    [MessageHandler]
+    procedure PostMessageHandler(MessageText: Text[1024])
+    begin
     end;
 
     [ModalPageHandler]
