@@ -14,33 +14,35 @@ query 50127 "Perf Customer Chunk"
 
 codeunit 50128 "Perf Sample CommitInLoop Good"
 {
-    procedure NormalizeCustomerNames()
+    procedure IncreaseCustomerCreditLimits()
     var
-        NormalizeState: Record "Perf Normalize State";
+        CreditLimitState: Record "Perf Credit Limit State";
         LastCustomerNo: Code[20];
     begin
-        if not NormalizeState.Get('CUSTOMER') then begin
-            NormalizeState.Init();
-            NormalizeState.Code := 'CUSTOMER';
-            NormalizeState.Insert();
+        if not CreditLimitState.Get('CUSTOMER') then begin
+            CreditLimitState.Init();
+            CreditLimitState.Code := 'CUSTOMER';
+            CreditLimitState.Insert();
         end;
-        LastCustomerNo := NormalizeState."Last Customer No.";
+        LastCustomerNo := CreditLimitState."Last Customer No.";
 
-        while NormalizeNextChunk(LastCustomerNo) do begin
-            // Persist progress in the same transaction as the completed chunk.
-            NormalizeState."Last Customer No." := LastCustomerNo;
-            NormalizeState.Modify();
+        while IncreaseNextChunk(LastCustomerNo) do begin
+            CreditLimitState."Last Customer No." := LastCustomerNo;
+            CreditLimitState.Modify();
             Commit();
         end;
     end;
 
-    local procedure NormalizeNextChunk(var LastCustomerNo: Code[20]): Boolean
+    local procedure IncreaseNextChunk(var LastCustomerNo: Code[20]): Boolean
     var
         Customer: Record Customer;
         TempCustomer: Record Customer temporary;
         CustomerChunk: Query "Perf Customer Chunk";
-        LastChunkCustomerNo: Code[20];
+        ChunkStartedAt: DateTime;
+        MaxChunkDuration: Duration;
     begin
+        ChunkStartedAt := CurrentDateTime();
+        MaxChunkDuration := 60000;
         CustomerChunk.TopNumberOfRows(500);
         if LastCustomerNo <> '' then
             CustomerChunk.SetFilter(CustomerNo, '>%1', LastCustomerNo);
@@ -49,7 +51,6 @@ codeunit 50128 "Perf Sample CommitInLoop Good"
             TempCustomer.Init();
             TempCustomer."No." := CustomerChunk.CustomerNo;
             TempCustomer.Insert();
-            LastChunkCustomerNo := CustomerChunk.CustomerNo;
         end;
         CustomerChunk.Close();
 
@@ -60,17 +61,17 @@ codeunit 50128 "Perf Sample CommitInLoop Good"
         if TempCustomer.FindSet() then
             repeat
                 if Customer.Get(TempCustomer."No.") then begin
-                    Customer.Name := UpperCase(Customer.Name);
+                    Customer."Credit Limit (LCY)" += 100;
                     Customer.Modify();
                 end;
-            until TempCustomer.Next() = 0;
+                LastCustomerNo := TempCustomer."No.";
+            until (TempCustomer.Next() = 0) or (CurrentDateTime() - ChunkStartedAt >= MaxChunkDuration);
 
-        LastCustomerNo := LastChunkCustomerNo;
         exit(true);
     end;
 }
 
-table 50128 "Perf Normalize State"
+table 50128 "Perf Credit Limit State"
 {
     fields
     {

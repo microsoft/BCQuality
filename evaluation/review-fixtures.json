@@ -17,7 +17,8 @@
       "article": "set-defaultimplementation-on-enum"
     },
     "performance": {
-      "article": "use-isempty-for-existence-check"
+      "article": "avoid-commit-inside-loops",
+      "context": "A single worker applies a one-time credit-limit increase over a stable customer set. Failed runs may be retried for the same operation."
     },
     "privacy": {
       "article": "no-pii-in-telemetry-message-string"
@@ -29,7 +30,8 @@
       "article": "telemetry-event-id-stable-unique"
     },
     "testing": {
-      "article": "ui-handlers-in-tests"
+      "article": "ui-handlers-in-tests",
+      "context": "ConfirmPostingAndShowMessage must verify exactly one 'Post this document?' confirmation, reply true, then exactly one 'Posting completed.' message in that order. The Customer Card scenarios verify the selected customer's identity; a credit-limit notification is conditional."
     },
     "upgrade": {
       "article": "initvalue-does-not-update-existing-rows",
