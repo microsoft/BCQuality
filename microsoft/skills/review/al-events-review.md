@@ -39,7 +39,7 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 - The changed AL object names and types — especially codeunits that publish events or host event subscribers, posting/release/validation routines that should expose extension points, and test codeunits that bind subscribers.
 - The changed procedures and triggers, weighted toward event publisher methods, methods carrying the `[EventSubscriber(...)]` attribute, routines that raise `OnBefore`/`OnAfter` events, and any procedure that calls `BindSubscription`/`UnbindSubscription`.
-- Tokens extracted from the diff that relate to events and the publish/subscribe model (`IntegrationEvent`, `BusinessEvent`, `InternalEvent`, `EventSubscriber`, `IsHandled`, `BindSubscription`, `UnbindSubscription`, `EventSubscriberInstance`, `OnBefore`, `OnAfter`, `Manual`, `IncludeSender`, `GlobalVarAccess`, `Isolated`, `local`, `internal`, `Sender`, `this`, `RecordRef`, `xRec`, `temporary`, `Temp`, `repeat`).
+- Tokens extracted from the diff that relate to events and the publish/subscribe model (`IntegrationEvent`, `BusinessEvent`, `InternalEvent`, `EventSubscriber`, `IsHandled`, `BindSubscription`, `UnbindSubscription`, `EventSubscriberInstance`, `OnBefore`, `OnAfter`, `Manual`, `IncludeSender`, `GlobalVarAccess`, `Isolated`, `local`, `internal`, `Sender`, `this`, `RecordRef`, `xRec`, `temporary`, `Temp`, `repeat`, `ChangeCompany`, `StartSession`, `RunTrigger`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -65,6 +65,7 @@ The following targeted checks map diff signals to specific `events` articles. Tr
 - A `RecordRef` event parameter, or a passed-through `xRec`, where a concrete typed record fits — `avoid-loosely-typed-event-parameters`.
 - A `var IsHandled` added to a pre-existing event rather than introduced through a new `OnBefore` publisher — `do-not-add-ishandled-to-an-existing-event`.
 - An `if IsHandled then exit;` whose skipped body performs posting, ledger-entry creation, number-series consumption, or integrity/permission validation — `do-not-bypass-critical-operations-with-ishandled`.
+- A record variable that had `ChangeCompany(<name>)` called on it and is later used with `Insert`, `Modify`, `Delete`, or `Validate`, where the table is not owned by the extension, has triggers that read company data, or has trigger-event subscribers that do not exit on `RunTrigger = false` — `changecompany-runs-triggers-in-the-calling-company`. Do not match a read-only use after `ChangeCompany`, a write with `RunTrigger = false` into an extension-owned table whose triggers do not read company data and whose trigger-event subscribers exit on `RunTrigger = false`, or the parameterless `ChangeCompany()` reset.
 
 ## Action
 

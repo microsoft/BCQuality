@@ -75,6 +75,8 @@ codeunit 50101 "Transfer Request Count Good"
     var
         TransferSetup: Record "Transfer Setup Good";
     begin
+        // Serializes the read-modify-write so concurrent background sessions don't lose an increment.
+        TransferSetup.LockTable();
         TransferSetup.Get();
         TransferSetup."Open Requests" += 1;
         TransferSetup.Modify();
