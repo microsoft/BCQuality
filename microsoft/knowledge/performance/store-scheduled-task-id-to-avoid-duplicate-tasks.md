@@ -19,10 +19,10 @@ Every call to `TaskScheduler.CreateTask` creates a new scheduled task and return
 
 Persist the GUID returned by `CreateTask` at the same scope as the logical task. Before creating a replacement, parse the stored GUID and call `TaskScheduler.TaskExists`; create and store a new task only when the previous task no longer exists. `TaskExists` checks one GUID, not whether an equivalent codeunit is already scheduled, so callers that can schedule concurrently still need serialization around this check-and-create sequence.
 
-See sample: `store-scheduled-task-id-to-avoid-duplicate-tasks.good.al`.
+See sample: [`store-scheduled-task-id-to-avoid-duplicate-tasks.good.al`](store-scheduled-task-id-to-avoid-duplicate-tasks.good.al).
 
 ## Anti Pattern
 
 Calling `TaskScheduler.CreateTask` every time initialization, login, setup, or another repeatable path runs while ignoring its return value. Each invocation creates another independent task even when an equivalent task is already pending.
 
-See sample: `store-scheduled-task-id-to-avoid-duplicate-tasks.bad.al`.
+See sample: [`store-scheduled-task-id-to-avoid-duplicate-tasks.bad.al`](store-scheduled-task-id-to-avoid-duplicate-tasks.bad.al).

@@ -21,10 +21,10 @@ Use a stable request ID that exists before the job queue processes the outbox ro
 
 A `Processed` flag set after the external call does not solve this failure window. If a later AL error rolls back that flag, the outbox row again looks unprocessed even though the external operation already happened.
 
-See sample: `job-queue-external-effects-must-be-idempotent.good.al`.
+See sample: [`job-queue-external-effects-must-be-idempotent.good.al`](job-queue-external-effects-must-be-idempotent.good.al).
 
 ## Anti Pattern
 
 Sending a state-changing request from a job queue handler with no stable request ID understood by the external API. Specifically, look for this sequence: read an outbox row, call `HttpClient.Post` or another side-effecting API, update or delete local data, and propagate an error after which the same outbox row can be processed again. The key may be part of the request body, URI, headers, or an existing business key; a naturally idempotent remote operation is already safe and should not be flagged.
 
-See sample: `job-queue-external-effects-must-be-idempotent.bad.al`.
+See sample: [`job-queue-external-effects-must-be-idempotent.bad.al`](job-queue-external-effects-must-be-idempotent.bad.al).

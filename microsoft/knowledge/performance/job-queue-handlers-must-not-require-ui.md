@@ -19,10 +19,10 @@ A job queue handler runs in a background session with no client UI. Calls that r
 
 Make a dedicated job queue entry point non-interactive. Validate parameters and data in AL, persist business-visible status when needed, and let failures propagate to the job queue log. If one procedure genuinely serves both foreground and background callers, isolate optional UI-only behavior behind `GuiAllowed`; do not use the guard to silently skip a decision that the operation requires.
 
-See sample: `job-queue-handlers-must-not-require-ui.good.al`.
+See sample: [`job-queue-handlers-must-not-require-ui.good.al`](job-queue-handlers-must-not-require-ui.good.al).
 
 ## Anti Pattern
 
 Calling `Confirm`, `Page.Run`, `Page.RunModal`, `Report.Run`, `Report.RunModal`, `Hyperlink`, `File.Upload`, or `File.Download` from a codeunit run by the job queue. Another signal is using `Message` as the only success or failure notification: no user is attached to receive it.
 
-See sample: `job-queue-handlers-must-not-require-ui.bad.al`.
+See sample: [`job-queue-handlers-must-not-require-ui.bad.al`](job-queue-handlers-must-not-require-ui.bad.al).
