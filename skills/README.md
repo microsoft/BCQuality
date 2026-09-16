@@ -32,6 +32,7 @@ READ and DO are read on demand — typically by the first action skill the agent
 |---|---|
 | [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Exposes BCQuality through the standard `SKILL.md` format when this repository is installed as a plugin. |
 | [`al-development-plan/SKILL.md`](al-development-plan/SKILL.md) | Enriches an existing AL plan read-only through the standard `SKILL.md` format; does not generate a plan or implement code. |
+| [`al-implementation-guidance/SKILL.md`](al-implementation-guidance/SKILL.md) | Consults BCQuality read-only at bounded implementation checkpoints; the consuming agent still owns edits, tests, and delivery. |
 
 Each adapter is deliberately thin. It translates the caller's request into an
 Entry task context, then follows Entry's dispatch without owning routing,
@@ -49,6 +50,9 @@ This gives the two skill formats distinct roles:
 - `microsoft/skills/development/al-development-plan.md` is the read-only
   knowledge-enrichment interface for existing plans. Consumers own format
   normalization, planning, implementation, and delivery.
+- `microsoft/skills/development/al-implementation-guidance.md` is the focused
+  implementation-time consultation interface. It uses the current diff and
+  decision context, and never becomes an implementation workflow.
 
 Each host adapter deliberately shares its name with the internal action skill
 for the same operation. Their locations distinguish the host integration from

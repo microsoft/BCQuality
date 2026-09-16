@@ -157,10 +157,11 @@ try {
         & (Join-Path $Root 'tools\Build-KnowledgeIndex.ps1') -BCQualityRoot $Root `
             -IndexPath (Join-Path $PrepareDirectory 'knowledge-index.json') | Out-Null
         $skillInstructions = [IO.File]::ReadAllText((Resolve-GuidanceReference $Root $manifest.skill))
+        $implementation = Test-ImplementationGuidanceManifest $manifest
         foreach ($case in $manifest.cases) {
             $modelId = Get-GuidanceCaseId $case.id
             $request = [ordered]@{
-                protocol = 'Run the supplied read-only skill on the runner-assigned repository and existing plan. Return only caseId and guidanceReport. The runner captures evidence before invocation; do not capture or modify it. Do not create artifacts in the target or knowledge checkout.'
+                protocol = 'Run the supplied read-only skill on the runner-assigned repository and supplied development context. Return only caseId and guidanceReport. The runner captures evidence before invocation; do not capture or modify it. Do not create artifacts in the target or knowledge checkout.'
                 caseId = $modelId
                 skill = $manifest.skill
                 skillInstructions = $skillInstructions
@@ -168,14 +169,21 @@ try {
                 knowledgeRoot = $Root
                 'task-context' = [ordered]@{
                     goal = Get-GuidancePlanRequest $case.'development-plan'
-                    'inputs-available' = @('development-plan', 'repository')
+                    'inputs-available' = $(if ($implementation) {
+                        @('development-plan', 'repository', 'implementation-diff', 'decision-context', 'consumed-guidance')
+                    } else { @('development-plan', 'repository') })
                     'bc-version' = $case.context.'bc-version'
                     technologies = $case.context.technologies
                     countries = $case.context.countries
                     'application-area' = $case.context.'application-area'
                 }
                 'development-plan' = $case.'development-plan'
-                resultSchema = Get-GuidanceResultSchema $modelId
+                resultSchema = Get-GuidanceResultSchema $modelId -Implementation:$implementation
+            }
+            if ($implementation) {
+                $request.'implementation-diff' = $case.'implementation-diff'
+                $request.'decision-context' = $case.'decision-context'
+                $request.'consumed-guidance' = $case.'consumed-guidance'
             }
             if ($workspaces.Count) { $request.repository = $workspaces[$case.id] }
             Write-GuidanceNewJson (Join-Path $PrepareDirectory "request-$modelId.json") $request

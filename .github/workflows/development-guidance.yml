@@ -2,7 +2,6 @@ name: Validate read-only development guidance
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
@@ -23,3 +22,11 @@ jobs:
       - name: Run credential-free guidance evaluator regressions
         shell: pwsh
         run: ./tools/Test-DevelopmentGuidanceEvaluator.ps1
+
+      - name: Validate and prepare implementation-guidance fixtures
+        shell: pwsh
+        run: ./tools/Test-DevelopmentGuidanceFixtures.ps1 -Root . -ManifestPath ./evaluation/implementation-guidance-fixtures.json -PrepareDirectory "$env:RUNNER_TEMP/bcquality-implementation-guidance-fixtures"
+
+      - name: Run implementation-guidance evaluator regressions
+        shell: pwsh
+        run: ./tools/Test-ImplementationGuidanceEvaluator.ps1

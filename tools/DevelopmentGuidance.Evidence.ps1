@@ -318,6 +318,87 @@ function Get-GuidancePlanRequest {
     return $Plan.request
 }
 
+function Test-ImplementationGuidanceManifest {
+    param($Manifest)
+    return $Manifest.skill -ceq 'microsoft/skills/development/al-implementation-guidance.md'
+}
+
+function Assert-ImplementationDecisionContext {
+    param($DecisionContext, [switch] $AllowEmpty)
+    Assert-GuidanceObject $DecisionContext 'decision-context'
+    if ($AllowEmpty -and -not $DecisionContext.Count) { return }
+    foreach ($key in @('phase', 'decision', 'decision-key', 'evidence-fingerprint',
+            'affected-files', 'affected-symbols', 'changed-tokens', 'tests',
+            'acceptance-criteria', 'development-plan-pin', 'implementation-evidence-pin')) {
+        if (-not $DecisionContext.Contains($key)) { throw "decision-context is missing required field '$key'." }
+    }
+    foreach ($key in @('phase', 'decision', 'decision-key', 'evidence-fingerprint',
+            'development-plan-pin', 'implementation-evidence-pin')) {
+        Assert-GuidanceString $DecisionContext[$key] "decision-context.$key"
+    }
+    foreach ($key in @('affected-files', 'affected-symbols', 'changed-tokens', 'tests', 'acceptance-criteria')) {
+        Assert-GuidanceArray $DecisionContext[$key] "decision-context.$key" -Strings
+    }
+}
+
+function Assert-ConsumedGuidance {
+    param($Consumed)
+    Assert-GuidanceArray $Consumed 'consumed-guidance'
+    $keys = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($entry in $Consumed) {
+        Assert-GuidanceObject $entry 'consumed-guidance entry' @('path', 'decision-key', 'evidence-fingerprint', 'prior-decision')
+        foreach ($key in @('path', 'decision-key', 'evidence-fingerprint', 'prior-decision')) {
+            Assert-GuidanceString $entry[$key] "consumed-guidance.$key"
+        }
+        $identity = "$($entry.path)`n$($entry.'decision-key')`n$($entry.'evidence-fingerprint')"
+        if (-not $keys.Add($identity)) { throw 'consumed-guidance contains duplicate identities.' }
+    }
+}
+
+function Assert-ImplementationGuidanceManifestCases {
+    param($Manifest, [string] $Root)
+    Assert-GuidanceArray $Manifest.cases 'manifest.cases' -NonEmpty
+    $ids = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $modelIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($case in $Manifest.cases) {
+        Assert-GuidanceObject $case 'manifest case' @(
+            'id', 'expectedOutcome', 'development-plan', 'implementation-diff',
+            'decision-context', 'consumed-guidance', 'context', 'requiredKnowledge',
+            'optionalKnowledge', 'expectedOmitted', 'requiresUnresolved')
+        if ($case.id -isnot [string] -or $case.id -cnotmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') {
+            throw 'Fixture id must be kebab-case.'
+        }
+        if (-not $ids.Add($case.id) -or -not $modelIds.Add((Get-GuidanceCaseId $case.id))) {
+            throw 'Duplicate fixture or model case identity.'
+        }
+        if ($case.expectedOutcome -cnotin @('completed', 'not-applicable', 'no-knowledge', 'partial', 'failed')) {
+            throw 'Fixture expectedOutcome is invalid.'
+        }
+        Assert-GuidanceString $case.expectedOutcome 'fixture.expectedOutcome'
+        $null = Get-GuidancePlanRequest $case.'development-plan'
+        if ($case.'implementation-diff' -isnot [string]) { throw 'implementation-diff must be a string.' }
+        Assert-ImplementationDecisionContext $case.'decision-context' -AllowEmpty
+        Assert-ConsumedGuidance $case.'consumed-guidance'
+        Assert-GuidanceContext $case.context
+        foreach ($name in @('requiredKnowledge', 'optionalKnowledge', 'expectedOmitted')) {
+            Assert-GuidanceArray $case[$name] "fixture.$name" -Strings
+        }
+        if ($case.requiresUnresolved -isnot [bool]) { throw 'Fixture requiresUnresolved must be boolean.' }
+        $references = @($case.requiredKnowledge) + @($case.optionalKnowledge) + @($case.expectedOmitted)
+        foreach ($reference in @($references | Sort-Object -Unique)) {
+            $null = Resolve-GuidanceReference $Root $reference -Knowledge
+        }
+        if ($case.expectedOutcome -in @('no-knowledge', 'not-applicable') -and
+            (@($case.requiredKnowledge) + @($case.optionalKnowledge)).Count) {
+            throw 'Empty-knowledge outcomes cannot require or accept selected knowledge.'
+        }
+        if ($case.expectedOutcome -eq 'not-applicable' -and
+            -not ([string]::IsNullOrWhiteSpace($case.'implementation-diff') -or -not $case.'decision-context'.Count)) {
+            throw 'The not-applicable implementation fixture must omit current diff or decision context.'
+        }
+    }
+}
+
 function Assert-GuidanceContext {
     param($Context)
     Assert-GuidanceObject $Context 'context' @('bc-version', 'technologies', 'countries', 'application-area', 'unknown')
@@ -349,6 +430,10 @@ function Assert-GuidanceManifest {
             $value -lt 0 -or $value -gt 1) { throw 'Manifest thresholds must be numbers between zero and one.' }
     }
     $null = Resolve-GuidanceReference $Root $Manifest.skill
+    if (Test-ImplementationGuidanceManifest $Manifest) {
+        Assert-ImplementationGuidanceManifestCases $Manifest $Root
+        return
+    }
     Assert-GuidanceArray $Manifest.cases 'manifest.cases' -NonEmpty
     $ids = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     $modelIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
@@ -382,8 +467,174 @@ function Assert-GuidanceManifest {
     }
 }
 
+function Assert-ImplementationGuidanceResult {
+    param($Result, $Case, $Manifest, [string] $Root, [string] $Workspace)
+    Assert-GuidanceObject $Result 'result' @('caseId', 'guidanceReport')
+    Assert-GuidanceString $Result.caseId 'result.caseId'
+    if ($Result.caseId -cne (Get-GuidanceCaseId $Case.id)) { throw 'Result caseId mismatch.' }
+    if ($Result.Contains('workspaceRoot')) {
+        Assert-GuidanceString $Result.workspaceRoot 'result.workspaceRoot'
+        if (-not [IO.Path]::IsPathFullyQualified($Result.workspaceRoot) -or
+            (Get-GuidanceSafePath $Result.workspaceRoot -Directory) -cne $Workspace) {
+            throw 'Result workspaceRoot disagrees with the runner binding.'
+        }
+    }
+    $report = $Result.guidanceReport
+    Assert-GuidanceObject $report 'guidanceReport' @(
+        'skill', 'outcome', 'summary', 'pins', 'context', 'knowledge',
+        'validation-considerations', 'deduplication', 'suppressed', 'unresolved')
+    Assert-GuidanceObject $report.skill 'skill' @('id', 'version')
+    if ($report.skill.id -cne 'al-implementation-guidance' -or
+        $report.skill.version -isnot [long] -or $report.skill.version -ne 1) {
+        throw 'Report skill identity/version is invalid.'
+    }
+    Assert-GuidanceString $report.outcome 'outcome'
+    if ($report.outcome -cnotin @('completed', 'not-applicable', 'no-knowledge', 'partial', 'failed')) {
+        throw 'Report outcome enum is invalid.'
+    }
+    if ($report.outcome -cne $Case.expectedOutcome) { throw 'Report outcome does not match fixture expectedOutcome.' }
+    if ($report.outcome -in @('partial', 'failed') -or $report.Contains('outcome-reason')) {
+        Assert-GuidanceString $report['outcome-reason'] 'outcome-reason'
+    }
+    Assert-GuidanceObject $report.summary 'summary' @(
+        'request', 'phase', 'decision', 'decision-key', 'evidence-fingerprint',
+        'candidates', 'selected', 'omitted-consumed')
+    foreach ($key in @('request', 'phase', 'decision', 'decision-key', 'evidence-fingerprint')) {
+        Assert-GuidanceString $report.summary[$key] "summary.$key"
+    }
+    foreach ($key in @('candidates', 'selected', 'omitted-consumed')) {
+        Assert-GuidanceInteger $report.summary[$key] "summary.$key"
+    }
+    Assert-GuidanceObject $report.pins 'pins' @('knowledge-checkout', 'development-plan', 'implementation-evidence')
+    foreach ($key in @('knowledge-checkout', 'development-plan', 'implementation-evidence')) {
+        Assert-GuidanceString $report.pins[$key] "pins.$key"
+    }
+    if ($report.pins.'knowledge-checkout' -cne 'unpinned') {
+        if ($report.pins.'knowledge-checkout' -cnotmatch '^([0-9A-Fa-f]{40}|[0-9A-Fa-f]{64})$' -or
+            $report.pins.'knowledge-checkout' -cne (Invoke-GuidanceGit $Root @('rev-parse', '--verify', 'HEAD'))) {
+            throw 'Knowledge checkout pin does not identify the evaluated checkout.'
+        }
+    }
+    if ($Case.expectedOutcome -ne 'not-applicable') {
+        if ($report.summary.'decision-key' -cne $Case.'decision-context'.'decision-key' -or
+            $report.summary.'evidence-fingerprint' -cne $Case.'decision-context'.'evidence-fingerprint' -or
+            $report.summary.phase -cne $Case.'decision-context'.phase -or
+            $report.summary.decision -cne $Case.'decision-context'.decision) {
+            throw 'Report summary does not preserve current decision context.'
+        }
+        if ($report.pins.'development-plan' -cne $Case.'decision-context'.'development-plan-pin' -or
+            $report.pins.'implementation-evidence' -cne $Case.'decision-context'.'implementation-evidence-pin') {
+            throw 'Report does not preserve consumer-supplied pins.'
+        }
+    }
+    Assert-GuidanceContext $report.context
+    foreach ($key in @('affected-files', 'affected-symbols', 'changed-tokens')) {
+        if (-not $report.context.Contains($key)) { throw "context is missing required field '$key'." }
+        Assert-GuidanceArray $report.context[$key] "context.$key" -Strings
+        if ($Case.expectedOutcome -ne 'not-applicable' -and
+            ($report.context[$key] | ConvertTo-Json -Compress) -cne
+            ($Case.'decision-context'[$key] | ConvertTo-Json -Compress)) {
+            throw "context.$key does not preserve current implementation evidence."
+        }
+    }
+    foreach ($name in @('knowledge', 'validation-considerations', 'suppressed', 'unresolved')) {
+        Assert-GuidanceArray $report[$name] $name
+    }
+    Assert-GuidanceArray $report.unresolved 'unresolved' -Strings
+    Assert-GuidanceObject $report.deduplication 'deduplication' @('strategy', 'omitted')
+    if ($report.deduplication.strategy -cne 'omit-exact-consumed-match') {
+        throw 'Deduplication strategy is invalid.'
+    }
+    Assert-GuidanceArray $report.deduplication.omitted 'deduplication.omitted'
+    if ($report.summary.selected -ne $report.knowledge.Count -or
+        $report.summary.'omitted-consumed' -ne $report.deduplication.omitted.Count -or
+        ($report.summary.selected + $report.summary.'omitted-consumed') -gt $report.summary.candidates) {
+        throw 'Summary counts disagree with selected or omitted guidance.'
+    }
+    if ($report.outcome -in @('no-knowledge', 'not-applicable') -and $report.knowledge.Count) {
+        throw 'This outcome requires empty knowledge.'
+    }
+    if ($report.outcome -eq 'completed' -and -not $report.knowledge.Count) {
+        throw 'Completed requires selected knowledge; empty evaluation is no-knowledge.'
+    }
+    if (($report.outcome -eq 'partial' -or $Case.requiresUnresolved) -and -not $report.unresolved.Count) {
+        throw 'Partial/incomplete evaluation must explain unresolved gaps.'
+    }
+    foreach ($dimension in $report.context.unknown) {
+        if (-not @($report.unresolved | Where-Object { $_ -match [regex]::Escape($dimension) }).Count) {
+            throw 'Unknown dimensions require a corresponding unresolved explanation.'
+        }
+    }
+    $used = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($entry in $report.knowledge) {
+        Assert-GuidanceObject $entry 'knowledge entry' @('path', 'used-for', 'constraints', 'sample-paths')
+        $null = Resolve-GuidanceReference $Root $entry.path -Knowledge
+        if (-not $used.Add($entry.path)) { throw 'Duplicate knowledge reference.' }
+        Assert-GuidanceString $entry.'used-for' 'knowledge.used-for'
+        Assert-GuidanceArray $entry.constraints 'knowledge.constraints' -Strings -NonEmpty
+        Assert-GuidanceArray $entry.'sample-paths' 'knowledge.sample-paths' -Strings
+        foreach ($sample in $entry.'sample-paths') {
+            $null = Resolve-GuidanceReference $Root $sample -Article $entry.path
+        }
+        Assert-GuidanceReferenceSha $entry $Root
+    }
+    $omitted = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($entry in $report.deduplication.omitted) {
+        Assert-GuidanceObject $entry 'deduplication omitted entry' @(
+            'path', 'decision-key', 'evidence-fingerprint', 'prior-decision')
+        foreach ($key in @('path', 'decision-key', 'evidence-fingerprint', 'prior-decision')) {
+            Assert-GuidanceString $entry[$key] "deduplication.omitted.$key"
+        }
+        $null = Resolve-GuidanceReference $Root $entry.path -Knowledge
+        $match = @($Case.'consumed-guidance' | Where-Object {
+            $_.path -ceq $entry.path -and
+            $_.'decision-key' -ceq $entry.'decision-key' -and
+            $_.'evidence-fingerprint' -ceq $entry.'evidence-fingerprint'
+        })
+        if ($match.Count -ne 1 -or $entry.'decision-key' -cne $report.summary.'decision-key' -or
+            $entry.'evidence-fingerprint' -cne $report.summary.'evidence-fingerprint') {
+            throw 'Omitted guidance is not an exact consumed match for this decision evidence.'
+        }
+        if (-not $omitted.Add($entry.path) -or $used.Contains($entry.path)) {
+            throw 'Omitted guidance is duplicated or reissued.'
+        }
+    }
+    if (@($Case.expectedOmitted | Where-Object { -not $omitted.Contains($_) }).Count -or
+        @($omitted | Where-Object { $_ -cnotin $Case.expectedOmitted }).Count) {
+        throw 'Deduplication omitted set does not match fixture expectation.'
+    }
+    $validationIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($entry in $report.'validation-considerations') {
+        Assert-GuidanceObject $entry 'validation consideration' @('id', 'reason', 'evidence')
+        foreach ($key in @('id', 'reason', 'evidence')) {
+            Assert-GuidanceString $entry[$key] "validation-considerations.$key"
+        }
+        if (-not $validationIds.Add($entry.id)) { throw 'Duplicate validation consideration id.' }
+    }
+    foreach ($entry in $report.suppressed) {
+        Assert-GuidanceObject $entry 'suppressed entry' @('reference', 'reason')
+        Assert-GuidanceObject $entry.reference 'suppressed.reference' @('path')
+        $null = Resolve-GuidanceReference $Root $entry.reference.path -Knowledge
+        Assert-GuidanceReferenceSha $entry.reference $Root
+        if ($entry.reason -cnotin @('layer-precedence', 'configuration')) {
+            throw 'Suppression reason is invalid.'
+        }
+    }
+    $matched = @($Case.requiredKnowledge | Where-Object { $used.Contains($_) }).Count
+    $recall = if ($Case.requiredKnowledge.Count) { $matched / $Case.requiredKnowledge.Count } else { 1.0 }
+    $accepted = @($Case.requiredKnowledge) + @($Case.optionalKnowledge)
+    $acceptedCount = @($used | Where-Object { $_ -cin $accepted }).Count
+    $precision = if ($used.Count) { $acceptedCount / $used.Count } elseif (-not $Case.requiredKnowledge.Count) { 1.0 } else { 0.0 }
+    if ($recall -lt $Manifest.minimumKnowledgeRecall) { throw 'Knowledge recall is below the manifest threshold.' }
+    if ($precision -lt $Manifest.minimumKnowledgePrecision) { throw 'Knowledge precision is below the manifest threshold.' }
+}
+
 function Assert-GuidanceResult {
     param($Result, $Case, $Manifest, [string] $Root, [string] $Workspace)
+    if (Test-ImplementationGuidanceManifest $Manifest) {
+        Assert-ImplementationGuidanceResult $Result $Case $Manifest $Root $Workspace
+        return
+    }
     Assert-GuidanceObject $Result 'result' @('caseId', 'guidanceReport')
     Assert-GuidanceString $Result.caseId 'result.caseId'
     if ($Result.caseId -cne (Get-GuidanceCaseId $Case.id)) { throw 'Result caseId mismatch.' }
@@ -491,7 +742,49 @@ function Assert-GuidanceReferenceSha {
 }
 
 function Get-GuidanceResultSchema {
-    param([string] $CaseId)
+    param([string] $CaseId, [switch] $Implementation)
+    if ($Implementation) {
+        return [ordered]@{
+            caseId = $CaseId
+            guidanceReport = [ordered]@{
+                skill = [ordered]@{ id = 'al-implementation-guidance'; version = 1 }
+                outcome = 'completed | not-applicable | no-knowledge | partial | failed'
+                'outcome-reason' = 'required for partial or failed'
+                summary = [ordered]@{
+                    request = 'preserved plan intent'; phase = 'current phase'; decision = 'next decision'
+                    'decision-key' = 'consumer key'; 'evidence-fingerprint' = 'consumer fingerprint'
+                    candidates = 0; selected = 0; 'omitted-consumed' = 0
+                }
+                pins = [ordered]@{
+                    'knowledge-checkout' = 'full checkout SHA or unpinned'
+                    'development-plan' = 'consumer plan pin or unpinned'
+                    'implementation-evidence' = 'consumer evidence pin or unpinned'
+                }
+                context = [ordered]@{
+                    'bc-version' = 'resolved target or unknown'; technologies = @('al')
+                    countries = @('w1'); 'application-area' = @('all')
+                    'affected-files' = @(); 'affected-symbols' = @(); 'changed-tokens' = @(); unknown = @()
+                }
+                knowledge = @([ordered]@{
+                    path = 'repo-relative knowledge article'; sha = 'optional full checkout commit id'
+                    'used-for' = 'current decision'; constraints = @('faithful normative constraint')
+                    'sample-paths' = @()
+                })
+                'validation-considerations' = @([ordered]@{
+                    id = 'stable id'; reason = 'why needed'; evidence = 'evidence consumer should obtain'
+                })
+                deduplication = [ordered]@{
+                    strategy = 'omit-exact-consumed-match'
+                    omitted = @([ordered]@{
+                        path = 'consumed article path'; 'decision-key' = 'exact current key'
+                        'evidence-fingerprint' = 'exact current fingerprint'; 'prior-decision' = 'prior decision'
+                    })
+                }
+                suppressed = @()
+                unresolved = @()
+            }
+        }
+    }
     return [ordered]@{
         caseId = $CaseId
         guidanceReport = [ordered]@{
