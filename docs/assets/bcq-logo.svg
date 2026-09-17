@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="720" viewBox="0 0 800 720" role="img" aria-labelledby="title description">
-  <title id="title">BCQuality logo and wordmark</title>
-  <desc id="description">A blue letter Q crossed by a teal quality check above the BCQuality wordmark.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title description">
+  <title id="title">BCQuality banner logo</title>
+  <desc id="description">A blue letter Q crossed by a teal quality check beside the BCQuality wordmark.</desc>
   <defs>
     <linearGradient id="ring" x1="215" y1="95" x2="585" y2="480" gradientUnits="userSpaceOnUse">
       <stop stop-color="#086194"/>
@@ -16,15 +16,11 @@
     <filter id="mark-shadow" x="-20%" y="-20%" width="140%" height="150%">
       <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#086194" flood-opacity="0.16"/>
     </filter>
-    <filter id="ground-shadow" x="-30%" y="-300%" width="160%" height="700%">
-      <feGaussianBlur stdDeviation="9"/>
-    </filter>
   </defs>
-  <g filter="url(#mark-shadow)" shape-rendering="geometricPrecision">
+  <g transform="matrix(0.7 0 0 0.7 -70 14)" filter="url(#mark-shadow)" shape-rendering="geometricPrecision">
     <circle cx="400" cy="280" r="185" fill="none" stroke="url(#ring)" stroke-width="70"/>
     <path d="m415 400 115 115h100L465 350Z" fill="url(#teal)"/>
     <path d="m285 270 115 115 250-250V35L400 285l-65-65Z" fill="url(#teal)"/>
   </g>
-  <text x="400" y="635" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="100" font-weight="700" letter-spacing="-4"><tspan fill="#086194">BC</tspan><tspan fill="#138EB7">Quality</tspan></text>
-  <ellipse cx="400" cy="682" rx="190" ry="12" fill="#086194" opacity="0.14" filter="url(#ground-shadow)"/>
+  <text x="455" y="262" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="142" font-weight="700" letter-spacing="-6"><tspan fill="#086194">BC</tspan><tspan fill="#138EB7">Quality</tspan></text>
 </svg>

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/bcq-logo.svg" alt="BCQuality logo" width="480">
+  <img src="docs/assets/bcq-logo.svg" alt="BCQuality logo" width="720">
 </p>
 
 # BCQuality

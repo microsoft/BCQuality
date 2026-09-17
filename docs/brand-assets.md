@@ -1,7 +1,7 @@
 # BCQ brand assets
 
 <p align="center">
-  <img src="assets/bcq-logo.svg" alt="BCQuality logo" width="480">
+  <img src="assets/bcq-logo.svg" alt="BCQuality logo" width="720">
 </p>
 
 The BCQuality mark combines a **Q** with a check to represent review,
@@ -15,7 +15,7 @@ match the source concept.
 
 | Asset | Best use |
 | --- | --- |
-| [`bcq-logo.svg`](assets/bcq-logo.svg) | Full logo and wordmark. |
+| [`bcq-logo.svg`](assets/bcq-logo.svg) | Horizontal banner with the mark and wordmark. |
 | [`bcq-mark.svg`](assets/bcq-mark.svg) | Symbol without the wordmark. |
 
 The SVG files can be scaled without losing quality.
@@ -36,8 +36,8 @@ logo reference.
 
 ## Usage
 
-- Prefer the full logo when at least 240 pixels of space is available; use the
-  mark at smaller sizes.
+- Prefer the full logo when at least 320 pixels of horizontal space is
+  available; use the mark at smaller sizes.
 - Preserve the artwork's proportions, colors, and orientation.
 - Use `BCQuality logo` as alternative text unless nearby text already names the
   project, in which case the image can be decorative.
