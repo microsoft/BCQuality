@@ -19,4 +19,4 @@ This exception does **not** extend to dynamically editable fields. A field with 
 
 If you want to hide a field's caption, pair `ShowCaption = false` with a literal `Editable = false`. Use this pattern only for content fields that do not act as labels for other fields in the same layout container.
 
-See sample: `show-caption-false-allowed-on-non-editable-fields.good.al`.
+See sample: [`show-caption-false-allowed-on-non-editable-fields.good.al`](show-caption-false-allowed-on-non-editable-fields.good.al).

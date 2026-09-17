@@ -17,10 +17,10 @@ A routine that exposes both an `OnBefore…` event (with `var IsHandled`) and a 
 
 Wrap only the default work in `if not IsHandled then begin … end;` and keep the `OnAfterX(…)` raise after that block, outside the guard, so it always fires regardless of whether a subscriber handled the OnBefore. This keeps the override seam and the after-notification independent, which is what subscribers expect.
 
-See sample: `preserve-onafter-execution-when-ishandled-skips-the-body.good.al`.
+See sample: [`preserve-onafter-execution-when-ishandled-skips-the-body.good.al`](preserve-onafter-execution-when-ishandled-skips-the-body.good.al).
 
 ## Anti Pattern
 
 Guarding with `if IsHandled then exit;` and placing the `OnAfterX` raise later in the same routine, so handling the OnBefore short-circuits the whole procedure and the OnAfter event is skipped along with the body. Detection: an `if IsHandled then exit;` in a routine that also raises a paired `OnAfter…` event after that point.
 
-See sample: `preserve-onafter-execution-when-ishandled-skips-the-body.bad.al`.
+See sample: [`preserve-onafter-execution-when-ishandled-skips-the-body.bad.al`](preserve-onafter-execution-when-ishandled-skips-the-body.bad.al).

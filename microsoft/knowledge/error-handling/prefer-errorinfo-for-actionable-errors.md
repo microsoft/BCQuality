@@ -17,10 +17,10 @@ A plain `Error('text')` ends the operation with a dead-end dialog: the user read
 
 Build an `ErrorInfo`, set `Title`, `Message`, and `DetailedMessage`, then attach the action that matches the situation. For a Fix-it, call `AddAction(Caption, Codeunit::Handler, 'MethodName')` where the handler method (which receives the `ErrorInfo`) applies the known-good value; phrase the caption as "Set value to …". For a Show-it, set `PageNo := Page::"…"`, set `RecordId` so navigation opens the right record, and call `AddNavigationAction('Show …')`. Raise it with `Error(ErrorInfo)`. Reserve recommended actions for cases where the solution is genuinely known and the user has permission to apply it.
 
-See sample: `prefer-errorinfo-for-actionable-errors.good.al`.
+See sample: [`prefer-errorinfo-for-actionable-errors.good.al`](prefer-errorinfo-for-actionable-errors.good.al).
 
 ## Anti Pattern
 
 Surfacing a recoverable validation failure with `Error('You cannot invoice more than %1 units.', MaxQty)` and nothing else. The user is blocked with no offered remedy even though the code knows the maximum and could set it. The detection signal: an `Error` call in a validation or posting path whose message names a specific correct value or a specific related page, with no surrounding `ErrorInfo`, `AddAction`, or `AddNavigationAction`. Replace it with an `ErrorInfo` that carries the corresponding Fix-it or Show-it action.
 
-See sample: `prefer-errorinfo-for-actionable-errors.bad.al`.
+See sample: [`prefer-errorinfo-for-actionable-errors.bad.al`](prefer-errorinfo-for-actionable-errors.bad.al).

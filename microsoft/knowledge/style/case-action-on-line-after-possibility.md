@@ -17,10 +17,10 @@ In an AL `case` statement, the action for each label is written on the line that
 
 Each case label sits on its own line, terminated by `:`. The action below it is indented; multi-statement actions open with `begin` on the label line and close with `end;` on its own line.
 
-See sample: `case-action-on-line-after-possibility.good.al`.
+See sample: [`case-action-on-line-after-possibility.good.al`](case-action-on-line-after-possibility.good.al).
 
 ## Anti Pattern
 
 `'A': Letter2 := '10';` (single-line label and action), and `'C': begin Letter2 := '12'; DoSomething(); end;` (everything on one line including the block body). Both defeat per-line diff review and crowd the control flow.
 
-See sample: `case-action-on-line-after-possibility.bad.al`.
+See sample: [`case-action-on-line-after-possibility.bad.al`](case-action-on-line-after-possibility.bad.al).

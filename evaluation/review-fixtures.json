@@ -1,0 +1,71 @@
+{
+  "version": 2,
+  "selection": "first-paired-al-article",
+  "minimumExpectedRecall": 1.0,
+  "minimumCleanRate": 1.0,
+  "overrides": {
+    "agents": {
+      "article": "wire-all-three-agent-interfaces"
+    },
+    "breaking-changes": {
+      "article": "do-not-expose-sensitive-data-through-public-api"
+    },
+    "events": {
+      "article": "reset-ishandled-only-when-the-value-can-carry-over"
+    },
+    "interfaces": {
+      "article": "set-defaultimplementation-on-enum"
+    },
+    "performance": {
+      "articles": [
+        "use-isempty-for-existence-check",
+        "job-queue-category-code-serializes-conflicting-jobs",
+        "job-queue-external-effects-must-be-idempotent",
+        "job-queue-handlers-must-not-require-ui",
+        "job-queue-handlers-must-propagate-failures",
+        "job-queue-on-hold-does-not-stop-running-work",
+        "store-scheduled-task-id-to-avoid-duplicate-tasks"
+      ]
+    },
+    "privacy": {
+      "article": "no-pii-in-telemetry-message-string"
+    },
+    "query": {
+      "articles": [
+        "dataitemtablefilter-cannot-be-overwritten-at-runtime",
+        "reopening-query-resets-cursor-but-keeps-filters",
+        "set-query-filters-before-open",
+        "setfilter-overwrites-query-columnfilter"
+      ]
+    },
+    "reporting": {
+      "articles": [
+        "clear-report-variable-before-independent-runmodal",
+        "currreport-break-ends-the-current-trigger",
+        "currreport-quit-rolls-back-and-skips-onpostreport",
+        "currreport-skip-does-not-stop-trigger-code",
+        "report-output-in-a-loop-needs-one-client-download",
+        "reportextension-dataitem-trigger-order-is-explicit",
+        "reportextension-report-triggers-run-after-base-triggers",
+        "settableview-cannot-broaden-dataitemtableview",
+        "stop-when-runrequestpage-returns-empty-parameters"
+      ]
+    },
+    "style": {
+      "article": "label-comment-explains-placeholders"
+    },
+    "telemetry": {
+      "article": "telemetry-event-id-stable-unique"
+    },
+    "testing": {
+      "article": "ui-handlers-in-tests"
+    },
+    "upgrade": {
+      "article": "initvalue-does-not-update-existing-rows",
+      "context": "The extended table existed in the previous app version and already contains rows."
+    },
+    "web-services": {
+      "article": "expose-systemid-as-the-api-key"
+    }
+  }
+}

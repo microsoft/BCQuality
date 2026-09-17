@@ -1,23 +1,29 @@
 page 50251 "Sample Tooltip Bad"
 {
     PageType = Card;
-    SourceTable = Customer;
     layout
     {
         area(Content)
         {
             group(General)
             {
-                field("No."; Rec."No.")
+                Caption = 'General';
+                field(CustomerNoValue; CustomerNoValue)
                 {
                     ApplicationArea = All;
+                    Caption = 'Customer No.';
                 }
-                field(Amount; Rec."Balance (LCY)")
+                field(PreviewAmount; PreviewAmount)
                 {
                     ApplicationArea = All;
+                    Caption = 'Preview Amount';
                     ToolTip = '';
                 }
             }
         }
     }
+
+    var
+        CustomerNoValue: Code[20];
+        PreviewAmount: Decimal;
 }

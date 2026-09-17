@@ -2,7 +2,7 @@ codeunit 50149 "Sec Sample CommitBeh Good"
 {
     [CommitBehavior(CommitBehavior::Ignore)]
     [IntegrationEvent(true, false)]
-    procedure OnBeforeApplyingDiscount(var Customer: Record Customer)
+    local procedure OnBeforeApplyingDiscount(var Customer: Record Customer)
     begin
     end;
 

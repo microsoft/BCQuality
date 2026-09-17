@@ -17,10 +17,10 @@ application-area: [all]
 
 For the `Codeunit.Run` atomic-sub-operation pattern (see `codeunit-run-as-atomic-sub-operation.md`) to work in a loop, keep the outer scope **read-only**. Move per-iteration writes — progress updates, logging, audit entries — into the sub-codeunit so they commit or roll back together with the per-item work. If logging must live outside the atomic boundary, defer it: collect failure info in memory during the loop (a `List of [Text]`, a temporary record, local variables) and write it in one pass after the loop ends, when no outer write transaction is open.
 
-See sample: `codeunit-run-requires-prior-commit-inside-transaction.good.al`.
+See sample: [`codeunit-run-requires-prior-commit-inside-transaction.good.al`](codeunit-run-requires-prior-commit-inside-transaction.good.al).
 
 ## Anti Pattern
 
 Inserting `Commit()` before each `Codeunit.Run` to silence the runtime error. The error goes away, but the outer scope now commits per iteration — the behavior `avoid-commit-inside-loops.md` exists to warn against. Attempting to silence the implicit commit inside the sub-codeunit with `[CommitBehavior(CommitBehavior::Ignore)]` also fails: the attribute does not apply to `Codeunit.Run`'s implicit commit. Conditioning the Commit on `Database.IsInWriteTransaction()` (runtime 11.0+) is another version of the same trap — the method has legitimate uses for diagnostics and library code that genuinely cannot control its caller, but branching production flow on runtime transaction state typically signals unclear ownership that would be better fixed by restructuring the caller so transaction state is predictable.
 
-See sample: `codeunit-run-requires-prior-commit-inside-transaction.bad.al`.
+See sample: [`codeunit-run-requires-prior-commit-inside-transaction.bad.al`](codeunit-run-requires-prior-commit-inside-transaction.bad.al).

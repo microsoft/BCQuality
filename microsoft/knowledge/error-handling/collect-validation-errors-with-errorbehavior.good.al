@@ -15,10 +15,13 @@ codeunit 50185 "Collect Errors Good Sample"
             until Item.Next() = 0;
 
         if HasCollectedErrors() then begin
-            CollectedErrors := GetCollectedErrors();
+            // The default is false; true retrieves and clears the collection.
+            CollectedErrors := GetCollectedErrors(true);
+            // This blocking aggregate intentionally retains messages only.
             foreach CollectedError in CollectedErrors do
                 ErrorText += CollectedError.Message() + '\';
-            Message('The following must be fixed before posting:\%1', ErrorText);
+            Error(ErrorInfo.Create(
+                StrSubstNo('The following must be fixed before posting:\%1', ErrorText), false));
         end;
     end;
 }
@@ -30,8 +33,10 @@ codeunit 50186 "Collect Errors Item Check"
     trigger OnRun()
     begin
         if Rec.Description = '' then
-            Error('Item %1 has no description.', Rec."No.");
+            Error(ErrorInfo.Create(
+                StrSubstNo('Item %1 has no description.', Rec."No."), true));
         if Rec."Unit Cost" <= 0 then
-            Error('Item %1 must have a positive unit cost.', Rec."No.");
+            Error(ErrorInfo.Create(
+                StrSubstNo('Item %1 must have a positive unit cost.', Rec."No."), true));
     end;
 }

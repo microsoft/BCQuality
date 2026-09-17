@@ -4,10 +4,21 @@ codeunit 50235 "Upgrade With Validation"
 
     trigger OnValidateUpgradePerCompany()
     begin
-        // No skip logic and no written justification — full-table validation
-        // runs on every single upgrade pass.
+        // A full-table scan repeats on every upgrade.
         ValidateAllCustomers();
     end;
 
-    local procedure ValidateAllCustomers() begin end;
+    local procedure ValidateAllCustomers()
+    var
+        Customer: Record Customer;
+    begin
+        if Customer.FindSet() then
+            repeat
+                if Customer."Customer Posting Group" = 'OLD' then
+                    Error(MigrationIncompleteErr);
+            until Customer.Next() = 0;
+    end;
+
+    var
+        MigrationIncompleteErr: Label 'The legacy customer posting group was not migrated.';
 }

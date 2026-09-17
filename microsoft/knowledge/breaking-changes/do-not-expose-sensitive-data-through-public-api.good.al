@@ -1,10 +1,10 @@
 codeunit 50320 "Payment Client Good"
 {
     var
-        AccessToken: Text;
+        AccessToken: SecretText;
 
-    // Credential flows inward through an internal setter and never leaves the object.
-    internal procedure SetAccessToken(NewToken: Text)
+    // Credential remains SecretText as it flows inward and is stored.
+    internal procedure SetAccessToken(NewToken: SecretText)
     begin
         AccessToken := NewToken;
     end;

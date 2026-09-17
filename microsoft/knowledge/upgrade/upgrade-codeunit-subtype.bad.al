@@ -1,7 +1,7 @@
 codeunit 50201 "Upgrade My Feature"
 {
-    // Missing Subtype = Upgrade; the OnUpgrade trigger is never dispatched.
-    trigger OnUpgradePerCompany()
+    // This compiles, but no Subtype = Upgrade trigger wires it to the pipeline.
+    procedure RunUpgrade()
     begin
         UpgradeMyFeature();
     end;

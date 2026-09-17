@@ -17,13 +17,13 @@ Each piece of upgrade logic must run exactly once per company (or database) acro
 
 Every upgrade procedure starts with a `HasUpgradeTag` guard and ends with `SetUpgradeTag` once the work is committed. Each feature gets its own tag string so features can be re-run independently if needed.
 
-See sample: `use-upgrade-tags-not-version-checks.good.al`.
+See sample: [`use-upgrade-tags-not-version-checks.good.al`](use-upgrade-tags-not-version-checks.good.al).
 
 ## Anti Pattern
 
 Branching on `MyApp.DataVersion().Major > N`, or chains of `< N` / `< M` to decide which upgrade step to run. Such code becomes unmaintainable after a few releases and silently does the wrong thing on tenants that skip versions.
 
-See sample: `use-upgrade-tags-not-version-checks.bad.al`.
+See sample: [`use-upgrade-tags-not-version-checks.bad.al`](use-upgrade-tags-not-version-checks.bad.al).
 
 ## See also
 

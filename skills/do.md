@@ -19,7 +19,25 @@ An action skill is a single markdown file with YAML frontmatter. It lives inside
 - `/community/skills/` — community-contributed action skills.
 - `/custom/skills/` — partner or customer action skills (typically in a consumer repo, not in BCQuality itself).
 
-Action skills do not live at the repo root. The files in `/skills/` — the three meta-skill contracts (READ, DO, WRITE) and the entry-point skill (`entry.md`, `kind: entry-point`) — are the only skills that sit outside a layer. The entry-point skill structurally follows this same four-step pattern but produces a dispatch record rather than a findings-report; see `skills/entry.md` for its contract.
+Action skills do not live at the repo root. Layer-independent files in
+`/skills/` contain the three meta-skill contracts (READ, DO, WRITE), the
+entry-point skill (`entry.md`, `kind: entry-point`), and host-format adapters.
+Adapters are not action skills. Entry structurally follows the same
+four-step pattern but produces a dispatch record rather than a findings-report;
+see [entry.md](entry.md) for its contract.
+
+## Skills hold mechanics; knowledge files hold BC facts
+
+An action skill is a *finder and applier*: its prose says how to discover candidate knowledge (Source), filter it (Relevance), narrow it to the task (Worklist), and shape output (Action). Every Business-Central-specific behavioural claim a skill acts on — what a property defaults to, what a trigger does, why a given shape is or is not a defect — belongs in a knowledge file the skill cites, not in the skill prose.
+
+This includes **negative knowledge**. A false-positive guard — "pattern X is not a defect, because BC does Y" — is as much a knowledge file as a positive best practice. When an eval shows the agent over-reporting a pattern, the fix is a knowledge file documenting why the pattern is legitimate, so the skill can cite it and any leaf can reuse it — not a hard-coded exclusion buried in one skill. See `skills/write.md` (*Is this a knowledge file?*).
+
+Two rules follow for skill authors:
+
+- **Do not add a BC fact to a skill.** If you are editing a skill to change *what it flags* — adding an exclusion, encoding a platform default, teaching it that some pattern is fine — you are holding a knowledge file, not a skill edit. Author the knowledge file and let Worklist route to it.
+- **Do not restate an article's fact inline.** A Worklist cue may name the article to load and the diff shape that selects it; it must not re-assert the article's reasoning, which then drifts from the source. Cite, don't copy.
+
+The meta-skills themselves (`read.md`, `do.md`, `write.md`) are domain-agnostic templates and carry no BC-specific rule.
 
 ## Frontmatter schema
 
@@ -43,7 +61,24 @@ application-area: [all]
 
 `bc-version`, `technologies`, `countries`, `application-area` are optional filters that let an orchestrator pre-select applicable skills for a task. They follow the same semantics as in READ.
 
-`inputs` is a list of abstract input types the skill **accepts**. Standard values: `pr-diff`, `object-list`, `file-path`, `repository`, `telemetry-query`. Semantics are any-of: the orchestrator supplies whichever listed input types it has, and the skill is invoked with a non-empty subset of its declared `inputs`. A skill that cannot proceed with the supplied subset MUST return `outcome: "not-applicable"`. `outputs` is always a single-element list naming the output kind; today only `findings-report` is defined.
+`inputs` is a list of abstract input types the skill **accepts**. Standard values:
+`pr-diff`, `object-list`, `file-path`, `folder-path`, `repository`, and
+`telemetry-query`. Semantics are any-of: the orchestrator supplies whichever
+listed input types it has, and the skill is invoked with a non-empty subset of
+its declared `inputs`. A skill that cannot proceed with the supplied subset
+MUST return `outcome: "not-applicable"`. `outputs` is always a single-element
+list naming the output kind; today only `findings-report` is defined.
+
+`file-path` is one file. `folder-path` is a directory whose recursively
+contained files form the complete current-state input, such as a Business
+Central app folder containing `app.json` and AL source. The input value is the
+actual path, not merely the name of the input type. The agent MUST enumerate
+the folder rather than reducing it to one representative file.
+
+Review skills use terms such as "diff", "changed files", and "changed code" as
+shorthand for the supplied review scope. For `folder-path`, every relevant file
+under the folder is in scope. A folder supplies no historical baseline:
+comparison-only rules MUST NOT infer a prior state that was not provided.
 
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
@@ -71,6 +106,12 @@ Every action skill MUST contain these five sections, in order:
 
 Every action skill emits a single JSON document that conforms to this schema:
 
+The machine-readable structural schema is
+[`schemas/findings-report.schema.json`](../schemas/findings-report.schema.json).
+The rules below remain authoritative for semantic checks that JSON Schema
+cannot perform by itself, including summary arithmetic, reference existence,
+source-scope locations, and article-body retrieval.
+
 ```json
 {
   "skill": { "id": "string", "version": 1 },
@@ -95,6 +136,7 @@ Every action skill emits a single JSON document that conforms to this schema:
       ],
       "confidence": "high | medium | low",
       "from-sub-skill": "string",
+      "domain": "string",
       "suggested-code": "string",
       "suggested-code-omission-reason": "string"
     }
@@ -122,6 +164,71 @@ Every action skill emits a single JSON document that conforms to this schema:
 The emitted document MUST be strict, valid JSON per [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259). Inside every string value, all double quotes MUST be escaped as `\"` and all line breaks as `\n`; other control characters MUST use their JSON escapes. This is not optional polish — it is the difference between a parseable report and one a consumer silently drops.
 
 AL source is the common failure case. Quoted identifiers (for example `Rec."No."`) and multi-line snippets routinely appear in `message`, `suggested-code`, and `suggested-code-omission-reason`, and each embedded quote or newline MUST be escaped when placed in a string value. A `suggested-code` payload that spans several lines is a single JSON string with `\n` separators, not a literal multi-line block. Emit the document as one JSON value with no trailing commentary, and do not rely on the consumer to repair unescaped output.
+
+### Consumer acceptance gate
+
+Capture the exact Task return as the immutable raw audit payload and primary
+transport. Preserve it unchanged in private run artifacts or host logs before
+creating any derived value. The accepted findings-report is either that exact
+return or the bounded normalized candidate described below; the raw audit
+payload never changes.
+
+Before the full acceptance gate, a coordinator MAY create a normalized
+candidate copy only through this deterministic procedure:
+
+1. Parse the exact return as strict JSON and provisionally check the complete
+   report without mutating it. Every acceptance rule below MUST already pass
+   except for one or more findings whose optional `location.range` has
+   `start-line != line`.
+2. Each such finding is eligible only when `location.line`,
+   `location.range.start-line`, and `location.range.end-line` are positive
+   integers, `start-line <= line <= end-line`, and the finding does not contain
+   the `suggested-code` field. Field presence disqualifies normalization even
+   if its value is empty because suggested code may be bound to the reported
+   range.
+3. Deep-copy the complete parsed report. In the candidate copy, remove only
+   `location.range` from every eligible finding. Retain `location.line` and
+   every other value unchanged. Do not add normalization metadata to the
+   findings-report.
+4. Record each removed range separately in private run telemetry or artifacts,
+   associated with the immutable raw audit payload. This record is
+   runner-owned and is not part of the declared report schema.
+5. Validate the entire normalized candidate with the existing full consumer
+   acceptance gate below. Only a candidate that passes every rule becomes the
+   accepted copy used for rollup. If any other validation defect exists, or
+   full validation fails, discard the candidate, preserve the raw payload, and
+   fail the complete leaf as before.
+
+This exception does not infer missing fields, alter references or paths, clamp
+line numbers, repair JSON, normalize a reversed or out-of-bounds range, remove
+a range from a finding containing `suggested-code`, or salvage arbitrary
+individual findings.
+
+Before accepting either the exact return or an eligible normalized candidate
+as a findings-report, a coordinator or host MUST validate it deterministically:
+
+1. Validate every required field, enum, type, conditional requirement, summary
+   count, coverage value, and leaf/super-skill constraint against this output
+   contract.
+2. For every knowledge-backed finding, verify each `references[].path` is an
+   exact repo-relative knowledge path that exists in the live BCQuality
+   snapshot, and verify `findings[].id` exactly equals
+   `references[0].path`. Verify each path is also present in the coordinator's
+   recorded set of complete article bodies retrieved for that leaf; catalog
+   membership alone is insufficient. Keep optional `references[].sha`
+   separate: it is commit provenance, not an article content hash.
+3. For every `location`, verify `file` is an exact source path in the supplied
+   review scope, the file exists in that source snapshot, and `line` and any
+   inclusive range identify existing lines with `start-line == line` and
+   `end-line >= start-line`.
+
+Validation failure invalidates the complete return; consumers MUST NOT salvage
+individual findings, infer missing fields, reconstruct JSON, clamp ranges,
+rewrite paths, or otherwise silently repair model output. Preserve the invalid
+raw payload unchanged. Record a separate failed validation result for that leaf
+with no findings, and derive the super-skill outcome as `partial` or `failed`
+using the normal rollup rules. Worker-side report-file persistence is optional
+and never replaces validation of the accepted exact or normalized copy.
 
 ### Field semantics
 
@@ -170,6 +277,8 @@ Consumers that render output MAY treat agent findings differently from knowledge
 
 **`findings[].message`** — human-readable explanation of the finding. Single short paragraph. No markdown formatting assumptions.
 
+**Applicability is not a finding.** Loading an article into the worklist only means its rule must be evaluated. If the changed code does not violate the article's normative guidance, emit nothing for that article. An `info` finding still requires a concrete observation defined by the article; skills MUST NOT use `info` to list guidance that merely happened to be relevant.
+
 **`findings[].location`** — optional. When present:
 
 - `file` MUST be a repo-relative path using forward slashes.
@@ -185,13 +294,26 @@ Findings without a `location` are permitted (for example, repository-wide observ
 
 The first reference is the **primary** reference: the knowledge file the finding most directly cites. Additional references provide supporting context and are not ranked. `references` MAY be empty only for **agent findings** (see the `findings[].id` section above for the full encoding); any other finding MUST have at least one reference.
 
+**Reference-integrity gate (mandatory).** A knowledge-backed finding may cite only a path copied verbatim from the current knowledge index or from a file discovered by the index fallback, and the skill must have opened that exact file in full before citing it. Never construct a plausible slug or infer a path from a topic name. Immediately before emitting the JSON document:
+
+1. Verify every non-empty `references[].path` exists in the live checkout and was opened during this skill run.
+2. Verify every citation-based `findings[].id` exactly equals `references[0].path`.
+3. Remove any candidate that cannot satisfy both checks; it is not a knowledge-backed finding. Do not convert it into an agent finding merely to preserve it.
+4. If reference integrity cannot be checked reliably, return `outcome: "failed"` rather than emitting fabricated or unverified citations.
+
+This gate applies independently to every leaf result and again to a super-skill's rolled-up result.
+
 **`findings[].confidence`** — the skill's confidence that the finding is a true positive, given the evidence it evaluated. Not applicability confidence, not severity confidence. Values: `high`, `medium`, `low`.
 
 **`findings[].from-sub-skill`** — optional. Set only by super-skills. The `skill.id` of the sub-skill that produced the finding, or the literal string `"agent"` for an agent finding the super-skill produced from its own cross-cutting reasoning. Absent on findings emitted directly by a leaf skill — including agent findings the leaf emits within its own domain, which appear in the leaf's own report without this field.
 
+**`findings[].domain`** — optional in the shared schema for backward compatibility and for non-review findings. It is a short, human-readable display label for the review domain that produced the finding (for example, `Security`, `Breaking Changes`, `API & Web Services`). A review leaf skill MUST set it on every finding it emits. The value MUST be a non-empty, single-line string with no leading or trailing whitespace or control characters. Internal whitespace, punctuation, case, and non-ASCII characters are valid and significant.
+
+A review super-skill MUST preserve `domain` verbatim when rolling a leaf finding into its top-level `findings[]`, including preserving its absence from older producers, and MUST set it to `"Agent"` for agent findings it emits about cross-cutting concerns. Consumers MUST tolerate its absence. When rendering a present value, consumers MUST preserve the complete display text, escaping only as required by the output format; they MUST NOT split it on whitespace or restrict it to identifier characters. `domain` is display text, not a stable machine identifier. If a consumer embeds it in metadata or uses it in a deduplication key, it MUST retain the exact string, use a lossless encoding, or use a collision-resistant digest; it MUST NOT rely on lowercasing or lossy slugification as the sole identity.
+
 **`findings[].suggested-code`** — optional in the schema but **expected for mechanical findings**. It is a concrete code-replacement payload for the lines indicated by `location`. When present, the string MUST be a literal replacement for the source lines covered by `location.line` (or `location.range` if set) — i.e., what the file would contain after the fix, with no surrounding diff markers, fences, or commentary. Consumers MAY render it as a one-click suggestion in the delivery surface (for example, a GitHub ```` ```suggestion ```` block).
 
-Emit `suggested-code` whenever the fix is small, local, and mechanical: deleting unreachable code; replacing one expression (`Count() > 0` → `not IsEmpty()`); moving a local `Label` to object scope; adding a missing property such as `ToolTip`, `OptionCaption`, or `DataClassification`; replacing a string-concatenated `Error` with a Label-backed call; changing a permission token; or adding a missing `else`/guard branch whose replacement is unambiguous from the surrounding diff. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, prefer adapting the `.good.al` replacement into `suggested-code`.
+Emit `suggested-code` whenever the fix is small, local, and mechanical: deleting unreachable code; replacing one expression (`Count() > 0` → `not IsEmpty()`); adding a missing property such as `ToolTip`, `OptionCaption`, or `DataClassification`; replacing a string-concatenated `Error` with a Label-backed call; changing a permission token; or adding a missing `else`/guard branch whose replacement is unambiguous from the surrounding diff. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, prefer adapting the `.good.al` replacement into `suggested-code`.
 
 Omit `suggested-code` only when the appropriate fix depends on context the skill cannot determine, when multiple defensible replacements exist, or when the fix spans non-contiguous code. If a finding is mechanical-looking but `suggested-code` is omitted, set `findings[].suggested-code-omission-reason` to a short explanation (for example, `requires choosing a real event id` or `fix spans multiple non-contiguous locations`). The `suggested-code` payload supplements `message`; it does not replace the explanation in `message`.
 
@@ -202,7 +324,7 @@ Omit `suggested-code` only when the appropriate fix depends on context the skill
 - `reference` — the suppressed file (same object shape as `findings[].references`).
 - `reason` — `layer-precedence` when another layer won under READ's precedence rules; `configuration` when the consumer disabled the file's layer.
 
-**`sub-results`** — super-skills only. Array of complete findings-reports, one per sub-skill that was invoked (i.e., every sub-skill not listed in `skipped-sub-skills`). Each entry MUST itself conform to this output contract. Leaf skills MUST NOT emit `sub-results`.
+**`sub-results`** — super-skills only. Array of complete findings-reports, one per sub-skill that was invoked (i.e., every sub-skill not listed in `skipped-sub-skills`). Each entry MUST itself conform to this output contract. Entries MUST appear in the worklist's declared order, regardless of invocation or completion order. Leaf skills MUST NOT emit `sub-results`.
 
 **`skipped-sub-skills`** — super-skills only. Array of sub-skills that were declared in frontmatter but not invoked. `reason` is `configuration` when the orchestrator disabled the sub-skill, or `not-applicable` when the super-skill's Relevance step ruled it out.
 
@@ -219,6 +341,26 @@ A **super-skill** is an action skill whose frontmatter declares a non-empty `sub
 
 Composition is flat: a super-skill MAY list only leaf skills (skills without their own `sub-skills`). Nested super-skills are not permitted in v1.
 
+### Scheduling boundary
+
+The super-skill defines which leaves must run, the input and output contracts,
+and how their results are composed. It does not prescribe a model, concurrency
+limit, retry policy, or telemetry system. Those choices belong to the
+orchestrator.
+
+Each leaf invocation MUST remain a discrete evaluation with its own complete
+findings-report. An orchestrator MAY execute independent leaves serially or
+concurrently, but MUST invoke every worklisted leaf, preserve `sub-results` in
+the declared worklist order, and wait for every invocation to finish before
+performing any super-skill self-review or final rollup. Scheduling MUST NOT
+change relevance, coverage, failure, reference-integrity, or output semantics.
+
+Orchestrators SHOULD generate `skill-index.json` with
+`tools/Build-SkillIndex.ps1` and consume the super-skill's ordered `subSkills`
+from that index instead of parsing Markdown. Action-skill frontmatter remains
+the source of truth; the generated index conforms to
+`schemas/skill-index.schema.json`.
+
 ### Section interpretation for super-skills
 
 The five required sections still apply. Their meaning shifts from knowledge files to sub-skills:
@@ -226,7 +368,7 @@ The five required sections still apply. Their meaning shifts from knowledge file
 - `## Source` — names the sub-skills invoked (mirrors `sub-skills` in frontmatter).
 - `## Relevance` — rules for deciding which sub-skills apply to the current task. A sub-skill is relevant when its declared `inputs` are satisfied by the orchestrator's provided inputs and the orchestrator has not disabled it via configuration. The super-skill MUST NOT filter sub-skills by task content (for example, by inspecting the diff or the file). Task-level applicability is the sub-skill's own responsibility; sub-skills signal non-applicability by returning `outcome: "not-applicable"` or `outcome: "no-knowledge"`.
 - `## Worklist` — the final list of sub-skills to invoke; the rest go to `skipped-sub-skills`.
-- `## Action` — invoke each worklisted sub-skill with the appropriate subset of inputs, collect its findings-report verbatim into `sub-results`, and copy its `findings[]` into the super-skill's top-level `findings[]` with `from-sub-skill` set. Findings from a sub-skill with `outcome: "failed"` MUST NOT be copied into the super-skill's top-level `findings[]` and MUST NOT contribute to the super-skill's `summary.counts` (their report is still preserved in `sub-results` for traceability, consistent with DO's rule that consumers ignore a failed skill's findings).
+- `## Action` — invoke each worklisted sub-skill with the appropriate subset of inputs, collect its findings-report verbatim into `sub-results`, and copy its `findings[]` into the super-skill's top-level `findings[]` with `from-sub-skill` set. All finding fields, including the optional `domain`, are preserved verbatim unless this contract explicitly requires a transformation. Findings from a sub-skill with `outcome: "failed"` MUST NOT be copied into the super-skill's top-level `findings[]` and MUST NOT contribute to the super-skill's `summary.counts` (their report is still preserved in `sub-results` for traceability, consistent with DO's rule that consumers ignore a failed skill's findings).
 - `## Output` — the super-skill's output contract, including `sub-results` and, if any, `skipped-sub-skills`.
 
 ### Outcome rollup
@@ -245,7 +387,13 @@ When the worklist is empty (every sub-skill was skipped), `outcome` is `not-appl
 
 ### Rolled-up summary
 
-`summary.counts` is the sum of sub-skill counts. `summary.coverage.worklist-size` and `items-evaluated` are the sums across invoked sub-skills.
+`summary.counts` counts the findings in the super-skill's final top-level
+`findings[]`, after failed sub-results have been excluded and duplicates have
+been merged. It MUST NOT be calculated by summing sub-skill counts, because the
+same concern may appear in more than one sub-result.
+
+`summary.coverage.worklist-size` and `items-evaluated` are the sums across
+invoked sub-skills whose outcomes are not `failed`.
 
 ### Suppression scope
 
@@ -253,15 +401,16 @@ A super-skill's top-level `suppressed[]` remains knowledge-file-only and is typi
 
 ## Worked example
 
-A minimal action skill that cites applicable guidance for a changed AL file, without generating findings of its own:
+A minimal action skill that reviews a changed AL file against applicable
+guidance. Relevance alone never produces a finding:
 
 ```yaml
 ---
 kind: action-skill
-id: cite-applicable-guidance
+id: review-applicable-guidance
 version: 1
-title: Cite applicable guidance
-description: Lists knowledge files relevant to a changed AL file.
+title: Review applicable guidance
+description: Reviews a changed AL file against applicable knowledge.
 inputs: [file-path]
 outputs: [findings-report]
 technologies: [al]
@@ -279,7 +428,12 @@ Filter by `technologies: [al]` and `bc-version` matching the target environment.
 Intersect `keywords` with tokens derived from the target file's object name and changed members.
 
 ## Action
-For each worklist entry, emit one finding with severity `info`, a message naming the concern, and a reference object pointing to the knowledge file.
+Read each worklisted article in full and compare its normative guidance to the
+input. Emit a finding only for a concrete violation or an observation the
+article explicitly defines, with justified severity, evidence, and a reference
+copied from the discovered article path. Do not report an article merely
+because it was relevant. If every item was evaluated and none warrants a
+finding, return `completed` with an empty `findings` array.
 
 ## Output
 Conforms to the DO output contract.
@@ -288,5 +442,3 @@ Conforms to the DO output contract.
 ## How orchestrators consume output
 
 An orchestrator invokes an action skill with an input appropriate to the skill's declared `inputs`, receives the JSON output, and maps findings to its delivery surface (PR comments, build gates, IDE diagnostics). The orchestrator MUST NOT interpret skill-specific fields beyond the schema above. Skills that need richer semantics MUST encode them within the schema (for example, by adding structured `message` text) rather than extending the output shape.
-
-

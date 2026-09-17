@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="120 0 560 560" role="img" aria-labelledby="title description">
+  <title id="title">BCQuality mark</title>
+  <desc id="description">A blue letter Q crossed by a teal quality check.</desc>
+  <defs>
+    <linearGradient id="ring" x1="215" y1="95" x2="585" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#086194"/>
+      <stop offset="0.58" stop-color="#138EB7"/>
+      <stop offset="0.8" stop-color="#17ABCB"/>
+      <stop offset="1" stop-color="#2CD2CD"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="255" y1="390" x2="585" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2CD2CD"/>
+      <stop offset="0.58" stop-color="#57E6CB"/>
+      <stop offset="1" stop-color="#9BF2C8"/>
+    </linearGradient>
+  </defs>
+  <g shape-rendering="geometricPrecision">
+    <circle cx="400" cy="280" r="185" fill="none" stroke="url(#ring)" stroke-width="70"/>
+    <path d="m415 400 115 115h100L465 350Z" fill="url(#teal)"/>
+    <path d="m285 270 115 115 250-250V35L400 285l-65-65Z" fill="url(#teal)"/>
+  </g>
+</svg>

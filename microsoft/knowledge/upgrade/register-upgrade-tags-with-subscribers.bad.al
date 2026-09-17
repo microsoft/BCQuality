@@ -16,5 +16,6 @@ codeunit 50213 "Upgrade Tag Registration"
         exit('MS-123456-MyFeature-20240101');
     end;
 
-    // No OnGetPerCompanyUpgradeTags subscriber — the tag is unknown to the platform.
+    // No OnGetPerCompanyUpgradeTags subscriber: SetAllUpgradeTags cannot seed this
+    // historical step for a newly initialized company, so it can run unnecessarily.
 }

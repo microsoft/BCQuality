@@ -7,6 +7,7 @@ codeunit 50220 "Shipping Charge Good Sample"
     begin
         // Give extensions a sanctioned seam to replace the calculation, then
         // skip the default logic when a subscriber has handled it.
+        IsHandled := false;
         OnBeforeCalculateShippingCharge(OrderAmount, Charge, IsHandled);
         if IsHandled then
             exit(Charge);

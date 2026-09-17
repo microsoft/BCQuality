@@ -1,24 +1,24 @@
 ---
 bc-version: [all]
 domain: privacy
-keywords: [data-classification, table-level, inheritance, override, cascading]
+keywords: [data-classification, table-level, field-inheritance, tableextension, appsourcecop, as0016, false-positive]
 technologies: [al]
 countries: [w1]
 application-area: [all]
 ---
 
-# Table-level DataClassification cascades to every field unless overridden
+# Table-level DataClassification is inherited by fields
 
 ## Description
 
-`DataClassification` may be set at the table level. When it is, every field in the table inherits that classification and individual fields do not need their own `DataClassification` property. The cascade is the platform's intended way of classifying tables whose fields are homogeneous — for example, a system configuration log whose every column is `SystemMetadata`. A field only needs its own classification when its content genuinely differs from the table's default and the inherited value would be wrong.
+A valid table-level `DataClassification` is the effective default for the Normal fields declared inside that table object when they do not declare their own value, and AppSourceCop AS0016 accepts those fields rather than reporting them as unclassified. A field-level value overrides that default only for the field on which it is set. The default does not cross object boundaries: a `tableextension` cannot set the table-level property, and the fields it adds do not inherit the base table's value, so every Normal field a table extension adds must classify itself. FlowFields and FlowFilters are handled separately by the platform and are covered by `flowfield-flowfilter-classification-systemmetadata.md`.
 
 ## Best Practice
 
-Set `DataClassification` once at the table level whenever every field in the table shares the same classification. Omit field-level `DataClassification` properties in that case. Override only on the specific fields whose data class differs from the table's — for example, a `SystemMetadata` audit table that nonetheless captures a `CustomerContent` value somewhere.
+Use a table-level classification when it accurately describes the table's fields, and add a field-level classification only where a field stores a different kind of data. Do not flag a Normal field solely because it omits an explicit property when its own table supplies a valid default; verify whether the inherited value matches the field's data instead. A `tableextension` has no default to inherit, so require an explicit `DataClassification` on every Normal field it adds.
 
-See sample: `table-level-data-classification-cascades.good.al`.
+See sample: [`table-level-data-classification-cascades.good.al`](table-level-data-classification-cascades.good.al).
 
 ## Anti Pattern
 
-Flagging individual fields for "missing `DataClassification`" when the table declares one — the inheritance is the correct, intentional pattern. The mirror anti-pattern is repeating the same `DataClassification` on every field of a table that already declares it at the table level; the property is redundant and adds nothing the platform did not already know.
+Reporting every Normal field without an explicit `DataClassification` when its own table already supplies a valid default, or requiring redundant field-level declarations that repeat the table value. The mirror-image mistake is waving through an unclassified Normal field added by a `tableextension` because the base table carries a default — a table extension inherits nothing. A real issue exists when neither scope supplies a valid classification, when a field's data requires an override of the inherited value, or when a Normal field added by a `tableextension` lacks a valid explicit `DataClassification`.

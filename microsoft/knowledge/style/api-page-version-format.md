@@ -17,10 +17,10 @@ The `APIVersion` property on an API page is part of the public URL path: `/api/<
 
 Start a new public endpoint at `'v1.0'`. Bump the minor when adding fields or non-breaking changes; bump the major when changing field types, removing fields, or any breaking change. Use `'beta'` for endpoints that are still iterating and SHOULD NOT be consumed by external integrations.
 
-See sample: `api-page-version-format.good.al`.
+See sample: [`api-page-version-format.good.al`](api-page-version-format.good.al).
 
 ## Anti Pattern
 
 `APIVersion = 'v2'` (missing minor), `APIVersion = '2.0'` (missing `v` prefix), `APIVersion = 'v2.0.0'` (extra segment). All three either fail to compile or produce a URL that consumers cannot reach.
 
-See sample: `api-page-version-format.bad.al`.
+See sample: [`api-page-version-format.bad.al`](api-page-version-format.bad.al).

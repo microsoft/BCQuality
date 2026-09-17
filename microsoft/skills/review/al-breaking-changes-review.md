@@ -4,7 +4,7 @@ id: al-breaking-changes-review
 version: 1
 title: AL breaking changes review
 description: Reviews AL source changes against breaking-changes guidance from BCQuality.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al]
@@ -16,11 +16,11 @@ application-area: [all]
 
 Reviews AL source changes against the `breaking-changes` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-An orchestrator invokes this skill with either a `pr-diff` (the standard PR-review entry point) or a `file-path` (single-file review). The skill produces a single JSON document conforming to the DO output contract.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. The skill produces a single JSON document conforming to the DO output contract.
 
 ## Source
 
-Read the BCQuality knowledge index once — the `knowledge-index.json` BCQuality builds at the root of the knowledge checkout (Entry's preparation step regenerates it over the live, already-filtered clone — see `skills/entry.md`). It lists every article that survived layer and allow/deny filtering and carries, per article, its `path`, `layer`, `domain`, frontmatter dimensions, `keywords`, `title`, and a one-line `description` hint — exactly the fields Relevance and Worklist consume. Take the index entries whose `domain` is `breaking-changes` as this skill's candidate set across every enabled layer; do not open the individual article files at this step. Open an article's full body only once it enters the Worklist below, so a review reads the index plus the handful of worklisted articles instead of every file under `*/knowledge/breaking-changes/**`.
+Use READ's **Bounded retrieval for review skills** workflow with `-Domain breaking-changes`. Consume every catalog page across enabled layers before applying this leaf's Relevance and Worklist; preserve each exact catalog path and open complete bodies only for exact paths selected by the Worklist. If the helper or prepared index is unavailable or invalid, use READ's explicit path-discovery and bounded native-read fallback.
 
 ## Relevance
 
@@ -43,6 +43,17 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
+The following targeted checks cover every current `breaking-changes` article:
+
+- A helper or object changes between `local`, `internal`, `protected`, or public access, or a new implementation detail is exposed without a supported-API reason — `choose-access-modifiers-deliberately`.
+- A public member is removed or replaced without first going through the `[Obsolete]` lifecycle — `deprecate-public-members-with-the-obsolete-lifecycle`.
+- A published procedure changes parameter count/order/type/name, `var`, return type, or array shape instead of preserving the old signature and adding an overload — `do-not-change-published-procedure-signatures`.
+- A public procedure/event/interface exposes a credential or other sensitive value through `Text` or an externally callable contract — `do-not-expose-sensitive-data-through-public-api`.
+- Code already marked obsolete is expanded with new behavior instead of routing new callers to its replacement — `do-not-modify-code-already-marked-obsolete`.
+- A shipped table field is deleted, renamed, renumbered, or replaced without retaining the original field as `ObsoleteState = Pending` and migrating its data — `obsolete-table-fields-instead-of-deleting-them`.
+
+For `obsolete-table-fields-instead-of-deleting-them`, compare the baseline ID and name before emitting. When the original field remains under the same ID and name with `ObsoleteState = Pending`, and the replacement uses a new ID, the change follows the rule and must not be flagged.
+
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
 When the post-conflict worklist is empty because no applicable breaking-changes knowledge exists, or because configuration suppressed every candidate, emit `outcome: "no-knowledge"`. When the worklist is empty because no applicable breaking-changes knowledge matched the changes, emit `outcome: "completed"` with an empty `findings` array.
@@ -53,7 +64,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee. When the file does not make such a claim, the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file. Repository-wide observations MAY omit `location`.
+- Applicability alone is not a finding. Emit `info` only for a concrete, non-actionable observation the article explicitly defines; otherwise emit nothing when no violation is present.
 
 Set `confidence` to:
 
@@ -77,7 +88,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Breaking Changes"`. A populated example:
 
 ```json
 {
@@ -100,7 +111,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/breaking-changes/do-not-change-published-procedure-signatures.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Breaking Changes"
     },
     {
       "id": "microsoft/knowledge/breaking-changes/choose-access-modifiers-deliberately.md",
@@ -113,14 +125,15 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/breaking-changes/choose-access-modifiers-deliberately.md" }
       ],
-      "confidence": "medium"
+      "confidence": "medium",
+      "domain": "Breaking Changes"
     }
   ],
   "suppressed": []
 }
 ```
 
-The empty-corpus case — BCQuality's state until breaking-changes knowledge files land — produces:
+When no applicable breaking-changes knowledge is available, the report is:
 
 ```json
 {

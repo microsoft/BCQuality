@@ -4,8 +4,8 @@ codeunit 50218 "Perf Sample LoadFields Good"
     var
         Customer: Record Customer;
     begin
-        Customer.SetLoadFields(Name);
         Customer.SetRange("Country/Region Code", 'US');
+        Customer.SetLoadFields(Name);
         if Customer.FindSet() then
             repeat
                 Message(Customer.Name);

@@ -42,9 +42,10 @@ ACTION_SKILL_OPTIONAL_KEYS = {
 }
 META_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
+HOST_SKILL_REQUIRED_KEYS = {"name", "description"}
 
 STANDARD_INPUTS = {
-    "pr-diff", "object-list", "file-path", "repository", "telemetry-query",
+    "pr-diff", "object-list", "file-path", "folder-path", "repository", "telemetry-query",
 }
 ALLOWED_OUTPUTS = {"findings-report"}
 VALID_SAMPLE_KINDS = {"good", "bad"}
@@ -62,6 +63,7 @@ ISO_ALPHA2 = re.compile(r"^[a-z]{2}$")
 RANGE_SHORTHAND = re.compile(r"^(\d+)\.\.(\d+)?$")
 FENCED_CODE_BLOCK = re.compile(r"^```", re.MULTILINE)
 HEADING_H2 = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+SAMPLE_REFERENCE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*\.(?:good|bad)\.[a-z0-9]+)`")
 
 
 # --- Diagnostics ------------------------------------------------------------
@@ -222,6 +224,13 @@ def validate_knowledge(path: Path, parsed: Parsed, report: Report) -> None:
     if "domain" in fm:
         if not isinstance(fm["domain"], str) or not fm["domain"].strip():
             report.error(path, "R04", "domain must be a non-empty string", 1)
+        elif fm["domain"] != path.parent.name:
+            report.error(
+                path,
+                "R27",
+                f"frontmatter domain '{fm['domain']}' must match directory '{path.parent.name}'",
+                1,
+            )
 
     # R05 keywords
     if "keywords" in fm:
@@ -372,6 +381,20 @@ def validate_action_skill(path: Path, parsed: Parsed, report: Report) -> None:
             bad = [x for x in ss if not x.endswith(".md")]
             if bad:
                 report.error(path, "R20", f"sub-skills entries must end in '.md': {bad}", 1)
+            non_canonical = [
+                x for x in ss
+                if "\\" in x or x.startswith("/") or ".." in Path(x).parts or x.startswith("./")
+            ]
+            if non_canonical:
+                report.error(
+                    path,
+                    "R20",
+                    f"sub-skills entries must be canonical repo-relative paths: {non_canonical}",
+                    1,
+                )
+            duplicates = sorted({x for x in ss if ss.count(x) > 1})
+            if duplicates:
+                report.error(path, "R20", f"sub-skills contains duplicate paths: {duplicates}", 1)
 
     # R21 five required sections, in order, each exactly once
     heads = [h for h, _ in headings_in_order(parsed.body)]
@@ -436,10 +459,36 @@ def validate_entry_skill(path: Path, parsed: Parsed, report: Report) -> None:
             report.error(path, "R23", f"version must be a positive integer: {v!r}", 1)
 
 
+def validate_host_skill(path: Path, parsed: Parsed, report: Report) -> None:
+    if parsed.frontmatter_error:
+        report.error(path, "R01", parsed.frontmatter_error, 1)
+        return
+    fm = parsed.frontmatter
+    assert fm is not None
+    missing = HOST_SKILL_REQUIRED_KEYS - fm.keys()
+    if missing:
+        report.error(path, "R29", f"missing required host-skill keys: {sorted(missing)}", 1)
+
+    name = fm.get("name")
+    if not isinstance(name, str) or not name:
+        report.error(path, "R29", "host-skill name must be a non-empty string", 1)
+    else:
+        if len(name) > 64 or not KEBAB_CASE.fullmatch(name):
+            report.error(path, "R29", f"host-skill name must be lowercase kebab-case and at most 64 characters: '{name}'", 1)
+        if name != path.parent.name:
+            report.error(path, "R29", f"host-skill name must match parent directory '{path.parent.name}', got '{name}'", 1)
+
+    description = fm.get("description")
+    if not isinstance(description, str) or not description:
+        report.error(path, "R29", "host-skill description must be a non-empty string", 1)
+    elif len(description) > 1024:
+        report.error(path, "R29", "host-skill description must be at most 1024 characters", 1)
+
+
 # --- Path and sample checks -------------------------------------------------
 
 def classify(path_from_root: Path) -> str | None:
-    """Return 'knowledge' | 'action-skill' | 'meta' | 'entry' | None."""
+    """Return 'knowledge' | 'action-skill' | 'host-skill' | 'meta' | 'entry' | None."""
     parts = path_from_root.parts
     if len(parts) < 2:
         return None
@@ -451,6 +500,8 @@ def classify(path_from_root: Path) -> str | None:
                 return "entry"
             if name in META_SKILL_FILES:
                 return "meta"
+        if len(parts) == 3 and parts[2] == "SKILL.md":
+            return "host-skill"
         return None
     if top in LAYERS and path_from_root.suffix == ".md":
         if len(parts) >= 3 and parts[1] == "skills":
@@ -477,7 +528,16 @@ def validate_samples_in_domain(domain_dir: Path, root: Path, report: Report) -> 
     """R14: every non-.md file must match <slug>.<kind>.<ext> with <slug>.md present."""
     if not domain_dir.is_dir():
         return
-    article_slugs = {p.stem for p in domain_dir.glob("*.md")}
+    articles = {p.stem: p for p in domain_dir.glob("*.md")}
+    article_slugs = set(articles)
+    article_texts: dict[str, str] = {}
+    for slug, article in articles.items():
+        try:
+            article_texts[slug] = article.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            # R01 reports this during the article pass.
+            continue
+
     for entry in domain_dir.iterdir():
         if not entry.is_file() or entry.suffix == ".md":
             continue
@@ -491,8 +551,23 @@ def validate_samples_in_domain(domain_dir: Path, root: Path, report: Report) -> 
         kind = m.group("kind")
         if slug not in article_slugs:
             report.error(entry, "R14", f"orphan sample: no matching article '{slug}.md' in {domain_dir.relative_to(root).as_posix()}")
+        elif entry.name not in article_texts.get(slug, ""):
+            report.error(
+                entry,
+                "R28",
+                f"sample is not referenced by its article '{slug}.md'",
+            )
         if kind not in VALID_SAMPLE_KINDS:
             report.warn(entry, "R14", f"non-standard sample kind '{kind}'; standard kinds are {sorted(VALID_SAMPLE_KINDS)}")
+
+    for slug, article in articles.items():
+        for sample_name in SAMPLE_REFERENCE.findall(article_texts.get(slug, "")):
+            if not (domain_dir / sample_name).is_file():
+                report.error(
+                    article,
+                    "R28",
+                    f"referenced sample does not exist: '{sample_name}'",
+                )
 
 
 # --- Orchestration ----------------------------------------------------------
@@ -504,7 +579,13 @@ class SkillRecord:
     skill_id: str | None
 
 
-def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
+def validate_sub_skills_registry(
+    path: Path,
+    fm: dict[str, Any],
+    root: Path,
+    action_skills_by_path: dict[str, dict[str, Any]],
+    report: Report,
+) -> None:
     """R26: a super-skill's declared `sub-skills` must exactly match the
     `al-*-review.md` leaf files present in the same directory (set equality,
     ordering-agnostic). This keeps the registered leaf list the single source
@@ -536,6 +617,17 @@ def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, rep
                 path, "R26",
                 f"sub-skills entry is not a sibling 'al-*-review.md' leaf: {entry}", 1,
             )
+
+    for entry in ss:
+        leaf = action_skills_by_path.get(entry)
+        if leaf is None:
+            if (root / entry).exists():
+                report.error(path, "R26", f"sub-skills entry is not an action skill: {entry}", 1)
+            continue
+        if is_non_empty_list_of_str(leaf.get("sub-skills")):
+            report.error(path, "R26", f"nested super-skill is not permitted in v1 composition: {entry}", 1)
+        if leaf.get("outputs") != ["findings-report"]:
+            report.error(path, "R26", f"sub-skill must produce findings-report: {entry}", 1)
 
     # Sibling leaves on disk that were never registered ('forgot to wire it up').
     for leaf in sorted(leaves - declared):
@@ -584,6 +676,8 @@ def run(root: Path) -> Report:
             validate_entry_skill(path, parsed, report)
             if parsed.frontmatter and isinstance(parsed.frontmatter.get("id"), str):
                 skill_records.append(SkillRecord(path, "entry-point", parsed.frontmatter["id"]))
+        elif kind == "host-skill":
+            validate_host_skill(path, parsed, report)
 
     # Second pass: sample files per knowledge domain
     for layer in LAYERS:
@@ -607,9 +701,13 @@ def run(root: Path) -> Report:
                     others = [q.relative_to(root).as_posix() for q in paths if q != p]
                     report.error(p, "R24", f"skill id '{sid}' ({kind}) is not unique; also defined in: {others}")
 
-    # Fourth pass: R26 sub-skills registry matches leaf files on disk
+    # Fourth pass: R26 sub-skills registry matches compatible leaf files on disk
+    action_skills_by_path = {
+        path.relative_to(root).as_posix(): fm
+        for path, fm in action_skill_fms
+    }
     for path, fm in action_skill_fms:
-        validate_sub_skills_registry(path, fm, root, report)
+        validate_sub_skills_registry(path, fm, root, action_skills_by_path, report)
 
     return report
 

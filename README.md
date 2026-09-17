@@ -1,150 +1,130 @@
-# BCQuality
+<p align="left">
+  <img src="docs/assets/bcq-logo.svg" alt="BCQuality logo" width="300">
+</p>
 
-Quality skills and knowledge for Business Central development.
+Quality skills and knowledge that help AI tools make better Business Central
+development decisions: catch BC-specific defects, avoid misleading advice,
+and explain findings with references you can read.
 
-BCQuality is a curated knowledge base and skills library for Business Central. It provides structured, machine-readable guidance that development agents and tools can consume — establishing a consistent quality bar across tooling and teams.
+BCQuality contains **knowledge and reusable skills**, not agents or a Business
+Central extension. Your host supplies the agent. You can install the content
+as a plugin, use it from another integration, or browse the knowledge directly.
 
-## What belongs here
+## Quick start
 
-BCQuality is a remedial knowledge base. A file exists because a capable LLM **would get something wrong, or miss something, without it** — not because the topic is important. The admission test for a knowledge file is one question:
+The walkthrough below uses **GitHub Copilot CLI in a terminal**, not the
+Copilot Chat panel in VS Code. First
+[install Copilot CLI and sign in](https://docs.github.com/en/copilot/get-started/cli-quickstart).
+Your account and organization policy must allow its use. You do not need to
+clone BCQuality, build a runner, or deploy an app to Business Central for this
+source-review example.
 
-> If this file did not exist, would a modern LLM reviewing or generating BC code make a mistake this file would have prevented?
+### Standalone plugin installation
 
-If the answer is no — the advice is generic software-engineering guidance, or the LLM already knows the BC mechanic in question — the file does not belong here, regardless of how sound the content is. A file earns its place by encoding something BC-specific that LLMs demonstrably get wrong: a CodeCop rule number, a platform API whose semantics the training data gets backwards, a non-obvious ordering rule, a BC property whose default is a footgun.
+Run these commands in your terminal:
 
-Good fit: "`SetLoadFields` must be called before filters, not after" (non-obvious ordering rule). "`FindSet(true)` takes a LockTable and the two-parameter signature is obsolete" (subtle platform behaviour + outdated training data). "CodeCop AA0233 flags `FindFirst … Next` loops" (rule-specific).
-
-Poor fit: "Use HTTPS instead of HTTP." "Don't hardcode secrets." "Keep transactions short." These are true but any capable LLM already applies them without prompting.
-
-The practical consequence: when a code-review agent flags something it shouldn't have, or misses something it should have caught, the remedy is a new knowledge file. When it already behaves correctly on a topic, no file is needed.
-
-## What's in this repo
-
-BCQuality contains **knowledge** and **skills**. It does not contain agents. Agents that consume BCQuality ship with [AL-Go](https://github.com/microsoft/AL-Go) and other orchestrators.
-
-### Knowledge files
-
-Atomic markdown files with YAML frontmatter. Each file covers one concern — one thing an agent would cite when reviewing or generating code. Knowledge files live in two layers:
-
-- **`/microsoft/`** — Microsoft-endorsed layer.
-  - `/microsoft/knowledge/` — Platform guardrails, official guidance.
-  - `/microsoft/skills/` — Microsoft-endorsed action skills.
-- **`/community/`** — BC community layer.
-  - `/community/knowledge/` — Community patterns and shared guidance.
-  - `/community/skills/` — Community-contributed action skills.
-
-- **`/custom/`** — Partner- and customer-specific overrides. Empty by default; populated in forks.
-  - `/custom/knowledge/` — Organization-specific knowledge files.
-  - `/custom/skills/` — Organization-specific action skills.
-
-All three layers are enabled by default when an agent consumes BCQuality. Content can be promoted from Community to Microsoft-endorsed once it proves itself — this is a first-class concept, not an afterthought.
-
-### Skills
-
-Skills define how agents consume knowledge. They come in three flavors:
-
-- **The entry-point skill** ([`skills/entry.md`](skills/entry.md)) — the first skill an agent invokes at runtime. Given a task context (goal, available inputs, technologies, BC version, etc.), it returns a **dispatch record** naming the action skill or skills to invoke next. Routing logic lives here, not in the orchestrator.
-
-- **Meta-skill contracts** (`/skills/`) — three stable references that define the rest of the repo:
-  1. **Schema + Use** (READ, [`skills/read.md`](skills/read.md)) — how to read a knowledge file: interpret frontmatter, parse sections, understand layer precedence. Any agent or skill that reads knowledge files depends on it.
-  2. **Action Skill** (DO, [`skills/do.md`](skills/do.md)) — the template every action skill follows. Defines the four-step pattern (Source → Relevance → Worklist → Action) and the structured output format that orchestrators expect.
-  3. **New Knowledge** (WRITE, [`skills/write.md`](skills/write.md)) — how to author a valid knowledge file. References Schema + Use for the format specification and adds authoring rules (atomicity, section guidance).
-
-  READ and DO are read on demand — typically when the first dispatched action skill runs. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
-
-- **Action skills** — concrete skills that follow the Action Skill template to do real work (review code, audit telemetry, etc.). Action skills live inside the layers that own them (`/microsoft/skills/`, `/community/skills/`, `/custom/skills/`). An action skill is either a **leaf** that evaluates knowledge files directly, or a **super-skill** that composes other action skills (declared via `sub-skills` in frontmatter). The canonical reference is [`microsoft/skills/review/al-code-review.md`](microsoft/skills/review/al-code-review.md) (super-skill), which composes the AL review leaf skills under [`microsoft/skills/review/`](microsoft/skills/review/) — one per knowledge domain.
-
-### Agent bootstrapping
-
-An orchestrator (such as AL-Go) points the agent at BCQuality's URL and provides a task context. The agent's first call is `/skills/entry.md`, which returns a dispatch record naming the action skill(s) to invoke. The agent then invokes each dispatched skill in turn, reading READ and DO on demand. No prior knowledge of BCQuality's structure is baked into the orchestrator — only the convention *"invoke `/skills/entry.md` first."*
-
-## Knowledge file format
-
-Every knowledge file is a markdown file with mandatory YAML frontmatter. Files target under 100 lines (ideal under 50). If two ideas would share a file, split them.
-
-### Frontmatter schema (v1)
-
-```yaml
----
-bc-version: [all]                       # or [26..28], or [26..] for "26 and later"
-domain: performance                     # security | performance | ux | telemetry | ...
-keywords: [query, filtering, partial]   # free-text tags for retrieval
-technologies: [al]                      # al | javascript | powershell | ...
-countries: [w1]                        # ISO codes, or [w1]
-application-area: [all]                 # finance | manufacturing | jobs | [all]
----
+```powershell
+copilot plugin install microsoft/BCQuality
+copilot plugin list
 ```
 
-All six fields are required. The schema is locked — changes require a PR approved by both maintainers.
+The list should include `bcquality`. The plugin currently exposes the
+[`al-code-review`](skills/al-code-review/SKILL.md) skill. Installation and skill
+discovery are the general pattern; reviewing an app is one example of using it.
 
-### Sections
+### Example: Review a complete app folder
 
-Every knowledge file must contain a `## Description` section. The following sections are optional but recommended:
+Start a **new** CLI session in your own app folder, replacing the example path:
 
-- **`## Best Practice`** — the recommended approach
-- **`## Anti Pattern`** — what to avoid and why
+```powershell
+cd "C:\Repos\MyBusinessCentralApp"
+copilot
+```
 
-Code examples belong in separate files, not in the knowledge file itself. Knowledge files must not contain fenced code blocks.
+Approve access only to a project you trust, then ask:
+
+> Use the installed al-code-review skill to review the complete Business Central
+> app in this folder without changing my source files. Return the complete
+> BCQuality findings report.
+
+The folder should contain `app.json` and your AL source; it does **not** need
+to be a Git repository. On macOS or Linux, use your app's local path instead.
+
+Expect a report for each selected review, with findings, source locations,
+severity, confidence, and references to the relevant guidance. Some hosts show
+the structured JSON directly. `completed` with no findings means nothing was
+flagged in that review's scope; `partial` or `failed` is **not** a clean result.
+See [reading your results](docs/using-bcquality.md#reading-your-results).
+
+[PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell)
+(`pwsh`) is recommended for fast knowledge discovery. If it is unavailable,
+the review can still discover knowledge by reading the folders.
+
+## Documentation
+
+| I want to... | Start here |
+| --- | --- |
+| Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](docs/using-bcquality.md#choose-how-to-use-bcquality) |
+| Review a file, changes, a branch, or a particular concern | [Using BCQuality](docs/using-bcquality.md) |
+| Resolve setup problems, incomplete reviews, or incorrect findings | [Troubleshooting and support](docs/troubleshooting.md) |
+| Browse the available guidance | [Knowledge by domain](docs/using-bcquality.md#knowledge-by-domain) |
+| Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |
+| Contribute knowledge or improve a rule | [Your first contribution](docs/contributing.md#your-first-contribution) |
+| Connect a host, agent, or CI integration | [Minimal integration example](docs/agent-consumption.md#try-a-minimal-integration) |
+
+[All documentation and technical references](docs/README.md).
 
 ## Scope
 
-BCQuality covers Business Central broadly — the application domains it supports, the technologies used to extend it, and the practices that keep implementations healthy. The scope includes:
+Today's curated content focuses on **technical AL code review**. It augments
+the agent's judgment; it is not an exhaustive BC manual or a substitute for
+compilation, analyzers, tests, or human review. See
+[coverage and limits](docs/using-bcquality.md#coverage-and-limits) for the
+available domains and the difference between a folder review and a comparison.
+Mechanical issues already enforced by the AL compiler or standard analyzers are
+intentionally left to those deterministic tools rather than duplicated here.
 
-- **Business Central domains** — Finance, Supply Chain Management, Manufacturing, Jobs, Warehousing, Service, and the many other functional areas BC covers. Domain knowledge helps agents understand the business context they are working in.
-- AL language patterns and anti-patterns
-- PowerShell scripting for BC
-- Pipelines (AL-Go, GitHub Actions)
-- Business Central APIs
-- Power Platform integration
-- Telemetry and KQL
-- AppSource lifecycle
+Functional areas such as Finance, Supply Chain Management, Manufacturing, Jobs,
+Warehousing, and Service, and technologies such as PowerShell, pipelines, and
+Power Platform, remain valid future scope, **not current coverage claims**.
 
-A BC developer's actual job spans all of this, and BCQuality reflects that.
+## What's in this repo
 
-## How agents consume BCQuality
+Knowledge articles cover one concern each. Skills tell an agent how to find
+and apply the relevant knowledge. Both live in three layers:
 
-Action skills follow a four-step pattern:
+| Layer | Purpose |
+| --- | --- |
+| [Microsoft](microsoft/) | Microsoft-endorsed skills and their knowledge. |
+| [Community](community/) | Community-owned skills and their knowledge. |
+| [Custom](custom/) | Organization-specific additions and overrides in your own fork. |
 
-1. **Source** — which knowledge folders and tags to search
-2. **Relevance** — filter by frontmatter (version, technology, country, area)
-3. **Worklist** — narrow from N candidates to the M that apply to the current task
-4. **Action** — apply the relevant knowledge and produce structured output
+All three are enabled by default; Custom is empty upstream. You do not need
+to configure layers to get started.
 
-Every action skill produces output in a common format that orchestrators can consume without skill-specific parsing. The format is JSON and includes an `outcome` (so a clean run, a not-applicable skill, and a partial failure are all distinguishable), `findings` (what the skill observed), structured `references` back to the knowledge files that informed each finding, per-finding `confidence`, and a `suppressed` list recording any knowledge files overridden by layer precedence. This contract is defined in the Action Skill meta-skill so that orchestrators and action skills remain independently evolvable.
+## Versioning
 
-BCQuality is an **additive** knowledge layer: it augments the agent's review judgement, it does not replace it. Super-skills (such as `al-code-review`) run a self-review pass alongside their sub-skills and surface concerns the agent identified on its own, marked with `from-sub-skill: "agent"` and an empty `references: []` so consumers can render them distinctly from knowledge-backed findings. See [agent-consumption.md](agent-consumption.md) and [`skills/do.md`](skills/do.md) for the full contract.
+Update the installed plugin from your terminal, then start a new session:
 
-The meta-skills in `/skills/` define this pattern. Every concrete action skill follows it.
-
-For the end-to-end flow — from orchestrator trigger through to how output reaches developers — see [agent-consumption.md](agent-consumption.md).
-
-## Repository structure
-
+```powershell
+copilot plugin update bcquality
 ```
-├── /skills/              # Global: entry-point skill + meta-skill contracts (READ, DO, WRITE)
-├── /.github/             # Actions and workflows
-├── /microsoft/           # Microsoft-endorsed layer
-│   ├── /knowledge/       # Knowledge files by domain
-│   │   └── /<domain>/    # Each article: <slug>.md + optional <slug>.good.al / <slug>.bad.al
-│   └── /skills/          # Microsoft-endorsed action skills
-├── /community/           # BC community layer
-│   ├── /knowledge/       # Knowledge files by domain
-│   │   └── /<domain>/    # Article + sibling samples, same convention
-│   └── /skills/          # Community action skills
-├── /custom/              # Partner/customer-specific overrides (empty; populated in forks)
-│   ├── /knowledge/
-│   └── /skills/
-```
+
+Plugin versions and content-release tags are different. For reproducible runs
+and organization forks, see [updates and versions](docs/customizing-bcquality.md#updates-and-versions).
+
+## What belongs here
+
+Knowledge belongs here when it prevents a BC-specific mistake an otherwise
+capable agent would make, including false-positive findings. BC facts belong
+in knowledge articles, not skill instructions. See the
+[admission test and examples](docs/contributing.md#what-belongs-here).
 
 ## Contributing
 
-Contributions are welcome. Before submitting a PR:
-
-1. Read the knowledge file format above — frontmatter and sections are validated by CI.
-2. Keep files atomic: one concern per file, under 100 lines.
-3. Target your contribution to the right layer — most community contributions go in `/community/knowledge/`.
-
-CI runs validation on every PR. If your knowledge file has schema violations, missing sections, code blocks, or exceeds 100 lines, the check will fail with a clear error message.
+Partners are welcome to contribute to the layer that owns the domain,
+regardless of affiliation. Start with the [contribution guide](docs/contributing.md).
+To report a problem without authoring a rule, see [support](docs/troubleshooting.md#reporting-a-problem).
 
 ## License
 

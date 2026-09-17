@@ -17,10 +17,10 @@ When behaviour varies by a discrete "type" — a shipping method, a posting stra
 
 Declare an `interface` with the method signatures only (no bodies). Define an `enum` that `implements` the interface and set `Implementation = <Interface> = <Codeunit>;` on each value, pointing at a codeunit that `implements` the same interface. In the consumer, declare a variable of the interface type, assign the enum value to it, and call the method — the platform dispatches to the codeunit mapped to that value. New variants plug in by adding an enum value and its implementation; existing call sites are untouched. The open/closed boundary lives at the enum, not scattered across `case` blocks.
 
-See sample: `prefer-interface-over-case-branching.good.al`.
+See sample: [`prefer-interface-over-case-branching.good.al`](prefer-interface-over-case-branching.good.al).
 
 ## Anti Pattern
 
 A `case "Shipping Method" of` block that selects behaviour inline, duplicated across the call sites that need it. Each new method forces a synchronized edit to every block, and a missed branch is a silent gap. Detection signal: a `case` statement over an enum value whose branches choose between variant computations or strategies, especially when the same shape appears in more than one procedure. Replace the enum with one that `implements` an interface, move each branch body into an implementation codeunit, and let dispatch happen through an interface variable.
 
-See sample: `prefer-interface-over-case-branching.bad.al`.
+See sample: [`prefer-interface-over-case-branching.bad.al`](prefer-interface-over-case-branching.bad.al).

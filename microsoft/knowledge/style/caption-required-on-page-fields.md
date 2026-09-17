@@ -1,28 +1,38 @@
 ---
 bc-version: [all]
 domain: style
-keywords: [caption, page-field, aa0225, aa0226, codecop, captionclass]
+keywords: [caption, page-field, source-field, inheritance, aa0225, aa0226, codecop, captionclass, false-positive]
 technologies: [al]
 countries: [w1]
 application-area: [all]
 ---
 
-# Every page field needs a `Caption` (CodeCop AA0225/AA0226)
+# Page fields can inherit their source table field's `Caption`
 
 ## Description
 
-CodeCop AA0225 and AA0226 require every field control to expose a `Caption` property, separately from the field's source name. The caption is what the user sees as the column header or label; the source name is what the code uses to reference the field. Without an explicit `Caption`, AL falls back to the source field's caption — which may be wrong for the page's context — or to the field name itself in code casing, which surfaces internal naming to users and to translators.
+A page field bound to a table field inherits the source field's `Caption` unless the page overrides it. An inherited caption is valid, user-facing, and translatable; omitting a page-level `Caption` does not mean the control displays an internal identifier or loses translations. CodeCop AA0225/AA0226 concern missing or empty captions, not a requirement to duplicate a caption already supplied by the source table field.
 
-Acceptable exceptions: a field whose caption is inherited via `CaptionClass = '3,5,' + CurrencyCode` (or another CaptionClass formula) does not need a literal `Caption`; the formula provides it. API pages and test pages may omit captions because their consumers are not human users. Boolean fields whose name already reads as a sentence — `Enabled`, `Posted`, `Released` — do not need a redundant Caption that repeats the name.
+Redundant page-level captions compile successfully, so compiler-error recovery does not prevent an agent from adding them. This guidance prevents that false positive rather than replacing analyzer diagnostics.
+
+Controls bound to variables or expressions cannot rely on table-field caption inheritance. For user-facing fields that need a label, supply a `Caption` or a `CaptionClass` that resolves to the intended caption. API pages are not human-facing UI; do not apply this UI-label guidance to their API contract names.
 
 ## Best Practice
 
-`Caption = 'Customer No.';` paired with `ToolTip = 'Specifies …';`. Captions are short, noun-phrase, title-case for primary labels; sentence-case is allowed for descriptive labels that read as a sentence fragment.
+Define the shared caption on the table field and let bound page fields inherit it. Add a page-level `Caption` only when there is no suitable inherited caption or the page genuinely needs different wording. Keep a valid `CaptionClass` rather than adding a redundant literal caption.
 
-See sample: `caption-required-on-page-fields.good.al`.
+Before reporting a missing caption, inspect the binding and source field, including dependency symbols when needed. If the source definition is unavailable, do not treat an omitted page property as proof that the caption is missing. Caption and tooltip requirements are separate: do not add a `ToolTip` just because a caption is being reviewed; see [tooltip inheritance guidance](tooltip-required-on-page-fields.md).
+
+See sample: [`caption-required-on-page-fields.good.al`](caption-required-on-page-fields.good.al). Caption inheritance applies across BC versions; the sample uses BC24/runtime 13.0 or later to also define tooltips on its table fields.
 
 ## Anti Pattern
 
-A field control with no `Caption` and no `CaptionClass`, or `Caption = '';`. The user sees the internal identifier as the column header and the translation pipeline has nothing to translate.
+A user-facing field that needs a label but has no non-empty explicit or inherited caption and no resolving `CaptionClass` has a genuine labeling gap. This includes `Caption = '';` when no `CaptionClass` supplies the label. A variable name alone is not a translatable caption.
 
-See sample: `caption-required-on-page-fields.bad.al`.
+The opposite review defect is flagging a bound field solely because it omits a page-level `Caption`, or inserting a copy of the table field's caption to satisfy AA0225/AA0226. That adds redundant text and prevents subsequent table-caption changes from flowing through to the page.
+
+See sample: [`caption-required-on-page-fields.bad.al`](caption-required-on-page-fields.bad.al).
+
+## References
+
+[Caption property](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/properties/devenv-caption-property) and [ToolTip property remarks documenting inheritance of both properties](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/properties/devenv-tooltip-property).

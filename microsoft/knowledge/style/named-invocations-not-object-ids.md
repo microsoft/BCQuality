@@ -17,10 +17,10 @@ application-area: [all]
 
 When invoking an object whose named alias is available in the same app (or in a dependency the current app already references), use the named form: `Page.RunModal(Page::"Posted Sales Shipment Lines", SalesShptLine)`, `Report.Run(Report::"Sales - Invoice", true)`. The same applies to `Codeunit.Run`, `XmlPort.Run`, `Query.Open`, and any platform method that takes an object reference. The named form makes diffs reviewable — a rename is visible — and makes log output and stack traces interpretable.
 
-See sample: `named-invocations-not-object-ids.good.al`.
+See sample: [`named-invocations-not-object-ids.good.al`](named-invocations-not-object-ids.good.al).
 
 ## Anti Pattern
 
 `Page.RunModal(525, …)` or `Report.Run(206, true)`. The numeric form is unreadable, fragile across renumbering, and breaks every search that looks for callers of a named object.
 
-See sample: `named-invocations-not-object-ids.bad.al`.
+See sample: [`named-invocations-not-object-ids.bad.al`](named-invocations-not-object-ids.bad.al).

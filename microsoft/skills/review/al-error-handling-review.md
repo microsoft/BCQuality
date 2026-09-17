@@ -4,7 +4,7 @@ id: al-error-handling-review
 version: 1
 title: AL error handling review
 description: Reviews AL source changes against error-handling guidance from BCQuality.
-inputs: [pr-diff, file-path]
+inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
 technologies: [al]
@@ -16,11 +16,11 @@ application-area: [all]
 
 Reviews AL source changes against the `error-handling` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-An orchestrator invokes this skill with either a `pr-diff` (the standard PR-review entry point) or a `file-path` (single-file review). The skill produces a single JSON document conforming to the DO output contract.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. The skill produces a single JSON document conforming to the DO output contract.
 
 ## Source
 
-Read the BCQuality knowledge index once — the `knowledge-index.json` BCQuality builds at the root of the knowledge checkout (Entry's preparation step regenerates it over the live, already-filtered clone — see `skills/entry.md`). It lists every article that survived layer and allow/deny filtering and carries, per article, its `path`, `layer`, `domain`, frontmatter dimensions, `keywords`, `title`, and a one-line `description` hint — exactly the fields Relevance and Worklist consume. Take the index entries whose `domain` is `error-handling` as this skill's candidate set across every enabled layer; do not open the individual article files at this step. Open an article's full body only once it enters the Worklist below, so a review reads the index plus the handful of worklisted articles instead of every file under `*/knowledge/error-handling/**`.
+Use READ's **Bounded retrieval for review skills** workflow with `-Domain error-handling`. Consume every catalog page across enabled layers before applying this leaf's Relevance and Worklist; preserve each exact catalog path and open complete bodies only for exact paths selected by the Worklist. If the helper or prepared index is unavailable or invalid, use READ's explicit path-discovery and bounded native-read fallback.
 
 ## Relevance
 
@@ -38,10 +38,20 @@ Discard files that are not applicable. Retain conditionally applicable files (an
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
 - The changed AL object names and types — especially codeunits that post or validate, tables and table extensions with `OnValidate` triggers, and any procedure that raises errors or orchestrates a batch over records.
-- The changed procedures and triggers, weighted toward `OnValidate`/`OnInsert`/`OnModify` triggers, posting and validation routines, and procedures attributed with `[ErrorBehavior(...)]`.
-- Tokens extracted from the diff that relate to error surfacing and diagnostics (`Error`, `ErrorInfo`, `Title`, `Message`, `DetailedMessage`, `AddAction`, `AddNavigationAction`, `RecordId`, `PageNo`, `ErrorBehavior`, `Collect`, `HasCollectedErrors`, `GetCollectedErrors`, `ClearCollectedErrors`, `ErrorType`, `Internal`, `Client`).
+- The changed procedures and triggers, weighted toward `OnValidate`/`OnInsert`/`OnModify` triggers, posting and validation routines, and procedures attributed with `[ErrorBehavior(...)]` or `[TryFunction]`.
+- Tokens extracted from the diff that relate to error surfacing and diagnostics (`Error`, `ErrorInfo`, `FieldError`, `TestField`, `Title`, `Message`, `DetailedMessage`, `AddAction`, `AddNavigationAction`, `RecordId`, `PageNo`, `ErrorBehavior`, `Collect`, `HasCollectedErrors`, `GetCollectedErrors`, `ClearCollectedErrors`, `ErrorType`, `Internal`, `Client`, `TryFunction`, `GetLastErrorText`, Boolean assignment).
+- Resolve changed standalone call targets; when the target declaration has `[TryFunction]`, worklist the ignored-return rule even if the declaration itself is unchanged. Only assignment and conditional use activate try semantics.
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
+
+The following targeted checks cover every current `error-handling` article:
+
+- `[ErrorBehavior(ErrorBehavior::Collect)]`, `ErrorInfo.Collectible`, `HasCollectedErrors`, `GetCollectedErrors`, or `ClearCollectedErrors` is added or changed, especially when errors are collected without later surfacing/clearing them — `collect-validation-errors-with-errorbehavior`.
+- Developer-only invariant text is raised with default client visibility, or a user-actionable validation is hidden as `ErrorType::Internal` — `errortype-internal-vs-client-for-diagnostics`.
+- `FieldError` receives a complete capitalized sentence, repeats the field caption/value, or ends the predicate with punctuation — `fielderror-default-message-logic`.
+- An unguarded `FieldError` is used as though it performed a comparison, or `TestField` is forced onto a complex rule needing a tailored predicate — `fielderror-vs-testfield`.
+- A resolved call target is marked `[TryFunction]` but the call is a standalone statement whose Boolean result is ignored — `ignored-tryfunction-return-disables-try-semantics`. This call-site rule supersedes the performance TryFunction article unless writes and rollback expectations are also visible.
+- A plain `Error` represents a known actionable correction that can be expressed through `ErrorInfo` actions/navigation, or an `ErrorInfo` omits the context needed for that action — `prefer-errorinfo-for-actionable-errors`.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
@@ -53,7 +63,7 @@ For each worklist entry, evaluate the diff against the file's `## Best Practice`
 
 - When the diff contains a clear match for an Anti Pattern, emit a finding with severity `major` or `blocker`, a message summarizing the anti-pattern, `location` pointing to the offending line or range, and a `references` entry pointing to the knowledge file. Use `blocker` only when the knowledge file states the anti-pattern violates a platform-level guarantee. When the file does not make such a claim, the ceiling is `major`.
 - When the diff contains code that contradicts a Best Practice without being a full anti-pattern, emit `minor` with the same reference shape.
-- When the skill cannot detect a violation but the file is clearly applicable to the change, emit `info` citing the file. Repository-wide observations MAY omit `location`.
+- Applicability alone is not a finding. Emit `info` only for a concrete, non-actionable observation the article explicitly defines; otherwise emit nothing when no violation is present.
 
 Set `confidence` to:
 
@@ -77,7 +87,7 @@ Outcome selection:
 
 ## Output
 
-Output conforms to the DO output contract. A populated example:
+Output conforms to the DO output contract. Every finding this skill emits MUST set `findings[].domain` to `"Error Handling"`. A populated example:
 
 ```json
 {
@@ -100,7 +110,8 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/error-handling/prefer-errorinfo-for-actionable-errors.md" }
       ],
-      "confidence": "high"
+      "confidence": "high",
+      "domain": "Error Handling"
     },
     {
       "id": "microsoft/knowledge/error-handling/errortype-internal-vs-client-for-diagnostics.md",
@@ -113,14 +124,15 @@ Output conforms to the DO output contract. A populated example:
       "references": [
         { "path": "microsoft/knowledge/error-handling/errortype-internal-vs-client-for-diagnostics.md" }
       ],
-      "confidence": "medium"
+      "confidence": "medium",
+      "domain": "Error Handling"
     }
   ],
   "suppressed": []
 }
 ```
 
-The empty-corpus case — BCQuality's state until error-handling knowledge files land — produces:
+When no applicable error-handling knowledge is available, the report is:
 
 ```json
 {

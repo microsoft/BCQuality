@@ -17,10 +17,10 @@ Raising an event on every iteration of a loop multiplies the cost of every subsc
 
 Raise `OnBeforeProcessLines` before the loop and `OnAfterProcessLines` after it, outside the `repeat … until`, so each subscriber runs once per batch rather than once per row. Give those events the record or filters they need to operate on the whole set.
 
-See sample: `do-not-publish-events-inside-loops.good.al`.
+See sample: [`do-not-publish-events-inside-loops.good.al`](do-not-publish-events-inside-loops.good.al).
 
 ## Anti Pattern
 
 An event raised inside the loop body, fired once per iteration, so subscriber cost scales with the row count and large batches slow down or time out. Detection: an `OnBefore…`/`OnAfter…`/`On…` raise located between `repeat` and `until` in a record loop.
 
-See sample: `do-not-publish-events-inside-loops.bad.al`.
+See sample: [`do-not-publish-events-inside-loops.bad.al`](do-not-publish-events-inside-loops.bad.al).

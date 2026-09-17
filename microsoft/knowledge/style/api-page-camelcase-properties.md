@@ -17,10 +17,10 @@ API pages — pages declared with `PageType = API` — surface as OData/JSON end
 
 Pick camelCase identifiers up front: `APIPublisher = 'contoso'`, `APIGroup = 'app1'`, `EntityName = 'customer'`, field `Name = 'displayName'`. Keep them short — they end up in URL paths and JSON keys that every consumer types.
 
-See sample: `api-page-camelcase-properties.good.al`.
+See sample: [`api-page-camelcase-properties.good.al`](api-page-camelcase-properties.good.al).
 
 ## Anti Pattern
 
 `APIPublisher = 'Contoso-App'` (hyphen rejected, capitalization wrong for camelCase), `EntityName = 'sales_order'` (underscore rejected), or fields exposed with `Name = 'Display Name'` (space rejected). The compiler usually catches these, but the failure mode is opaque and the rename cost on a deployed API is high.
 
-See sample: `api-page-camelcase-properties.bad.al`.
+See sample: [`api-page-camelcase-properties.bad.al`](api-page-camelcase-properties.bad.al).

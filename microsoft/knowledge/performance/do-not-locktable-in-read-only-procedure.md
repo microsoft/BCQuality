@@ -17,10 +17,10 @@ application-area: [all]
 
 Reserve `LockTable` for the read directly before a `Modify`, `Insert`, or `Delete` that depends on the read value. If a helper is sometimes called for reading and sometimes for writing, split it into separate read and write paths and call `LockTable` only on the write path. For read-only existence checks or lookups, the right primitive is `ReadIsolation` (see `prefer-readisolation-over-locktable-for-reads.md`).
 
-See sample: `do-not-locktable-in-read-only-procedure.good.al`.
+See sample: [`do-not-locktable-in-read-only-procedure.good.al`](do-not-locktable-in-read-only-procedure.good.al).
 
 ## Anti Pattern
 
 A pure getter that opens with `Rec.LockTable();`. Every caller's transaction now acquires `UPDLOCK` on that table for every subsequent read until commit. The contention shows up as blocking on unrelated sessions whose own code path looks innocent — the locker is invisible to the blocked reader.
 
-See sample: `do-not-locktable-in-read-only-procedure.bad.al`.
+See sample: [`do-not-locktable-in-read-only-procedure.bad.al`](do-not-locktable-in-read-only-procedure.bad.al).

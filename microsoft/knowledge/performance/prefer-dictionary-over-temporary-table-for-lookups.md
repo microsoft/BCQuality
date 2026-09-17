@@ -11,12 +11,12 @@ application-area: [all]
 
 ## Description
 
-A temporary table supports a full record API — filters, iteration, multi-field keys — but a pure key→value lookup pays for plumbing it does not use. Per the upstream guidance, "if a temporary table record is ONLY used as a lookup table, it is faster to use a dictionary which supports O(1) lookups instead of O(lg n) for temporary tables." The Dictionary type has no record machinery to traverse; the key hash answers the lookup directly.
+An AL `Dictionary` directly models an unordered unique key-to-value collection. A temporary table models records and supports keys, filters, validation, and ordered iteration in Business Central Server memory. For a pure lookup map, the dictionary avoids repeatedly configuring and searching a temporary record and makes the intended access pattern explicit.
 
 ## Best Practice
 
-When the use of a temp record is "set a key, see if the row exists, read a single value", switch to `Dictionary of [Key, Value]`. Use the temp-table form when the use genuinely needs filtering, iteration in a specific order, or a multi-field key. Compatibility with code that expects a `Record` parameter is a real reason to keep the temp table; performance alone, on a pure lookup, is not.
+Use `Dictionary of [Key, Value]` when the operation is add-or-replace, contains-key, and get-value by one supported key type. Use a temporary table when the value is a record, or when the code needs filters, ordered iteration, multiple fields, multiple keys, or table behavior. Both structures consume service-tier memory and still need volume analysis.
 
 ## Anti Pattern
 
-A temp `Record` declared, populated row by row, then queried with `SetRange(KeyField, X); if Find('=') then Value := Rec.ValueField;`. The lookup hashes the key behind the scenes and does the same work a `Dictionary` would, plus the per-row record overhead. The pattern often appears because the author originally needed iteration and the iteration was later removed without revisiting the data structure.
+A temporary record used only through `SetRange(KeyField, X); FindFirst()` to retrieve one scalar value, with no record semantics that justify the table. The opposite mistake is replacing a temporary table that needs filtering or ordered iteration with a dictionary.

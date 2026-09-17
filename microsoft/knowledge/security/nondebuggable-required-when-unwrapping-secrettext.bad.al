@@ -1,19 +1,14 @@
 codeunit 50214 "Sec Sample NonDebug Bad"
 {
-    procedure BuildConnectionString(ApiKey: SecretText): Text
+    procedure CallLegacyOnPremisesConsumer(ApiKey: SecretText)
+    var
+        PlainApiKey: Text;
     begin
-        exit('Server=db.example.com;Key=' + ApiKey.Unwrap());
+        PlainApiKey := ApiKey.Unwrap();
+        InvokeLegacyConsumer(PlainApiKey);
     end;
 
-    procedure ParseSessionToken(Response: HttpResponseMessage; var SessionToken: SecretText)
-    var
-        ResponseText: Text;
-        JsonObject: JsonObject;
-        JsonToken: JsonToken;
+    local procedure InvokeLegacyConsumer(ApiKey: Text)
     begin
-        Response.Content.ReadAs(ResponseText);
-        JsonObject.ReadFrom(ResponseText);
-        JsonObject.Get('access_token', JsonToken);
-        SessionToken := JsonToken.AsValue().AsText();
     end;
 }

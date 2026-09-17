@@ -20,13 +20,14 @@ codeunit 50225 "Reservation Post Good Sample"
     var
         IsHandled: Boolean;
     begin
+        IsHandled := false;
         OnBeforeReserve(ReservationEntry, IsHandled);
-        if IsHandled then
-            exit;
+        if not IsHandled then begin
+            ReservationEntry.Reserved := true;
+            ReservationEntry.Modify(true);
+        end;
 
-        ReservationEntry.Reserved := true;
-        ReservationEntry.Modify(true);
-
+        // OnAfter reports completion whether a subscriber or the base body handled it.
         OnAfterReserve(ReservationEntry);
     end;
 

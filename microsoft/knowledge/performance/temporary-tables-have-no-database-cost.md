@@ -7,16 +7,16 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Temporary tables are in-memory; access-pattern rules do not apply
+# Temporary tables avoid SQL I/O, not in-memory work
 
 ## Description
 
-A record declared `Temporary` (or a page with `SourceTableTemporary = true`) lives entirely in memory; reads and writes never reach SQL. Per the upstream guidance, "any access pattern (FindSet, FindFirst, Get, loops) on temp tables is acceptable — they are in-memory and fast." The rules in the rest of this domain — partial loading, bulk operations, N+1 detection, `IsEmpty` over `Count` — exist to avoid database round-trips that a temporary table does not perform.
+A temporary table stores its rows in Business Central Server memory instead of a physical SQL table. Its reads and writes therefore do not incur SQL round-trips, locking, or SIFT maintenance. They still allocate memory and execute record filtering, key lookup, sorting, insertion, and iteration in the service tier; those costs grow with the temporary dataset and access pattern.
 
 ## Best Practice
 
-Recognize the `Temporary` property (on a record variable, table declaration, or page's `SourceTableTemporary`) and exempt the code from access-pattern flags. The `SetLoadFields`/`FindSet` discipline that matters for `Customer` does not matter for a temporary `Customer` variable used as a working set. The interesting performance question on a temp table is volume in memory, not query plan.
+Do not apply SQL-specific findings such as missing `SetLoadFields`, lock contention, or N+1 database round-trips to a temporary record. Still assess memory volume and repeated scans or lookups. For a pure key-to-value collection, consider an AL `Dictionary`; keep a temporary table when record fields, keys, filtering, or ordered iteration are required.
 
 ## Anti Pattern
 
-Flagging a temporary table's `FindFirst` inside a loop, or a temporary table without `SetLoadFields`, as a performance issue. The recommendation produces no measurable gain and obscures genuine issues elsewhere in the same review.
+Claiming that every temporary-table access pattern is free because no SQL is involved. A nested scan over a large in-memory buffer can still dominate service-tier CPU, while adding `SetLoadFields` to that buffer addresses a database cost that does not exist.

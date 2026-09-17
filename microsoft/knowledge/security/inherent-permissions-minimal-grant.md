@@ -15,8 +15,8 @@ application-area: [all]
 
 ## Best Practice
 
-Match the inherent permission to the procedure's body: a procedure that only reads `Customer.Name` declares `[InherentPermissions(PermissionObjectType::TableData, Database::Customer, 'r')]`, not `'RIMD'`. Pick the inherent entitlement that matches the lowest tier the procedure should run under — do not require Premium for a procedure that performs an Essential-tier check. See sample: `inherent-permissions-minimal-grant.good.al`.
+Match the inherent permission to the procedure's body: a procedure that only reads `Customer.Name` declares `[InherentPermissions(PermissionObjectType::TableData, Database::Customer, 'r')]`, not `'RIMD'`. Pick the inherent entitlement that matches the lowest tier the procedure should run under — do not require Premium for a procedure that performs an Essential-tier check. See sample: [`inherent-permissions-minimal-grant.good.al`](inherent-permissions-minimal-grant.good.al).
 
 ## Anti Pattern
 
-Declaring `[InherentPermissions(..., 'RIMD')]` on a read-only procedure (`GetCustomerName`), or `[InherentEntitlements(Entitlement::"Dynamics 365 Business Central Premium")]` on a procedure that performs a simple existence check. Reviewers should compare the attribute's permission letters against what the procedure body actually does and flag any grant broader than the operations performed. See sample: `inherent-permissions-minimal-grant.bad.al`.
+Declaring `[InherentPermissions(..., 'RIMD')]` on a read-only procedure (`GetCustomerName`), or `[InherentEntitlements(Entitlement::"Dynamics 365 Business Central Premium")]` on a procedure that performs a simple existence check. Reviewers should compare the attribute's permission letters against what the procedure body actually does and flag any grant broader than the operations performed. See sample: [`inherent-permissions-minimal-grant.bad.al`](inherent-permissions-minimal-grant.bad.al).

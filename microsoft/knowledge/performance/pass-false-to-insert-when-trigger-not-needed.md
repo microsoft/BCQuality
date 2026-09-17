@@ -17,7 +17,7 @@ application-area: [all]
 
 Reach for the `(false)` form when the calling code already enforces the invariants the trigger would, or when the trigger is empty for the current table/extension. Use `(true)` when the trigger does work the caller depends on (number-series allocation, validation, cascading writes). Decide per call, not by code style: a default of "always `true`" makes bulk writes pay for triggers they did not need, and a default of "always `false`" silently skips validation the trigger was put there to enforce.
 
-See sample: `pass-false-to-insert-when-trigger-not-needed.good.al`.
+See sample: [`pass-false-to-insert-when-trigger-not-needed.good.al`](pass-false-to-insert-when-trigger-not-needed.good.al).
 
 ## Anti Pattern
 

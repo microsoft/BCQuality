@@ -17,10 +17,10 @@ application-area: [all]
 
 Use `FindSet(true)` only when the loop body genuinely modifies the iterated rows; use `FindSet()` (or `FindSet(false)`) when the loop only reads. Do not write `FindSet(true, true)` or `FindSet(true, false)` — the two-parameter form is the obsolete signature.
 
-See sample: `findset-true-applies-updlock-on-read.good.al`.
+See sample: [`findset-true-applies-updlock-on-read.good.al`](findset-true-applies-updlock-on-read.good.al).
 
 ## Anti Pattern
 
 `FindSet(true)` on a loop that does not modify the iterated rows takes an `UpdLock` the work does not need; competing readers and writers stall against a lock the loop never uses. The mirror anti-pattern is `FindSet()` (no parameter) on a loop that *does* modify each row — the read takes a shared lock, the `Modify` then needs to upgrade, and the gap between them is a deadlock candidate.
 
-See sample: `findset-true-applies-updlock-on-read.bad.al`.
+See sample: [`findset-true-applies-updlock-on-read.bad.al`](findset-true-applies-updlock-on-read.bad.al).

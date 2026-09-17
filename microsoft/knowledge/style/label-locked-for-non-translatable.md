@@ -17,10 +17,10 @@ A `Label` is by default surfaced to translators and rewritten per locale. That i
 
 Pair `Locked = true` with the `Tok` suffix for short tokens (`GetMethodTok: Label 'GET', Locked = true;`) and with the `Txt` suffix for telemetry strings that contain format placeholders but should not be localized. The `Locked` parameter and the `Tok` / `Txt` suffix together make the intent unambiguous.
 
-See sample: `label-locked-for-non-translatable.good.al`.
+See sample: [`label-locked-for-non-translatable.good.al`](label-locked-for-non-translatable.good.al).
 
 ## Anti Pattern
 
 `HttpsUrl: Label 'https://example.com';` or `ContentTypeTok: Label 'application/json';` declared without `Locked = true`. The translator localizes them, the integration fails in production for the affected tenant, and the failure is invisible in the developer's English-locale tests.
 
-See sample: `label-locked-for-non-translatable.bad.al`.
+See sample: [`label-locked-for-non-translatable.bad.al`](label-locked-for-non-translatable.bad.al).

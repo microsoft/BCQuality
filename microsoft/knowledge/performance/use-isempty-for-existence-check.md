@@ -17,10 +17,10 @@ When the caller only needs to know whether any row matches a filter, `IsEmpty()`
 
 Phrase existence checks as `if not Record.IsEmpty() then ...` (or `if Record.IsEmpty() then ...` for the negative). Apply filters via `SetRange`/`SetFilter` before the call so the existence check runs against the intended subset. Reserve `Count` for cases where the actual number matters and `FindFirst` for cases where the record fields are read.
 
-See sample: `use-isempty-for-existence-check.good.al`.
+See sample: [`use-isempty-for-existence-check.good.al`](use-isempty-for-existence-check.good.al).
 
 ## Anti Pattern
 
 `if Customer.Count() > 0 then ...` and `if Customer.FindFirst() then ...` (when the record is discarded) — both are flagged by the upstream guidance as the wrong tool. The first asks the database for the full count; the second asks for a row's fields. Both answers go unused.
 
-See sample: `use-isempty-for-existence-check.bad.al`.
+See sample: [`use-isempty-for-existence-check.bad.al`](use-isempty-for-existence-check.bad.al).

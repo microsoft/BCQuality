@@ -17,10 +17,10 @@ An API meant purely for reading — a reporting or lookup endpoint — is not re
 
 For a read-only / reporting API page set all three CRUD guards off — `InsertAllowed = false`, `ModifyAllowed = false`, `DeleteAllowed = false` — and mark the page `Editable = false`. The endpoint then serves GET requests and rejects any insert, modify, or delete, matching the read-only contract regardless of the caller. Make the read-only stance explicit rather than depending on the writable default.
 
-See sample: `disable-write-operations-on-read-only-api-pages.good.al`.
+See sample: [`disable-write-operations-on-read-only-api-pages.good.al`](disable-write-operations-on-read-only-api-pages.good.al).
 
 ## Anti Pattern
 
 An API intended for read-only consumption that omits the CRUD guards, leaving `InsertAllowed`, `ModifyAllowed`, and `DeleteAllowed` at their writable defaults. The endpoint silently accepts POST, PATCH, and DELETE, so a client can mutate or remove data the API was never meant to expose for writing. The detection signal: a read-only/reporting `PageType = API` page that does not set the three `*Allowed = false` properties.
 
-See sample: `disable-write-operations-on-read-only-api-pages.bad.al`.
+See sample: [`disable-write-operations-on-read-only-api-pages.bad.al`](disable-write-operations-on-read-only-api-pages.bad.al).

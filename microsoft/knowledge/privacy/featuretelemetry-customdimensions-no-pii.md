@@ -17,10 +17,10 @@ application-area: [all]
 
 Pass only non-personal context through `CustomDimensions` — feature names, status enums, counts, error codes, durations. For uptake or usage signals that do not need per-call context, prefer the parameterless overload of `LogUptake`/`LogUsage` over a `CustomDimensions` dictionary that risks accreting PII over time.
 
-See sample: `featuretelemetry-customdimensions-no-pii.good.al`.
+See sample: [`featuretelemetry-customdimensions-no-pii.good.al`](featuretelemetry-customdimensions-no-pii.good.al).
 
 ## Anti Pattern
 
 `CustomDimensions.Add('EmployeeNo', ExpenseHeader."Employee No.")` followed by `FeatureTelemetry.LogUsage(...)` — the employee number is a pseudonymous user identifier (EUPI) and is now in telemetry. Same pattern with `'UserName'`, `'CustomerEmail'`, `'AttachmentName'` etc.
 
-See sample: `featuretelemetry-customdimensions-no-pii.bad.al`.
+See sample: [`featuretelemetry-customdimensions-no-pii.bad.al`](featuretelemetry-customdimensions-no-pii.bad.al).

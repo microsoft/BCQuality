@@ -17,10 +17,10 @@ application-area: [all]
 
 Reach for `FieldCaption("Location Code")` and `TableCaption()` whenever the value flows into a UI primitive. The same rule applies to format parameters: `Error(SomeErr, FieldCaption("Status"), TableCaption(), "Status")` rather than `Error(SomeErr, FieldName("Status"), TableName(), "Status")`. The captions follow the user's language; the names do not.
 
-See sample: `fieldcaption-not-fieldname-in-user-messages.good.al`.
+See sample: [`fieldcaption-not-fieldname-in-user-messages.good.al`](fieldcaption-not-fieldname-in-user-messages.good.al).
 
 ## Anti Pattern
 
 `Message('Updated %1', TableName())` or `Confirm(UpdateLocationQst, true, FieldName("Location Code"))`. The user sees the English internal name in every locale, and any future rename of the caption fails to reach the message.
 
-See sample: `fieldcaption-not-fieldname-in-user-messages.bad.al`.
+See sample: [`fieldcaption-not-fieldname-in-user-messages.bad.al`](fieldcaption-not-fieldname-in-user-messages.bad.al).

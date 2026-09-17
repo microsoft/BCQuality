@@ -17,10 +17,10 @@ When upgrade code encounters unexpected data — a record it expected to find, a
 
 When an upgrade procedure detects something missing, call `Session.LogMessage` with a stable event ID, classify the message verbosity (typically `Warning`), and `exit` the procedure so the rest of the upgrade can proceed. The platform telemetry then surfaces the situation to the partner without breaking the customer.
 
-See sample: `do-not-block-upgrade-on-data-errors.good.al`.
+See sample: [`do-not-block-upgrade-on-data-errors.good.al`](do-not-block-upgrade-on-data-errors.good.al).
 
 ## Anti Pattern
 
 Calling `Record.Get(Key)` (or any other erroring API) and letting the error propagate out of the upgrade trigger. The first tenant with imperfect data fails to upgrade, and the failure surfaces as a hard upgrade error rather than as a telemetry signal.
 
-See sample: `do-not-block-upgrade-on-data-errors.bad.al`.
+See sample: [`do-not-block-upgrade-on-data-errors.bad.al`](do-not-block-upgrade-on-data-errors.bad.al).

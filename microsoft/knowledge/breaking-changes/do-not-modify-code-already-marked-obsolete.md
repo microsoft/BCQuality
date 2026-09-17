@@ -17,10 +17,10 @@ A member carrying `[Obsolete]`, or wrapped in a `#if not CLEANxx` conditional-co
 
 Leave obsolete members exactly as they are and implement against the current, supported replacement. New logic — a surcharge calculation, an event publisher, a hook — belongs on the live API (`GetUnitPrice`), never inside the deprecated `GetPrice` or behind a `#if not CLEAN25` guard. If the replacement does not yet exist, create it as a first-class member and build there. The obsolete code should only shrink over time, not accrete new behavior.
 
-See sample: `do-not-modify-code-already-marked-obsolete.good.al`.
+See sample: [`do-not-modify-code-already-marked-obsolete.good.al`](do-not-modify-code-already-marked-obsolete.good.al).
 
 ## Anti Pattern
 
 Adding a surcharge calculation inside the `[Obsolete]` `GetPrice` procedure, or behind a `#if not CLEAN25` block, so the new behavior is wired to code that will be removed when `CLEAN25` is enabled. Detection: new statements, event declarations, or dependencies introduced inside an `[Obsolete]`-marked member or a `#if not CLEANxx` region. Move the logic onto the supported replacement instead.
 
-See sample: `do-not-modify-code-already-marked-obsolete.bad.al`.
+See sample: [`do-not-modify-code-already-marked-obsolete.bad.al`](do-not-modify-code-already-marked-obsolete.bad.al).

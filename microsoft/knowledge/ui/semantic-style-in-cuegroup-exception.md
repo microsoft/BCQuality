@@ -19,4 +19,4 @@ This is a narrow platform exception to `semantic-styles-need-independent-textual
 
 You may apply `Favorable`, `Unfavorable`, or `Ambiguous` to fields inside a `cuegroup` without supplying a redundant textual indicator — the platform supplies the screen-reader text. Reserve this shortcut for cue tiles only; do not extend it to other layout containers.
 
-See sample: `semantic-style-in-cuegroup-exception.good.al`.
+See sample: [`semantic-style-in-cuegroup-exception.good.al`](semantic-style-in-cuegroup-exception.good.al).

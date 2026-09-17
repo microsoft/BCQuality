@@ -17,10 +17,10 @@ A `Confirm`, `StrMenu`, modal page, or other user prompt issued from inside a wr
 
 Sequence the operation so user confirmation happens *before* any database write that takes a lock the prompt holds open. The shape is: ask the user → if confirmed, acquire locks and post. `if Confirm(...) then begin SalesHeader.LockTable(); SalesHeader.Get(DocNo); PostSalesOrder(SalesHeader); end;` keeps the lock window down to the work itself.
 
-See sample: `avoid-user-prompts-inside-transactions.good.al`.
+See sample: [`avoid-user-prompts-inside-transactions.good.al`](avoid-user-prompts-inside-transactions.good.al).
 
 ## Anti Pattern
 
 `SalesHeader.LockTable(); SalesHeader.Get(DocNo); if Confirm('Post this order?') then ...;` — the lock is held for as long as the dialog is up. A user who steps away to lunch holds the lock for an hour, and every other session that touches that row blocks for the duration.
 
-See sample: `avoid-user-prompts-inside-transactions.bad.al`.
+See sample: [`avoid-user-prompts-inside-transactions.bad.al`](avoid-user-prompts-inside-transactions.bad.al).

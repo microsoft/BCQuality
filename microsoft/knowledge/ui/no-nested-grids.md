@@ -19,4 +19,4 @@ Always flag a nested grid as a violation. The fix is to restructure the page so 
 
 Wrapping a working data-table grid inside another grid in an attempt to compose two tabular regions side by side. The outer grid silently degrades to layout-table rendering, the inner grid's headers are no longer associated with the outer structure, and editable fields with `ShowCaption = false` lose their labels.
 
-See sample: `no-nested-grids.bad.al`.
+See sample: [`no-nested-grids.bad.al`](no-nested-grids.bad.al).

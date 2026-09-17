@@ -4,10 +4,14 @@ codeunit 50217 "Privacy Sample Consent Bad"
     var
         HttpClient: HttpClient;
         Content: HttpContent;
+        Payload: JsonObject;
+        PayloadText: Text;
         Response: HttpResponseMessage;
     begin
-        Content.WriteFrom(StrSubstNo('{"email":"%1","name":"%2"}',
-            Customer."E-Mail", Customer.Name));
+        Payload.Add('email', Customer."E-Mail");
+        Payload.Add('name', Customer.Name);
+        Payload.WriteTo(PayloadText);
+        Content.WriteFrom(PayloadText);
         HttpClient.Post('https://api.externalservice.com/sync', Content, Response);
     end;
 }

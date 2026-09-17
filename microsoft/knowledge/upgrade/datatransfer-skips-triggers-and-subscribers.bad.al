@@ -7,8 +7,8 @@ codeunit 50221 "Upgrade Existing Field"
         Customer: Record Customer;
         DT: DataTransfer;
     begin
-        // "Credit Limit (LCY)" has OnValidate logic that recalculates risk fields
-        // and notifies subscribers. DataTransfer skips both — derived data drifts.
+        // DataTransfer skips the field's OnValidate logic and validation events,
+        // plus the table OnModify trigger and row-based modification events.
         DT.SetTables(Database::Customer, Database::Customer);
         DT.AddConstantValue(50000, Customer.FieldNo("Credit Limit (LCY)"));
         DT.CopyFields();

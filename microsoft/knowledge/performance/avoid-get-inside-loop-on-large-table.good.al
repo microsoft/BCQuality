@@ -1,15 +1,38 @@
-codeunit 50252 "Perf Sample NPlus1 Good"
+query 50252 "Perf Sample BOM Cost"
 {
-    procedure SumStdCost(var BOMLine: Record "BOM Component") TotalCost: Decimal
+    QueryType = Normal;
+
+    elements
+    {
+        dataitem(ProductionBOMLine; "Production BOM Line")
+        {
+            column(ProductionBOMNo; "Production BOM No.") { }
+            column(VersionCode; "Version Code") { }
+            column(QuantityPer; "Quantity per") { }
+
+            dataitem(Item; Item)
+            {
+                DataItemLink = "No." = ProductionBOMLine."No.";
+                DataItemTableFilter = "Costing Method" = const(Standard);
+                SqlJoinType = InnerJoin;
+
+                column(StandardCost; "Standard Cost") { }
+            }
+        }
+    }
+}
+
+codeunit 50254 "Perf Sample NPlus1 Good"
+{
+    procedure SumStdCost(BOMNo: Code[20]; BOMVersionCode: Code[20]) TotalCost: Decimal
     var
-        Item: Record Item;
+        BOMCost: Query "Perf Sample BOM Cost";
     begin
-        Item.SetLoadFields("Costing Method", "Standard Cost");
-        if BOMLine.FindSet() then
-            repeat
-                if Item.Get(BOMLine."No.") then
-                    if Item."Costing Method" = Item."Costing Method"::Standard then
-                        TotalCost += Item."Standard Cost" * BOMLine."Quantity per";
-            until BOMLine.Next() = 0;
+        BOMCost.SetRange(ProductionBOMNo, BOMNo);
+        BOMCost.SetRange(VersionCode, BOMVersionCode);
+        BOMCost.Open();
+        while BOMCost.Read() do
+            TotalCost += BOMCost.StandardCost * BOMCost.QuantityPer;
+        BOMCost.Close();
     end;
 }

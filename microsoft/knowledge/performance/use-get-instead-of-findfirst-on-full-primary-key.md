@@ -17,10 +17,10 @@ application-area: [all]
 
 When all primary-key fields are available at the call site, call `Get` (or `GetBySystemId`) with them. Reserve `FindFirst` for cases where the filter is on something other than the full primary key — a unique secondary field, a partial composite key, a sort that the caller cares about.
 
-See sample: `use-get-instead-of-findfirst-on-full-primary-key.good.al`.
+See sample: [`use-get-instead-of-findfirst-on-full-primary-key.good.al`](use-get-instead-of-findfirst-on-full-primary-key.good.al).
 
 ## Anti Pattern
 
 Composing `SetRange` calls that exactly cover the primary key and then calling `FindFirst`. The result is correct but the call site reads as "search the table" rather than "look up by key", which obscures both the intent and the access pattern from later reviewers.
 
-See sample: `use-get-instead-of-findfirst-on-full-primary-key.bad.al`.
+See sample: [`use-get-instead-of-findfirst-on-full-primary-key.bad.al`](use-get-instead-of-findfirst-on-full-primary-key.bad.al).

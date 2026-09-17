@@ -17,10 +17,10 @@ application-area: [all]
 
 Stage the deprecation across releases. Step 1: mark `Pending` with reason and tag; consumers are warned but data and code keep working. Step 2: in a later release, transition to `Removed` and (if persisted data references the element) ship an upgrade procedure that migrates that data — gated by an upgrade tag. The standard mechanic for retiring the actual implementation body is to remove the `#if not CLEAN<version>` block in the same release that flips the state to `Removed`.
 
-See sample: `obsolete-pending-to-removed-staging.good.al`.
+See sample: [`obsolete-pending-to-removed-staging.good.al`](obsolete-pending-to-removed-staging.good.al).
 
 ## Anti Pattern
 
 Jumping straight to `ObsoleteState = Removed` without a prior `Pending` release. Consumers have no deprecation window to migrate and any data still referencing the element is stranded. Equally wrong: leaving an element `Pending` indefinitely and never staging its removal — the deprecation never completes.
 
-See sample: `obsolete-pending-to-removed-staging.bad.al`.
+See sample: [`obsolete-pending-to-removed-staging.bad.al`](obsolete-pending-to-removed-staging.bad.al).
