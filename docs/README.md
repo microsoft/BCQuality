@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/bcq-mark.svg" alt="BCQuality mark" width="128">
+</p>
+
 # BCQuality documentation
 
 **New to BCQuality? Start with the [quick start](../README.md#quick-start).**
@@ -32,3 +36,4 @@ prerequisites for using the plugin.
 | [DO](../skills/do.md) | Action-skill format and structured output contract. |
 | [WRITE](../skills/write.md) | Knowledge-authoring rules. |
 | [Review evaluation](../evaluation/README.md) | Sample conventions, fixture preparation, and scoring. |
+| [Brand assets](brand-assets.md) | BCQ logo files and usage guidance. |
