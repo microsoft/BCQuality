@@ -52,7 +52,10 @@
       ]
     },
     "style": {
-      "article": "label-comment-explains-placeholders"
+      "articles": [
+        "label-comment-explains-placeholders",
+        "dateformula-evaluate-needs-language-independent-literals"
+      ]
     },
     "telemetry": {
       "article": "telemetry-event-id-stable-unique"
