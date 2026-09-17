@@ -73,7 +73,6 @@ the review can still discover knowledge by reading the folders.
 | Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |
 | Contribute knowledge or improve a rule | [Your first contribution](docs/contributing.md#your-first-contribution) |
 | Connect a host, agent, or CI integration | [Minimal integration example](docs/agent-consumption.md#try-a-minimal-integration) |
-| Use the BCQ logo in project materials | [Brand assets](docs/brand-assets.md) |
 
 [All documentation and technical references](docs/README.md).
 
