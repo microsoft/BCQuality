@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="docs/assets/bcq-logo.svg" alt="BCQuality logo" width="720">
+<p align="left">
+  <img src="docs/assets/bcq-logo.svg" alt="BCQuality logo" width="500">
 </p>
-
-# BCQuality
 
 Quality skills and knowledge that help AI tools make better Business Central
 development decisions: catch BC-specific defects, avoid misleading advice,
