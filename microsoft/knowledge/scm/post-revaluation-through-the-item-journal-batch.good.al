@@ -1,8 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Journal;
-using Microsoft.Inventory.Posting;
-
 codeunit 50103 "SCM Revaluation Batch Good"
 {
     procedure PostCalculatedRevaluationBatch(TemplateName: Code[10]; BatchName: Code[10])

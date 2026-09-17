@@ -1,8 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Location;
-using Microsoft.Inventory.Transfer;
-
 codeunit 50113 "SCM Transfer Posting Good"
 {
     procedure ShipTransferOrder(TransferOrderNo: Code[20])

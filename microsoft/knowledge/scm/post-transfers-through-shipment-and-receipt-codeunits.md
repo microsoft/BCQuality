@@ -15,22 +15,21 @@ A two-step transfer order preserves a continuous quantity, reservation, and cost
 
 ## Best Practice
 
-For a prepared non-direct transfer order without required warehouse documents, use `"TransferOrder-Post Shipment".Run` at shipment and `"TransferOrder-Post Receipt".Run` at receipt, passing the actual `"Transfer Header"`. Validate the intended quantities to ship/receive through the source document; do not assign posted quantity counters as preparation.
+A prepared non-direct transfer order without required warehouse documents uses `"TransferOrder-Post Shipment".Run` at shipment and `"TransferOrder-Post Receipt".Run` at receipt, with the actual `"Transfer Header"`. Validated source quantities to ship/receive prepare the operation; posted quantity counters are results of posting.
 
-When warehouse shipment or receipt is required, use the warehouse document posting workflow that invokes the transfer poster with its real source context. Retain the configured standard direct-transfer workflow for direct transfers; the two-step sample's in-transit guard is not a universal requirement.
+Required warehouse shipment or receipt enters the warehouse document posting workflow, which invokes the transfer poster with its real source context. Direct transfers have their configured standard workflow; the two-step sample's in-transit guard is not a universal requirement.
 
-Standalone item reclassification journals and bin movements are legitimate separate operations. Do not demand a fixed number of item ledger entries, or a nonzero `"Transferred-from Entry No."` on every transfer application: tracking/application splits and average-cost transfer handling differ. Require evidence that code is replacing completion of an existing transfer order, not merely moving stock through another supported process.
+Standalone item reclassification journals and bin movements are legitimate separate operations, not completion of an existing transfer order. Tracking/application splits and average-cost handling mean transfers do not have one fixed item-entry count or a nonzero `"Transferred-from Entry No."` on every application.
+
+See sample: [`post-transfers-through-shipment-and-receipt-codeunits.good.al`](post-transfers-through-shipment-and-receipt-codeunits.good.al).
 
 ## Anti Pattern
 
-Report ad-hoc item postings, independent positive/negative adjustments, manually created posted-transfer rows, or changes to source shipment/receipt counters used to stand in for transfer-order posting. Updating `"Last Shipment No."` after a bare item-journal call does not create the posted shipment, source-line progress, or transfer application lineage.
+Ad-hoc item postings, independent positive/negative adjustments, manually created posted-transfer rows, and direct shipment/receipt-counter changes cannot substitute for transfer-order posting. Updating `"Last Shipment No."` after a bare item-journal call does not create the posted shipment, source-line progress, or transfer application lineage.
 
-Do not repair this by changing an existing item ledger entry's location or inventing application links. Route the source transaction through its owning shipment/receipt or configured direct-transfer workflow. Metadata enrichment inside that workflow is not itself a posting bypass.
+Changing an existing item ledger entry's location or inventing application links does not repair that missing workflow. Metadata enrichment within the normal shipment/receipt or direct-transfer workflow is distinct from replacing the posting operation.
 
-## Samples
-
-- [`post-transfers-through-shipment-and-receipt-codeunits.bad.al`](post-transfers-through-shipment-and-receipt-codeunits.bad.al)
-- [`post-transfers-through-shipment-and-receipt-codeunits.good.al`](post-transfers-through-shipment-and-receipt-codeunits.good.al)
+See sample: [`post-transfers-through-shipment-and-receipt-codeunits.bad.al`](post-transfers-through-shipment-and-receipt-codeunits.bad.al).
 
 ## References
 

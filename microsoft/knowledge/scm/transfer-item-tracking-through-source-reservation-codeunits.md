@@ -15,22 +15,21 @@ Moving lot/serial tracking between document lines is a source-ownership operatio
 
 ## Best Practice
 
-Use the reservation codeunit for the source workflow. For the tracking portion of blanket-sales-order or quote conversion to a sales order, `"Sales Line-Reserve".TransferSaleLineToSalesLine` takes the existing source line, prepared destination line, and quantity to transfer in **base units**. It delegates the source/status and quantity movement to `"Create Reserv. Entry".TransferReservEntry`.
+Reservation codeunits provide source-specific tracking workflows. For the tracking portion of blanket-sales-order or quote conversion to a sales order, `"Sales Line-Reserve".TransferSaleLineToSalesLine` takes the existing source line, prepared destination line, and quantity to transfer in **base units**. It delegates the source/status and quantity movement to `"Create Reserv. Entry".TransferReservEntry`.
 
-The caller still owns document conversion and destination-line preparation; this method does not create a sales order. Keep item, variant, location, and source identity consistent, and use other source-specific wrappers for purchases, transfers, assembly, or production instead of reusing a sales wrapper indiscriminately.
+The caller still owns document conversion and destination-line preparation; this method does not create a sales order. The source and destination must have compatible item, variant, location, and source identity. Purchases, transfers, assembly, and production have their own source-specific wrappers rather than sharing the sales conversion contract.
 
-`"Item Tracking Management".CopyItemTracking` serves a different purpose: it creates Prospect copies, not a transfer of reservation ownership. That is valid for its intended copy workflow. Temporary Tracking Specification processing is also normal, and persisted historical tracking specifications are not forbidden; distinguish the working/historic representation from the current source booking.
+`"Item Tracking Management".CopyItemTracking` serves a different purpose: it creates Prospect copies, not a transfer of reservation ownership. That is valid for its intended copy workflow. Temporary Tracking Specification processing and persisted historical tracking specifications are also normal; the working/historic representation differs from the current source booking.
+
+See sample: [`transfer-item-tracking-through-source-reservation-codeunits.good.al`](transfer-item-tracking-through-source-reservation-codeunits.good.al).
 
 ## Anti Pattern
 
-Report direct rewrites of persistent `"Reservation Entry"` source type/subtype, ID, reference number, or quantities to implement source-line conversion or a partial tracking transfer. Changing only `"Quantity (Base)"` and source keys can drop the remainder or leave the other tracking/reservation quantities attached to the wrong source.
+Direct rewrites of persistent `"Reservation Entry"` source type/subtype, ID, reference number, or quantities do not perform the source-line conversion or partial tracking-transfer workflow. Changing only `"Quantity (Base)"` and source keys can drop the remainder or leave the other tracking/reservation quantities attached to the wrong source.
 
-Also report use of a tracking copy as a replacement for moving an existing binding reservation when that intent is explicit. Do not flag a legitimate Prospect copy, temporary tracking buffer, historical tracking read, or source-specific engine call merely because it uses these tables.
+A tracking copy cannot replace movement of an existing binding reservation. Legitimate Prospect copying, temporary tracking buffers, historical tracking reads, and source-specific engine calls serve distinct purposes and are not independent reservation transfers.
 
-## Samples
-
-- [`transfer-item-tracking-through-source-reservation-codeunits.bad.al`](transfer-item-tracking-through-source-reservation-codeunits.bad.al)
-- [`transfer-item-tracking-through-source-reservation-codeunits.good.al`](transfer-item-tracking-through-source-reservation-codeunits.good.al)
+See sample: [`transfer-item-tracking-through-source-reservation-codeunits.bad.al`](transfer-item-tracking-through-source-reservation-codeunits.bad.al).
 
 ## References
 

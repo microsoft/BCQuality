@@ -15,24 +15,23 @@ A requisition/planning line is a pending change to a supply/demand network, not 
 
 ## Best Practice
 
-For requisition batch carry-out, initialize `"Req. Wksh.-Make Order"` with `Set` and invoke `CarryOutBatchAction` on the intended accepted lines. Supply the order/posting/receipt defaults separately from the ending-order-date cutoff, and preserve the selected worksheet/batch/line filters. A plain `Run` or a single order-line insertion helper is not a replacement for this batch initialization and finalization.
+Requisition batch carry-out initializes `"Req. Wksh.-Make Order"` with `Set` and invokes `CarryOutBatchAction` on the intended accepted lines. Order/posting/receipt defaults are separate from the ending-order-date cutoff, and worksheet/batch/line filters define the selection. A plain `Run` or a single order-line insertion helper is not a replacement for this batch initialization and finalization.
 
-Use the standard `"Carry Out Action"` dispatch for broader planning output and its configured purchase, transfer, assembly, or manufacturing choices. Do not turn every action into a new purchase order, bypass source-specific reservation transfer, or delete proposals before the owning workflow has completed their supply change.
+The standard `"Carry Out Action"` dispatch handles broader planning output and its configured purchase, transfer, assembly, or manufacturing choices. Each action's supply change and source-specific reservation transfer precede proposal finalization; not every action creates a new purchase order.
 
 Ordinary manual purchase creation that does not consume planning output is outside this rule. Users may reject or delete unwanted proposals without creating supply; temporary planning simulations, pre-carry-out enrichment, and engine-owned cleanup are also legitimate. `Delete(true)` on a requisition line is not intrinsically a defect.
 
 The samples select an existing accepted New/Purchase item proposal with sales-demand context. Dates are explicit, the source selection remains bounded, and the clean sample leaves order creation and reservation handoff to the standard workflow; it is not a complete planning-run generator.
 
+See sample: [`carry-out-requisition-actions-through-the-standard-workflow.good.al`](carry-out-requisition-actions-through-the-standard-workflow.good.al).
+
 ## Anti Pattern
 
-Report code that consumes accepted persistent `"Requisition Line"` action messages, manually creates or changes supply from a subset of fields, and then deletes or marks the proposal handled without the standard carry-out/source-reservation handoff. Running purchase-field validation and the requisition delete trigger does not first move the proposal's demand links to the new purchase line.
+Manually creating or changing supply from a subset of an accepted persistent `"Requisition Line"`, then deleting or marking that proposal handled, skips the standard carry-out/source-reservation handoff. Purchase-field validation and the requisition delete trigger do not first move the proposal's demand links to the new purchase line.
 
-Require both proposal-consumption intent and a visible supply conversion. Do not flag an isolated deletion of an unwanted suggestion, an ordinary purchase-order API, or the standard carry-out engine's own insert/delete sequence.
+Deleting an unwanted suggestion or creating an ordinary purchase order without consuming planning output is a separate operation. The standard carry-out engine's own insert/delete sequence participates in the source handoff rather than replacing it.
 
-## Samples
-
-- [`carry-out-requisition-actions-through-the-standard-workflow.bad.al`](carry-out-requisition-actions-through-the-standard-workflow.bad.al)
-- [`carry-out-requisition-actions-through-the-standard-workflow.good.al`](carry-out-requisition-actions-through-the-standard-workflow.good.al)
+See sample: [`carry-out-requisition-actions-through-the-standard-workflow.bad.al`](carry-out-requisition-actions-through-the-standard-workflow.bad.al).
 
 ## References
 

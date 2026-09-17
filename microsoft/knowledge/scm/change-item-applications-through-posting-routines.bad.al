@@ -1,7 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Ledger;
-
 codeunit 50104 "SCM Item Application Bad"
 {
     procedure ChangeSalesQuantityApplication(ApplicationEntryNo: Integer; NewInboundEntryNo: Integer)

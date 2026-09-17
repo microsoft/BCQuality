@@ -1,7 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Sales.Document;
-
 codeunit 50109 "SCM Tracking Transfer Good"
 {
     procedure TransferBlanketOrderTracking(var SourceBlanketOrderLine: Record "Sales Line"; var DestinationSalesOrderLine: Record "Sales Line"; QuantityBaseToTransfer: Decimal)

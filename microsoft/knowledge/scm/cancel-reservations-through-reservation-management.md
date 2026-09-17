@@ -15,22 +15,21 @@ Persistent `"Reservation Entry"` rows are not disposable allocation markers. Res
 
 ## Best Practice
 
-For explicit cancellation of an existing binding reservation, use `"Reservation Engine Mgt.".CancelReservation`. It checks the reservation status and `"Disallow Cancellation"`, handles the counterpart, and preserves or retracks the remaining source quantities as appropriate. For source-line quantity changes, use the source-specific reservation management path rather than deleting its reservation rows yourself.
+Explicit cancellation of an existing binding reservation uses `"Reservation Engine Mgt.".CancelReservation`. It checks the reservation status and `"Disallow Cancellation"`, handles the counterpart, and preserves or retracks the remaining source quantities as appropriate. Source-line quantity changes have their own source-specific reservation management path.
 
-Do not require every Reservation Entry to have a partner or identical lot/serial values on both sides: Surplus/Prospect entries and supported late-binding scenarios need different treatment. Temporary buffers, engine-owned updates, and supported publisher metadata are not independent cancellation. Cancelling a reservation is also different from intentionally removing an item-tracking assignment.
+Not every Reservation Entry has a partner or identical lot/serial values on both sides: Surplus/Prospect entries and supported late-binding scenarios have different relationships. Temporary buffers, engine-owned updates, and supported publisher metadata are not independent cancellation. Cancelling a reservation is also different from intentionally removing an item-tracking assignment.
 
 The samples retrieve the negative side of a persistent sales-line reservation and cancel only the binding. They do not delete the sales line or remove its tracking specifications.
 
+See sample: [`cancel-reservations-through-reservation-management.good.al`](cancel-reservations-through-reservation-management.good.al).
+
 ## Anti Pattern
 
-Report `Delete(true)`, `DeleteAll`, or a status/source rewrite on persistent `"Reservation Entry"` records used as a replacement for cancelling a reservation. Deleting both sides is not a sufficient repair: it can still discard tracking that should survive and omit retracking.
+`Delete(true)`, `DeleteAll`, or a status/source rewrite on persistent `"Reservation Entry"` records does not perform binding-reservation cancellation. Even deleting both sides can discard tracking that should survive and omit retracking.
 
-Require cancellation intent and a binding reservation in the visible context. Do not flag normal processing of temporary Prospect/Surplus buffers or diagnose every single row as an orphan.
+Normal processing of temporary Prospect/Surplus buffers is outside that cancellation workflow, and an unpaired row is not intrinsically an orphan.
 
-## Samples
-
-- [`cancel-reservations-through-reservation-management.bad.al`](cancel-reservations-through-reservation-management.bad.al)
-- [`cancel-reservations-through-reservation-management.good.al`](cancel-reservations-through-reservation-management.good.al)
+See sample: [`cancel-reservations-through-reservation-management.bad.al`](cancel-reservations-through-reservation-management.bad.al).
 
 ## References
 

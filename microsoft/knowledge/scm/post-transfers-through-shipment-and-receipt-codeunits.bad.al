@@ -1,10 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Journal;
-using Microsoft.Inventory.Location;
-using Microsoft.Inventory.Posting;
-using Microsoft.Inventory.Transfer;
-
 codeunit 50112 "SCM Transfer Posting Bad"
 {
     procedure ShipTransferOrder(TransferOrderNo: Code[20]; var ItemJournalLine: Record "Item Journal Line")

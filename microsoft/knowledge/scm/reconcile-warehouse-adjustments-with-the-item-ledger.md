@@ -15,24 +15,23 @@ At a Directed Put-away and Pick location, registering an ordinary warehouse quan
 
 ## Best Practice
 
-After the warehouse adjustment has been registered, run `"Calculate Whse. Adjustment"` for the intended item/location and prepared item-journal batch, then post the generated lines through `"Item Jnl.-Post Batch"`. The calculation derives the reconciliation by location, variant, units of measure, and tracking, marks the lines `"Warehouse Adjustment"`, and accounts for already prepared unposted adjustments.
+After warehouse registration, `"Calculate Whse. Adjustment"` prepares item-journal lines for the intended item/location and batch; `"Item Jnl.-Post Batch"` posts those lines. The calculation derives the reconciliation by location, variant, units of measure, and tracking, marks the lines `"Warehouse Adjustment"`, and accounts for already prepared unposted adjustments.
 
-Keep reconciliation separate from source-document posting: warehouse receipts/shipments use their document workflows. Intentional warehouse-only staging is valid when a separately owned reconciliation step completes the process; do not flag the registration call just because that later job is outside the diff.
+Reconciliation is separate from source-document posting: warehouse receipts/shipments use their document workflows. Intentional warehouse-only staging is valid when a separately owned reconciliation step completes the process; registration need not perform both phases in one call.
 
-Do not generalize this rule to every warehouse operation. Bin movements need not change total inventory, and warehouse tracking/expiration reclassification has a standard batch path that can also post item-journal entries. Standard reclassification and basic-location item adjustments are not this ordinary advanced-warehouse quantity-adjustment case.
+Bin movements need not change total inventory, and warehouse tracking/expiration reclassification has a standard batch path that can also post item-journal entries. Standard reclassification and basic-location item adjustments are not this ordinary advanced-warehouse quantity-adjustment case.
 
 The samples start after warehouse quantity registration and report whether inventory reconciliation completed. The clean sample calculates and posts into an empty dedicated batch; it is not a complete warehouse physical-count workflow.
 
+See sample: [`reconcile-warehouse-adjustments-with-the-item-ledger.good.al`](reconcile-warehouse-adjustments-with-the-item-ledger.good.al).
+
 ## Anti Pattern
 
-Report a workflow that claims to reconcile a registered advanced-warehouse quantity adjustment by posting a manually mirrored ordinary item-journal line, or that marks reconciliation complete after only warehouse registration or adjustment calculation. Calculation prepares journal lines; it does not post those lines. Require explicit synchronization intent and location/workflow evidence.
+A manually mirrored ordinary item-journal line does not reconcile a registered advanced-warehouse quantity adjustment. Likewise, a reconciliation function that returns completion after only registration or adjustment calculation leaves any generated adjustment lines unposted. Calculation prepares journal lines; it does not post them.
 
-Do not repair the defect by inventing positive/negative quantities or flipping `"Warehouse Adjustment"` on an arbitrary line. Use the calculation step so the adjustment-bin balance and the actual tracked quantities drive inventory reconciliation.
+Invented positive/negative quantities or flipping `"Warehouse Adjustment"` on an arbitrary line does not establish the required relationship to the adjustment-bin balance and tracked quantities. That relationship comes from the calculation step.
 
-## Samples
-
-- [`reconcile-warehouse-adjustments-with-the-item-ledger.bad.al`](reconcile-warehouse-adjustments-with-the-item-ledger.bad.al)
-- [`reconcile-warehouse-adjustments-with-the-item-ledger.good.al`](reconcile-warehouse-adjustments-with-the-item-ledger.good.al)
+See sample: [`reconcile-warehouse-adjustments-with-the-item-ledger.bad.al`](reconcile-warehouse-adjustments-with-the-item-ledger.bad.al).
 
 ## References
 

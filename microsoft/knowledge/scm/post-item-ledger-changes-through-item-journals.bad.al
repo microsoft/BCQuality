@@ -1,8 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Journal;
-using Microsoft.Inventory.Ledger;
-
 codeunit 50100 "SCM Stock Adjustment Bad"
 {
     procedure PostPreparedPositiveAdjustment(ItemJournalLine: Record "Item Journal Line"; NewEntryNo: Integer)

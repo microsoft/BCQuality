@@ -1,8 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Journal;
-using Microsoft.Inventory.Posting;
-
 codeunit 50101 "SCM Stock Adjustment Good"
 {
     procedure PostPreparedPositiveAdjustment(var ItemJournalLine: Record "Item Journal Line")

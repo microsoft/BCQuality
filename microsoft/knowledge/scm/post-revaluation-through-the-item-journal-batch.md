@@ -15,22 +15,21 @@ A calculated revaluation line with nonblank `"Inventory Value Per"` represents a
 
 ## Best Practice
 
-Post a prepared revaluation batch through `"Item Jnl.-Post Batch"`. Keep the calculated line's valuation date, aggregation scope, location/variant filters, and revaluation fields intact. The batch expands summarized values into per-entry postings and checks that the eligible inventory has not changed; for partial revaluation it also rechecks remaining quantity before posting.
+Posting a prepared revaluation batch through `"Item Jnl.-Post Batch"` preserves the calculated line's valuation date, aggregation scope, location/variant filters, and revaluation fields. The batch expands summarized values into per-entry postings and checks that the eligible inventory has not changed; for partial revaluation it also rechecks remaining quantity before posting.
 
-Do not treat the public `"Item Jnl.-Post Line".RunWithCheck` API as a replacement for that orchestration. It remains legitimate for finalized individual-entry revaluation lines within a workflow that already supplies the necessary checks; the batch itself uses the line poster. A call to that API without evidence of summarized or partial revaluation is not this defect.
+The public `"Item Jnl.-Post Line".RunWithCheck` API does not replace that orchestration. It remains legitimate for finalized individual-entry revaluation lines within a workflow that already supplies the necessary checks; the batch itself uses the line poster. Ordinary quantity journals and finalized per-entry revaluations are distinct from this summarized/partial-revaluation case.
 
 The samples explicitly require `"Value Entry Type" = Revaluation` and a nonblank `"Inventory Value Per"` in an existing calculated journal batch. They demonstrate posting, not how to calculate a new valuation or choose a standard cost.
 
+See sample: [`post-revaluation-through-the-item-journal-batch.good.al`](post-revaluation-through-the-item-journal-batch.good.al).
+
 ## Anti Pattern
 
-Report a loop that sends calculated aggregate revaluation lines straight to `"Item Jnl.-Post Line"`, or a custom partial-revaluation workflow that bypasses the remaining-quantity recheck visible in the standard batch. A loop over the journal is not equivalent to distributing the aggregate over its underlying item entries.
+A loop that sends calculated aggregate revaluation lines straight to `"Item Jnl.-Post Line"` skips distribution over the underlying item entries. A partial-revaluation workflow without the remaining-quantity recheck can post a valuation against inventory that no longer matches the calculation.
 
-Do not recommend directly editing existing `"Value Entry"` cost amounts or the Item's unit cost to repair the result. Use the revaluation/cost-adjustment workflow appropriate to the correction.
+Directly editing existing `"Value Entry"` cost amounts or the Item's unit cost does not repair those allocation and adjustment relationships. Their correction belongs to the revaluation/cost-adjustment workflow.
 
-## Samples
-
-- [`post-revaluation-through-the-item-journal-batch.bad.al`](post-revaluation-through-the-item-journal-batch.bad.al)
-- [`post-revaluation-through-the-item-journal-batch.good.al`](post-revaluation-through-the-item-journal-batch.good.al)
+See sample: [`post-revaluation-through-the-item-journal-batch.bad.al`](post-revaluation-through-the-item-journal-batch.bad.al).
 
 ## References
 

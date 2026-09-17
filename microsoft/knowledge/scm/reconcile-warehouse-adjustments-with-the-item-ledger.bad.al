@@ -1,10 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Item;
-using Microsoft.Inventory.Journal;
-using Microsoft.Inventory.Location;
-using Microsoft.Warehouse.Journal;
-
 codeunit 50110 "SCM Warehouse Adjustment Bad"
 {
     procedure ReconcileRegisteredWarehouseAdjustment(ItemNo: Code[20]; LocationCode: Code[10]; TemplateName: Code[10]; BatchName: Code[10]; PostingDate: Date; DocumentNo: Code[20]): Boolean

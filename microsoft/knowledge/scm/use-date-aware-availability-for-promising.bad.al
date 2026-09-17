@@ -1,7 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Item;
-
 codeunit 50114 "SCM Additional Promise Bad"
 {
     procedure CanPromiseAdditionalDemand(ItemNo: Code[20]; LocationCode: Code[10]; VariantCode: Code[10]; ShipmentDate: Date; RequestedAdditionalQuantityBase: Decimal; LookaheadDateFormula: DateFormula): Boolean

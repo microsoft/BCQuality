@@ -1,9 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Requisition;
-using Microsoft.Purchases.Document;
-using Microsoft.Sales.Document;
-
 codeunit 50117 "SCM Requisition Action Good"
 {
     procedure CarryOutAcceptedNewPurchase(TemplateName: Code[10]; BatchName: Code[10]; LineNo: Integer; OrderDate: Date; PostingDate: Date; ReceiptDate: Date; CutoffDate: Date)

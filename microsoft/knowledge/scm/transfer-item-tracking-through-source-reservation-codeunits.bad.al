@@ -1,8 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Tracking;
-using Microsoft.Sales.Document;
-
 codeunit 50108 "SCM Tracking Transfer Bad"
 {
     procedure TransferBlanketOrderTracking(var SourceBlanketOrderLine: Record "Sales Line"; var DestinationSalesOrderLine: Record "Sales Line"; QuantityBaseToTransfer: Decimal)

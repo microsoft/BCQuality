@@ -1,8 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Tracking;
-using Microsoft.Sales.Document;
-
 codeunit 50106 "SCM Cancel Reservation Bad"
 {
     procedure CancelSalesReservation(ReservationEntryNo: Integer)

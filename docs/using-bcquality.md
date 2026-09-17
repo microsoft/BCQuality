@@ -194,8 +194,8 @@ Available knowledge is **not** a promise that every rule will run. Selection
 depends on the task, target context, enabled layers, and source evidence.
 A whole-folder review is a current-state snapshot: detecting a published API
 removal or another comparison-only regression requires an actual baseline.
-The corpus combines technical AL guidance with a focused SCM functional
-domain, not exhaustive functional validation or AppSource certification.
+The corpus combines technical AL guidance with targeted functional-domain
+invariants, not exhaustive functional validation or AppSource certification.
 
 The SCM leaf owns selected inventory/value, application, reservation, tracking,
 and warehouse/posting invariants. It prunes unrelated AL using the actual
@@ -204,6 +204,12 @@ tables, codeunits, fields, and operations in scope; an item caption or a broad
 must not be replaced with an assumed posting defect. Manufacturing, assembly,
 planning, and other supply-chain areas are covered only where an article
 explicitly names the shared interface or invariant.
+
+SCM owns Item/Value/Capacity/Warehouse and inventory-application posting
+records. Pure G/L, customer/vendor/detailed/VAT and financial-only posting
+mutations belong to Finance, even when that domain is not enabled. Equivalent
+findings for one inventory-originated posting bypass have one SCM primary
+owner; distinct independent financial defects remain separate.
 
 BCQuality intentionally does not duplicate mechanical diagnostics already
 enforced by the AL compiler or standard analyzers. Run the consuming app's

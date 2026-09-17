@@ -1,8 +1,3 @@
-namespace BCQuality.SCM.Samples;
-
-using Microsoft.Inventory.Ledger;
-using Microsoft.Inventory.Posting;
-
 codeunit 50105 "SCM Item Application Good"
 {
     procedure ChangeSalesQuantityApplication(ApplicationEntryNo: Integer; NewInboundEntryNo: Integer)

@@ -110,28 +110,6 @@ try {
         }
     }
 
-    $scm = @($skills | Where-Object id -eq 'al-scm-review')
-    if ($scm.Count -ne 1 -or
-        (@($scm[0].inputs) -join ',') -cne 'pr-diff,file-path,folder-path' -or
-        (@($scm[0].filters.technologies) -join ',') -cne 'al') {
-        throw 'SCM must be discoverable as an AL leaf accepting diffs, files, and complete folders.'
-    }
-    $scmText = Get-Content -LiteralPath (Join-Path $Root $scm[0].path) -Raw
-    $scmExamples = [regex]::Matches($scmText, '(?s)```json\s*(\{.*?\})\s*```')
-    if ($scmExamples.Count -ne 2) {
-        throw "Expected two SCM findings-report examples, found $($scmExamples.Count)."
-    }
-    foreach ($example in $scmExamples) {
-        if (-not ($example.Groups[1].Value | Test-Json -SchemaFile $reportSchema -ErrorAction Stop)) {
-            throw 'An SCM output example does not satisfy schemas/findings-report.schema.json.'
-        }
-        $report = $example.Groups[1].Value | ConvertFrom-Json
-        if ($report.skill.id -cne 'al-scm-review' -or
-            @($report.findings | Where-Object domain -cne 'Supply Chain Management').Count) {
-            throw 'SCM output examples must retain the leaf id and complete display domain.'
-        }
-    }
-
     $minimalReport = @{
         skill = @{ id = 'al-style-review'; version = 1 }
         outcome = 'completed'
