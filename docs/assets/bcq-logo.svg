@@ -22,5 +22,5 @@
     <path d="m415 400 115 115h100L465 350Z" fill="url(#teal)"/>
     <path d="m285 270 115 115 250-250V35L400 285l-65-65Z" fill="url(#teal)"/>
   </g>
-  <text x="455" y="262" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="142" font-weight="700" letter-spacing="-6"><tspan fill="#086194">BC</tspan><tspan fill="#138EB7">Quality</tspan></text>
+  <text x="455" y="268" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="160" font-weight="700" letter-spacing="-6"><tspan fill="#086194">BC</tspan><tspan fill="#138EB7">Quality</tspan></text>
 </svg>
