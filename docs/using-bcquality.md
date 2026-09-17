@@ -85,6 +85,7 @@ branch names with ones in your project.
 | Uncommitted changes | Use the installed al-code-review skill to review my staged and unstaged tracked changes against HEAD, without changing files. Identify any untracked AL files not included in that diff. |
 | Branch changes | Use the installed al-code-review skill to review changes on this branch since its merge base with `origin/main`. Exclude uncommitted changes and do not edit files. |
 | Focused review | Use the installed al-code-review skill to review performance in the app in this folder, without changing files. Return the complete performance findings report. |
+| Supply chain code | Use the installed al-code-review skill to review SCM posting, inventory, reservations, item tracking, and warehouse workflows in this app folder, without changing files. Return the complete Supply Chain Management findings report. |
 | Agent SDK code | Use the installed al-code-review skill to review Agent SDK implementation and usage in this app folder, without changing files. Return the complete Agents findings report. |
 
 For Git comparisons, the named base ref must exist locally. If it is missing,
@@ -183,7 +184,7 @@ using your normal compilation, analyzer, test, and human-review workflow.
 
 ## Coverage and limits
 
-The Microsoft broad review composes the 17 Microsoft domains listed below.
+The Microsoft broad review composes the Microsoft domains listed below.
 The Community Agents review is a separate skill selected by the request, not
 a nested part of that coordinator. All current review leaves accept app
 folders, files, and diffs; request an Agent SDK review explicitly when that
@@ -193,8 +194,16 @@ Available knowledge is **not** a promise that every rule will run. Selection
 depends on the task, target context, enabled layers, and source evidence.
 A whole-folder review is a current-state snapshot: detecting a published API
 removal or another comparison-only regression requires an actual baseline.
-The corpus is technical AL guidance, not exhaustive functional validation or
-AppSource certification.
+The corpus combines technical AL guidance with a focused SCM functional
+domain, not exhaustive functional validation or AppSource certification.
+
+The SCM leaf owns selected inventory/value, application, reservation, tracking,
+and warehouse/posting invariants. It prunes unrelated AL using the actual
+tables, codeunits, fields, and operations in scope; an item caption or a broad
+`ApplicationArea` alone is not an SCM review signal. Missing workflow context
+must not be replaced with an assumed posting defect. Manufacturing, assembly,
+planning, and other supply-chain areas are covered only where an article
+explicitly names the shared interface or invariant.
 
 BCQuality intentionally does not duplicate mechanical diagnostics already
 enforced by the AL compiler or standard analyzers. Run the consuming app's
@@ -222,6 +231,7 @@ Each article describes one concern. Where samples exist, use its linked
 | Reporting | [Reporting](../microsoft/knowledge/reporting/) |
 | Security | [Security](../microsoft/knowledge/security/) |
 | Style | [Style](../microsoft/knowledge/style/) |
+| Supply Chain Management | [SCM](../microsoft/knowledge/scm/) |
 | Telemetry | [Telemetry](../microsoft/knowledge/telemetry/) |
 | Testing | [Testing](../microsoft/knowledge/testing/) |
 | User interface | [UI](../microsoft/knowledge/ui/) |

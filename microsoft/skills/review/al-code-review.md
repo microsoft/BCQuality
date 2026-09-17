@@ -28,6 +28,7 @@ sub-skills:
   - microsoft/skills/review/al-reporting-review.md
   - microsoft/skills/review/al-appsource-review.md
   - microsoft/skills/review/al-telemetry-review.md
+  - microsoft/skills/review/al-scm-review.md
 ---
 
 # AL code review

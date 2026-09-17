@@ -1,0 +1,42 @@
+---
+bc-version: [all]
+domain: scm
+keywords: [reservation-entry, tracking-specification, sales-line-reserve, transfersalelinetosalesline, transferreserventry, copyitemtracking, quantity-base]
+technologies: [al]
+countries: [w1]
+application-area: [all]
+---
+
+# Transfer item tracking through source reservation codeunits
+
+## Description
+
+Moving lot/serial tracking between document lines is a source-ownership operation, not a copy of visible tracking fields. Partial movement must retain the old source's remainder, destination units of measure, quantities to handle/invoice, status, sign, and any reservation counterpart. Repointing a `"Reservation Entry"` loses this coordination; inserting a `"Tracking Specification"` row alone does not book the destination's source tracking.
+
+## Best Practice
+
+Use the reservation codeunit for the source workflow. For the tracking portion of blanket-sales-order or quote conversion to a sales order, `"Sales Line-Reserve".TransferSaleLineToSalesLine` takes the existing source line, prepared destination line, and quantity to transfer in **base units**. It delegates the source/status and quantity movement to `"Create Reserv. Entry".TransferReservEntry`.
+
+The caller still owns document conversion and destination-line preparation; this method does not create a sales order. Keep item, variant, location, and source identity consistent, and use other source-specific wrappers for purchases, transfers, assembly, or production instead of reusing a sales wrapper indiscriminately.
+
+`"Item Tracking Management".CopyItemTracking` serves a different purpose: it creates Prospect copies, not a transfer of reservation ownership. That is valid for its intended copy workflow. Temporary Tracking Specification processing is also normal, and persisted historical tracking specifications are not forbidden; distinguish the working/historic representation from the current source booking.
+
+## Anti Pattern
+
+Report direct rewrites of persistent `"Reservation Entry"` source type/subtype, ID, reference number, or quantities to implement source-line conversion or a partial tracking transfer. Changing only `"Quantity (Base)"` and source keys can drop the remainder or leave the other tracking/reservation quantities attached to the wrong source.
+
+Also report use of a tracking copy as a replacement for moving an existing binding reservation when that intent is explicit. Do not flag a legitimate Prospect copy, temporary tracking buffer, historical tracking read, or source-specific engine call merely because it uses these tables.
+
+## Samples
+
+- [`transfer-item-tracking-through-source-reservation-codeunits.bad.al`](transfer-item-tracking-through-source-reservation-codeunits.bad.al)
+- [`transfer-item-tracking-through-source-reservation-codeunits.good.al`](transfer-item-tracking-through-source-reservation-codeunits.good.al)
+
+## References
+
+- [Item Tracking Lines window design](https://learn.microsoft.com/en-us/dynamics365/business-central/design-details-item-tracking-lines-window)
+- [Active versus historic item-tracking entries](https://learn.microsoft.com/en-us/dynamics365/business-central/design-details-active-versus-historic-item-tracking-entries)
+- [Item tracking and reservations](https://learn.microsoft.com/en-us/dynamics365/business-central/design-details-item-tracking-and-reservations)
+- [BaseApp sales tracking transfer](https://github.com/microsoft/BCApps/blob/8f7a04cb0db8aa96cb97e055c45c61aead49e280/src/Layers/W1/BaseApp/Sales/Document/SalesLineReserve.Codeunit.al#L532-L578)
+- [Base-unit conversion caller](https://github.com/microsoft/BCApps/blob/8f7a04cb0db8aa96cb97e055c45c61aead49e280/src/Layers/W1/BaseApp/Sales/Document/BlanketSalesOrdertoOrder.Codeunit.al#L195-L198)
+- [Prospect-copy API](https://github.com/microsoft/BCApps/blob/8f7a04cb0db8aa96cb97e055c45c61aead49e280/src/Layers/W1/BaseApp/Inventory/Tracking/ItemTrackingManagement.Codeunit.al#L575-L657)

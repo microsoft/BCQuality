@@ -93,19 +93,42 @@ try {
         'microsoft/skills/review/al-query-review.md',
         'microsoft/skills/review/al-reporting-review.md',
         'microsoft/skills/review/al-appsource-review.md',
-        'microsoft/skills/review/al-telemetry-review.md'
+        'microsoft/skills/review/al-telemetry-review.md',
+        'microsoft/skills/review/al-scm-review.md'
     )
     $review = @($skills | Where-Object id -eq 'al-code-review')
     if ($review.Count -ne 1) {
         throw "Expected exactly one al-code-review record, found $($review.Count)."
     }
     if ((@($review[0].subSkills) -join "`n") -cne ($expectedLeaves -join "`n")) {
-        throw 'al-code-review subSkills did not preserve the declared 17-leaf order.'
+        throw "al-code-review subSkills did not preserve the declared $($expectedLeaves.Count)-leaf order."
     }
     foreach ($leafPath in $expectedLeaves) {
         $leaf = @($skills | Where-Object path -ceq $leafPath)
         if ($leaf.Count -ne 1 -or @($leaf[0].subSkills).Count -ne 0) {
             throw "Expected '$leafPath' to resolve to exactly one leaf action skill."
+        }
+    }
+
+    $scm = @($skills | Where-Object id -eq 'al-scm-review')
+    if ($scm.Count -ne 1 -or
+        (@($scm[0].inputs) -join ',') -cne 'pr-diff,file-path,folder-path' -or
+        (@($scm[0].filters.technologies) -join ',') -cne 'al') {
+        throw 'SCM must be discoverable as an AL leaf accepting diffs, files, and complete folders.'
+    }
+    $scmText = Get-Content -LiteralPath (Join-Path $Root $scm[0].path) -Raw
+    $scmExamples = [regex]::Matches($scmText, '(?s)```json\s*(\{.*?\})\s*```')
+    if ($scmExamples.Count -ne 2) {
+        throw "Expected two SCM findings-report examples, found $($scmExamples.Count)."
+    }
+    foreach ($example in $scmExamples) {
+        if (-not ($example.Groups[1].Value | Test-Json -SchemaFile $reportSchema -ErrorAction Stop)) {
+            throw 'An SCM output example does not satisfy schemas/findings-report.schema.json.'
+        }
+        $report = $example.Groups[1].Value | ConvertFrom-Json
+        if ($report.skill.id -cne 'al-scm-review' -or
+            @($report.findings | Where-Object domain -cne 'Supply Chain Management').Count) {
+            throw 'SCM output examples must retain the leaf id and complete display domain.'
         }
     }
 
@@ -238,4 +261,4 @@ finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Write-Output 'Skill-index check PASSED: deterministic, schema-valid, and all 17 review leaves preserved in order.'
+Write-Output "Skill-index check PASSED: deterministic, schema-valid, and all $($expectedLeaves.Count) review leaves preserved in order."
