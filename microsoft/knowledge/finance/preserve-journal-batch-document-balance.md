@@ -4,7 +4,7 @@ domain: finance
 keywords: [force-doc-balance, gen-journal-template, gen-jnl-post-batch, runwithcheck, document-no, posting-date, balancing]
 technologies: [al]
 countries: [w1]
-application-area: [finance]
+application-area: [all]
 ---
 
 # Preserve the journal batch's document-balancing policy

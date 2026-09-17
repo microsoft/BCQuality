@@ -4,7 +4,7 @@ domain: finance
 keywords: [reversetransaction, reverseregister, transaction-no, entry-no, reversal-entry, g-l-register]
 technologies: [al]
 countries: [w1]
-application-area: [finance]
+application-area: [all]
 ---
 
 # Pass the transaction number, not a ledger-entry number, to ReverseTransaction

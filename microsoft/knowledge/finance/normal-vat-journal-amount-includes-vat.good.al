@@ -35,13 +35,11 @@ codeunit 50108 "Import Purchase Journal Total"
         JournalLine.TestField("VAT Calculation Type", JournalLine."VAT Calculation Type"::"Normal VAT");
         JournalLine.TestField("VAT %", 25);
         JournalLine.TestField("VAT Difference", 0);
-        JournalLine.TestField("Non-Deductible VAT %", 0);
         JournalLine.TestField("Bal. Gen. Posting Type", JournalLine."Bal. Gen. Posting Type"::" ");
         JournalLine.TestField("Bal. VAT %", 0);
         VATPostingSetup.Get(JournalLine."VAT Bus. Posting Group", JournalLine."VAT Prod. Posting Group");
         VATPostingSetup.TestField("VAT Calculation Type", VATPostingSetup."VAT Calculation Type"::"Normal VAT");
         VATPostingSetup.TestField("VAT %", 25);
-        VATPostingSetup.TestField("Non-Deductible VAT %", 0);
         VATPostingSetup.TestField("Unrealized VAT Type", VATPostingSetup."Unrealized VAT Type"::" ");
         GeneralLedgerSetup.Get();
         GeneralLedgerSetup.TestField("Additional Reporting Currency", '');

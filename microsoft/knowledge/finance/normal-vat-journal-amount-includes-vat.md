@@ -4,20 +4,22 @@ domain: finance
 keywords: [normal-vat, automatic-vat-entry, gross-amount, net-amount, vat-posting-setup, gen-journal-line, purchase]
 technologies: [al]
 countries: [w1]
-application-area: [finance]
+application-area: [all]
 ---
 
 # Supply a VAT-inclusive journal Amount for automatic Normal VAT
 
 ## Description
 
-For a general-journal line using **Automatic VAT Entry** and **Normal VAT**, `Amount` includes VAT. The posting engine extracts tax from that total; it does not add tax to a VAT-exclusive expense imported into `Amount`. For an LCY purchase of net 100 plus 25 VAT, entering 100 produces an 80 expense and 20 VAT, rather than the intended 100 expense and 25 VAT from a total of 125.
+For a general-journal line using **Automatic VAT Entry** and **Normal VAT**, `Amount` includes VAT. The posting engine extracts tax from that total; it does not add tax to a VAT-exclusive expense imported into `Amount`. An LCY invoice with net 100 and VAT 25 therefore needs a journal total of 125, not 100.
 
 ## Best Practice
 
 Map the source's VAT-inclusive total to journal `Amount` in this posting mode. Establish the intended account and posting-group combination before validating the final amount. Account-derived VAT defaults depend on `Copy VAT Setup to Jnl. Lines`; do not assume account selection always supplies the intended configuration.
 
-Require the actual input contract and calculation mode, not just a variable named `NetAmount`. The examples encode source net, VAT, and gross values plus a 25% Normal-VAT setup check. They target an LCY G/L purchase with 0.01 amount rounding and without balancing-side VAT, additional reporting currency, VAT differences, unrealized VAT, or non-deductible VAT. Other calculation types, Manual VAT Entry, reverse charge, Full VAT, sales/use tax, non-deductible or unrealized tax, and other currency/rounding contexts need their own analysis; this is not a universal gross-up formula or country-specific tax advice.
+Require the actual input contract and calculation mode, not just a variable named `NetAmount`. The examples encode source net, VAT, and gross values plus a 25% Normal-VAT setup check. They target an LCY G/L purchase with 0.01 amount rounding and without balancing-side VAT, additional reporting currency, VAT differences, or unrealized VAT. Other calculation types, Manual VAT Entry, reverse charge, Full VAT, sales/use tax, unrealized tax, and other currency/rounding contexts need their own analysis; this is not a universal gross-up formula or country-specific tax advice.
+
+The concern is the supplied transaction total, not its deductible/non-deductible allocation. Non-deductible VAT features can change the allocation of that total, not turn the source's net amount into its gross amount. Do not infer a particular expense or deductible-VAT split from this rule. The samples therefore do not depend on later-version non-deductible-VAT fields.
 
 See sample: [`normal-vat-journal-amount-includes-vat.good.al`](normal-vat-journal-amount-includes-vat.good.al).
 

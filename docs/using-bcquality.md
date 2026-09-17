@@ -183,7 +183,7 @@ using your normal compilation, analyzer, test, and human-review workflow.
 
 ## Coverage and limits
 
-The Microsoft broad review composes the 18 Microsoft domains listed below.
+The Microsoft broad review composes the Microsoft domains listed below.
 The Community Agents review is a separate skill selected by the request, not
 a nested part of that coordinator. All current review leaves accept app
 folders, files, and diffs; request an Agent SDK review explicitly when that
@@ -193,13 +193,16 @@ Available knowledge is **not** a promise that every rule will run. Selection
 depends on the task, target context, enabled layers, and source evidence.
 A whole-folder review is a current-state snapshot: detecting a published API
 removal or another comparison-only regression requires an actual baseline.
-The corpus includes technical AL guidance and targeted Finance posting
+The corpus combines technical AL guidance with targeted functional-domain
 invariants, not exhaustive functional validation or AppSource certification.
 
 The Finance leaf reviews journal posting, financial ledger changes,
 applications, and posting-linked dimension handling. It prunes unrelated code
-at the leaf rather than changing broad-review orchestration. Its dimension
-guidance can apply across application areas, but it does not own generic
+at the leaf rather than changing broad-review orchestration. Finance articles
+use `application-area: [all]` so missing application-area context does not
+weaken applicable findings; resolved records and operations supply the
+narrowing. Finance owns financial ledgers, not Item, Value, Capacity, Warehouse,
+or inventory-application records owned by SCM. It also does not own generic
 custom-table or master Default Dimension wiring. Request a focused "Finance
 posting review" when only this domain is needed.
 

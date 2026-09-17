@@ -17,7 +17,7 @@ When a journal line or posting document inherits dimensions, its `Dimension Set 
 
 For an intentional **complete** dimension transfer, copy the source set ID and synchronize the destination's projections through its supported validation or dimension-management routine. On `Gen. Journal Line`, `Validate("Dimension Set ID", SourceSetID)` updates the two shortcut fields. Do not assume another table has the same validation trigger.
 
-When line-specific dimensions must survive a header change, use the appropriate set-combination or delta routine instead of blindly replacing the line's entire set. Reading or filtering a known global dimension is legitimate; it is not a claim to enumerate every dimension. This rule owns dimension transfer through existing journal/document posting records, not custom-table or master `Default Dimension` wiring, which belongs to data modeling.
+When line-specific dimensions must survive a header change, use the appropriate set-combination or delta routine instead of blindly replacing the line's entire set. Reading or filtering a known global dimension is legitimate; it is not a claim to enumerate every dimension. This rule owns transfers through general-journal and financial-document posting records, not writes to Item, Value, Capacity, Warehouse, or inventory-application records owned by SCM. Generic custom-table or master `Default Dimension` wiring belongs to data modeling.
 
 See sample: [`write-dimensions-as-dimension-set-entries.good.al`](write-dimensions-as-dimension-set-entries.good.al).
 

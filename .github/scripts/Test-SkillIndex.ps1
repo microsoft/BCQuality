@@ -101,7 +101,7 @@ try {
         throw "Expected exactly one al-code-review record, found $($review.Count)."
     }
     if ((@($review[0].subSkills) -join "`n") -cne ($expectedLeaves -join "`n")) {
-        throw 'al-code-review subSkills did not preserve the declared 18-leaf order.'
+        throw "al-code-review subSkills did not preserve the declared $($expectedLeaves.Count)-leaf order."
     }
     foreach ($leafPath in $expectedLeaves) {
         $leaf = @($skills | Where-Object path -ceq $leafPath)
@@ -239,4 +239,4 @@ finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Write-Output 'Skill-index check PASSED: deterministic, schema-valid, and all 18 review leaves preserved in order.'
+Write-Output "Skill-index check PASSED: deterministic, schema-valid, and all $($expectedLeaves.Count) review leaves preserved in order."

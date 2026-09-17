@@ -17,13 +17,13 @@ The same `Dimension Set ID` can be referenced by an unposted journal line and by
 
 To change an unposted transaction's dimensions, load its set into a **temporary** `Dimension Set Entry` buffer with `DimensionManagement.GetDimensionSet`, change the buffer, and obtain a reusable ID with `GetDimensionSetID`. Validate dimension values in the buffer so `Dimension Value ID` matches the chosen value. Store the resulting ID on the transaction and synchronize its projections through that record's supported dimension validation.
 
-For already-posted G/L dimensions, use the supported dimension-correction workflow rather than changing shared rows. Read-only access, temporary buffers, and standard maintenance of projection metadata such as `Global Dimension No.` are not membership changes. This rule protects shared posting history; it does not prescribe custom-table/default-dimension wiring.
+For already-posted G/L dimensions, use the supported dimension-correction workflow rather than changing shared rows. Read-only access, temporary buffers, and standard maintenance of projection metadata such as `Global Dimension No.` are not membership changes. This rule protects dimension sets reached from general-journal, financial-document, or Finance-ledger flows. It does not own Item, Value, Capacity, Warehouse, or inventory-application record writes, or prescribe custom-table/default-dimension wiring.
 
 See sample: [`do-not-edit-shared-dimension-sets.good.al`](do-not-edit-shared-dimension-sets.good.al).
 
 ## Anti Pattern
 
-Follow a journal/document/ledger `Dimension Set ID` to a **persistent** `Dimension Set Entry` and modify, rename, or delete its dimension/value membership in order to change that one transaction. Inspect `IsTemporary` guards, aliases, and the fields written before reporting: the same operations on a temporary working copy are expected.
+Follow a general-journal, financial-document, or Finance-ledger `Dimension Set ID` to a **persistent** `Dimension Set Entry` and modify, rename, or delete its dimension/value membership in order to change that one transaction. Inspect `IsTemporary` guards, aliases, and the fields written before reporting: the same operations on a temporary working copy are expected.
 
 See sample: [`do-not-edit-shared-dimension-sets.bad.al`](do-not-edit-shared-dimension-sets.bad.al).
 

@@ -8,7 +8,9 @@ Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name t
 
 The Finance override deliberately covers every paired Finance article, not
 only the first filename. Its shared context supplies the target version and
-application area, not expected answers. Scenario prerequisites live in
+localization but deliberately omits application area, as production callers
+often do. Finance applicability must come from its source-surface gate, not
+an artificial evaluation-only area hint. Scenario prerequisites live in
 executable AL: the document-balance cases check the template setting, and the
 VAT cases encode the imported net/VAT/gross totals and applicable VAT mode.
 Do not move these prerequisites into comments that preparation removes.

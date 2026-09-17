@@ -26,7 +26,7 @@ codeunit 50107 "Post Journal Allocation"
         PostBatch.Run(JournalLine);
     end;
 
-    local procedure AddAllocationLine(JournalTemplate: Record "Gen. Journal Template"; BatchName: Code[10]; LineNo: Integer; AccountNo: Code[20]; PostingDate: Date; DocumentNo: Code[20]; Amount: Decimal)
+    local procedure AddAllocationLine(JournalTemplate: Record "Gen. Journal Template"; BatchName: Code[10]; LineNo: Integer; AccountNo: Code[20]; PostingDate: Date; DocumentNo: Code[20]; LineAmount: Decimal)
     var
         JournalLine: Record "Gen. Journal Line";
     begin
@@ -40,7 +40,7 @@ codeunit 50107 "Post Journal Allocation"
         JournalLine.Validate("Account Type", JournalLine."Account Type"::"G/L Account");
         JournalLine.Validate("Account No.", AccountNo);
         JournalLine.Validate("Gen. Posting Type", JournalLine."Gen. Posting Type"::" ");
-        JournalLine.Validate(Amount, Amount);
+        JournalLine.Validate(Amount, LineAmount);
         JournalLine.Insert(true);
     end;
 

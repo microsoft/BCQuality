@@ -4,7 +4,7 @@ domain: finance
 keywords: [g-l-entry, ledger-entry, reversal, audit-trail, correction, financial-content, entry-edit]
 technologies: [al]
 countries: [w1]
-application-area: [finance]
+application-area: [all]
 ---
 
 # Correct posted financial content through posting workflows, not row surgery
@@ -19,11 +19,13 @@ Use a supported transaction/register reversal, credit memo, or correcting journa
 
 Supported operational edits are deliberate exceptions: for example, `"G/L Entry-Edit"` supports description changes, and `"Cust. Entry-Edit"` / `"Vend. Entry-Edit"` handle their table-specific editable fields. [Due-date synchronization](change-ledger-due-dates-through-entry-edit.md), [application/unapplication](apply-ledger-entries-through-application-codeunits.md), G/L dimension correction, and supported date compression have their own workflows. Do not flag their standard implementations, temporary simulation buffers, or extension-only metadata updates as financial row surgery. A subscriber is not exempt merely because it runs inside a supported workflow: inspect the fields it actually changes.
 
+This rule covers G/L, customer/vendor/detailed, VAT, and financial-posting/register records. Item, Value, Capacity, Warehouse, inventory-application, and other inventory-posting records are SCM concerns. The financial-row leg of one inventory-posting bypass is outside this rule when the same inventory correction resolves it; an independently actionable financial defect remains in scope regardless of the containing module's name.
+
 See sample: [`do-not-modify-or-delete-posted-ledger-entries.good.al`](do-not-modify-or-delete-posted-ledger-entries.good.al).
 
 ## Anti Pattern
 
-Persist a change to original financial content, delete posted rows, or fabricate reversal flags/links to repair or undo a transaction outside the supported correction/maintenance workflow. Require an existing, non-temporary standard ledger record and evidence of the fields or rows affected; a `Modify` token alone is insufficient. Settlement-state writes belong to the application article rather than a duplicate finding here.
+Persist a change to original financial content, delete posted rows, or fabricate reversal flags/links to repair or undo a transaction outside the supported correction/maintenance workflow. Require an existing, non-temporary Finance-owned record and evidence of the fields or rows affected; a `Modify` token or `*Ledger Entry` name alone is insufficient. Settlement-state writes belong to the application article rather than a duplicate finding here.
 
 See sample: [`do-not-modify-or-delete-posted-ledger-entries.bad.al`](do-not-modify-or-delete-posted-ledger-entries.bad.al).
 

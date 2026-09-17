@@ -4,7 +4,7 @@ domain: finance
 keywords: [cust-ledger-entry, vendor-ledger-entry, detailed-ledger-entry, remaining-amount, application, unapplication, open, closed-by-entry-no]
 technologies: [al]
 countries: [w1]
-application-area: [finance]
+application-area: [all]
 ---
 
 # Apply and unapply entries through the application workflow, not status flags
@@ -23,7 +23,7 @@ See sample: [`apply-ledger-entries-through-application-codeunits.good.al`](apply
 
 ## Anti Pattern
 
-Implement payment matching, settlement, or reopening by directly persisting `Open`, `"Closed by Entry No."`, closure amounts/dates, or detailed-entry unapplication flags, or by deleting/rewriting detailed application amounts. Require confirmed writes to existing non-temporary records and settlement intent. Do not suggest assigning a `Remaining Amount` FlowField as a fix.
+Implement customer/vendor payment matching, settlement, or reopening by directly persisting `Open`, `"Closed by Entry No."`, closure amounts/dates, or detailed-entry unapplication flags, or by deleting/rewriting detailed application amounts. Require confirmed writes to existing non-temporary customer/vendor or detailed customer/vendor entries and settlement intent. Item/inventory application records belong to SCM, not this rule. Do not suggest assigning a `Remaining Amount` FlowField as a fix.
 
 This article owns fabricated application state. Use the [posted-financial-content rule](do-not-modify-or-delete-posted-ledger-entries.md) for original accounting-value corrections, not a second finding prescribing the same application fix.
 

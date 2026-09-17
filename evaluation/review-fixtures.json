@@ -25,7 +25,7 @@
         "reverse-transactions-by-transaction-number",
         "write-dimensions-as-dimension-set-entries"
       ],
-      "context": "Target Business Central 28, worldwide standard application (w1), application-area finance. Review each file as an independent source input."
+      "context": "Target Business Central 28, worldwide standard application (w1). Review each file as an independent source input."
     },
     "interfaces": {
       "article": "set-defaultimplementation-on-enum"

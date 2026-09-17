@@ -4,7 +4,7 @@ domain: finance
 keywords: [due-date, initial-entry-due-date, cust-entry-edit, vend-entry-edit, detailed-ledger-entry, aging]
 technologies: [al]
 countries: [w1]
-application-area: [finance]
+application-area: [all]
 ---
 
 # Change posted customer/vendor due dates through the entry-edit workflow
