@@ -6,6 +6,16 @@ The evaluation is convention-driven. The harness discovers every `<layer>/skills
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+The Finance override deliberately covers every paired Finance article, not
+only the first filename. Its shared context supplies the target version and
+application area, not expected answers. Scenario prerequisites live in
+executable AL: the document-balance cases check the template setting, and the
+VAT cases encode the imported net/VAT/gross totals and applicable VAT mode.
+Do not move these prerequisites into comments that preparation removes.
+Clean samples also retain supported operational edits, temporary ledger/set
+buffers, legitimate entry-number APIs, and reads of individual shortcut
+dimensions so these exceptions are exercised rather than blanket-excluded.
+
 ## Validate the corpus
 
 ```powershell

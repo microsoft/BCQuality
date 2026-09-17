@@ -183,7 +183,7 @@ using your normal compilation, analyzer, test, and human-review workflow.
 
 ## Coverage and limits
 
-The Microsoft broad review composes the 17 Microsoft domains listed below.
+The Microsoft broad review composes the 18 Microsoft domains listed below.
 The Community Agents review is a separate skill selected by the request, not
 a nested part of that coordinator. All current review leaves accept app
 folders, files, and diffs; request an Agent SDK review explicitly when that
@@ -193,8 +193,15 @@ Available knowledge is **not** a promise that every rule will run. Selection
 depends on the task, target context, enabled layers, and source evidence.
 A whole-folder review is a current-state snapshot: detecting a published API
 removal or another comparison-only regression requires an actual baseline.
-The corpus is technical AL guidance, not exhaustive functional validation or
-AppSource certification.
+The corpus includes technical AL guidance and targeted Finance posting
+invariants, not exhaustive functional validation or AppSource certification.
+
+The Finance leaf reviews journal posting, financial ledger changes,
+applications, and posting-linked dimension handling. It prunes unrelated code
+at the leaf rather than changing broad-review orchestration. Its dimension
+guidance can apply across application areas, but it does not own generic
+custom-table or master Default Dimension wiring. Request a focused "Finance
+posting review" when only this domain is needed.
 
 BCQuality intentionally does not duplicate mechanical diagnostics already
 enforced by the AL compiler or standard analyzers. Run the consuming app's
@@ -215,6 +222,7 @@ Each article describes one concern. Where samples exist, use its linked
 | Data modeling | [Data modeling](../microsoft/knowledge/data-modeling/) |
 | Error handling | [Error handling](../microsoft/knowledge/error-handling/) |
 | Events | [Events](../microsoft/knowledge/events/) |
+| Finance | [Finance](../microsoft/knowledge/finance/) |
 | Interfaces | [Interfaces](../microsoft/knowledge/interfaces/) |
 | Performance | [Performance](../microsoft/knowledge/performance/) |
 | Privacy | [Privacy](../microsoft/knowledge/privacy/) |
