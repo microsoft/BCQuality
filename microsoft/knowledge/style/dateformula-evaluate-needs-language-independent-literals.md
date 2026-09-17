@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-A `DateFormula` stores a formula in a language-independent representation, but `Evaluate` must first interpret its text input. Declaring the destination as `DateFormula` does not make an English literal such as `1W` independent of the session language: French uses `S` for weeks. Passing the resulting typed variable to `CalcDate` does not repair a parsing failure that already happened in `Evaluate`.
+A `DateFormula` stores a formula in a language-independent representation, but `Evaluate` must first interpret its text input. Declaring the destination as `DateFormula` does not make an English literal such as `1W` independent of the session language: French uses `S` for weeks. Passing the resulting typed variable to `CalcDate` satisfies that call's CodeCop AA0462 argument requirement, but cannot repair a parsing failure that already happened in `Evaluate`.
 
 ## Best Practice
 
@@ -29,14 +29,10 @@ Do not report direct `CalcDate` text arguments under this article: CodeCop AA046
 
 See sample: [`dateformula-evaluate-needs-language-independent-literals.bad.al`](dateformula-evaluate-needs-language-independent-literals.bad.al).
 
-## Validation
-
-Exercise the default path with an empty formula and an explicit reference date in English and a language with different unit tokens, such as French. Both should produce a date one week later. Also cover an already configured formula and input entered in the active language; these must retain their meaning.
-
 ## References
 
 [DateFormula data type](https://learn.microsoft.com/dynamics365/business-central/dev-itpro/developer/methods-auto/dateformula/dateformula-data-type) and [CalcDate language behavior](https://learn.microsoft.com/dynamics365/business-central/dev-itpro/developer/methods-auto/system/system-calcdate-dateformula-date-method).
 
-[CodeCop AA0462](https://learn.microsoft.com/dynamics365/business-central/dev-itpro/developer/analyzers/codecop-aa0462) defines the separate direct-`CalcDate` check.
+[CodeCop AA0462](https://learn.microsoft.com/dynamics365/business-central/dev-itpro/developer/analyzers/codecop-aa0462) defines the separate direct-`CalcDate` check. In a CodeCop compilation probe against BC28.5 symbols, the direct text control produced AA0462; `Evaluate(Interval, '1W')` followed by typed `CalcDate` did not.
 
 [BaseApp retention scheduling](https://github.com/microsoft/BCApps/blob/8f7a04cb0db8aa96cb97e055c45c61aead49e280/src/Layers/W1/BaseApp/System/RetentionPolicy/RetentionPolicyScheduler.Codeunit.al#L73-L97) initializes a typed formula with an invariant literal.
