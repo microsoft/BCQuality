@@ -78,10 +78,9 @@ Add scheduling, retries, and rendering only when needed, using the
   - **Layer content** in `/microsoft/`, `/community/`, and `/custom/` — knowledge files and action skills grouped by authority.
 
 When BCQuality is installed as a standalone plugin, it additionally exposes
-`skills/al-code-review/SKILL.md` and
-`skills/al-development-plan/SKILL.md`. These are host-format adapters, not
-additional action skills: each creates the task context and enters the same
-flow at Entry.
+`skills/al-code-review/SKILL.md`. This is a host-format adapter, not an
+additional action skill: it creates the task context and enters the same flow
+at Entry.
 
 ## Repository structure
 
@@ -121,11 +120,10 @@ The orchestrator has a URL setting that points at BCQuality (default: `github.co
 ### 2. Agent invokes Entry
 The agent reads `/skills/entry.md` and runs it against the task context. Entry applies its Source → Relevance → Worklist → Action steps over the action skills under `*/skills/**/*.md` and returns a **dispatch record**: the set of action skills to invoke, plus a list of candidates it skipped (with reasons). Routing is a skill, not orchestrator logic.
 
-For a standalone plugin installation, the host activates the matching adapter
+For a standalone plugin installation, the host activates the review adapter
 first. The adapter preserves the caller's actual goal, constructs the task
-context, and invokes Entry. It does not select the internal review or
-plan-enrichment action skill itself or duplicate Entry's preparation, routing, and
-failure semantics.
+context, and invokes Entry. It does not select the internal review action skill
+itself or duplicate Entry's preparation, routing, and failure semantics.
 
 ### 3. Agent consumes the dispatch record
 The dispatch record names one or more action skills, the subset of inputs each
@@ -186,11 +184,12 @@ drive a review/fix loop. Implementation stays in the consuming workflow.
 ### 7. Orchestrator integrates
 The orchestrator turns findings into PR comments, build gates, or IDE diagnostics. It can feed read-only guidance into its own implementation phases, preserving all existing approvals and delivery gates.
 
-## Repository-specific development orchestrators
+## Provisional repository-specific development integration
 
 A repository-specific workflow can consume this read-only foundation before
 authoring while retaining its independent final review. This is the intended
-integration boundary, not a shipped consumer integration:
+integration boundary proposed by `al-development-plan`, not a shipped consumer
+integration or a stable plugin surface:
 
 1. Investigate and produce the consumer's normal initial plan. Normalize any
    consumer-specific format outside BCQuality. A full serialized plan document
@@ -218,6 +217,10 @@ The consumer owns analysis, normalization, persistence, per-phase injection,
 approvals, TDD and runtime execution, propagation, retries, commits, and PR
 delivery. BCQuality supplies additional referenced product knowledge, not a
 replacement orchestrator.
+
+Consumer owners must agree the input/output contract and insertion point before
+adoption. Runtime mutation-proofing and effectiveness measurement belong to the
+consumer pilot rather than the BCQuality content repository.
 
 ### Outcomes are additive, not a universal coding gate
 

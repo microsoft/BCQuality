@@ -73,6 +73,11 @@ proceed with the supplied subset MUST return `outcome: "not-applicable"`.
 - `findings-report` — evaluates an input and reports defects or observations.
 - `development-guidance-report` — selects and summarizes applicable BCQuality knowledge for an existing development plan without changing the target repository.
 
+`development-plan` and `development-guidance-report` are provisional contract
+extensions. They are intentionally not exposed by the standalone plugin in this
+release. Consumer-owner agreement and pilot evidence are required before they
+are treated as frozen public integration surfaces.
+
 `file-path` is one file. `folder-path` is a directory whose recursively
 contained files form the complete current-state input, such as a Business
 Central app folder containing `app.json` and AL source. The input value is the
@@ -105,6 +110,14 @@ Every action skill MUST contain these five sections, in order:
 **Worklist.** Narrow the relevant candidates to the subset that applies to the current task. This is where the task-specific signal enters: the objects changed in the PR, the queries being audited, the existing plan being enriched. Typical moves: match `keywords` against task vocabulary, match file topics against changed objects, deduplicate by concern.
 
 **Action.** Execute the skill's work against the worklist. Evaluate each item in the worklist against the task input and emit findings. The action step is where skill behavior differs; the preceding three steps are uniform.
+
+Review and plan enrichment use different Worklist signals by design. Review
+leaves inspect existing source and use domain-specific code tokens to decide
+which rules can produce findings. Plan enrichment precedes implementation and
+selects cross-domain constraints from plan vocabulary and confirmed repository
+symbols. Both use the same knowledge index, applicability semantics, layer
+precedence, and full normative article bodies; review-leaf cue lists are not a
+second knowledge registry.
 
 <a id="output-contract"></a>
 
@@ -345,6 +358,11 @@ Severity taxonomy:
 
 An action skill with `outputs: [development-guidance-report]` emits one JSON document:
 
+The provisional machine-readable structural schema is
+[`schemas/development-guidance-report.schema.json`](../schemas/development-guidance-report.schema.json).
+The semantic rules below remain authoritative for count arithmetic, exact
+reference existence, applicability, and normative constraint fidelity.
+
 ```json
 {
   "skill": { "id": "string", "version": 1 },
@@ -389,12 +407,12 @@ An action skill with `outputs: [development-guidance-report]` emits one JSON doc
 }
 ```
 
-The skill is read-only with respect to the target repository: no edits, generated files, staging, commits, or publication. Keep index, report, and scratch artifacts outside that repository. The report is strict JSON with no surrounding commentary. The caller supplies an existing plan and repository; consumer-specific input normalization and workflow state are outside this contract.
+The skill is read-only with respect to the target repository: no edits, generated files, staging, commits, or publication. Keep index, report, and scratch artifacts outside that repository. The report is strict JSON with no surrounding commentary. The caller supplies an existing plan and may supply a readable repository; consumer-specific input normalization and workflow state are outside this contract.
 
 ### Guidance outcome semantics
 
 - `completed` — evaluation finished, at least one article was selected, every selected article was opened and faithfully converted into constraints, and no materially unresolved conditional guidance remains.
-- `not-applicable` — the required existing plan or readable repository is absent, or the task is outside the skill's applicability. No constraints are claimed.
+- `not-applicable` — the required existing plan is absent, does not identify the intended change, or is outside the skill's applicability. No constraints are claimed.
 - `no-knowledge` — evaluation finished and there are **no additional applicable BCQuality constraints** for this plan. `knowledge` is empty. This is not a statement that the work is unsafe or unimplementable; the consuming workflow can proceed under its ordinary gates. Do not add generic or filler articles to avoid this outcome.
 - `partial` — evaluation is incomplete or conditional guidance remains materially unresolved. Name each gap in `outcome-reason` and `unresolved`; do not silently treat an unknown dimension as a match.
 - `failed` — retrieval, reference integrity, or another error prevents a reliable report. Set `outcome-reason`; consumers must not treat the result as reliable constraints or as `no-knowledge`.
@@ -409,7 +427,7 @@ The skill is read-only with respect to the target repository: no edits, generate
 
 `validation-considerations` states evidence the implementation workflow should obtain; it does not claim that a command or test has run. `suppressed` has the same shape and semantics as in a findings-report. `unresolved` records missing repository context or plan decisions that prevent a reliable constraint. Unknown applicability dimensions must appear in both `context.unknown` and a relevant unresolved entry, explaining whether they materially affect a candidate. An unknown dimension is not itself a failure or proof that relevant knowledge exists.
 
-Reference SHAs, when present, identify the files read; they do not prove runtime pinning on their own. The consumer records and verifies the actual immutable BCQuality checkout used for both enrichment and final review, plus its filtering policy and run provenance outside the target repository. See [agent-consumption.md](../agent-consumption.md).
+Reference SHAs, when present, identify the files read; they do not prove runtime pinning on their own. The consumer records and verifies the actual immutable BCQuality checkout used for both enrichment and final review, plus its filtering policy and run provenance outside the target repository. See [agent-consumption.md](../docs/agent-consumption.md).
 
 ## Composition (super-skills)
 

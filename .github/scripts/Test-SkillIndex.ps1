@@ -32,7 +32,8 @@ function Assert-ThrowsLike {
 $generator = Join-Path $Root 'tools/Build-SkillIndex.ps1'
 $indexSchema = Join-Path $Root 'schemas/skill-index.schema.json'
 $reportSchema = Join-Path $Root 'schemas/findings-report.schema.json'
-foreach ($path in $generator, $indexSchema, $reportSchema) {
+$guidanceReportSchema = Join-Path $Root 'schemas/development-guidance-report.schema.json'
+foreach ($path in $generator, $indexSchema, $reportSchema, $guidanceReportSchema) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Required contract file not found: $path"
     }
@@ -121,6 +122,36 @@ try {
     }
     if (@($guidance[0].subSkills).Count) {
         throw 'al-development-plan must remain a leaf action skill.'
+    }
+
+    $minimalGuidanceReport = @{
+        skill = @{ id = 'al-development-plan'; version = 1 }
+        outcome = 'completed'
+        summary = @{
+            request = 'Enrich the existing plan.'
+            kind = 'feature'
+            candidates = 1
+            selected = 1
+        }
+        context = @{
+            'bc-version' = '28'
+            technologies = @('al')
+            countries = @('w1')
+            'application-area' = @('all')
+            unknown = @()
+        }
+        knowledge = @(@{
+            path = 'microsoft/knowledge/performance/apply-filters-before-iterating.md'
+            'used-for' = 'Constrain filtered iteration.'
+            constraints = @('Apply filters before iterating.')
+            'sample-paths' = @()
+        })
+        'validation-considerations' = @()
+        suppressed = @()
+        unresolved = @()
+    } | ConvertTo-Json -Depth 10
+    if (-not ($minimalGuidanceReport | Test-Json -SchemaFile $guidanceReportSchema -ErrorAction Stop)) {
+        throw 'Minimal development-guidance report does not satisfy schemas/development-guidance-report.schema.json.'
     }
 
     $minimalReport = @{

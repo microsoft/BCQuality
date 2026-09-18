@@ -36,6 +36,11 @@ task-context:
 
 `goal` and `inputs-available` are required. Filter dimensions (`technologies`, `bc-version`, `countries`, `application-area`) are optional; omitting a dimension is equivalent to "unconstrained" — see Relevance for the exact matching rule. `enabled-layers` defaults to all three. `disabled-skills` defaults to empty.
 
+`development-plan` and the corresponding `development-guidance-report` output
+kind are provisional. They are available to explicit integrations for review
+and pilot use, but are not registered as standalone plugin capabilities in
+this release.
+
 ## Preparation — knowledge index
 
 Before routing, ensure the knowledge index is current for the **live** clone. The dispatched skills read `knowledge-index.json` (by default at the clone root) at their Source step instead of opening every knowledge file — see READ's [Retrieval workflow](read.md). When a consumer prunes its clone to policy *before* the agent runs, the index MUST be built over the clone as it exists now, so it lists exactly the articles that survived pruning and never an article the consumer denied:

@@ -16,7 +16,7 @@ application-area: [all]
 
 Selects the BCQuality knowledge that should constrain an existing AL development plan. It does not implement, edit, stage, commit, or publish anything in the target repository. Repository-specific orchestrators can consume this skill before their own test and implementation phases while retaining ownership of workflow, tooling, and delivery.
 
-Both a readable `repository` and a non-empty `development-plan` are required. The plan may be structured data or text, but it must identify the intended change. Return `not-applicable` without changing files when either input is absent or the repository is not an AL project.
+A non-empty `development-plan` is required. A readable `repository` is optional but recommended: use it to confirm affected symbols and applicability context when supplied. When it is absent, preserve repository-dependent facts as unknown and return `partial` only when that missing context materially prevents reliable selection. Return `not-applicable` without changing files when the plan is absent or does not identify the intended change.
 
 The caller supplies its existing plan, not a request to generate one. Consumer-specific formats must be normalized by the consumer before invocation. This skill does not interpret issue records, continuation markers, batons, retries, or workflow state. A serialized document containing plan metadata and a markdown body is acceptable when it states the intended change, affected surfaces, proposed approach, test strategy, and acceptance criteria. Missing details remain unknown; do not invent them.
 
@@ -24,7 +24,7 @@ The caller supplies its existing plan, not a request to generate one. Consumer-s
 
 Read the BCQuality knowledge index once, using the external path supplied by Entry when present. If no index is available, use READ's path-based discovery across enabled layers; inability to read the corpus is `failed`, not `no-knowledge`. Use entries from every enabled layer and domain. The index supplies candidate paths, applicability dimensions, keywords, titles, and descriptions; it never substitutes for opening selected articles in full.
 
-Inspect the target repository read-only for `app.json`, affected files and symbols named by the plan, relevant tests, permission sets, dependencies, target/runtime versions, countries, application areas, and repository conventions. Do not create scratch or generated files inside the target repository.
+When supplied, inspect the target repository read-only for `app.json`, affected files and symbols named by the plan, relevant tests, permission sets, dependencies, target/runtime versions, countries, application areas, and repository conventions. Do not create scratch or generated files inside the target repository.
 
 ## Relevance
 
@@ -52,6 +52,8 @@ When a dimension cannot be resolved, retain conditionally applicable candidates 
 7. Check the resulting worklist across the whole plan. A bug fix may require testing, data, performance, and upgrade guidance at once; a feature plan may require security and lifecycle constraints that are not named in its title.
 
 Keep the worklist focused. Do not include generic engineering advice, an entire domain, or an article that would not change implementation or validation.
+
+This skill deliberately does not dispatch the review leaves. Review leaves inspect existing source and emit defects through domain-specific code signals; plan enrichment runs before that source exists and must collect constraints that cross several domains. Both paths consume the same indexed article metadata and full normative article bodies, so new knowledge is automatically eligible for plan retrieval. Review-leaf token maps remain code-detection precision rules, not a second registry that plan retrieval must duplicate.
 
 ## Action
 
