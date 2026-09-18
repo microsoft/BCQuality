@@ -51,6 +51,19 @@
         "stop-when-runrequestpage-returns-empty-parameters"
       ]
     },
+    "scm": {
+      "articles": [
+        "post-item-ledger-changes-through-item-journals",
+        "post-revaluation-through-the-item-journal-batch",
+        "change-item-applications-through-posting-routines",
+        "cancel-reservations-through-reservation-management",
+        "transfer-item-tracking-through-source-reservation-codeunits",
+        "reconcile-warehouse-adjustments-with-the-item-ledger",
+        "post-transfers-through-shipment-and-receipt-codeunits",
+        "use-date-aware-availability-for-promising",
+        "carry-out-requisition-actions-through-the-standard-workflow"
+      ]
+    },
     "style": {
       "article": "label-comment-explains-placeholders"
     },

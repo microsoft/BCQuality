@@ -6,6 +6,16 @@ The evaluation is convention-driven. The harness discovers every `<layer>/skills
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+The SCM `articles` override deliberately selects every rule in the initial
+functional domain, producing nine positive cases and nine clean controls.
+Business context is executable: document/status `TestField` guards,
+calculated-revaluation fields, source-transfer base quantities, warehouse
+reconciliation steps, and additional-demand promising parameters survive
+neutralization. Do not move those preconditions into comments or generic
+"posting" helper names; removing them can turn a real defect into a valid
+alternative workflow. The clean pairs exercise the supported APIs selected by
+the same routing cues, not merely unrelated code that contains no SCM tokens.
+
 ## Validate the corpus
 
 ```powershell
