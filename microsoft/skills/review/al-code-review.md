@@ -25,6 +25,7 @@ sub-skills:
   - microsoft/skills/review/al-testing-review.md
   - microsoft/skills/review/al-data-modeling-review.md
   - microsoft/skills/review/al-query-review.md
+  - microsoft/skills/review/al-reporting-review.md
   - microsoft/skills/review/al-appsource-review.md
   - microsoft/skills/review/al-telemetry-review.md
 ---
@@ -40,6 +41,11 @@ An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-pat
 ## Source
 
 The sub-skills invoked by this skill are those listed in frontmatter `sub-skills`. Additional leaf skills are added by updating the `sub-skills` list. The skill does not discover sub-skills implicitly.
+
+Hosts that orchestrate leaves mechanically SHOULD run
+`tools/Build-SkillIndex.ps1` and resolve this skill by `id: al-code-review`.
+The generated `subSkills` array preserves the frontmatter order and avoids
+host-specific Markdown parsing.
 
 ## Relevance
 
@@ -65,7 +71,10 @@ The worklist is the list of sub-skills judged relevant by the previous step. Eve
 
 The Action step consists of **discrete leaf invocations**, not one combined generation. Invocation scheduling belongs to the orchestrator: independent leaves may run serially or concurrently, but their evaluation contexts and findings-reports remain isolated. Concretely this means:
 
-- **Isolate leaf invocations when the host supports it.** For fast/small models, each sub-skill SHOULD run in a fresh model call or child context containing only the task input, READ/DO contracts, the leaf instructions, a domain-filtered slice of the current knowledge index, and articles that leaf worklists. Preserve each index row's exact `path`; the leaf must copy references from that slice. The coordinator then collects the resulting JSON. This is the preferred fast-model profile: it bounds context, prevents later leaves from being skipped as attention is exhausted, and removes any reason to synthesize article paths.
+- **Isolate leaf invocations when the host supports it.** Each sub-skill SHOULD run in a fresh model call or child context containing only its assigned source paths, READ/DO contracts, the leaf instructions, the complete bounded domain catalog per READ, and articles that leaf worklists. Preserve each catalog row's exact `path`; the leaf must copy references from that catalog.
+- **Keep run artifacts private.** Before dispatch, allocate a new GUID-named directory under the current session's artifact directory and a distinct scratch/report child directory for every leaf. Pass a leaf only its own assigned source paths and child directory, never the run root or sibling paths. A leaf MUST NOT discover, enumerate, read, modify, or delete sibling artifacts. Do not reuse a prior run directory, and do not clean up any run artifact until every leaf has finished and consolidation is complete.
+- **Keep raw Task transport distinct from the accepted copy.** Capture the exact Task return as the immutable raw audit payload and primary transport. Preserve it unchanged in the leaf's private artifacts or host log. Then apply DO's bounded pre-gate range normalization, when eligible, and its full consumer acceptance gate. The report accepted for rollup is the exact return when no normalization occurred, or the normalized candidate copy when DO permits it; worker-side persistence of another report file is optional and redundant.
+- **Treat automatic output spills as host-owned.** If the host reports that a Task return was automatically spilled, the coordinator MAY read that file read-only only at the exact path returned by the tool. Never modify, delete, enumerate around, or reuse an automatic spill path. Never bypass a content-exclusion or access denial.
 - Treat each sub-skill in the worklist as its own pass: read the sub-skill's instructions, apply its Source → Relevance → Worklist → Action steps to the orchestrator-supplied inputs, and produce that sub-skill's complete findings-report independently.
 - Do not collapse multiple sub-skills into one shared reasoning step. Each sub-skill has a distinct knowledge subset and a distinct evaluation procedure; sharing one rolled-up scan dilutes per-skill attention and causes leaves to silently underreport (this has been observed in production: leaf skills returned empty `findings[]` while their standalone runs against the same diff produced multiple matches).
 - The agent self-review pass is its own final iteration. Begin it only after every sub-skill in the worklist has completed and its sub-result is recorded.
@@ -77,8 +86,8 @@ The Action step consists of **discrete leaf invocations**, not one combined gene
 For each sub-skill in the worklist:
 
 1. Invoke the sub-skill with the orchestrator's inputs, passing only the subset each sub-skill declares in its `inputs`.
-2. Capture the sub-skill's complete findings-report verbatim and append it to `sub-results`.
-3. If the sub-skill's `outcome` is `failed`, stop here for this sub-skill: its findings are not reliable per the DO contract and MUST NOT be copied into the super-skill's top-level `findings[]` or counted in `summary.counts`.
+2. Capture the exact Task return as the immutable raw audit payload and primary transport. Preserve it unchanged in the leaf's private artifacts or host log before deriving a candidate. Apply only DO's bounded pre-gate normalization: when the complete raw report has no other defect, a finding has positive-integer `line`, `start-line`, and `end-line`, `start-line <= line <= end-line`, `start-line != line`, and no `suggested-code` field, copy the complete report and remove only that finding's optional `location.range`. Record the normalization separately in private run telemetry or artifacts, never in the findings-report. Validate the entire candidate through DO's existing strict acceptance gate. Accept the exact return when unchanged or the normalized candidate when it passes; otherwise record a separate failed validation result with no findings for rollup. Do not reconstruct JSON, infer fields, alter paths or references, clamp lines, normalize reversed or out-of-bounds ranges, remove a range associated with `suggested-code`, or salvage individual findings.
+3. Append the accepted findings-report, or the separate failed validation result, to `sub-results`. If its `outcome` is `failed`, stop here for this sub-skill: its findings are not reliable per the DO contract and MUST NOT be copied into the super-skill's top-level `findings[]` or counted in `summary.counts`.
 4. Otherwise, compare each entry from the sub-skill's `findings[]` with findings already rolled up. Two findings are duplicates when they point to the same file and overlapping line/range and prescribe materially the same correction, even when their knowledge-file IDs differ. Merge duplicates instead of appending both: keep the more specific domain owner, preserve that finding's optional `domain` field verbatim (including its absence), use its reference as `references[0]` and therefore as `id`, append the other references as supporting references, keep the highest severity and confidence justified by either report, and preserve one self-contained message. Article and leaf ownership notes decide specificity; do not choose by execution order.
 5. Append each non-duplicate finding, setting `from-sub-skill` to the sub-skill's `skill.id` and preserving its optional `domain` field verbatim, including its absence. For non-citation findings (those whose `id` is a skill-defined slug rather than a reference path), prefix `id` with `<from-sub-skill>:` to prevent collisions across sub-skills. Other finding fields are preserved.
 
@@ -122,7 +131,13 @@ Calculate `summary.counts` from the final top-level `findings[]`, after failed s
 
 Derive `outcome` using the DO rollup rules. `outcome-reason` is populated for `partial` and `failed` and SHOULD summarize per-sub-skill state, for example: *"al-security-review failed (tool timeout); al-performance-review completed."*
 
-Before emitting the rollup, apply DO's reference-integrity gate to every nested and top-level finding. Every knowledge-backed ID/reference path must exist in the live checkout, must have been opened by the producing leaf, and must be copied verbatim rather than synthesized. Treat a sub-result containing an unverifiable citation as failed and exclude its findings from the top-level rollup.
+Before emitting the rollup, apply DO's consumer acceptance gate to every nested
+and top-level finding. A leaf's nested report is its accepted exact return or
+its accepted normalized candidate copy; its exact Task return remains the
+separate immutable raw audit payload. Treat an invalid sub-result as failed and
+exclude all of its findings from the top-level rollup. Never reconstruct it
+into a success-shaped report or perform normalization beyond DO's bounded
+exception.
 
 ## Output
 

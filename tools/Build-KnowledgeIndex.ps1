@@ -30,6 +30,8 @@
     expected to prune its clone to policy first). For provenance and to
     reproduce a consumer's exact view, pass -EnabledLayers to restrict the walk
     to those layers and to record the policy in the index header.
+    Invalid articles are omitted with a path-specific warning so one bad
+    optional layer article cannot block valid siblings.
 
 .PARAMETER BCQualityRoot
     Path to the BCQuality content root to index (typically a filtered clone).
@@ -69,6 +71,17 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Knowledge-Retrieval.ps1')
+
+if ($PSBoundParameters.ContainsKey('EnabledLayers')) {
+    if ($null -eq $EnabledLayers) {
+        throw 'EnabledLayers must be an array; omit it to index all layers.'
+    }
+    if (@($EnabledLayers | Where-Object { $_ -cnotin @('microsoft', 'community', 'custom') }).Count -or
+        @($EnabledLayers | Group-Object -CaseSensitive | Where-Object Count -gt 1).Count) {
+        throw 'EnabledLayers must contain unique canonical lowercase layer names.'
+    }
+}
 
 # Default to the clone root (parent of this script's tools/ folder) so the
 # agent's Entry preparation step can invoke this with no arguments from the
@@ -91,6 +104,45 @@ function Get-RelativePath {
     param([string] $Root, [string] $Full)
     $rel = $Full.Substring($Root.Length).TrimStart([char]'/', [char]'\')
     return ($rel -replace '\\', '/')
+}
+
+function Get-BytesSha256 {
+    param([byte[]] $Bytes)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($sha.ComputeHash($Bytes)) -replace '-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
+function Read-ArticleSource {
+    param([string] $Path)
+    $bytes = [IO.File]::ReadAllBytes($Path)
+    try {
+        $text = [Text.UTF8Encoding]::new($false, $true).GetString($bytes)
+    }
+    catch [Text.DecoderFallbackException] {
+        throw [IO.InvalidDataException]::new('invalid UTF-8', $_.Exception)
+    }
+    return [pscustomobject]@{
+        bytes = $bytes
+        text = $text
+        sha256 = Get-BytesSha256 -Bytes $bytes
+    }
+}
+
+function Get-ValueSha256 {
+    param([Parameter(Mandatory)] $Value)
+    $bytes = [Text.Encoding]::UTF8.GetBytes((ConvertTo-Json -InputObject $Value -Depth 8 -Compress))
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($sha.ComputeHash($bytes)) -replace '-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
 }
 
 # Trims a Description to a single short line (<= $Max chars) for the lean
@@ -116,9 +168,12 @@ function ConvertFrom-ArticleFrontmatter {
     # Pattern) is included; the index is a lossless substitute for the
     # frontmatter + Description the worklist predicate reads, not a
     # substitute for the article's normative guidance.
-    param([string] $Path)
+    param(
+        [string] $Path,
+        [string] $Text
+    )
 
-    $lines = Get-Content -LiteralPath $Path -ErrorAction Stop
+    $lines = [regex]::Split($Text.TrimStart([char]0xfeff), '\r\n|\n|\r')
 
     # Frontmatter is the first '---'-delimited block.
     if ($lines.Count -lt 1 -or $lines[0].Trim() -ne '---') { return $null }
@@ -129,17 +184,40 @@ function ConvertFrom-ArticleFrontmatter {
     if ($fmEnd -lt 0) { return $null }
 
     $fm = @{}
+    $arrayFields = @('bc-version', 'keywords', 'technologies', 'countries', 'application-area')
     for ($i = 1; $i -lt $fmEnd; $i++) {
         $line = $lines[$i]
         if ($line -match '^\s*([a-zA-Z][\w-]*)\s*:\s*(.*)$') {
             $key = $Matches[1]
             $val = $Matches[2].Trim()
-            if ($val -match '^\[(.*)\]$') {
+            if ($key -in $arrayFields) {
+                if ($val -notmatch '^\[(.*)\]$') {
+                    throw [IO.InvalidDataException]::new(
+                        "frontmatter field '$key' must use non-empty bracket-array syntax"
+                    )
+                }
                 $inner = $Matches[1].Trim()
-                if ($inner -eq '') { $fm[$key] = @() }
-                else { $fm[$key] = @($inner -split '\s*,\s*' | ForEach-Object { $_.Trim() }) }
+                if ($inner -eq '') {
+                    throw [IO.InvalidDataException]::new(
+                        "frontmatter field '$key' must use non-empty bracket-array syntax"
+                    )
+                }
+                $values = @($inner -split '\s*,\s*' | ForEach-Object { $_.Trim() })
+                if (@($values | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count) {
+                    throw [IO.InvalidDataException]::new(
+                        "frontmatter field '$key' must use non-empty bracket-array syntax"
+                    )
+                }
+                $fm[$key] = $values
             }
             elseif ($val -ne '') { $fm[$key] = $val }
+        }
+    }
+    foreach ($field in $arrayFields) {
+        if (-not $fm.ContainsKey($field) -or $fm[$field] -isnot [array] -or -not $fm[$field].Count) {
+            throw [IO.InvalidDataException]::new(
+                "frontmatter field '$field' must use non-empty bracket-array syntax"
+            )
         }
     }
 
@@ -185,42 +263,71 @@ $indexArticles = [System.Collections.Generic.List[object]]::new()
 foreach ($layerDir in @('microsoft', 'community', 'custom')) {
     $kbRoot = Join-Path $BCQualityRoot (Join-Path $layerDir 'knowledge')
     if (-not (Test-Path $kbRoot)) { continue }
-    if ($EnabledLayers -and ($EnabledLayers -notcontains $layerDir)) { continue }
+    if ($EnabledLayers -and ($EnabledLayers -cnotcontains $layerDir)) { continue }
 
-    Get-ChildItem -LiteralPath $kbRoot -Recurse -File -Filter '*.md' -ErrorAction SilentlyContinue |
-        Sort-Object FullName |
-        ForEach-Object {
-            $rel = Get-RelativePath -Root $BCQualityRoot -Full $_.FullName
-            $parsed = $null
-            try { $parsed = ConvertFrom-ArticleFrontmatter -Path $_.FullName } catch { $parsed = $null }
+    $files = @(
+        Get-ChildItem -LiteralPath $kbRoot -Recurse -File -Filter '*.md' -ErrorAction SilentlyContinue |
+            Sort-Object FullName
+    )
+    foreach ($file in $files) {
+        $rel = Get-RelativePath -Root $BCQualityRoot -Full $file.FullName
+        try {
+            $source = Read-ArticleSource -Path $file.FullName
+            $parsed = ConvertFrom-ArticleFrontmatter -Path $file.FullName -Text $source.text
             if (-not $parsed) {
-                # Invalid/unparseable file: list path + domain-from-path so it
-                # is never silently dropped from discovery. Consumers fall back
-                # to reading it in full.
-                $domainFromPath = if ($rel -match '/knowledge/([^/]+)/') { $Matches[1] } else { '' }
-                $indexArticles.Add([pscustomobject]@{
-                    path = $rel; layer = $layerDir; domain = $domainFromPath
-                    'bc-version' = @(); technologies = @(); countries = @(); 'application-area' = @()
-                    keywords = @(); title = ''; description = ''; parsed = $false
-                }) | Out-Null
-                return
+                throw [IO.InvalidDataException]::new('missing or unterminated frontmatter')
             }
-            $indexArticles.Add([pscustomobject]@{
-                path               = $rel
-                layer              = $layerDir
-                domain             = $parsed.domain
-                'bc-version'       = @($parsed.'bc-version')
-                technologies       = @($parsed.technologies)
-                countries          = @($parsed.countries)
-                'application-area' = @($parsed.'application-area')
-                keywords           = @($parsed.keywords)
-                title              = $parsed.title
-                description        = if ($FullIndex) { $parsed.description } else { Get-LeanDescription -Text $parsed.description }
-                parsed             = $true
-            }) | Out-Null
+            foreach ($required in @(
+                @('domain', $parsed.domain),
+                @('H1 title', $parsed.title),
+                @('Description', $parsed.description)
+            )) {
+                if ([string]::IsNullOrWhiteSpace([string]$required[1])) {
+                    throw [IO.InvalidDataException]::new("missing $($required[0])")
+                }
+            }
         }
+        catch [IO.InvalidDataException] {
+            Write-Warning "Skipping invalid knowledge article '$rel': $($_.Exception.Message)."
+            continue
+        }
+
+        $article = [ordered]@{
+            path               = $rel
+            layer              = $layerDir
+            domain             = $parsed.domain
+            'bc-version'       = @($parsed.'bc-version')
+            technologies       = @($parsed.technologies)
+            countries          = @($parsed.countries)
+            'application-area' = @($parsed.'application-area')
+            keywords           = @($parsed.keywords)
+            title              = $parsed.title
+            description        = if ($FullIndex) { $parsed.description } else { Get-LeanDescription -Text $parsed.description }
+            parsed             = $true
+            sourceSha256       = $source.sha256
+        }
+        $problem = Get-KnowledgeMetadataProblem -Row $article
+        if ($problem) {
+            Write-Warning "Skipping invalid knowledge article '$rel': $problem."
+            continue
+        }
+        $indexArticles.Add($article) | Out-Null
+    }
 }
 
+$articlesByPath = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal)
+foreach ($article in $indexArticles) {
+    if (-not $articlesByPath.TryAdd($article.path, $article)) {
+        throw "Duplicate knowledge path while building source snapshot: $($article.path)"
+    }
+}
+$sourcePaths = [string[]]@($articlesByPath.Keys)
+[Array]::Sort($sourcePaths, [StringComparer]::Ordinal)
+$sourceManifest = @(
+    foreach ($path in $sourcePaths) {
+        [ordered]@{ path = $path; sha256 = $articlesByPath[$path].sourceSha256 }
+    }
+)
 $index = [pscustomobject]@{
     version       = 1
     generatedAt   = (Get-Date).ToUniversalTime().ToString('o')
@@ -228,6 +335,7 @@ $index = [pscustomobject]@{
     knowledgeAllow= @($KnowledgeAllow)
     knowledgeDeny = @($KnowledgeDeny)
     articleCount  = $indexArticles.Count
+    sourceSnapshot= Get-ValueSha256 -Value $sourceManifest
     articles      = @($indexArticles)
 }
 

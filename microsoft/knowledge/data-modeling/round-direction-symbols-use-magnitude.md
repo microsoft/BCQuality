@@ -17,13 +17,13 @@ AL's `Round(Number, Precision, Direction)` uses `'>'` to round away from zero an
 
 Choose the direction from the business meaning: `'>'` increases absolute magnitude and `'<'` decreases absolute magnitude for both positive and negative values. Include positive and negative cases whenever a directed rounding rule is tested.
 
-See sample: `round-direction-symbols-use-magnitude.good.al`.
+See sample: [`round-direction-symbols-use-magnitude.good.al`](round-direction-symbols-use-magnitude.good.al).
 
 ## Anti Pattern
 
 Using `'<'` as a mathematical floor or `'>'` as a mathematical ceiling. The result looks correct for positive amounts but moves in the opposite mathematical direction for negative amounts.
 
-See sample: `round-direction-symbols-use-magnitude.bad.al`.
+See sample: [`round-direction-symbols-use-magnitude.bad.al`](round-direction-symbols-use-magnitude.bad.al).
 
 ## Reference
 

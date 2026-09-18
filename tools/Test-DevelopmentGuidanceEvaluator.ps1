@@ -159,7 +159,8 @@ function Test-ReportMutation([string] $Name, [scriptblock] $Change, [string] $Di
 try {
     [IO.Directory]::CreateDirectory($root) | Out-Null
     foreach ($reference in @($article, $otherArticle, $sample, $otherArticle.Replace('.md', '.good.al'),
-            'microsoft/skills/development/al-development-plan.md', 'tools/Build-KnowledgeIndex.ps1')) {
+            'microsoft/skills/development/al-development-plan.md', 'tools/Build-KnowledgeIndex.ps1',
+            'tools/Knowledge-Retrieval.ps1')) {
         $destination = Join-Path $root $reference.Replace('/', [IO.Path]::DirectorySeparatorChar)
         [IO.Directory]::CreateDirectory((Split-Path $destination -Parent)) | Out-Null
         [IO.File]::Copy((Join-Path $sourceRoot $reference.Replace('/', [IO.Path]::DirectorySeparatorChar)), $destination)
@@ -169,8 +170,35 @@ try {
     $publicManifestPath = Join-Path $sourceRoot 'evaluation\development-guidance-fixtures.json'
     $publicManifest = Read-GuidanceJson $publicManifestPath
     $publicRoot = Join-Path $scratch 'public-fixture-checkout'
-    $publicReferences = @($publicManifest.skill, 'tools/Build-KnowledgeIndex.ps1', 'evaluation/development-guidance-fixtures.json') +
-        @($publicManifest.cases | ForEach-Object { $_.requiredKnowledge; $_.optionalKnowledge })
+    $publicKnowledgeReferences = @(
+        $publicManifest.cases |
+            ForEach-Object { $_.requiredKnowledge; $_.optionalKnowledge } |
+            Sort-Object -Unique
+    )
+    $publicSampleReferences = @(
+        foreach ($articleReference in $publicKnowledgeReferences) {
+            $articlePath = Join-Path $sourceRoot $articleReference.Replace('/', [IO.Path]::DirectorySeparatorChar)
+            $articleDirectory = Split-Path $articleReference -Parent
+            $articleText = [IO.File]::ReadAllText($articlePath)
+            foreach ($match in [regex]::Matches(
+                    $articleText,
+                    '\[[^\]]+\]\((?<sample>[a-z0-9-]+\.(?:good|bad)\.[a-zA-Z0-9]+)\)'
+                )) {
+                "$($articleDirectory.Replace('\', '/'))/$($match.Groups['sample'].Value)"
+            }
+        }
+    )
+    $publicReferences = @(
+        @(
+            $publicManifest.skill,
+            'tools/Build-KnowledgeIndex.ps1',
+            'tools/Knowledge-Retrieval.ps1',
+            'evaluation/development-guidance-fixtures.json'
+        ) +
+        $publicKnowledgeReferences +
+        $publicSampleReferences |
+            Sort-Object -Unique
+    )
     foreach ($reference in @($publicReferences | Sort-Object -Unique)) {
         $destination = Join-Path $publicRoot $reference.Replace('/', [IO.Path]::DirectorySeparatorChar)
         [IO.Directory]::CreateDirectory((Split-Path $destination -Parent)) | Out-Null

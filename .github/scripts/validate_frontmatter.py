@@ -149,14 +149,14 @@ def is_non_empty_list_of_str(value: Any) -> bool:
 
 
 def normalize_repo_md_path(value: Any) -> tuple[str | None, str | None]:
-    """Normalize an optional leading './' and reject absolute/escaping paths."""
+    """Validate a canonical repo-relative Markdown path."""
     if not isinstance(value, str) or not value:
         return None, "must be a non-empty string"
     if "\\" in value:
         return None, "must use forward slashes"
 
-    normalized = value[2:] if value.startswith("./") else value
-    segments = normalized.split("/")
+    normalized = value
+    segments = value.split("/")
     if (
         not normalized
         or normalized.startswith("/")
@@ -406,6 +406,9 @@ def validate_action_skill(path: Path, parsed: Parsed, report: Report) -> None:
             bad = [f"{x}: {err}" for x in ss if (err := normalize_repo_md_path(x)[1])]
             if bad:
                 report.error(path, "R20", f"invalid sub-skills paths: {bad}", 1)
+            duplicates = sorted({x for x in ss if ss.count(x) > 1})
+            if duplicates:
+                report.error(path, "R20", f"sub-skills contains duplicate paths: {duplicates}", 1)
 
     # R21 five required sections, in order, each exactly once
     heads = [h for h, _ in headings_in_order(parsed.body)]
@@ -590,7 +593,13 @@ class SkillRecord:
     skill_id: str | None
 
 
-def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, report: Report) -> None:
+def validate_sub_skills_registry(
+    path: Path,
+    fm: dict[str, Any],
+    root: Path,
+    action_skills_by_path: dict[str, dict[str, Any]],
+    report: Report,
+) -> None:
     """R26: a super-skill's declared `sub-skills` must exactly match the
     `al-*-review.md` leaf files present in the same directory (set equality,
     ordering-agnostic). This keeps the registered leaf list the single source
@@ -626,6 +635,17 @@ def validate_sub_skills_registry(path: Path, fm: dict[str, Any], root: Path, rep
                 path, "R26",
                 f"sub-skills entry is not a sibling 'al-*-review.md' leaf: {entry}", 1,
             )
+
+    for entry in ss:
+        leaf = action_skills_by_path.get(entry)
+        if leaf is None:
+            if (root / entry).exists():
+                report.error(path, "R26", f"sub-skills entry is not an action skill: {entry}", 1)
+            continue
+        if is_non_empty_list_of_str(leaf.get("sub-skills")):
+            report.error(path, "R26", f"nested super-skill is not permitted in v1 composition: {entry}", 1)
+        if leaf.get("outputs") != ["findings-report"]:
+            report.error(path, "R26", f"sub-skill must produce findings-report: {entry}", 1)
 
     # Sibling leaves on disk that were never registered ('forgot to wire it up').
     for leaf in sorted(leaves - declared):
@@ -699,9 +719,13 @@ def run(root: Path) -> Report:
                     others = [q.relative_to(root).as_posix() for q in paths if q != p]
                     report.error(p, "R24", f"skill id '{sid}' ({kind}) is not unique; also defined in: {others}")
 
-    # Fourth pass: R26 sub-skills registry matches leaf files on disk
+    # Fourth pass: R26 sub-skills registry matches compatible leaf files on disk
+    action_skills_by_path = {
+        path.relative_to(root).as_posix(): fm
+        for path, fm in action_skill_fms
+    }
     for path, fm in action_skill_fms:
-        validate_sub_skills_registry(path, fm, root, report)
+        validate_sub_skills_registry(path, fm, root, action_skills_by_path, report)
 
     return report
 

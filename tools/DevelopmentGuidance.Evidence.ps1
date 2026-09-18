@@ -80,24 +80,15 @@ function Assert-GuidanceItem {
     if (($Item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $Item.LinkType -or $Item.LinkTarget) {
         throw 'Links, junctions, hard links and reparse points are not supported.'
     }
-}
-
-function Get-GuidanceStreams {
-    param([string] $Path)
-    if (-not $IsWindows) { return @() }
-    return @(
-        Get-Item -LiteralPath $Path -Stream '*' -Force -ErrorAction Stop |
-            Where-Object Stream -ne ':$DATA' |
-            Sort-Object Stream -CaseSensitive |
-            ForEach-Object {
-                $streamPath = "$($_.FileName):$($_.Stream)"
-                [ordered]@{
-                    name = $_.Stream
-                    length = $_.Length
-                    sha256 = Get-GuidanceHash $streamPath
-                }
-            }
-    )
+    if (-not $Item.PSIsContainer -and $IsWindows) {
+        $unsupportedStreams = @(
+            Get-Item -LiteralPath $Item.FullName -Stream '*' -Force -ErrorAction Stop |
+                Where-Object Stream -notin @(':$DATA', 'sec.endpointdlp')
+        )
+        if ($unsupportedStreams.Count) {
+            throw 'Alternate data streams are not supported.'
+        }
+    }
 }
 
 function Get-GuidanceSafePath {
@@ -210,7 +201,6 @@ function Get-GuidanceSnapshot {
                 $entry.length = $item.Length
                 $entry.lastWriteUtcTicks = $item.LastWriteTimeUtc.Ticks
                 $entry.sha256 = Get-GuidanceHash $item.FullName
-                $entry.streams = @(Get-GuidanceStreams $item.FullName)
             }
             $files.Add($entry)
         }

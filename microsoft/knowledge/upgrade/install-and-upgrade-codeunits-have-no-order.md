@@ -17,13 +17,13 @@ An extension can contain multiple `Install` or `Upgrade` codeunits, but Business
 
 Keep separate install or upgrade codeunits independent. When two steps have a real dependency, coordinate them from one owning trigger in the required order; use upgrade tags to make each completed step idempotent.
 
-See sample: `install-and-upgrade-codeunits-have-no-order.good.al`.
+See sample: [`install-and-upgrade-codeunits-have-no-order.good.al`](install-and-upgrade-codeunits-have-no-order.good.al).
 
 ## Anti Pattern
 
 Splitting dependent steps into separate codeunits and relying on names, object IDs, or declaration order. The dependent codeunit can run first and fail or observe partially migrated data.
 
-See sample: `install-and-upgrade-codeunits-have-no-order.bad.al`.
+See sample: [`install-and-upgrade-codeunits-have-no-order.bad.al`](install-and-upgrade-codeunits-have-no-order.bad.al).
 
 ## Reference
 

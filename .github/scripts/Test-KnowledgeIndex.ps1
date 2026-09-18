@@ -16,6 +16,8 @@
       3. Selection-input integrity — every parsed article row carries the
          non-empty `domain` + `keywords` the worklist predicate selects on, and
          every article parses (an unparseable article is an invalid file).
+      4. Bounded retrieval — delegates to tools/Test-KnowledgeRetrieval.ps1 for
+         lossless paging, exact-body round trips, and explicit failure cases.
 
     Exit code 0 = healthy; non-zero = a problem CI must block on.
 #>
@@ -90,4 +92,5 @@ if ($problems.Count) {
     exit 1
 }
 Write-Host "Knowledge-index check PASSED: $($rows.Count) articles, deterministic, full coverage, selection inputs intact." -ForegroundColor Green
+& (Join-Path $Root 'tools/Test-KnowledgeRetrieval.ps1') -Root $Root
 exit 0

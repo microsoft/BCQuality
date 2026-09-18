@@ -22,8 +22,10 @@
     stable metadata, Git HEAD/refs/index and ignored/untracked files are compared.
     Links/reparse points, hard links, external Git storage in targets,
     submodules and sparse checkouts are rejected rather than followed. Windows
-    alternate data streams are included in the evidence by name, length, and
-    hash; direct stream paths remain rejected. Run in quiescent repositories.
+    alternate data streams are rejected except for the known endpoint-DLP
+    metadata stream `sec.endpointdlp`, which is ignored because endpoint
+    protection may add or refresh it asynchronously without changing file
+    content. Direct stream paths remain rejected. Run in quiescent repositories.
     The knowledge checkout may itself be a linked Git worktree; its Git storage
     identity is recorded explicitly.
 #>

@@ -17,13 +17,13 @@ From runtime 14.0, AL can type-test an interface or `Variant` with `is` and cast
 
 Use `is` to establish that the value supports the target interface before using `as`. Cast directly only where the target implementation is an invariant guaranteed by the surrounding contract.
 
-See sample: `guard-interface-casts-with-is.good.al`.
+See sample: [`guard-interface-casts-with-is.good.al`](guard-interface-casts-with-is.good.al).
 
 ## Anti Pattern
 
 Using `as` unconditionally for an optional extended interface. An otherwise valid implementation of the base interface then fails at runtime merely because it does not implement the additional contract.
 
-See sample: `guard-interface-casts-with-is.bad.al`.
+See sample: [`guard-interface-casts-with-is.bad.al`](guard-interface-casts-with-is.bad.al).
 
 ## Reference
 

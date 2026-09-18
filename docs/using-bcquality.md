@@ -183,7 +183,7 @@ using your normal compilation, analyzer, test, and human-review workflow.
 
 ## Coverage and limits
 
-The Microsoft broad review composes the 16 Microsoft domains listed below.
+The Microsoft broad review composes the 17 Microsoft domains listed below.
 The Community Agents review is a separate skill selected by the request, not
 a nested part of that coordinator. All current review leaves accept app
 folders, files, and diffs; request an Agent SDK review explicitly when that
@@ -219,6 +219,7 @@ Each article describes one concern. Where samples exist, use its linked
 | Performance | [Performance](../microsoft/knowledge/performance/) |
 | Privacy | [Privacy](../microsoft/knowledge/privacy/) |
 | Query objects | [Query](../microsoft/knowledge/query/) |
+| Reporting | [Reporting](../microsoft/knowledge/reporting/) |
 | Security | [Security](../microsoft/knowledge/security/) |
 | Style | [Style](../microsoft/knowledge/style/) |
 | Telemetry | [Telemetry](../microsoft/knowledge/telemetry/) |

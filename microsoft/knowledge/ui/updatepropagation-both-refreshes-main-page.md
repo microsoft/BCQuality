@@ -17,13 +17,13 @@ A page part does not automatically refresh its parent page when the subpage chan
 
 Set `UpdatePropagation = Both` on a part when edits in that subpage must immediately update values rendered by the main page. Leave propagation at `Subpage` when the parent has no dependent presentation to avoid unnecessary refreshes.
 
-See sample: `updatepropagation-both-refreshes-main-page.good.al`.
+See sample: [`updatepropagation-both-refreshes-main-page.good.al`](updatepropagation-both-refreshes-main-page.good.al).
 
 ## Anti Pattern
 
 Displaying a line-dependent total on the main page while the editable lines part updates only itself. The persisted values can be correct while the parent page continues to show an old total.
 
-See sample: `updatepropagation-both-refreshes-main-page.bad.al`.
+See sample: [`updatepropagation-both-refreshes-main-page.bad.al`](updatepropagation-both-refreshes-main-page.bad.al).
 
 ## Reference
 

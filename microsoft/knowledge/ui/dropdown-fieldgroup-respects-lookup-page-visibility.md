@@ -17,13 +17,13 @@ A tableextension can append a field to the `DropDown` field group with `addlast`
 
 When adding a hidden field to a `DropDown` field group, also extend the page used for the lookup and make that field control visible. Verify the actual lookup page rather than assuming the table definition alone controls the drop-down.
 
-See sample: `dropdown-fieldgroup-respects-lookup-page-visibility.good.al`.
+See sample: [`dropdown-fieldgroup-respects-lookup-page-visibility.good.al`](dropdown-fieldgroup-respects-lookup-page-visibility.good.al).
 
 ## Anti Pattern
 
 Adding the field with `addlast(DropDown; ...)` while leaving its lookup-page control hidden, then expecting the field to appear in the drop-down.
 
-See sample: `dropdown-fieldgroup-respects-lookup-page-visibility.bad.al`.
+See sample: [`dropdown-fieldgroup-respects-lookup-page-visibility.bad.al`](dropdown-fieldgroup-respects-lookup-page-visibility.bad.al).
 
 ## Reference
 

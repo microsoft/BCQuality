@@ -17,13 +17,13 @@ Business Central document headers assign their number series first and then call
 
 In the document table's insert path, assign the document number and then call `InitRecord`. Keep the default assignments in that procedure and expose narrow before/after events when other extensions must participate.
 
-See sample: `initialize-document-defaults-in-initrecord.good.al`.
+See sample: [`initialize-document-defaults-in-initrecord.good.al`](initialize-document-defaults-in-initrecord.good.al).
 
 ## Anti Pattern
 
 Assigning document defaults in a page trigger, or scattering them directly through `OnInsert` with no `InitRecord` boundary. Non-page creation paths can then miss the defaults, and extensions have no stable initialization hook.
 
-See sample: `initialize-document-defaults-in-initrecord.bad.al`.
+See sample: [`initialize-document-defaults-in-initrecord.bad.al`](initialize-document-defaults-in-initrecord.bad.al).
 
 ## Reference
 
