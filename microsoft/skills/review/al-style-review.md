@@ -3,7 +3,7 @@ kind: action-skill
 id: al-style-review
 version: 1
 title: AL style review
-description: Reviews AL source changes against naming, labelling, and code-convention guidance from BCQuality.
+description: Reviews AL source changes against naming, labelling, localization, and code-convention guidance from BCQuality.
 inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
@@ -16,7 +16,7 @@ application-area: [all]
 
 Reviews AL source changes against the `style` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-Style findings cover AL conventions that require contextual judgment — API page naming, temporary-variable prefixes, label semantics, named invocations, `FieldCaption`/`TableCaption` in user messages, error-parameter handling, and file naming. Mechanical compiler and analyzer rules are intentionally outside this skill; run the consuming app's configured analyzers separately.
+Style findings cover AL conventions that require contextual judgment — API page naming, temporary-variable prefixes, label semantics, date-formula localization, named invocations, `FieldCaption`/`TableCaption` in user messages, error-parameter handling, and file naming. Mechanical compiler and analyzer rules are intentionally outside this skill; run the consuming app's configured analyzers separately.
 
 An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. The skill produces a single JSON document conforming to the DO output contract.
 
@@ -40,8 +40,8 @@ Discard files that are not applicable. Retain conditionally applicable files onl
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
 - Changed AL objects — especially API pages (`PageType = API`), tables and pages declaring Labels/TextConsts, codeunits issuing `Error`/`Message`/`Confirm`, and any file whose name violates the `<ObjectName>.<ObjectType>.al` convention.
-- Changed declarations, weighted toward `: Label '...'`, `: TextConst '...'`, temporary record variables, error-handling call sites, and API declarations.
-- Tokens extracted from the diff (`Label`, `TextConst`, `Locked`, `Comment`, `MaxLength`, `temporary`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `DelayedInsert`, `FieldCaption`, `TableCaption`, `FieldName`, `TableName`, `Page.RunModal`, `Report.Run`, `StrSubstNo`).
+- Changed declarations, weighted toward `: Label '...'`, `: TextConst '...'`, temporary record variables, `DateFormula` declarations and their `Evaluate` call sites, error-handling call sites, and API declarations.
+- Tokens extracted from the diff (`Label`, `TextConst`, `Locked`, `Comment`, `MaxLength`, `temporary`, `DateFormula`, `Evaluate`, `CalcDate`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `DelayedInsert`, `FieldCaption`, `TableCaption`, `FieldName`, `TableName`, `Page.RunModal`, `Report.Run`, `StrSubstNo`).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object or declaration. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -50,6 +50,8 @@ Do not worklist `temporary-variable-temp-prefix.md` for an event publisher param
 Apply these high-signal mappings before fuzzy topic ranking:
 
 - A `Label` or `TextConst` contains multiple or ambiguous placeholders but has no `Comment`, or its Comment does not explain every placeholder — `label-comment-explains-placeholders.md`. A single placeholder whose meaning is explicit in the text, such as `Customer %1`, is allowed without a Comment and must not be flagged.
+- A normal two-argument `Evaluate` has a resolved `DateFormula` destination and a hard-coded non-angle-bracket date-formula literal, directly or through a visible constant — `dateformula-evaluate-needs-language-independent-literals.md`. Do not use this cue for dynamic/localized external input, already invariant `<...>` input, or direct `CalcDate(Text, ...)` calls.
+
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ and record suppressions.
 
 When the post-conflict worklist is empty because no applicable style knowledge exists, or because configuration suppressed every candidate, emit `outcome: "no-knowledge"`. When the worklist is empty because no applicable style knowledge matched the changes, emit `outcome: "completed"` with an empty `findings` array.
