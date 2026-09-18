@@ -39,7 +39,7 @@ Narrow the relevant files to the subset that applies to the changes under review
 
 - The changed AL object names and types — especially `interface` objects, codeunits and enums declared with the `implements` keyword, and consumers that declare or assign an `Interface` variable.
 - The changed procedures and triggers, weighted toward factory or dispatch routines that resolve a variant to behaviour, setter-injection procedures that take an `Interface` parameter, and `case`-over-enum blocks that select between strategies.
-- Tokens extracted from the diff that relate to interfaces and enum-backed implementation (`interface`, `extends`, `implements`, `Implementation`, `DefaultImplementation`, `UnknownValueImplementation`, `enum`, `Extensible`, `Interface`, `case`, and the `case <enum> of` anti-pattern signal — a `case` over an enum value whose branches choose between variant computations).
+- Tokens extracted from the diff that relate to interfaces and enum-backed implementation (`interface`, `extends`, `implements`, `Implementation`, `DefaultImplementation`, `UnknownValueImplementation`, `enum`, `Extensible`, `Interface`, `Variant`, `is`, `as`, `case`, and the `case <enum> of` anti-pattern signal — a `case` over an enum value whose branches choose between variant computations).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -54,6 +54,7 @@ The following targeted checks map diff signals to specific `interfaces` articles
 - `DefaultImplementation` used as the only fallback where a persisted ordinal may no longer match any declared enum value, or a persisted enum lacks `UnknownValueImplementation` on BC18 or later — `handle-unknown-enum-ordinals-with-unknownvalueimplementation`.
 - A method added directly to an interface that exists in the baseline, instead of adding a BC25+ interface that `extends` it or a versioned sibling for older targets — `extend-published-interfaces-dont-edit-them`.
 - A declared enum value with no `Implementation` and no enum-level `DefaultImplementation` — `set-defaultimplementation-on-enum`.
+- An `Interface` or `Variant` is cast with `as` to an optional extended interface without first establishing support with `is` — `guard-interface-casts-with-is`.
 
 For `set-defaultimplementation-on-enum`, inspect the complete containing enum before emitting. An enum-level `DefaultImplementation = <Interface> = <Codeunit>;` conclusively covers every declared value that omits its own `Implementation`; do not flag such a value and do not replace the intentional fallback with a per-value mapping.
 
