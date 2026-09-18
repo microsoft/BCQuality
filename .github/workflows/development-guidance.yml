@@ -1,0 +1,25 @@
+name: Validate read-only development guidance
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate-development-guidance:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate and prepare development-guidance fixtures
+        shell: pwsh
+        run: ./tools/Test-DevelopmentGuidanceFixtures.ps1 -Root . -PrepareDirectory "$env:RUNNER_TEMP/bcquality-development-guidance-fixtures"
+
+      - name: Run credential-free guidance evaluator regressions
+        shell: pwsh
+        run: ./tools/Test-DevelopmentGuidanceEvaluator.ps1

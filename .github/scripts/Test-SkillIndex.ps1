@@ -109,6 +109,20 @@ try {
         }
     }
 
+    $guidance = @($skills | Where-Object id -eq 'al-development-plan')
+    if ($guidance.Count -ne 1) {
+        throw "Expected exactly one al-development-plan record, found $($guidance.Count)."
+    }
+    if ((@($guidance[0].inputs) -join "`n") -cne ("development-plan`nrepository")) {
+        throw 'al-development-plan inputs were not indexed in declared order.'
+    }
+    if ((@($guidance[0].outputs) -join "`n") -cne 'development-guidance-report') {
+        throw 'al-development-plan output kind was not preserved in the skill index.'
+    }
+    if (@($guidance[0].subSkills).Count) {
+        throw 'al-development-plan must remain a leaf action skill.'
+    }
+
     $minimalReport = @{
         skill = @{ id = 'al-style-review'; version = 1 }
         outcome = 'completed'
