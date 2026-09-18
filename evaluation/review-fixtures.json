@@ -13,6 +13,20 @@
     "events": {
       "article": "reset-ishandled-only-when-the-value-can-carry-over"
     },
+    "finance": {
+      "articles": [
+        "apply-ledger-entries-through-application-codeunits",
+        "change-ledger-due-dates-through-entry-edit",
+        "do-not-edit-shared-dimension-sets",
+        "do-not-modify-or-delete-posted-ledger-entries",
+        "normal-vat-journal-amount-includes-vat",
+        "post-ledger-entries-through-posting-codeunits",
+        "preserve-journal-batch-document-balance",
+        "reverse-transactions-by-transaction-number",
+        "write-dimensions-as-dimension-set-entries"
+      ],
+      "context": "Target Business Central 28, worldwide standard application (w1). Review each file as an independent source input."
+    },
     "interfaces": {
       "article": "set-defaultimplementation-on-enum"
     },

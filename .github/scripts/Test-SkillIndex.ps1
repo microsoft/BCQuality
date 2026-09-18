@@ -93,14 +93,15 @@ try {
         'microsoft/skills/review/al-query-review.md',
         'microsoft/skills/review/al-reporting-review.md',
         'microsoft/skills/review/al-appsource-review.md',
-        'microsoft/skills/review/al-telemetry-review.md'
+        'microsoft/skills/review/al-telemetry-review.md',
+        'microsoft/skills/review/al-finance-review.md'
     )
     $review = @($skills | Where-Object id -eq 'al-code-review')
     if ($review.Count -ne 1) {
         throw "Expected exactly one al-code-review record, found $($review.Count)."
     }
     if ((@($review[0].subSkills) -join "`n") -cne ($expectedLeaves -join "`n")) {
-        throw 'al-code-review subSkills did not preserve the declared 17-leaf order.'
+        throw "al-code-review subSkills did not preserve the declared $($expectedLeaves.Count)-leaf order."
     }
     foreach ($leafPath in $expectedLeaves) {
         $leaf = @($skills | Where-Object path -ceq $leafPath)
@@ -238,4 +239,4 @@ finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Write-Output 'Skill-index check PASSED: deterministic, schema-valid, and all 17 review leaves preserved in order.'
+Write-Output "Skill-index check PASSED: deterministic, schema-valid, and all $($expectedLeaves.Count) review leaves preserved in order."
