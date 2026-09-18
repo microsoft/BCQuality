@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "skill": "microsoft/skills/development/al-implementation-guidance.md",
+  "minimumKnowledgeRecall": 1.0,
+  "minimumKnowledgePrecision": 0.67,
+  "cases": [
+    {
+      "id": "expanded-surface-adds-pii-field",
+      "title": "Current implementation expands beyond the plan into a privacy-sensitive schema surface",
+      "evidenceType": "production-shaped-synthetic",
+      "expectedOutcome": "completed",
+      "development-plan": {
+        "request": "Add an opt-in notification channel selected by an internal setup routine.",
+        "affected-files": ["src/Notifications/NotificationSetup.Codeunit.al"],
+        "test-strategy": "Verify the selected channel is persisted and used.",
+        "acceptance-criteria": ["A tenant can select and use the notification channel."]
+      },
+      "implementation-diff": "diff --git a/src/Notifications/NotificationSetup.TableExt.al b/src/Notifications/NotificationSetup.TableExt.al\nnew file mode 100644\n--- /dev/null\n+++ b/src/Notifications/NotificationSetup.TableExt.al\n@@\n+tableextension 71000 \"Notification Setup Ext.\" extends \"Notification Setup\"\n+{\n+    fields\n+    {\n+        field(71000; \"Recipient E-Mail\"; Text[250])\n+        {\n+            DataClassification = ToBeClassified;\n+        }\n+    }\n+}",
+      "decision-context": {
+        "phase": "implement-schema",
+        "decision": "Finalize the newly introduced recipient field before adding persistence tests.",
+        "decision-key": "notification-recipient-schema",
+        "evidence-fingerprint": "sha256:expanded-surface-v1",
+        "affected-files": ["src/Notifications/NotificationSetup.TableExt.al"],
+        "affected-symbols": ["tableextension 71000 Notification Setup Ext.", "field 71000 Recipient E-Mail"],
+        "changed-tokens": ["tableextension", "field", "DataClassification", "ToBeClassified"],
+        "tests": ["Persist and retrieve a recipient email in the setup extension."],
+        "acceptance-criteria": ["The new recipient field is suitable for release."],
+        "development-plan-pin": "plan:notification-channel:v1",
+        "implementation-evidence-pin": "diff:expanded-surface-v1"
+      },
+      "consumed-guidance": [
+        {
+          "path": "microsoft/knowledge/privacy/data-classification-required-on-pii-fields.md",
+          "decision-key": "notification-recipient-schema",
+          "evidence-fingerprint": "sha256:plan-only-v0",
+          "prior-decision": "No recipient field existed in the implementation surface."
+        }
+      ],
+      "context": {
+        "bc-version": "28",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": []
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/privacy/data-classification-required-on-pii-fields.md"
+      ],
+      "optionalKnowledge": [
+        "microsoft/knowledge/privacy/resolve-tobeclassified-before-release.md"
+      ],
+      "expectedOmitted": [],
+      "requiresUnresolved": false
+    },
+    {
+      "id": "exact-consumed-guidance-is-omitted",
+      "title": "Exact previously consumed guidance is not reissued",
+      "evidenceType": "production-shaped-synthetic",
+      "expectedOutcome": "no-knowledge",
+      "development-plan": {
+        "request": "Add a recipient email field to notification setup.",
+        "affected-files": ["src/Notifications/NotificationSetup.TableExt.al"],
+        "test-strategy": "Persist and retrieve the recipient.",
+        "acceptance-criteria": ["The recipient is stored with the intended schema."]
+      },
+      "implementation-diff": "diff --git a/src/Notifications/NotificationSetup.TableExt.al b/src/Notifications/NotificationSetup.TableExt.al\n@@\n+        field(71000; \"Recipient E-Mail\"; Text[250])\n+        {\n+            DataClassification = ToBeClassified;\n+        }",
+      "decision-context": {
+        "phase": "implement-schema",
+        "decision": "Finalize the recipient field classification.",
+        "decision-key": "notification-recipient-schema",
+        "evidence-fingerprint": "sha256:recipient-schema-v1",
+        "affected-files": ["src/Notifications/NotificationSetup.TableExt.al"],
+        "affected-symbols": ["field 71000 Recipient E-Mail"],
+        "changed-tokens": ["DataClassification", "ToBeClassified"],
+        "tests": ["Persist and retrieve a recipient email."],
+        "acceptance-criteria": ["The field classification is finalized."],
+        "development-plan-pin": "plan:notification-recipient:v1",
+        "implementation-evidence-pin": "diff:recipient-schema-v1"
+      },
+      "consumed-guidance": [
+        {
+          "path": "microsoft/knowledge/privacy/data-classification-required-on-pii-fields.md",
+          "decision-key": "notification-recipient-schema",
+          "evidence-fingerprint": "sha256:recipient-schema-v1",
+          "prior-decision": "Classify the recipient field according to the data it stores."
+        }
+      ],
+      "context": {
+        "bc-version": "28",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": []
+      },
+      "requiredKnowledge": [],
+      "optionalKnowledge": [],
+      "expectedOmitted": [
+        "microsoft/knowledge/privacy/data-classification-required-on-pii-fields.md"
+      ],
+      "requiresUnresolved": false
+    },
+    {
+      "id": "no-additional-guidance-control",
+      "title": "Comment-only implementation checkpoint has no additional guidance",
+      "evidenceType": "production-shaped-synthetic",
+      "expectedOutcome": "no-knowledge",
+      "development-plan": {
+        "request": "Correct a spelling error in an internal implementation comment without changing behavior.",
+        "affected-files": ["src/Notifications/NotificationDispatcher.Codeunit.al"],
+        "test-strategy": "Inspect the diff for comment-only changes.",
+        "acceptance-criteria": ["Executable AL is unchanged."]
+      },
+      "implementation-diff": "diff --git a/src/Notifications/NotificationDispatcher.Codeunit.al b/src/Notifications/NotificationDispatcher.Codeunit.al\n@@\n-        // Retreive the configured channel.\n+        // Retrieve the configured channel.",
+      "decision-context": {
+        "phase": "verify-diff",
+        "decision": "Confirm that the change remains comment-only.",
+        "decision-key": "notification-comment-spelling",
+        "evidence-fingerprint": "sha256:comment-only-v1",
+        "affected-files": ["src/Notifications/NotificationDispatcher.Codeunit.al"],
+        "affected-symbols": ["procedure DispatchNotification"],
+        "changed-tokens": ["comment"],
+        "tests": ["Inspect the patch for executable changes."],
+        "acceptance-criteria": ["Only comment text changes."],
+        "development-plan-pin": "plan:comment-spelling:v1",
+        "implementation-evidence-pin": "diff:comment-only-v1"
+      },
+      "consumed-guidance": [],
+      "context": {
+        "bc-version": "28",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": []
+      },
+      "requiredKnowledge": [],
+      "optionalKnowledge": [],
+      "expectedOmitted": [],
+      "requiresUnresolved": false
+    },
+    {
+      "id": "missing-current-decision-and-diff",
+      "title": "Plan-only input is not an implementation consultation",
+      "evidenceType": "production-shaped-synthetic",
+      "expectedOutcome": "not-applicable",
+      "development-plan": {
+        "request": "Add notification delivery.",
+        "affected-files": ["src/Notifications/NotificationDispatcher.Codeunit.al"],
+        "test-strategy": "Verify delivery.",
+        "acceptance-criteria": ["Notifications are delivered."]
+      },
+      "implementation-diff": "",
+      "decision-context": {},
+      "consumed-guidance": [],
+      "context": {
+        "bc-version": "28",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": []
+      },
+      "requiredKnowledge": [],
+      "optionalKnowledge": [],
+      "expectedOmitted": [],
+      "requiresUnresolved": false
+    },
+    {
+      "id": "read-only-public-interface-checkpoint",
+      "title": "Public interface checkpoint returns constraints without repository mutation",
+      "evidenceType": "production-shaped-synthetic",
+      "expectedOutcome": "completed",
+      "development-plan": {
+        "request": "Expose delivery status through the existing notification provider contract.",
+        "affected-files": ["src/Notifications/INotificationProvider.Interface.al"],
+        "test-strategy": "Compile existing and new provider implementations.",
+        "acceptance-criteria": ["Existing dependent provider implementations remain compatible."]
+      },
+      "implementation-diff": "diff --git a/src/Notifications/INotificationProvider.Interface.al b/src/Notifications/INotificationProvider.Interface.al\n@@\n interface \"Notification Provider\"\n {\n     procedure Send(NotificationId: Guid);\n+    procedure GetDeliveryStatus(NotificationId: Guid): Enum \"Delivery Status\";\n }",
+      "decision-context": {
+        "phase": "public-contract-checkpoint",
+        "decision": "Choose a compatible shape for the new delivery-status capability.",
+        "decision-key": "notification-provider-status-contract",
+        "evidence-fingerprint": "sha256:provider-interface-v2",
+        "affected-files": ["src/Notifications/INotificationProvider.Interface.al"],
+        "affected-symbols": ["interface Notification Provider", "procedure GetDeliveryStatus"],
+        "changed-tokens": ["interface", "procedure", "Enum"],
+        "tests": ["Compile unchanged dependent provider implementations.", "Compile a provider opting into delivery status."],
+        "acceptance-criteria": ["Existing implementations remain compatible."],
+        "development-plan-pin": "plan:delivery-status:v1",
+        "implementation-evidence-pin": "diff:provider-interface-v2"
+      },
+      "consumed-guidance": [],
+      "context": {
+        "bc-version": "28",
+        "technologies": ["al"],
+        "countries": ["w1"],
+        "application-area": ["all"],
+        "unknown": []
+      },
+      "requiredKnowledge": [
+        "microsoft/knowledge/interfaces/extend-published-interfaces-dont-edit-them.md"
+      ],
+      "optionalKnowledge": [],
+      "expectedOmitted": [],
+      "requiresUnresolved": false
+    }
+  ]
+}

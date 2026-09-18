@@ -168,3 +168,41 @@ article-read traces, resulting diffs, compile/test outcomes, and independent
 review evidence, including failures, no-knowledge, partial, and unresolved
 results. No compile/run or authoring-quality claim follows from the
 credential-free checks above.
+
+## Read-only implementation guidance
+
+`implementation-guidance-fixtures.json` covers a distinct just-in-time
+consultation contract. Its production-shaped synthetic AL contexts exercise a
+new privacy constraint after the implementation surface expands beyond the
+plan, exact consumed-guidance omission, an honest no-additional-guidance
+control, missing current diff/decision context, and a public-interface
+checkpoint. They are neutral fixtures, not copies of knowledge samples or
+evidence of a production integration.
+
+Validate and prepare the implementation manifest with the shared scorer:
+
+```powershell
+$run = Join-Path ([IO.Path]::GetTempPath()) 'bcquality-implementation-guidance-run'
+pwsh ./tools/Test-DevelopmentGuidanceFixtures.ps1 -Root . `
+    -ManifestPath ./evaluation/implementation-guidance-fixtures.json `
+    -PrepareDirectory $run
+pwsh ./tools/Test-ImplementationGuidanceEvaluator.ps1
+```
+
+The same runner-owned baseline and workspace-map flow used for plan guidance
+proves that evaluated target repositories remain byte-for-byte and
+Git-identity stable across scoring. The implementation regression adds strict
+phase/decision/pin preservation and exact path + decision key + evidence
+fingerprint deduplication checks. This remains before/after evidence, not an OS
+sandbox; it cannot detect a transient reverted write.
+
+BCQuality does not keep consumed state or run checkpoints automatically. The
+consumer chooses explicit checkpoints, persists consumed triples, recomputes
+evidence fingerprints, owns edits/build/tests/retries/delivery, and runs an
+independent final review. `no-knowledge` is only an additive retrieval outcome,
+never a functional-correctness or release-readiness claim.
+
+A future experiment should compare four matched arms: baseline, plan-only,
+implementation-only, and combined. Hold task, starting code, model, tools,
+runtime, checkpoints, and gates constant. This is a recommended evaluation
+design, not a claimed result.

@@ -79,7 +79,8 @@ Add scheduling, retries, and rendering only when needed, using the
 
 When BCQuality is installed as a standalone plugin, it additionally exposes
 `skills/al-code-review/SKILL.md` and
-`skills/al-development-plan/SKILL.md`. These are host-format adapters, not
+`skills/al-development-plan/SKILL.md`, and
+`skills/al-implementation-guidance/SKILL.md`. These are host-format adapters, not
 additional action skills: each creates the task context and enters the same
 flow at Entry.
 
@@ -175,6 +176,7 @@ The output contracts are defined in the DO meta-skill:
 
 - A **findings report** carries review findings, domain labels, references, confidence, and suppressions.
 - A **development guidance report** carries read-only knowledge constraints and validation considerations for an existing plan.
+- An **implementation guidance report** carries focused additional constraints for a current diff, phase, and next implementation or validation decision.
 
 The orchestrator parses this **without skill-specific logic**. This is the point of the contract: orchestrators and action skills evolve independently.
 
@@ -182,6 +184,11 @@ For plan enrichment, the skill reads the existing plan and target repository,
 selects applicable knowledge, and returns constraints without changing the
 target. It does not generate a replacement plan, run tests, implement code, or
 drive a review/fix loop. Implementation stays in the consuming workflow.
+
+For implementation consultation, the skill additionally reads the current
+implementation diff and explicit decision context. It does not broaden the
+plan again: it returns only knowledge that can change the next bounded
+implementation or validation decision.
 
 ### 7. Orchestrator integrates
 The orchestrator turns findings into PR comments, build gates, or IDE diagnostics. It can feed read-only guidance into its own implementation phases, preserving all existing approvals and delivery gates.
@@ -205,11 +212,21 @@ integration boundary, not a shipped consumer integration:
 3. Execute the dispatched `al-development-plan` skill. Persist the unchanged
    report and provenance **after** any consumer state initialization or cleanup
    that could erase them. BCQuality does not own the state directory or lifecycle.
-4. Inject relevant constraints and validation considerations into the existing
-   Baseline, Implement, propagation (such as MiApp), and Critique phases, or
-   equivalents. Re-enrich on material plan or applicability changes; preserve
-   the relationship between plan version, guidance, and implementation attempt.
-5. Run an independent final BCQuality review against the completed diff using
+4. Implement in the consumer workflow. At explicit checkpoints, invoke
+   `al-implementation-guidance` with the existing plan, readable repository,
+   current implementation diff, and decision context. Useful checkpoints
+   include schema/data upgrade, public APIs/events/interfaces, permissions,
+   external effects/job queues/`HttpClient`, telemetry/privacy, UI/page
+   background tasks, and tests. The coding agent may also initiate a bounded
+   consultation. This hybrid recommendation is visible orchestration, not
+   automatic hidden behavior.
+5. Apply returned constraints, edit, compile, test, and retry in the consumer.
+   Persist consumed article path, decision key, and evidence fingerprint in
+   consumer-owned state. Requery when the diff, affected files/symbols,
+   changed AL tokens, next decision, acceptance criteria, validation result, or
+   applicability context materially changes. Exact unchanged triples are
+   omitted deterministically; BCQuality stores no state.
+6. Run an independent final BCQuality review against the completed diff using
    the **same recorded immutable checkout** used for enrichment. Review the
    actual changes, not the guidance report as proof of correctness, then apply
    the consumer's ordinary delivery gates.
@@ -230,6 +247,90 @@ outcomes and recorded unknowns: seek missing context, re-enrich, escalate, or
 apply their existing risk controls without relabeling the report as successful.
 Do not fill gaps with generic articles simply to unlock implementation.
 
+For implementation consultation, `no-knowledge` means no additional applicable
+constraints for the exact current decision and evidence fingerprint. It does
+not establish functional correctness, safe deployment, adequate tests, or
+release readiness.
+
+### Minimal implementation consultation
+
+The consumer supplies the actual values separately from Entry's type list:
+
+```text
+BCQuality root: C:\Knowledge\BCQuality
+development-plan: <existing normalized plan>
+repository: C:\Repos\MyBusinessCentralApp
+implementation-diff: <current patch with exact changed files>
+decision-context:
+  phase: public-contract-checkpoint
+  decision: Choose a compatible shape for the new provider capability.
+  decision-key: provider-capability-contract
+  evidence-fingerprint: sha256:<consumer-computed-current-evidence>
+  affected-files: [src/Provider/INotificationProvider.Interface.al]
+  affected-symbols: [interface Notification Provider]
+  changed-tokens: [interface, procedure]
+  tests: [Compile existing and new provider implementations.]
+  acceptance-criteria: [Existing implementations remain compatible.]
+  development-plan-pin: plan:v1
+  implementation-evidence-pin: diff:v2
+consumed-guidance: []
+
+Invoke skills/entry.md with inputs-available:
+[development-plan, repository, implementation-diff, decision-context,
+consumed-guidance]. Execute only the dispatched implementation-guidance skill
+and return its implementation-guidance-report unchanged.
+```
+
+An abbreviated successful report is:
+
+```json
+{
+  "skill": { "id": "al-implementation-guidance", "version": 1 },
+  "outcome": "completed",
+  "summary": {
+    "request": "Expose delivery status through the provider contract.",
+    "phase": "public-contract-checkpoint",
+    "decision": "Choose a compatible shape for the new provider capability.",
+    "decision-key": "provider-capability-contract",
+    "evidence-fingerprint": "sha256:example",
+    "candidates": 1,
+    "selected": 1,
+    "omitted-consumed": 0
+  },
+  "pins": {
+    "knowledge-checkout": "0123456789abcdef0123456789abcdef01234567",
+    "development-plan": "plan:v1",
+    "implementation-evidence": "diff:v2"
+  },
+  "context": {
+    "bc-version": "28",
+    "technologies": ["al"],
+    "countries": ["w1"],
+    "application-area": ["all"],
+    "affected-files": ["src/Provider/INotificationProvider.Interface.al"],
+    "affected-symbols": ["interface Notification Provider"],
+    "changed-tokens": ["interface", "procedure"],
+    "unknown": []
+  },
+  "knowledge": [
+    {
+      "path": "microsoft/knowledge/interfaces/extend-published-interfaces-dont-edit-them.md",
+      "used-for": "Choose a compatible public contract shape.",
+      "constraints": ["Preserve the shipped interface and use the article's compatible extension shape."],
+      "sample-paths": ["microsoft/knowledge/interfaces/extend-published-interfaces-dont-edit-them.good.al"]
+    }
+  ],
+  "validation-considerations": [],
+  "deduplication": { "strategy": "omit-exact-consumed-match", "omitted": [] },
+  "suppressed": [],
+  "unresolved": []
+}
+```
+
+The example illustrates shape and provenance, not a functional-correctness
+claim. Consumers must still open the cited knowledge through the skill,
+compile, test, and independently review the resulting diff.
+
 ### Pinning and pilot evidence
 
 A configured tag or ref alone does not establish runtime pinning. Record the
@@ -247,6 +348,13 @@ checkout. Retain external logs, diffs, test/compile outcomes, and independent
 final reviews, including failures and unresolved results. Credential-free
 fixture preparation and scorer regressions do not demonstrate improved repair
 quality, compilation, runtime success, or production integration.
+
+A focused authoring experiment should use four matched arms: baseline without
+guidance, plan guidance only, implementation guidance only, and combined plan
+plus implementation guidance. Hold starting task/code, model, tools, runtime,
+checkpoints, and delivery gates constant; evaluate resulting diffs, compile and
+test evidence, independent final review, guidance precision, duplication, and
+cost. This is a recommended design, not a reported experiment or result.
 
 ## Knowledge-backed and agent findings
 

@@ -449,4 +449,6 @@ try {
 }
 
 # Intentional negative native-command probes leave LASTEXITCODE nonzero.
+& (Join-Path $PSScriptRoot 'Test-ImplementationGuidanceEvaluator.ps1')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 exit 0

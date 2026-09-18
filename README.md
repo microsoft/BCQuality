@@ -29,11 +29,13 @@ copilot plugin list
 The list should include `bcquality`. The plugin exposes
 [`al-code-review`](skills/al-code-review/SKILL.md) and the read-only
 [`al-development-plan`](skills/al-development-plan/SKILL.md) plan-enrichment
-skill. Installation and skill discovery are the general pattern; reviewing an
-app is one example of using it.
+and [`al-implementation-guidance`](skills/al-implementation-guidance/SKILL.md)
+consultation skills. Installation and skill discovery are the general pattern;
+reviewing an app is one example of using it.
 
-Plugin version `0.3.0` adds `al-development-plan`, a read-only adapter for
-enriching an **existing** plan. It does not generate a plan or implement code.
+Plugin version `0.4.0` adds `al-implementation-guidance`, a read-only,
+just-in-time consultation over the current diff and decision context. It does
+not edit code or run an implementation workflow.
 
 The adapters are intentionally not second implementations:
 
@@ -47,6 +49,11 @@ standalone host skill: skills/al-development-plan/SKILL.md
   -> routing contract: skills/entry.md
     -> enrichment skill: microsoft/skills/development/al-development-plan.md
       -> referenced constraints for the consumer's existing workflow (read-only)
+
+standalone host skill: skills/al-implementation-guidance/SKILL.md
+  -> routing contract: skills/entry.md
+    -> consultation skill: microsoft/skills/development/al-implementation-guidance.md
+      -> focused constraints for the consumer's next decision (read-only)
 ```
 
 Only the files under `skills/*/SKILL.md` follow the host's packaging format.
@@ -113,13 +120,16 @@ intentionally left to those deterministic tools rather than duplicated here.
 
 The read-only `al-development-plan` interface selects relevant constraints
 before the consumer implements its own existing plan.
+The distinct `al-implementation-guidance` interface consults the same corpus
+after implementation begins and selects only constraints capable of changing
+the next bounded implementation or validation decision.
 
 Repository-specific orchestrators retain planning, implementation, approvals,
 tests, environment, propagation, and delivery ownership. The intended flow is
-consumer analysis and normalized plan -> read-only BCQuality guidance ->
-existing implementation phases -> independent final BCQuality review ->
-delivery. Consumer uptake and a real runtime pilot are follow-up work, not
-implemented integrations or demonstrated authoring improvements.
+consumer analysis and normalized plan -> read-only plan guidance -> consumer
+implementation -> explicit read-only implementation checkpoints -> consumer
+edits and tests -> independent final BCQuality review -> delivery. BCQuality
+does not own checkpoint state or invoke itself automatically.
 
 `no-knowledge` means no additional applicable BCQuality constraints, with empty
 `knowledge`; it does not make a plan unsafe or prevent the consumer from using
@@ -151,8 +161,9 @@ and apply the relevant knowledge. Both live in three layers:
 | [Community](community/) | Community-owned skills and their knowledge. |
 | [Custom](custom/) | Organization-specific additions and overrides in your own fork. |
 
-Review skills emit a `findings-report`; plan enrichment emits a read-only
-`development-guidance-report`. Both contracts are defined in
+Review skills emit a `findings-report`; plan enrichment emits
+`development-guidance-report`; implementation consultation emits
+`implementation-guidance-report`. All contracts are defined in
 [`skills/do.md`](skills/do.md). See
 [how agents consume BCQuality](docs/agent-consumption.md) for the integration
 flow.
