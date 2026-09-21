@@ -211,6 +211,16 @@ mutations belong to Finance, even when that domain is not enabled. Equivalent
 findings for one inventory-originated posting bypass have one SCM primary
 owner; distinct independent financial defects remain separate.
 
+The Finance leaf reviews journal posting, financial ledger changes,
+applications, and posting-linked dimension handling. It prunes unrelated code
+at the leaf rather than changing broad-review orchestration. Finance articles
+use `application-area: [all]` so missing application-area context does not
+weaken applicable findings; resolved records and operations supply the
+narrowing. Finance owns financial ledgers, not Item, Value, Capacity, Warehouse,
+or inventory-application records owned by SCM. It also does not own generic
+custom-table or master Default Dimension wiring. Request a focused "Finance
+posting review" when only this domain is needed.
+
 BCQuality intentionally does not duplicate mechanical diagnostics already
 enforced by the AL compiler or standard analyzers. Run the consuming app's
 normal compiler and analyzer pipeline alongside review and authoring. Knowledge
@@ -230,6 +240,7 @@ Each article describes one concern. Where samples exist, use its linked
 | Data modeling | [Data modeling](../microsoft/knowledge/data-modeling/) |
 | Error handling | [Error handling](../microsoft/knowledge/error-handling/) |
 | Events | [Events](../microsoft/knowledge/events/) |
+| Finance | [Finance](../microsoft/knowledge/finance/) |
 | Interfaces | [Interfaces](../microsoft/knowledge/interfaces/) |
 | Performance | [Performance](../microsoft/knowledge/performance/) |
 | Privacy | [Privacy](../microsoft/knowledge/privacy/) |
