@@ -94,14 +94,16 @@ try {
         'microsoft/skills/review/al-query-review.md',
         'microsoft/skills/review/al-reporting-review.md',
         'microsoft/skills/review/al-appsource-review.md',
-        'microsoft/skills/review/al-telemetry-review.md'
+        'microsoft/skills/review/al-telemetry-review.md',
+        'microsoft/skills/review/al-scm-review.md',
+        'microsoft/skills/review/al-finance-review.md'
     )
     $review = @($skills | Where-Object id -eq 'al-code-review')
     if ($review.Count -ne 1) {
         throw "Expected exactly one al-code-review record, found $($review.Count)."
     }
     if ((@($review[0].subSkills) -join "`n") -cne ($expectedLeaves -join "`n")) {
-        throw 'al-code-review subSkills did not preserve the declared 17-leaf order.'
+        throw "al-code-review subSkills did not preserve the declared $($expectedLeaves.Count)-leaf order."
     }
     foreach ($leafPath in $expectedLeaves) {
         $leaf = @($skills | Where-Object path -ceq $leafPath)
@@ -152,6 +154,17 @@ try {
     } | ConvertTo-Json -Depth 10
     if (-not ($minimalGuidanceReport | Test-Json -SchemaFile $guidanceReportSchema -ErrorAction Stop)) {
         throw 'Minimal development-guidance report does not satisfy schemas/development-guidance-report.schema.json.'
+    }
+
+    $failedGuidanceReport = $minimalGuidanceReport | ConvertFrom-Json
+    $failedGuidanceReport.outcome = 'failed'
+    $failedGuidanceReport | Add-Member -NotePropertyName 'outcome-reason' -NotePropertyValue 'Retrieval failed.'
+    if (($failedGuidanceReport | ConvertTo-Json -Depth 10) | Test-Json -SchemaFile $guidanceReportSchema -ErrorAction SilentlyContinue) {
+        throw 'A failed development-guidance report with knowledge must not satisfy its JSON schema.'
+    }
+    $failedGuidanceReport.knowledge = @()
+    if (-not (($failedGuidanceReport | ConvertTo-Json -Depth 10) | Test-Json -SchemaFile $guidanceReportSchema -ErrorAction Stop)) {
+        throw 'A failed development-guidance report with empty knowledge must satisfy its JSON schema.'
     }
 
     $minimalReport = @{
@@ -283,4 +296,4 @@ finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Write-Output 'Skill-index check PASSED: deterministic, schema-valid, and all 17 review leaves preserved in order.'
+Write-Output "Skill-index check PASSED: deterministic, schema-valid, and all $($expectedLeaves.Count) review leaves preserved in order."

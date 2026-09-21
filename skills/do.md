@@ -421,7 +421,7 @@ The skill is read-only with respect to the target repository: no edits, generate
 
 ### Guidance field semantics
 
-`summary.request` preserves the planned intent and `kind` classifies it without replacing the plan. `candidates` and `selected` are non-negative integer counts: selected equals the number of unique `knowledge` entries and cannot exceed candidates. Counts are retrieval diagnostics, not capability or authoring-quality scores.
+`summary.request` preserves the planned intent and `kind` classifies it without replacing the plan. `candidates` and `selected` are non-negative integer counts: selected equals the number of distinct article paths in `knowledge` and cannot exceed candidates. Each article path appears at most once; combine its uses and constraints into that entry. Counts are retrieval diagnostics, not capability or authoring-quality scores.
 
 `knowledge[].constraints` is a non-empty list summarizing only normative `## Best Practice` and `## Anti Pattern` content from the referenced article. It must not introduce a Business Central fact absent from that article. `used-for` names the concrete plan decision. `sample-paths` contains only sibling samples that exist and were opened. All paths use forward slashes, are repository-relative, and must resolve inside the recorded BCQuality checkout; absolute paths, traversal, and links escaping that checkout are invalid. Every reference is subject to the reference-integrity gate.
 

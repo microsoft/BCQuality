@@ -6,6 +6,28 @@ The evaluation is convention-driven. The harness discovers every `<layer>/skills
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+The SCM `articles` override deliberately selects every rule in the initial
+functional domain, producing nine positive cases and nine clean controls.
+Business context is executable: document/status `TestField` guards,
+calculated-revaluation fields, source-transfer base quantities, warehouse
+reconciliation steps, and additional-demand promising parameters survive
+neutralization. Do not move those preconditions into comments or generic
+"posting" helper names; removing them can turn a real defect into a valid
+alternative workflow. The clean pairs exercise the supported APIs selected by
+the same routing cues, not merely unrelated code that contains no SCM tokens.
+
+The Finance override deliberately covers every paired Finance article, not
+only the first filename. Its shared context supplies the target version and
+localization but deliberately omits application area, as production callers
+often do. Finance applicability must come from its source-surface gate, not
+an artificial evaluation-only area hint. Scenario prerequisites live in
+executable AL: the document-balance cases check the template setting, and the
+VAT cases encode the imported net/VAT/gross totals and applicable VAT mode.
+Do not move these prerequisites into comments that preparation removes.
+Clean samples also retain supported operational edits, temporary ledger/set
+buffers, legitimate entry-number APIs, and reads of individual shortcut
+dimensions so these exceptions are exercised rather than blanket-excluded.
+
 ## Validate the corpus
 
 ```powershell

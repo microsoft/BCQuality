@@ -93,7 +93,8 @@ the review can still discover knowledge by reading the folders.
 
 ## Scope
 
-Today's curated content focuses on **technical AL code review**. It augments
+Today's curated content covers **technical AL code review** and a focused
+**Supply Chain Management (SCM)** functional domain. It augments
 the agent's judgment; it is not an exhaustive BC manual or a substitute for
 compilation, analyzers, tests, or human review. See
 [coverage and limits](docs/using-bcquality.md#coverage-and-limits) for the
@@ -120,9 +121,11 @@ its ordinary gates. Retrieval failures and materially unresolved conditional
 guidance are distinct outcomes, not empty knowledge. Do not add generic advice
 just to avoid a `no-knowledge` result.
 
-Functional areas such as Finance, Supply Chain Management, Manufacturing, Jobs,
-Warehousing, and Service, and technologies such as PowerShell, pipelines, and
-Power Platform, remain valid future scope, **not current coverage claims**.
+The [SCM domain](microsoft/knowledge/scm/) covers selected inventory, costing,
+reservation, tracking, and warehouse/posting workflows, not exhaustive supply
+chain validation. Broader functional coverage such as Finance, Manufacturing,
+Jobs, and Service, and technologies such as PowerShell, pipelines, and Power
+Platform, remain valid future scope, **not current coverage claims**.
 
 ## Plan-enrichment follow-up scope
 

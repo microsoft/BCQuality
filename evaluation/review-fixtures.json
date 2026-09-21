@@ -13,6 +13,20 @@
     "events": {
       "article": "reset-ishandled-only-when-the-value-can-carry-over"
     },
+    "finance": {
+      "articles": [
+        "apply-ledger-entries-through-application-codeunits",
+        "change-ledger-due-dates-through-entry-edit",
+        "do-not-edit-shared-dimension-sets",
+        "do-not-modify-or-delete-posted-ledger-entries",
+        "normal-vat-journal-amount-includes-vat",
+        "post-ledger-entries-through-posting-codeunits",
+        "preserve-journal-batch-document-balance",
+        "reverse-transactions-by-transaction-number",
+        "write-dimensions-as-dimension-set-entries"
+      ],
+      "context": "Target Business Central 28, worldwide standard application (w1). Review each file as an independent source input."
+    },
     "interfaces": {
       "article": "set-defaultimplementation-on-enum"
     },
@@ -51,8 +65,24 @@
         "stop-when-runrequestpage-returns-empty-parameters"
       ]
     },
+    "scm": {
+      "articles": [
+        "post-item-ledger-changes-through-item-journals",
+        "post-revaluation-through-the-item-journal-batch",
+        "change-item-applications-through-posting-routines",
+        "cancel-reservations-through-reservation-management",
+        "transfer-item-tracking-through-source-reservation-codeunits",
+        "reconcile-warehouse-adjustments-with-the-item-ledger",
+        "post-transfers-through-shipment-and-receipt-codeunits",
+        "use-date-aware-availability-for-promising",
+        "carry-out-requisition-actions-through-the-standard-workflow"
+      ]
+    },
     "style": {
-      "article": "label-comment-explains-placeholders"
+      "articles": [
+        "label-comment-explains-placeholders",
+        "dateformula-evaluate-needs-language-independent-literals"
+      ]
     },
     "telemetry": {
       "article": "telemetry-event-id-stable-unique"
