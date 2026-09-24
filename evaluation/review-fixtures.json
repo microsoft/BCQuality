@@ -10,6 +10,20 @@
     "breaking-changes": {
       "article": "do-not-expose-sensitive-data-through-public-api"
     },
+    "data-modeling": {
+      "articles": [
+        "check-blocked-in-referencing-code-not-in-master",
+        "extend-report-selection-usage-for-new-document-types",
+        "document-print-and-email-actions-call-report-selections-directly",
+        "custom-document-dispatch-must-not-bypass-report-selections",
+        "transferfields-mirrored-fields-must-match-type-and-length",
+        "extend-find-entries-navigate-for-new-document-types",
+        "activate-new-price-calculation-handler-via-onfindsupportedsetup",
+        "extend-price-source-type-must-sync-document-subset-enum",
+        "new-price-source-must-add-candidate-and-trigger-recalculation",
+        "report-barcodes-must-use-barcode-module-and-production-font-name"
+      ]
+    },
     "events": {
       "article": "reset-ishandled-only-when-the-value-can-carry-over"
     },
