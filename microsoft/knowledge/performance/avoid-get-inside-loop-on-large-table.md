@@ -15,7 +15,7 @@ A `Get` or `FindFirst` against another persistent table inside a loop can produc
 
 ## Best Practice
 
-Use a query object to join the outer and inner tables when the relationship and filters can be expressed as one query. If keys repeat, a dictionary cache can reduce lookups to one per distinct key. `SetLoadFields` can reduce the columns transferred by unavoidable inner reads, but it does not eliminate the N+1 shape and must not be presented as doing so.
+Use a query object to join the outer and inner tables when the relationship and filters can be expressed as one query. If complete lookup keys repeat and the result remains valid, a [scoped cache](cache-repeated-filtered-results-with-explicit-scope.md) can reduce lookups to one per distinct key; do not assume primary-key `Get` calls each hit SQL (see [transaction caching](primary-key-get-in-loop-is-transaction-cached.md)). `SetLoadFields` can reduce the columns transferred by unavoidable inner reads, but it does not eliminate the N+1 shape and must not be presented as doing so.
 
 See sample: [`avoid-get-inside-loop-on-large-table.good.al`](avoid-get-inside-loop-on-large-table.good.al).
 
