@@ -4,6 +4,15 @@ The evaluation is convention-driven. The harness discovers every `<layer>/skills
 
 `review-fixtures.json` contains only global thresholds and optional exceptional overrides. An override may select a different `article`, add context when the generic convention cannot express a scenario, or use an `articles` array when one domain needs explicit regression coverage for several paired articles. Specify either `article` or `articles`, not both. The first selected article retains the stable `<domain>-bad` and `<domain>-good` manifest IDs; additional articles use slug-qualified IDs. Overrides should remain empty in the normal case.
 
+CI also measures selected paired articles against every effective article that
+has both AL companions. A changed paired article must be selected by the
+domain convention or an override. When adding it would not provide a useful
+deterministic regression, add a narrow `coverageWaivers` entry with its exact
+article path and a non-empty reason. Waivers are reviewable exceptions, not a
+substitute for domain coverage. The generated coverage report includes totals
+and per-domain ratios; the ratio is informational, while changed-file coverage
+is mandatory.
+
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
 The SCM `articles` override deliberately selects every rule in the initial
@@ -35,6 +44,13 @@ pwsh ./tools/Test-ReviewFixtures.ps1 -Root .
 ```
 
 This credential-free check proves every selected leaf maps to a same-named knowledge domain with at least one complete AL sample pair and that all configured overrides are valid.
+
+To reproduce the changed-file gate and emit the same measurable report as CI:
+
+```powershell
+git diff --name-only origin/main...HEAD | Set-Content .changed-paths.txt
+pwsh ./tools/Test-ReviewFixtures.ps1 -Root . -ChangedPathsFile .changed-paths.txt -CoverageReportPath .coverage.json
+```
 
 ## Run a fast-model evaluation
 

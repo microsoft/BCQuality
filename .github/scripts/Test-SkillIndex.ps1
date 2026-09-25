@@ -30,9 +30,10 @@ function Assert-ThrowsLike {
 }
 
 $generator = Join-Path $Root 'tools/Build-SkillIndex.ps1'
+$resolver = Join-Path $Root 'tools/Resolve-SkillWorklist.ps1'
 $indexSchema = Join-Path $Root 'schemas/skill-index.schema.json'
 $reportSchema = Join-Path $Root 'schemas/findings-report.schema.json'
-foreach ($path in $generator, $indexSchema, $reportSchema) {
+foreach ($path in $generator, $resolver, $indexSchema, $reportSchema) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Required contract file not found: $path"
     }
@@ -235,9 +236,83 @@ Output.
     Assert-ThrowsLike -Pattern '*Nested super-skills are not supported*' -Action {
         & $generator -BCQualityRoot $fixtureRoot -IndexPath (Join-Path $tmp 'nested.json')
     }
+
+    Remove-Item -LiteralPath (Join-Path $fixtureSkills 'al-nested-review.md') -Force
+    $validSuper = @'
+---
+kind: action-skill
+id: al-code-review
+version: 1
+title: Review
+description: Test super-skill.
+inputs: [file-path]
+outputs: [findings-report]
+sub-skills:
+  - microsoft/skills/review/al-leaf-review.md
+---
+
+# Review
+
+## Source
+Source.
+## Relevance
+Relevance.
+## Worklist
+Worklist.
+## Action
+Action.
+## Output
+Output.
+'@
+    Set-Content -LiteralPath $superPath -Value $validSuper -Encoding utf8NoBOM
+
+    $customSkills = Join-Path -Path $fixtureRoot -ChildPath 'custom/skills/review'
+    New-Item -ItemType Directory -Path $customSkills -Force | Out-Null
+    $customLeaf = $leaf.Replace('title: Leaf', 'title: Custom Leaf')
+    Set-Content -LiteralPath (Join-Path $customSkills 'custom-leaf-review.md') -Value $customLeaf -Encoding utf8NoBOM
+
+    $layeredPath = Join-Path $tmp 'layered.json'
+    & $generator -BCQualityRoot $fixtureRoot -IndexPath $layeredPath | Out-Null
+    $layeredIndex = Get-Content -LiteralPath $layeredPath -Raw | ConvertFrom-Json
+    $layeredLeaves = @($layeredIndex.skills | Where-Object id -eq 'al-leaf-review')
+    if ($layeredLeaves.Count -ne 2) {
+        throw "Expected both layered al-leaf-review implementations, found $($layeredLeaves.Count)."
+    }
+    if ((@($layeredLeaves.layer | Sort-Object) -join ',') -cne 'custom,microsoft') {
+        throw 'Layered al-leaf-review implementations did not preserve custom and microsoft records.'
+    }
+
+    $resolved = & $resolver -BCQualityRoot $fixtureRoot -IndexPath $layeredPath -SuperSkillPath (
+        'microsoft/skills/review/al-code-review.md'
+    )
+    if ($resolved.subSkills.Count -ne 1 -or
+        $resolved.subSkills[0].path -cne 'custom/skills/review/custom-leaf-review.md') {
+        throw 'The custom implementation did not win the layered leaf slot.'
+    }
+
+    $microsoftOnly = & $resolver -BCQualityRoot $fixtureRoot -IndexPath $layeredPath -SuperSkillPath (
+        'microsoft/skills/review/al-code-review.md'
+    ) -EnabledLayers microsoft
+    if ($microsoftOnly.subSkills.Count -ne 1 -or
+        $microsoftOnly.subSkills[0].path -cne 'microsoft/skills/review/al-leaf-review.md') {
+        throw 'Disabling the custom layer did not fall back to the Microsoft implementation.'
+    }
+
+    $customDisabled = & $resolver -BCQualityRoot $fixtureRoot -IndexPath $layeredPath -SuperSkillPath (
+        'microsoft/skills/review/al-code-review.md'
+    ) -DisabledSkills 'custom/skills/review/custom-leaf-review.md'
+    if ($customDisabled.subSkills.Count -ne 1 -or
+        $customDisabled.subSkills[0].path -cne 'microsoft/skills/review/al-leaf-review.md') {
+        throw 'Disabling the custom implementation did not fall back to Microsoft.'
+    }
+
+    Set-Content -LiteralPath (Join-Path $customSkills 'duplicate-leaf-review.md') -Value $customLeaf -Encoding utf8NoBOM
+    Assert-ThrowsLike -Pattern '*Duplicate action-skill IDs within a layer: custom:al-leaf-review*' -Action {
+        & $generator -BCQualityRoot $fixtureRoot -IndexPath (Join-Path $tmp 'duplicate-layer.json')
+    }
 }
 finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Write-Output "Skill-index check PASSED: deterministic, schema-valid, and all $($expectedLeaves.Count) review leaves preserved in order."
+Write-Output "Skill-index check PASSED: deterministic, schema-valid, layered overrides resolved, and all $($expectedLeaves.Count) review leaves preserved in order."

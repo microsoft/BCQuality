@@ -18,7 +18,9 @@ param(
     [string] $ManifestPath,
     [string] $PrepareDirectory,
     [string] $ResultsPath,
-    [string] $ResultsDirectory
+    [string] $ResultsDirectory,
+    [string] $ChangedPathsFile,
+    [string] $CoverageReportPath
 )
 
 Set-StrictMode -Version Latest
@@ -160,7 +162,23 @@ foreach ($overrideDomain in $overrides.Keys) {
     }
 }
 
+$coverageWaivers = @{}
+if ($manifest.PSObject.Properties.Name -contains 'coverageWaivers') {
+    foreach ($waiver in @($manifest.coverageWaivers)) {
+        if (-not $waiver.path -or -not $waiver.reason) {
+            $problems.Add('Each coverage waiver requires non-empty path and reason values.') | Out-Null
+            continue
+        }
+        if ($coverageWaivers.ContainsKey([string]$waiver.path)) {
+            $problems.Add("Duplicate coverage waiver: $($waiver.path)") | Out-Null
+            continue
+        }
+        $coverageWaivers[[string]$waiver.path] = [string]$waiver.reason
+    }
+}
+
 $caseList = [System.Collections.Generic.List[object]]::new()
+$pairedArticlesByDomain = @{}
 foreach ($domain in $leafDomains) {
     $articleCandidates = @(
         foreach ($layer in $layers) {
@@ -189,6 +207,7 @@ foreach ($domain in $leafDomains) {
             ForEach-Object { $_.Group | Sort-Object Rank -Descending | Select-Object -First 1 } |
             Sort-Object BaseName
     )
+            $pairedArticlesByDomain[$domain] = @($articles)
     if (-not $articles.Count) {
         $problems.Add("${domain}: no enabled knowledge layer has an article with both .good.al and .bad.al companion samples.") | Out-Null
         continue
@@ -339,6 +358,65 @@ foreach ($domain in $leafDomains) {
     }
 }
 
+$selectedArticlePaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+foreach ($case in $cases) {
+    foreach ($reference in @($case.expected)) {
+        $selectedArticlePaths.Add([string]$reference) | Out-Null
+    }
+}
+$effectivePairedPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+$coverageDomains = @(
+    foreach ($domain in $leafDomains) {
+        $paired = @($pairedArticlesByDomain[$domain])
+        foreach ($article in $paired) {
+            $effectivePairedPaths.Add([string]$article.ArticlePath) | Out-Null
+        }
+        $selected = @($paired | Where-Object { $selectedArticlePaths.Contains([string]$_.ArticlePath) }).Count
+        [pscustomobject][ordered]@{
+            domain = $domain
+            pairedArticles = $paired.Count
+            selectedArticles = $selected
+            coverage = if ($paired.Count) { $selected / $paired.Count } else { 0 }
+        }
+    }
+)
+$pairedTotal = ($coverageDomains | Measure-Object pairedArticles -Sum).Sum
+$selectedTotal = ($coverageDomains | Measure-Object selectedArticles -Sum).Sum
+$coverageReport = [pscustomobject][ordered]@{
+    pairedArticles = $pairedTotal
+    selectedArticles = $selectedTotal
+    coverage = if ($pairedTotal) { $selectedTotal / $pairedTotal } else { 0 }
+    domains = $coverageDomains
+}
+if ($CoverageReportPath) {
+    $coverageParent = Split-Path -Parent $CoverageReportPath
+    if ($coverageParent -and -not (Test-Path -LiteralPath $coverageParent)) {
+        New-Item -ItemType Directory -Path $coverageParent -Force | Out-Null
+    }
+    $coverageReport | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $CoverageReportPath -Encoding utf8NoBOM
+}
+
+if ($ChangedPathsFile) {
+    if (-not (Test-Path -LiteralPath $ChangedPathsFile -PathType Leaf)) {
+        $problems.Add("Changed paths file not found: $ChangedPathsFile") | Out-Null
+    }
+    else {
+        foreach ($changedPathValue in Get-Content -LiteralPath $ChangedPathsFile) {
+            $changedPath = ([string]$changedPathValue).Trim().Replace('\', '/')
+            if ($changedPath -notmatch '^(microsoft|community|custom)/knowledge/[^/]+/(.+?)(?:\.(?:good|bad)\.al|\.md)$') {
+                continue
+            }
+            $articlePath = "$($Matches[1])/knowledge/$($changedPath.Split('/')[2])/$($Matches[2]).md"
+            if (-not $effectivePairedPaths.Contains($articlePath) -or $selectedArticlePaths.Contains($articlePath)) {
+                continue
+            }
+            if (-not $coverageWaivers.ContainsKey($articlePath)) {
+                $problems.Add("Changed paired article is not selected for evaluation and has no coverage waiver: $articlePath") | Out-Null
+            }
+        }
+    }
+}
+
 if ($problems.Count) {
     Write-Host "Review fixture validation FAILED ($($problems.Count) problem(s)):" -ForegroundColor Red
     $problems | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
@@ -474,7 +552,7 @@ if ($PrepareDirectory) {
 
 if (-not $ResultsPath -and -not $ResultsDirectory) {
     & (Join-Path $PSScriptRoot 'Test-ReviewContract.ps1') -Root $Root
-    Write-Host "Review fixture validation PASSED: $($cases.Count) cases cover $($leafDomains.Count) leaf domains." -ForegroundColor Green
+    Write-Host "Review fixture validation PASSED: $($cases.Count) cases cover $selectedTotal/$pairedTotal paired articles across $($leafDomains.Count) leaf domains." -ForegroundColor Green
     exit 0
 }
 

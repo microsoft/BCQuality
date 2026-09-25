@@ -46,8 +46,12 @@ The sub-skills invoked by this skill are those listed in frontmatter `sub-skills
 
 Hosts that orchestrate leaves mechanically SHOULD run
 `tools/Build-SkillIndex.ps1` and resolve this skill by `id: al-code-review`.
-The generated `subSkills` array preserves the frontmatter order and avoids
-host-specific Markdown parsing.
+The generated `subSkills` array preserves the frontmatter slot order and
+avoids host-specific Markdown parsing. Before invoking leaves, run
+`tools/Resolve-SkillWorklist.ps1` with this skill's path and the task's enabled
+layers and disabled skill paths. Each declared path supplies a leaf `id`; the
+resolver selects the highest-precedence enabled implementation with that `id`
+without changing slot order.
 
 ## Relevance
 

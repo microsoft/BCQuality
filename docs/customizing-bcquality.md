@@ -44,6 +44,15 @@ Otherwise the layers are additive. A matching filename alone does not suppress
 an article; the [READ contract](../skills/read.md#layer-precedence) governs
 knowledge conflicts. Review reports record displaced knowledge in `suppressed`.
 
+Action skills use the same layer order but override by frontmatter `id`. A
+custom leaf with the same `id` as a Community or Microsoft leaf replaces that
+leaf in every super-skill slot while its layer is enabled. The files may have
+different names. IDs must remain unique within each layer. Disabling the custom
+layer or the custom skill path makes composition fall back to the next enabled
+implementation. Hosts should build the skill index and use
+`tools/Resolve-SkillWorklist.ps1`; they must not implement this selection from
+filenames.
+
 Layer selection is **not an access-control boundary**. A plugin installation
 still contains excluded layers on disk. An integration requiring genuine
 exclusion must remove denied files from its own content copy before the agent
