@@ -38,7 +38,15 @@
         "job-queue-handlers-must-not-require-ui",
         "job-queue-handlers-must-propagate-failures",
         "job-queue-on-hold-does-not-stop-running-work",
-        "store-scheduled-task-id-to-avoid-duplicate-tasks"
+        "store-scheduled-task-id-to-avoid-duplicate-tasks",
+        "design-covering-keys-from-read-pattern",
+        "review-overlapping-keys-before-adding-an-index",
+        "preserve-buffered-inserts-by-separating-target-reads",
+        "aggregate-before-persisting-intermediate-results",
+        "cache-repeated-filtered-results-with-explicit-scope",
+        "avoid-repeating-unchanged-validation",
+        "calcsums-instead-of-calcfields-in-loop",
+        "temporary-tables-have-no-database-cost"
       ]
     },
     "privacy": {

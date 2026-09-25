@@ -20,6 +20,7 @@ codeunit 50242 "Perf Sample ModifyAll Good"
         StagingEntry: Record "Perf Import Staging Entry";
     begin
         StagingEntry.SetRange("Batch ID", BatchId);
+        StagingEntry.SetRange(Processed, false);
         // Processed has no OnValidate logic, and the equivalent loop uses Modify(false).
         StagingEntry.ModifyAll(Processed, true, false);
     end;

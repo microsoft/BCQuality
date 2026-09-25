@@ -13,7 +13,7 @@ application-area: [all]
 
 ## Description
 
-The Business Central server caches primary-key `Get` calls within a transaction. Query objects do not use that cache: every `Open`/`Read` goes to SQL. `avoid-get-inside-loop-on-large-table.md` is right when an unbounded inner `Get`/`FindFirst` joins two large sets. It is wrong as a blanket rewrite of repeated `Get` on the same keys. Replacing a cached `Get` with a Query that re-executes per call can be slower. This file exists so reviewers stop treating every `Get` inside a loop as a Query candidate.
+The Business Central server caches primary-key `Get` calls within a transaction. Query objects do not use that primary-key cache: reopening a Query per lookup executes the query again; `Read` consumes rows from an open query, not a new query for each row. `avoid-get-inside-loop-on-large-table.md` is right when an unbounded inner `Get`/`FindFirst` joins two large sets. It is wrong as a blanket rewrite of repeated `Get` on the same keys. Replacing a cached `Get` with a Query reopened per call can be slower.
 
 ## Best Practice
 
