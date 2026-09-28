@@ -1,18 +1,24 @@
 codeunit 50363 "Perf Variant Cache Bad"
 {
-    procedure CountLinesWithVariants(OrderNo: Code[20]) VariantLines: Integer
+    procedure CountAndCollectVariantLines(var TempSalesLine: Record "Sales Line" temporary; OrderNo: Code[20]; var VariantItemNos: List of [Code[20]]) VariantLines: Integer
     var
-        SalesLine: Record "Sales Line";
         ItemVariant: Record "Item Variant";
     begin
-        SalesLine.SetRange("Document Type", SalesLine."Document Type"::Order);
-        SalesLine.SetRange("Document No.", OrderNo);
-        SalesLine.SetRange(Type, SalesLine.Type::Item);
-        if SalesLine.FindSet() then
+        TempSalesLine.SetRange("Document Type", TempSalesLine."Document Type"::Order);
+        TempSalesLine.SetRange("Document No.", OrderNo);
+        TempSalesLine.SetRange(Type, TempSalesLine.Type::Item);
+        if TempSalesLine.FindSet() then
             repeat
-                ItemVariant.SetRange("Item No.", SalesLine."No.");
+                ItemVariant.SetRange("Item No.", TempSalesLine."No.");
                 if not ItemVariant.IsEmpty() then
                     VariantLines += 1;
-            until SalesLine.Next() = 0;
+            until TempSalesLine.Next() = 0;
+
+        if TempSalesLine.FindSet() then
+            repeat
+                ItemVariant.SetRange("Item No.", TempSalesLine."No.");
+                if not ItemVariant.IsEmpty() then
+                    VariantItemNos.Add(TempSalesLine."No.");
+            until TempSalesLine.Next() = 0;
     end;
 }

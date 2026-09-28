@@ -17,6 +17,7 @@ table 50360 "Perf Read Entry"
         key(PK; "Entry No.") { Clustered = true; }
         key(ByCustomerDate; "Customer No.", "Posting Date")
         {
+            // Supports the filters and explicit payload; implicit system fields may still require lookups.
             IncludedFields = "Item No.", Quantity;
         }
     }

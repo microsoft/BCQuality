@@ -46,7 +46,9 @@
         "cache-repeated-filtered-results-with-explicit-scope",
         "avoid-repeating-unchanged-validation",
         "calcsums-instead-of-calcfields-in-loop",
-        "temporary-tables-have-no-database-cost"
+        "temporary-tables-have-no-database-cost",
+        "use-setloadfields-for-partial-records",
+        "prefer-modifyall-over-per-row-modify"
       ]
     },
     "privacy": {
