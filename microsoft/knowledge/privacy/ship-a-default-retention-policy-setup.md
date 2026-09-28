@@ -1,7 +1,7 @@
 ---
-bc-version: [all]
+bc-version: [17..]
 domain: privacy
-keywords: [retention-policy-setup, retention-period, default-policy, unbounded-table-growth, opt-in-deletion, upgrade-tag]
+keywords: [retention-policy, retention-policy-setup, addallowedtable, findorcreateretentionperiod, retention-period, default-policy, unbounded-table-growth, opt-in-deletion, upgrade-tag]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -15,7 +15,7 @@ application-area: [all]
 
 ## Best Practice
 
-In the same install and upgrade routine that registers the table (see [`register-owned-log-tables-for-retention-policies.md`](register-owned-log-tables-for-retention-policies.md)), create the `Retention Policy Setup` record: reuse an existing `Retention Period` whose `"Retention Period"` enum value matches the period you want and create one only when none exists, then `Validate` `"Table Id"`, `"Apply to all records"` and `"Retention Period"` before inserting. Gate the creation on an upgrade tag so it happens once per company rather than on every upgrade. Default to inserting with `Enabled` set to false: pre-creating the line puts a reviewed, sensible period in front of the administrator while leaving the decision to delete tenant data with them. Shipping the policy enabled is defensible for rows that are purely diagnostic and documented as transient — state that choice, and the default period, in the app's onboarding material either way.
+In the same install and upgrade routine that registers the table (see [`register-owned-log-tables-for-retention-policies.md`](register-owned-log-tables-for-retention-policies.md)), create the `Retention Policy Setup` record: get the period code from `Codeunit "Retention Policy Setup".FindOrCreateRetentionPeriod`, which reuses an existing `Retention Period` with the requested enum value and otherwise creates one without colliding on an existing code (a hand-written lookup-then-insert fails when a period with the chosen code already exists for a different value), then `Validate` `"Table Id"`, `"Apply to all records"` and `"Retention Period"` before inserting. Gate the creation on an upgrade tag so it happens once per company rather than on every upgrade. Default to inserting with `Enabled` set to false: pre-creating the line puts a reviewed, sensible period in front of the administrator while leaving the decision to delete tenant data with them. Shipping the policy enabled is defensible for rows that are purely diagnostic and documented as transient — state that choice, and the default period, in the app's onboarding material either way.
 
 See sample: [`ship-a-default-retention-policy-setup.good.al`](ship-a-default-retention-policy-setup.good.al).
 

@@ -3,12 +3,21 @@ codeunit 50560 "Contoso Reten. Pol. Setup"
     Access = Internal;
 
     procedure AddAllowedTables()
+    begin
+        AddAllowedTables(false);
+    end;
+
+    // ForceUpdate re-registers even after the upgrade tag is set, so the
+    // table comes back when an administrator refreshes the allowed tables.
+    procedure AddAllowedTables(ForceUpdate: Boolean)
     var
         ContosoActivityLog: Record "Contoso Activity Log";
         RetenPolAllowedTables: Codeunit "Reten. Pol. Allowed Tables";
         UpgradeTag: Codeunit "Upgrade Tag";
+        IsInitialSetup: Boolean;
     begin
-        if UpgradeTag.HasUpgradeTag(AllowedTableTag()) then
+        IsInitialSetup := not UpgradeTag.HasUpgradeTag(AllowedTableTag());
+        if not (IsInitialSetup or ForceUpdate) then
             exit;
 
         if not RetenPolAllowedTables.IsAllowedTable(Database::"Contoso Activity Log") then
@@ -17,12 +26,19 @@ codeunit 50560 "Contoso Reten. Pol. Setup"
                 ContosoActivityLog.FieldNo(SystemCreatedAt),
                 28); // support cases need at least four weeks of log history
 
-        UpgradeTag.SetUpgradeTag(AllowedTableTag());
+        if IsInitialSetup then
+            UpgradeTag.SetUpgradeTag(AllowedTableTag());
     end;
 
     local procedure AllowedTableTag(): Code[250]
     begin
         exit('Contoso-ActivityLogAllowedTable-20260910');
+    end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Reten. Pol. Allowed Tables", OnRefreshAllowedTables, '', false, false)]
+    local procedure AddAllowedTablesOnRefreshAllowedTables()
+    begin
+        AddAllowedTables(true);
     end;
 }
 
