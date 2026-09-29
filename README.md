@@ -26,9 +26,24 @@ copilot plugin install microsoft/BCQuality
 copilot plugin list
 ```
 
-The list should include `bcquality`. The plugin currently exposes the
+The list should include `bcquality`. The plugin exposes the
 [`al-code-review`](skills/al-code-review/SKILL.md) skill. Installation and skill
 discovery are the general pattern; reviewing an app is one example of using it.
+
+The adapter is intentionally not a second implementation:
+
+```text
+standalone host skill: skills/al-code-review/SKILL.md
+  -> routing contract: skills/entry.md
+    -> review coordinator: microsoft/skills/review/al-code-review.md
+      -> domain review leaves
+```
+
+Only the files under `skills/*/SKILL.md` follow the host's packaging format.
+The remaining files are BCQuality's internal protocol and layered action
+skills. Entry remains the single owner of routing and index preparation. This
+separation keeps standalone installation available without duplicating policy
+in the adapter.
 
 ### Example: Review a complete app folder
 
@@ -47,6 +62,10 @@ Approve access only to a project you trust, then ask:
 
 The folder should contain `app.json` and your AL source; it does **not** need
 to be a Git repository. On macOS or Linux, use your app's local path instead.
+
+The host adapter and internal action skill intentionally share a name: they
+expose the same operation in two different skill formats. Their paths make the
+boundary explicit.
 
 Expect a report for each selected review, with findings, source locations,
 severity, confidence, and references to the relevant guidance. Some hosts show
@@ -83,11 +102,37 @@ available domains and the difference between a folder review and a comparison.
 Mechanical issues already enforced by the AL compiler or standard analyzers are
 intentionally left to those deterministic tools rather than duplicated here.
 
+BCQuality defines a provisional internal, read-only `al-development-plan`
+action-skill contract that selects relevant constraints before a consumer
+implements its own existing plan. It is not registered as a standalone plugin
+skill and does not change the plugin version. Consumer-owner agreement and a
+runtime pilot are required before treating it as a stable public surface.
+
+Repository-specific orchestrators retain planning, implementation, approvals,
+tests, environment, propagation, and delivery ownership. The intended flow is
+consumer analysis and normalized plan -> read-only BCQuality guidance ->
+existing implementation phases -> independent final BCQuality review ->
+delivery. Consumer uptake and a real runtime pilot are follow-up work, not
+implemented integrations or demonstrated authoring improvements.
+
+`no-knowledge` means no additional applicable BCQuality constraints, with empty
+`knowledge`; it does not make a plan unsafe or prevent the consumer from using
+its ordinary gates. Retrieval failures and materially unresolved conditional
+guidance are distinct outcomes, not empty knowledge. Do not add generic advice
+just to avoid a `no-knowledge` result.
+
 The [SCM domain](microsoft/knowledge/scm/) covers selected inventory, costing,
 reservation, tracking, and warehouse/posting workflows, not exhaustive supply
 chain validation. Broader functional coverage such as Finance, Manufacturing,
 Jobs, and Service, and technologies such as PowerShell, pipelines, and Power
 Platform, remain valid future scope, **not current coverage claims**.
+
+## Plan-enrichment follow-up scope
+
+Consumer agreement, consumer-owned persistence and phase injection, a pinned
+baseline comparison, and a runtime pilot remain follow-up work. BCQuality does
+not claim improved repairs or authoring effectiveness from this provisional
+contract alone.
 
 ## What's in this repo
 
@@ -99,6 +144,12 @@ and apply the relevant knowledge. Both live in three layers:
 | [Microsoft](microsoft/) | Microsoft-endorsed skills and their knowledge. |
 | [Community](community/) | Community-owned skills and their knowledge. |
 | [Custom](custom/) | Organization-specific additions and overrides in your own fork. |
+
+Review skills emit a `findings-report`; plan enrichment emits a read-only
+`development-guidance-report`. Both contracts are defined in
+[`skills/do.md`](skills/do.md). See
+[how agents consume BCQuality](docs/agent-consumption.md) for the integration
+flow.
 
 All three are enabled by default; Custom is empty upstream. You do not need
 to configure layers to get started.
