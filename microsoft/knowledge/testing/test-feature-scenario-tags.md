@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: testing
-keywords: [feature, scenario, given, when, then, tags, bdd, atdd, comments]
+keywords: [feature, scenario, given, when, then, tags, bdd, atdd, comments, subtype-test]
 technologies: [al]
 countries: [w1]
 application-area: [all]

@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: style
-keywords: [comments, verbosity, self-documenting, restate, tutorial-style]
+keywords: [comments, verbosity, self-documenting, restate, tutorial-style, credit-memo-routing]
 technologies: [al]
 countries: [w1]
 application-area: [all]

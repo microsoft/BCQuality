@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: style
-keywords: [pages, business-logic, codeunit, separation-of-concerns, presentation-layer]
+keywords: [pages, business-logic, codeunit, separation-of-concerns, presentation-layer, rec-modify]
 technologies: [al]
 countries: [w1]
 application-area: [all]

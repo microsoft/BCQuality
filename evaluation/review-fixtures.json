@@ -11,6 +11,21 @@
     "breaking-changes": {
       "article": "do-not-expose-sensitive-data-through-public-api"
     },
+    "data-modeling": {
+      "articles": [
+        "check-blocked-in-referencing-code-not-in-master",
+        "code-must-not-change-workdate",
+        "pictures-must-use-media-not-blob",
+        "table-design-must-match-bc-table-type-conventions"
+      ]
+    },
+    "error-handling": {
+      "articles": [
+        "collect-validation-errors-with-errorbehavior",
+        "defensive-vs-offensive-code-must-match-blast-radius",
+        "log-writes-must-survive-rollback"
+      ]
+    },
     "events": {
       "article": "reset-ishandled-only-when-the-value-can-carry-over"
     },
@@ -54,7 +69,9 @@
         "use-setautocalcfields-for-per-row-flowfields",
         "temporary-tables-have-no-database-cost",
         "use-setloadfields-for-partial-records",
-        "prefer-modifyall-over-per-row-modify"
+        "prefer-modifyall-over-per-row-modify",
+        "al-methods-limited-during-write-transactions",
+        "avoid-user-prompts-inside-transactions"
       ]
     },
     "privacy": {
@@ -98,13 +115,16 @@
     "security": {
       "articles": [
         "al-has-no-built-in-htmlencode",
-        "do-not-concatenate-external-text-into-setfilter"
+        "do-not-concatenate-external-text-into-setfilter",
+        "exposed-objects-must-be-in-a-permission-set"
       ]
     },
     "style": {
       "articles": [
         "label-comment-explains-placeholders",
-        "dateformula-evaluate-needs-language-independent-literals"
+        "dateformula-evaluate-needs-language-independent-literals",
+        "al-comments-must-not-restate-what-code-already-shows",
+        "pages-must-not-contain-business-logic"
       ]
     },
     "telemetry": {
@@ -113,11 +133,30 @@
     "testing": {
       "articles": [
         "ui-handlers-in-tests",
-        "reset-per-test-state-before-the-isinitialized-guard"
+        "reset-per-test-state-before-the-isinitialized-guard",
+        "asserterror-needs-expectederror-and-code",
+        "bcpt-scenarios-must-be-app-specific",
+        "commit-shared-test-fixture-inside-lazy-initialize",
+        "given-blocks-must-cover-full-precondition-chain",
+        "table-relation-test-exclude-known-invalid-relations-via-event",
+        "test-feature-scenario-tags",
+        "test-one-when-per-test",
+        "transactionmodel-attribute-governs-test-transactions",
+        "ui-test-codeunit-naming",
+        "use-assert-isfalse-not-asserterror-for-boolean-checks"
+      ]
+    },
+    "ui": {
+      "articles": [
+        "default-descending-sort-on-historical-pages",
+        "page-design-must-match-bc-page-type-conventions"
       ]
     },
     "upgrade": {
-      "article": "initvalue-does-not-update-existing-rows",
+      "articles": [
+        "initvalue-does-not-update-existing-rows",
+        "upgrade-tag-logic-must-not-nest-deeply"
+      ],
       "context": "The extended table existed in the previous app version and already contains rows."
     },
     "web-services": {
@@ -126,7 +165,8 @@
         "handle-httpclient-platform-failure-before-response-access",
         "check-http-status-before-consuming-response-body",
         "check-json-null-before-converting-values",
-        "format-exchanged-values-with-standard-format-9"
+        "format-exchanged-values-with-standard-format-9",
+        "api-page-least-privilege-write-access"
       ]
     }
   }
