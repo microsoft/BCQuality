@@ -3,6 +3,7 @@
   "selection": "first-paired-al-article",
   "minimumExpectedRecall": 1.0,
   "minimumCleanRate": 1.0,
+  "coverageWaivers": [],
   "overrides": {
     "agents": {
       "article": "wire-all-three-agent-interfaces"
@@ -41,11 +42,16 @@
         "store-scheduled-task-id-to-avoid-duplicate-tasks",
         "design-covering-keys-from-read-pattern",
         "review-overlapping-keys-before-adding-an-index",
+        "setcurrentkey-sets-sort-order-not-index-hint",
         "preserve-buffered-inserts-by-separating-target-reads",
         "aggregate-before-persisting-intermediate-results",
         "cache-repeated-filtered-results-with-explicit-scope",
         "avoid-repeating-unchanged-validation",
+        "avoid-get-inside-loop-on-large-table",
+        "isempty-before-findset-is-extra-round-trip",
+        "query-results-bypass-primary-key-cache",
         "calcsums-instead-of-calcfields-in-loop",
+        "use-setautocalcfields-for-per-row-flowfields",
         "temporary-tables-have-no-database-cost",
         "use-setloadfields-for-partial-records",
         "prefer-modifyall-over-per-row-modify"
@@ -85,7 +91,14 @@
         "reconcile-warehouse-adjustments-with-the-item-ledger",
         "post-transfers-through-shipment-and-receipt-codeunits",
         "use-date-aware-availability-for-promising",
-        "carry-out-requisition-actions-through-the-standard-workflow"
+        "carry-out-requisition-actions-through-the-standard-workflow",
+        "derive-base-quantities-through-the-line-unit-of-measure"
+      ]
+    },
+    "security": {
+      "articles": [
+        "al-has-no-built-in-htmlencode",
+        "do-not-concatenate-external-text-into-setfilter"
       ]
     },
     "style": {
@@ -98,14 +111,23 @@
       "article": "telemetry-event-id-stable-unique"
     },
     "testing": {
-      "article": "ui-handlers-in-tests"
+      "articles": [
+        "ui-handlers-in-tests",
+        "reset-per-test-state-before-the-isinitialized-guard"
+      ]
     },
     "upgrade": {
       "article": "initvalue-does-not-update-existing-rows",
       "context": "The extended table existed in the previous app version and already contains rows."
     },
     "web-services": {
-      "article": "expose-systemid-as-the-api-key"
+      "articles": [
+        "expose-systemid-as-the-api-key",
+        "handle-httpclient-platform-failure-before-response-access",
+        "check-http-status-before-consuming-response-body",
+        "check-json-null-before-converting-values",
+        "format-exchanged-values-with-standard-format-9"
+      ]
     }
   }
 }

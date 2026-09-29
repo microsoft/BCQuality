@@ -222,6 +222,12 @@ as a findings-report, a coordinator or host MUST validate it deterministically:
    inclusive range identify existing lines with `start-line == line` and
    `end-line >= start-line`.
 
+Hosts SHOULD execute `tools/Validate-FindingsReport.ps1` with the exact source
+scope and the leaf's recorded set of fully retrieved article paths. Pass
+`-SkillKind super` when validating a super-skill's rolled-up report. Pass
+`-AllowBoundedNormalization` only when the host preserves the immutable raw
+payload and records `removedRanges` in private telemetry as required above.
+
 Validation failure invalidates the complete return; consumers MUST NOT salvage
 individual findings, infer missing fields, reconstruct JSON, clamp ranges,
 rewrite paths, or otherwise silently repair model output. Preserve the invalid
@@ -356,16 +362,27 @@ performing any super-skill self-review or final rollup. Scheduling MUST NOT
 change relevance, coverage, failure, reference-integrity, or output semantics.
 
 Orchestrators SHOULD generate `skill-index.json` with
-`tools/Build-SkillIndex.ps1` and consume the super-skill's ordered `subSkills`
-from that index instead of parsing Markdown. Action-skill frontmatter remains
-the source of truth; the generated index conforms to
+`tools/Build-SkillIndex.ps1` instead of parsing Markdown. Each declared
+`subSkills` path defines an ordered leaf slot: its indexed `id` identifies the
+slot, while its path fixes the declaration order. Before scheduling leaves,
+the orchestrator MUST resolve each slot to the highest-precedence enabled,
+non-disabled leaf with that `id` (`custom` over `community` over `microsoft`).
+If no implementation remains, the slot is skipped with `reason:
+"configuration"`. The orchestrator SHOULD use
+`tools/Resolve-SkillWorklist.ps1` for this resolution. Action-skill
+frontmatter remains the source of truth; the generated index conforms to
 `schemas/skill-index.schema.json`.
+
+Layer resolution MUST NOT reorder slots. Multiple implementations with the
+same `id` are valid only when they belong to different layers; duplicate IDs
+within one layer are invalid. Disabling a winning implementation falls back
+to the next enabled implementation for that slot when one exists.
 
 ### Section interpretation for super-skills
 
 The five required sections still apply. Their meaning shifts from knowledge files to sub-skills:
 
-- `## Source` — names the sub-skills invoked (mirrors `sub-skills` in frontmatter).
+- `## Source` — names the declared sub-skill slots (mirrors `sub-skills` in frontmatter) and resolves their effective leaf implementations by the layered rule above.
 - `## Relevance` — rules for deciding which sub-skills apply to the current task. A sub-skill is relevant when its declared `inputs` are satisfied by the orchestrator's provided inputs and the orchestrator has not disabled it via configuration. The super-skill MUST NOT filter sub-skills by task content (for example, by inspecting the diff or the file). Task-level applicability is the sub-skill's own responsibility; sub-skills signal non-applicability by returning `outcome: "not-applicable"` or `outcome: "no-knowledge"`.
 - `## Worklist` — the final list of sub-skills to invoke; the rest go to `skipped-sub-skills`.
 - `## Action` — invoke each worklisted sub-skill with the appropriate subset of inputs, collect its findings-report verbatim into `sub-results`, and copy its `findings[]` into the super-skill's top-level `findings[]` with `from-sub-skill` set. All finding fields, including the optional `domain`, are preserved verbatim unless this contract explicitly requires a transformation. Findings from a sub-skill with `outcome: "failed"` MUST NOT be copied into the super-skill's top-level `findings[]` and MUST NOT contribute to the super-skill's `summary.counts` (their report is still preserved in `sub-results` for traceability, consistent with DO's rule that consumers ignore a failed skill's findings).

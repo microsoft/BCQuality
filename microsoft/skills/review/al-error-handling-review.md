@@ -22,6 +22,13 @@ An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-pat
 
 Use READ's **Bounded retrieval for review skills** workflow with `-Domain error-handling`. Consume every catalog page across enabled layers before applying this leaf's Relevance and Worklist; preserve each exact catalog path and open complete bodies only for exact paths selected by the Worklist. If the helper or prepared index is unavailable or invalid, use READ's explicit path-discovery and bounded native-read fallback.
 
+When the review scope contains outbound `HttpClient.Get` or `HttpClient.Post` calls, including resolved call paths, also retrieve every catalog page with `-Domain web-services`, using the same known task dimensions and enabled layers. Restrict supplementary candidates to these article slugs across enabled layers; the links identify their canonical owners:
+
+- [`handle-httpclient-platform-failure-before-response-access`](../../knowledge/web-services/handle-httpclient-platform-failure-before-response-access.md)
+- [`check-http-status-before-consuming-response-body`](../../knowledge/web-services/check-http-status-before-consuming-response-body.md)
+
+Retain each selected catalog row's exact `path`; do not invent paths for missing, pruned, or disabled entries. Apply this leaf's Relevance, Worklist, and READ layer precedence to the supplementary candidates before retrieving complete bodies with `Get-KnowledgeArticles.ps1`. Apply each selected article's own scope and exceptions when evaluating code and agent-finding candidates. Use READ's bounded path-discovery fallback over these same sources when needed. This supplements error-handling knowledge, not the scope of the review with unrelated web-services concerns.
+
 ## Relevance
 
 Apply the frontmatter matching rules defined in READ (*Frontmatter matching semantics*) against the task context:
@@ -40,6 +47,7 @@ Narrow the relevant files to the subset that applies to the changes under review
 - The changed AL object names and types — especially codeunits that post or validate, tables and table extensions with `OnValidate` triggers, and any procedure that raises errors or orchestrates a batch over records.
 - The changed procedures and triggers, weighted toward `OnValidate`/`OnInsert`/`OnModify` triggers, posting and validation routines, and procedures attributed with `[ErrorBehavior(...)]` or `[TryFunction]`.
 - Tokens extracted from the diff that relate to error surfacing and diagnostics (`Error`, `ErrorInfo`, `FieldError`, `TestField`, `Title`, `Message`, `DetailedMessage`, `AddAction`, `AddNavigationAction`, `RecordId`, `PageNo`, `ErrorBehavior`, `Collect`, `HasCollectedErrors`, `GetCollectedErrors`, `ClearCollectedErrors`, `ErrorType`, `Internal`, `Client`, `TryFunction`, `GetLastErrorText`, Boolean assignment).
+- For the outbound HTTP call paths identified in Source, include `HttpClient`, `Get`, `Post`, `HttpResponseMessage`, response use, and caller failure handling (including `[TryFunction]` call sites) in keyword and topic matching.
 - Resolve changed standalone call targets; when the target declaration has `[TryFunction]`, worklist the ignored-return rule even if the declaration itself is unchanged. Only assignment and conditional use activate try semantics.
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object type. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
@@ -47,6 +55,8 @@ A file enters the candidate worklist when its `keywords` intersect the extracted
 The following targeted checks cover every current `error-handling` article:
 
 - `[ErrorBehavior(ErrorBehavior::Collect)]`, `ErrorInfo.Collectible`, `HasCollectedErrors`, `GetCollectedErrors`, or `ClearCollectedErrors` is added or changed, especially when errors are collected without later surfacing/clearing them — `collect-validation-errors-with-errorbehavior`.
+- New or changed code inserts an error/duration log record around a failed `TryFunction`/`GetLastErrorText`/`GetLastErrorCode` path and then raises, propagates, or rethrows the error — `log-writes-must-survive-rollback`. Do not worklist it when the log insert already happens inside a `Session.StartSession`-targeted codeunit's `OnRun`; that is the compliant shape, not the signal to flag.
+- A guarded lookup (`if Record.Get(...) then ... else` or similar) sets a value used later, and the same guard shape (with the same blank/zero fallback style) is applied to a field that feeds a posted amount, a tax/VAT calculation, a quantity or price actually used in a transaction, or a legally/compliance-facing output — `defensive-vs-offensive-code-must-match-blast-radius`. The signal is a posting-critical or compliance-facing field guarded defensively with a silent fallback, not the mere presence of a guarded lookup.
 - Developer-only invariant text is raised with default client visibility, or a user-actionable validation is hidden as `ErrorType::Internal` — `errortype-internal-vs-client-for-diagnostics`.
 - `FieldError` receives a complete capitalized sentence, repeats the field caption/value, or ends the predicate with punctuation — `fielderror-default-message-logic`.
 - An unguarded `FieldError` is used as though it performed a comparison, or `TestField` is forced onto a complex rule needing a tailored predicate — `fielderror-vs-testfield`.

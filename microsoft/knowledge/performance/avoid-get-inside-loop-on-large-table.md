@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: performance
-keywords: [n-plus-one, get, findfirst, loop, inner-lookup, large-table]
+keywords: [n-plus-one, get, findfirst, loop, inner-lookup, large-table, item-get, query]
 technologies: [al]
 countries: [w1]
 application-area: [all]

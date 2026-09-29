@@ -77,6 +77,7 @@ paths; they select articles, not findings. Facts and exceptions stay in articles
 | Registered warehouse quantity/physical-adjustment synchronization, `"Directed Put-away and Pick"`, `"Adjustment Bin Code"`, `"Warehouse Adjustment"`, or `"Calculate Whse. Adjustment"` and the resulting item-journal posting | `reconcile-warehouse-adjustments-with-the-item-ledger` |
 | `"Transfer Header"`/`"Transfer Line"` shipment/receipt completion, transfer posting publishers, in-transit/document-link changes, or item-journal posting presented as transfer-order completion | `post-transfers-through-shipment-and-receipt-codeunits` |
 | `Inventory`, `CalcQtyAvailableToPromise`, or stock sums used in a dated supply/demand promise, including changed location/variant/date filters and source-demand context | `use-date-aware-availability-for-promising` |
+| Direct assignment to `Quantity`, `"Unit of Measure Code"`, `"Qty. per Unit of Measure"`, or a `(Base)` quantity field on a persisted or posted item journal, sales, purchase, or transfer line, or a line quantity compared with a base-unit inventory value | `derive-base-quantities-through-the-line-unit-of-measure` |
 | `"Requisition Line"` action-message execution, accepted planning suggestions, `"Req. Wksh.-Make Order"`, `CarryOutBatchAction`, or linked supply creation/change plus requisition-line deletion | `carry-out-requisition-actions-through-the-standard-workflow` |
 
 Route clean supported calls through the same cues, not just suspicious writes.

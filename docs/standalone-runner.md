@@ -49,16 +49,20 @@ only result.
    action skills to run. Do not reproduce its routing logic.
 3. Execute every dispatched action skill with the exact input subset in its
    dispatch record. Read `skills/read.md` and `skills/do.md` on demand.
-4. When an action skill declares `sub-skills`, execute every relevant leaf as a
-   discrete invocation. Leaves are independent and may be scheduled serially
-   or concurrently.
+4. When an action skill declares `sub-skills`, resolve its ordered leaf slots
+  with `tools/Resolve-SkillWorklist.ps1`, passing the enabled layers and
+  disabled skill paths from the task context. Execute every resolved leaf as
+  a discrete invocation. Leaves are independent and may be scheduled serially
+  or concurrently.
 5. Capture the exact Task return as the immutable raw audit payload and primary
    transport. Preserve it unchanged in private artifacts or host logs. Before
    the full DO acceptance gate, create a normalized candidate only for DO's
    bounded optional-range case, record that normalization separately in private
    telemetry, and accept the candidate only if the entire copy passes the
-   unchanged strict gate. The accepted report contains no undeclared telemetry
-   fields.
+  unchanged strict gate. Use `tools/Validate-FindingsReport.ps1`, passing the
+  exact source paths and fully retrieved article paths; pass `-SkillKind super`
+  for the final rolled-up report. The accepted report contains no undeclared
+  telemetry fields.
 6. Collect each accepted findings-report into `sub-results` in the declared
    `sub-skills` order, not completion order. Run the super-skill self-review
    only after all leaves have finished.
@@ -92,6 +96,8 @@ A compatible runner:
 
 - invokes every worklisted leaf exactly once unless a documented retry replaces
   a failed attempt;
+- resolves same-ID leaf implementations by `custom > community > microsoft`,
+  preserves declared slot order, and falls back when a higher layer is disabled;
 - keeps leaf contexts isolated and passes only the inputs they declare;
 - preserves each raw Task return unchanged for audit and distinguishes it from
   any normalized accepted copy;

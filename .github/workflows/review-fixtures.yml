@@ -12,7 +12,26 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Collect changed paths
+        shell: pwsh
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          $paths = if (-not $env:BASE_SHA -or $env:BASE_SHA -match '^0+$') {
+            @(git diff-tree --no-commit-id --name-only -r $env:GITHUB_SHA)
+          } else {
+            @(git diff --name-only $env:BASE_SHA $env:GITHUB_SHA)
+          }
+          $paths | Set-Content -LiteralPath "$env:RUNNER_TEMP/changed-paths.txt" -Encoding utf8NoBOM
 
       - name: Validate review evaluation corpus
         shell: pwsh
-        run: ./tools/Test-ReviewFixtures.ps1 -Root . -PrepareDirectory "$env:RUNNER_TEMP/bcquality-review-fixtures"
+        run: |
+          ./tools/Test-ReviewFixtures.ps1 -Root . `
+            -PrepareDirectory "$env:RUNNER_TEMP/bcquality-review-fixtures" `
+            -ChangedPathsFile "$env:RUNNER_TEMP/changed-paths.txt" `
+            -CoverageReportPath "$env:RUNNER_TEMP/review-coverage.json"
+          Get-Content -LiteralPath "$env:RUNNER_TEMP/review-coverage.json"

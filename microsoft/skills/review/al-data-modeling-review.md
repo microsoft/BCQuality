@@ -16,7 +16,7 @@ application-area: [all]
 
 Reviews AL source changes against the `data-modeling` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. Data-modeling findings are narrow by design — they apply when the review scope contains setup or master tables, their card pages, primary keys, number-series assignment, block enforcement, or audit fields. The skill returns `not-applicable` when none of those apply.
+An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. Data-modeling findings are narrow by design — they apply when the review scope contains setup or master tables, their card pages, primary keys, number-series assignment, block enforcement, audit fields, dimension wiring, journal-based posting-routine structure, or Item Ledger Entry document-number lookups after a combined sales post. The skill returns `not-applicable` when none of those apply.
 
 ## Source
 
@@ -46,6 +46,10 @@ A file enters the candidate worklist when its `keywords` intersect the extracted
 The following targeted checks cover every current `data-modeling` article. Treat each as a candidate-selection cue: when the signal appears in changed code, add the named article to the worklist and evaluate it in Action.
 
 - A `* Setup` table or its page changes singleton structure, uses a nonblank or generated key, permits insert/delete, uses a List page, or does not ensure the blank-keyed row exists — `setup-table-is-a-singleton`.
+- A new field is typed `Media`, `MediaSet`, or `BLOB` and the field's caption/name suggests a picture or image — `pictures-must-use-media-not-blob`.
+- Code outside a test codeunit or a demo-data generator calls `WorkDate(NewDate)` (the assignment form, not a bare `WorkDate()` read) as part of logic whose purpose is unrelated to the work date itself — `code-must-not-change-workdate`. A test deliberately setting a date context, or a demo-data routine that saves, sets, and restores the work date to backdate the data it creates, is not this anti-pattern.
+- A new or extended table's name, fields, or usage positively establish it as one of Business Central's nine business-record types — a name ending `Ledger Entry`/`Register`/`Journal Line`/`Header`/`Line`/`Setup`, an auto-generated `Entry No.`/`No.` key posted from elsewhere, a `Template Name`+`Batch Name`+`Line No.` key, or a singleton `Primary Key` field — `table-design-must-match-bc-table-type-conventions`. Do not worklist it from a bare `keys` block or primary-key declaration alone: a temporary/buffer table, a work queue, a log, a cross-reference/mapping table, or a process-local staging table is not one of the nine types and is out of this rule's scope entirely, not an unresolved case.
+- Code reads `Item Ledger Entry."Document No."` (or `"Last Shipping No."`/`"Last Posting No."`) after a combined Ship+Invoice **sales** post — `item-ledger-entry-document-no-follows-last-shipping-no`. This is a sales-specific rule: purchase combined posting is Receive+Invoice and uses receiving fields such as `"Last Receiving No."`, not the shipment/document-number behavior this article describes. Do not worklist it from purchase posting code.
 - A custom master table changes its primary key, `No.`/`No. Series` fields, or `OnInsert` without assigning a blank `No.` from setup through a number series — `master-table-no-from-number-series-in-oninsert`.
 - BC v22 or later code introduces or retains `NoSeriesManagement`, `InitSeries`, `SelectSeries`, or `SetSeries`, or number assignment/manual-entry checks do not use codeunit `"No. Series"` methods such as `GetNextNo`, `IsManual`, or `TestManual` — `use-no-series-codeunit-not-noseriesmanagement`.
 - A master gains or changes `Blocked`, or a document line, journal line, reference-field `OnValidate`, or posting routine uses that master without `TestField(Blocked, false)` at the point of use; also cue when the check is placed only in the master's own triggers — `check-blocked-in-referencing-code-not-in-master`.
@@ -54,6 +58,10 @@ The following targeted checks cover every current `data-modeling` article. Treat
 - A `Media` or `MediaSet` field is assigned directly between different table types or different field IDs instead of registering each shared item with `MediaSet.Insert` — `share-mediaset-items-with-insert-not-field-assignment`.
 - A custom document header assigns defaults outside an `InitRecord` boundary, calls `InitRecord` before assigning its number, or places UI-independent defaults only in a page trigger — `initialize-document-defaults-in-initrecord`.
 - Directed `Round` calls use `'<'` as mathematical floor or `'>'` as mathematical ceiling, especially where negative amounts are possible — `round-direction-symbols-use-magnitude`.
+- A new field is typed `Code`/`Text` and its `OnValidate` calls `DimensionManagement`/`DimMgt`, or a table adds Shortcut Dimension fields, a `Dimension Set ID` field, or `AddDimSource`/`GetDefaultDimID` — `dimension-management-wiring`. A master table calling `SaveDefaultDim` and a document/journal table computing its own `Dimension Set ID` are two different valid shapes; do not flag a master table for lacking a `Dimension Set ID` field or a document for lacking `SaveDefaultDim`.
+- A journal-based posting codeunit is added or changed and validation, Journal-table access, ledger writes, and user-interaction (`Confirm`/dialogs) all occur in one procedure or one codeunit, rather than split across `Check Line`/`Post Line`/`Post Batch`-shaped companions — `check-post-line-batch-pattern`. A document posting routine calling `Post Line` directly without a `Post Batch` companion is not this anti-pattern.
+- An existing, already-published table's `keys` block adds, removes, or reorders a field in its primary key or any `Clustered = true` key — `do-not-change-primary-key`. A new table defining its own key for the first time is not this anti-pattern; requires repository/publication context to know the table has already shipped.
+- Code reads a setup/configuration-table field inside a branch that has already decided the value is required, and blank/zero is handled with a fallback to a default rather than `TestField`/an equivalent guard — `testfield-required-setup-field`. A read that is genuinely optional in that branch, or one already guarded by `TestField`, is not this anti-pattern.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ. Drop lower-precedence files whose normative guidance (`## Best Practice` or `## Anti Pattern`) directly contradicts a higher-precedence candidate, and record each dropped file in `suppressed` with `reason: "layer-precedence"`. Files that would have been candidates but are hidden because their layer is disabled in consumer configuration are recorded with `reason: "configuration"`. Files that never became candidates are NOT recorded in `suppressed`.
 
@@ -83,7 +91,7 @@ Outcome selection:
 
 - `completed` — the skill evaluated every worklist item.
 - `no-knowledge` — no applicable data-modeling knowledge survived filtering.
-- `not-applicable` — the diff touches no setup/master table, page, key, numbering, block-check, or audit-field surface.
+- `not-applicable` — the diff touches no setup/master table, page, key, numbering, block-check, audit-field, dimension-wiring, posting-routine-structure, or Item-Ledger-Entry-document-number surface.
 - `partial` — a budget was hit before the worklist was exhausted.
 - `failed` — an unrecoverable error occurred.
 

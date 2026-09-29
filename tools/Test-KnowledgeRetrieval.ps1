@@ -348,6 +348,60 @@ try {
     $indexPath = Join-Path $tmp 'knowledge-index.json'
     & $generator -BCQualityRoot $Root -IndexPath $indexPath | Out-Null
     $index = Get-Content -LiteralPath $indexPath -Raw -Encoding utf8 | ConvertFrom-Json
+
+    # Check the declared finder route and real tool reachability, not model compliance.
+    $errorSkill = Get-Content -LiteralPath (Join-Path $Root 'microsoft/skills/review/al-error-handling-review.md') -Raw
+    $errorSource = [regex]::Match($errorSkill, '(?ms)^## Source\r?\n(.*?)(?=^## )').Groups[1].Value
+    $sourceDomains = @([regex]::Matches($errorSource, '-Domain ([a-z-]+)') | ForEach-Object { $_.Groups[1].Value })
+    Assert-Sequence $sourceDomains @('error-handling', 'web-services') 'error-handling declares its own and supplementary HTTP catalogs'
+    foreach ($cue in @('HttpClient.Get', 'HttpClient.Post', 'resolved call paths', 'same known task dimensions and enabled layers')) {
+        Assert-True ($errorSource.Contains($cue)) "supplementary source retains '$cue'"
+    }
+    $httpArticleNames = @(
+        [regex]::Matches($errorSource, '\]\(\.\./\.\./knowledge/web-services/([a-z-]+\.md)\)') |
+            ForEach-Object { $_.Groups[1].Value }
+    )
+    Assert-Sequence $httpArticleNames @(
+        'handle-httpclient-platform-failure-before-response-access.md'
+        'check-http-status-before-consuming-response-body.md'
+    ) 'supplementary source names only the two canonical HTTP articles'
+    $httpArguments = @{
+        BCQualityRoot = $Root
+        IndexPath = $indexPath
+        EnabledLayers = @('microsoft', 'community', 'custom')
+        Technologies = @('al')
+        BCVersion = 28
+        Countries = @('w1')
+    }
+    $ownCatalog = Invoke-CatalogPages -Arguments ($httpArguments + @{ Domain = $sourceDomains[0] })
+    Assert-True (-not @($ownCatalog.candidates | Where-Object { $_.path -like '*/knowledge/web-services/*' }).Count) 'the primary catalog does not silently expand domains'
+    $httpCatalog = Invoke-CatalogPages -Arguments ($httpArguments + @{ Domain = $sourceDomains[1] })
+    $httpRows = @($httpCatalog.candidates | Where-Object { $httpArticleNames -ccontains ($_.path -split '/')[-1] })
+    $expectedHttpPaths = @(
+        $index.articles |
+            Where-Object { $_.domain -ceq 'web-services' -and $httpArticleNames -ccontains ($_.path -split '/')[-1] } |
+            ForEach-Object path |
+            Sort-Object
+    )
+    foreach ($name in $httpArticleNames) {
+        Assert-True ($expectedHttpPaths -ccontains "microsoft/knowledge/web-services/$name") "canonical owner exists for $name"
+    }
+    Assert-Sequence @($httpRows.path | Sort-Object) $expectedHttpPaths 'supplementary selection preserves exact paths across layers'
+    Test-BodyRoundTrip -Paths $httpRows.path -IndexPath $indexPath
+    foreach ($excludedContext in @(
+        @{ EnabledLayers = @() }
+        @{ Technologies = @('javascript') }
+    )) {
+        $arguments = $httpArguments + @{ Domain = $sourceDomains[1] }
+        foreach ($key in $excludedContext.Keys) {
+            $arguments[$key] = $excludedContext[$key]
+        }
+        $catalog = Invoke-CatalogPages -Arguments $arguments
+        $selected = @($catalog.candidates | Where-Object { $httpArticleNames -ccontains ($_.path -split '/')[-1] })
+        Assert-Equal $selected.Count 0 'supplementary selection respects disabled layers and nonmatching technology'
+    }
+    Write-Host 'HTTP source contract and exact-body reachability passed; model routing was not evaluated.'
+
     $diskArticlePaths = @(
         foreach ($layer in 'microsoft', 'community', 'custom') {
             $knowledge = Join-Path $Root "$layer\knowledge"

@@ -203,9 +203,19 @@ foreach ($layer in 'microsoft', 'community', 'custom') {
     }
 }
 
-$ids = @($records | Group-Object id | Where-Object Count -gt 1)
-if ($ids.Count) {
-    throw "Duplicate action-skill IDs: $($ids.Name -join ', ')"
+$idsWithinLayer = @(
+    $records |
+        Group-Object { "$($_.layer)`0$($_.id)" } |
+        Where-Object Count -gt 1
+)
+if ($idsWithinLayer.Count) {
+    $duplicates = @(
+        $idsWithinLayer | ForEach-Object {
+            $parts = $_.Name -split "`0", 2
+            "$($parts[0]):$($parts[1])"
+        }
+    )
+    throw "Duplicate action-skill IDs within a layer: $($duplicates -join ', ')"
 }
 
 foreach ($record in $records) {

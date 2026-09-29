@@ -688,12 +688,16 @@ def run(root: Path) -> Report:
             if domain_dir.is_dir():
                 validate_samples_in_domain(domain_dir, root, report)
 
-    # Third pass: R24 unique ids within kind
+    # Third pass: R24 unique ids within kind. Layered action-skill overrides
+    # may share an id, but two definitions in one layer are ambiguous.
     by_kind: dict[str, dict[str, list[Path]]] = {}
     for rec in skill_records:
         if rec.skill_id is None:
             continue
-        by_kind.setdefault(rec.kind, {}).setdefault(rec.skill_id, []).append(rec.path)
+        scope = rec.kind
+        if rec.kind == "action-skill":
+            scope = f"{rec.kind}:{rec.path.relative_to(root).parts[0]}"
+        by_kind.setdefault(scope, {}).setdefault(rec.skill_id, []).append(rec.path)
     for kind, by_id in by_kind.items():
         for sid, paths in by_id.items():
             if len(paths) > 1:
