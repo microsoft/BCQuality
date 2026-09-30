@@ -23,11 +23,7 @@
       "article": "use-isempty-for-existence-check"
     },
     "privacy": {
-      "article": "no-pii-in-telemetry-message-string",
-      "additionalArticles": [
-        "register-owned-log-tables-for-retention-policies",
-        "ship-a-default-retention-policy-setup"
-      ]
+      "article": "no-pii-in-telemetry-message-string"
     },
     "style": {
       "article": "label-comment-explains-placeholders"
