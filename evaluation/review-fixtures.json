@@ -84,7 +84,11 @@
       ]
     },
     "privacy": {
-      "article": "no-pii-in-telemetry-message-string"
+      "articles": [
+        "no-pii-in-telemetry-message-string",
+        "register-owned-log-tables-for-retention-policies",
+        "ship-a-default-retention-policy-setup"
+      ]
     },
     "query": {
       "articles": [
