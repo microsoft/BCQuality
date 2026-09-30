@@ -17,6 +17,7 @@
         "check-blocked-in-referencing-code-not-in-master",
         "code-must-not-change-workdate",
         "custom-document-dispatch-must-not-bypass-report-selections",
+        "document-line-prices-follow-prices-including-vat",
         "document-print-and-email-actions-call-report-selections-directly",
         "extend-find-entries-navigate-for-new-document-types",
         "extend-price-source-type-must-sync-document-subset-enum",
