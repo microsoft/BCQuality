@@ -1,0 +1,18 @@
+name: Validate skill index and report schemas
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate skill-index generator and schemas
+        shell: pwsh
+        run: ./.github/scripts/Test-SkillIndex.ps1 -Root .

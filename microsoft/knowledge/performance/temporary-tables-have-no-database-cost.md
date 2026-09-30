@@ -15,8 +15,12 @@ A temporary table stores its rows in Business Central Server memory instead of a
 
 ## Best Practice
 
-Do not apply SQL-specific findings such as missing `SetLoadFields`, lock contention, or N+1 database round-trips to a temporary record. Still assess memory volume and repeated scans or lookups. For a pure key-to-value collection, consider an AL `Dictionary`; keep a temporary table when record fields, keys, filtering, or ordered iteration are required.
+Do not apply SQL-specific findings such as missing `SetLoadFields`, lock contention, or N+1 database round-trips to a temporary record. Still assess memory volume and repeated scans or lookups. In a matrix, if each cell re-sums the same group, calculate the totals once at the complete group key and reuse them; invalidate or adjust totals if cells change. For a pure key-to-value collection, consider an AL `Dictionary`; keep a temporary table when record fields, keys, filtering, or ordered iteration are required. Measure AL time and peak memory, not just SQL time.
+
+See sample: [`temporary-tables-have-no-database-cost.good.al`](temporary-tables-have-no-database-cost.good.al).
 
 ## Anti Pattern
 
 Claiming that every temporary-table access pattern is free because no SQL is involved. A nested scan over a large in-memory buffer can still dominate service-tier CPU, while adding `SetLoadFields` to that buffer addresses a database cost that does not exist.
+
+See sample: [`temporary-tables-have-no-database-cost.bad.al`](temporary-tables-have-no-database-cost.bad.al).

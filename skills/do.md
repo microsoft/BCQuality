@@ -106,6 +106,12 @@ Every action skill MUST contain these five sections, in order:
 
 Every action skill emits a single JSON document that conforms to this schema:
 
+The machine-readable structural schema is
+[`schemas/findings-report.schema.json`](../schemas/findings-report.schema.json).
+The rules below remain authoritative for semantic checks that JSON Schema
+cannot perform by itself, including summary arithmetic, reference existence,
+source-scope locations, and article-body retrieval.
+
 ```json
 {
   "skill": { "id": "string", "version": 1 },
@@ -158,6 +164,77 @@ Every action skill emits a single JSON document that conforms to this schema:
 The emitted document MUST be strict, valid JSON per [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259). Inside every string value, all double quotes MUST be escaped as `\"` and all line breaks as `\n`; other control characters MUST use their JSON escapes. This is not optional polish — it is the difference between a parseable report and one a consumer silently drops.
 
 AL source is the common failure case. Quoted identifiers (for example `Rec."No."`) and multi-line snippets routinely appear in `message`, `suggested-code`, and `suggested-code-omission-reason`, and each embedded quote or newline MUST be escaped when placed in a string value. A `suggested-code` payload that spans several lines is a single JSON string with `\n` separators, not a literal multi-line block. Emit the document as one JSON value with no trailing commentary, and do not rely on the consumer to repair unescaped output.
+
+### Consumer acceptance gate
+
+Capture the exact Task return as the immutable raw audit payload and primary
+transport. Preserve it unchanged in private run artifacts or host logs before
+creating any derived value. The accepted findings-report is either that exact
+return or the bounded normalized candidate described below; the raw audit
+payload never changes.
+
+Before the full acceptance gate, a coordinator MAY create a normalized
+candidate copy only through this deterministic procedure:
+
+1. Parse the exact return as strict JSON and provisionally check the complete
+   report without mutating it. Every acceptance rule below MUST already pass
+   except for one or more findings whose optional `location.range` has
+   `start-line != line`.
+2. Each such finding is eligible only when `location.line`,
+   `location.range.start-line`, and `location.range.end-line` are positive
+   integers, `start-line <= line <= end-line`, and the finding does not contain
+   the `suggested-code` field. Field presence disqualifies normalization even
+   if its value is empty because suggested code may be bound to the reported
+   range.
+3. Deep-copy the complete parsed report. In the candidate copy, remove only
+   `location.range` from every eligible finding. Retain `location.line` and
+   every other value unchanged. Do not add normalization metadata to the
+   findings-report.
+4. Record each removed range separately in private run telemetry or artifacts,
+   associated with the immutable raw audit payload. This record is
+   runner-owned and is not part of the declared report schema.
+5. Validate the entire normalized candidate with the existing full consumer
+   acceptance gate below. Only a candidate that passes every rule becomes the
+   accepted copy used for rollup. If any other validation defect exists, or
+   full validation fails, discard the candidate, preserve the raw payload, and
+   fail the complete leaf as before.
+
+This exception does not infer missing fields, alter references or paths, clamp
+line numbers, repair JSON, normalize a reversed or out-of-bounds range, remove
+a range from a finding containing `suggested-code`, or salvage arbitrary
+individual findings.
+
+Before accepting either the exact return or an eligible normalized candidate
+as a findings-report, a coordinator or host MUST validate it deterministically:
+
+1. Validate every required field, enum, type, conditional requirement, summary
+   count, coverage value, and leaf/super-skill constraint against this output
+   contract.
+2. For every knowledge-backed finding, verify each `references[].path` is an
+   exact repo-relative knowledge path that exists in the live BCQuality
+   snapshot, and verify `findings[].id` exactly equals
+   `references[0].path`. Verify each path is also present in the coordinator's
+   recorded set of complete article bodies retrieved for that leaf; catalog
+   membership alone is insufficient. Keep optional `references[].sha`
+   separate: it is commit provenance, not an article content hash.
+3. For every `location`, verify `file` is an exact source path in the supplied
+   review scope, the file exists in that source snapshot, and `line` and any
+   inclusive range identify existing lines with `start-line == line` and
+   `end-line >= start-line`.
+
+Hosts SHOULD execute `tools/Validate-FindingsReport.ps1` with the exact source
+scope and the leaf's recorded set of fully retrieved article paths. Pass
+`-SkillKind super` when validating a super-skill's rolled-up report. Pass
+`-AllowBoundedNormalization` only when the host preserves the immutable raw
+payload and records `removedRanges` in private telemetry as required above.
+
+Validation failure invalidates the complete return; consumers MUST NOT salvage
+individual findings, infer missing fields, reconstruct JSON, clamp ranges,
+rewrite paths, or otherwise silently repair model output. Preserve the invalid
+raw payload unchanged. Record a separate failed validation result for that leaf
+with no findings, and derive the super-skill outcome as `partial` or `failed`
+using the normal rollup rules. Worker-side report-file persistence is optional
+and never replaces validation of the accepted exact or normalized copy.
 
 ### Field semantics
 
@@ -284,11 +361,28 @@ the declared worklist order, and wait for every invocation to finish before
 performing any super-skill self-review or final rollup. Scheduling MUST NOT
 change relevance, coverage, failure, reference-integrity, or output semantics.
 
+Orchestrators SHOULD generate `skill-index.json` with
+`tools/Build-SkillIndex.ps1` instead of parsing Markdown. Each declared
+`subSkills` path defines an ordered leaf slot: its indexed `id` identifies the
+slot, while its path fixes the declaration order. Before scheduling leaves,
+the orchestrator MUST resolve each slot to the highest-precedence enabled,
+non-disabled leaf with that `id` (`custom` over `community` over `microsoft`).
+If no implementation remains, the slot is skipped with `reason:
+"configuration"`. The orchestrator SHOULD use
+`tools/Resolve-SkillWorklist.ps1` for this resolution. Action-skill
+frontmatter remains the source of truth; the generated index conforms to
+`schemas/skill-index.schema.json`.
+
+Layer resolution MUST NOT reorder slots. Multiple implementations with the
+same `id` are valid only when they belong to different layers; duplicate IDs
+within one layer are invalid. Disabling a winning implementation falls back
+to the next enabled implementation for that slot when one exists.
+
 ### Section interpretation for super-skills
 
 The five required sections still apply. Their meaning shifts from knowledge files to sub-skills:
 
-- `## Source` — names the sub-skills invoked (mirrors `sub-skills` in frontmatter).
+- `## Source` — names the declared sub-skill slots (mirrors `sub-skills` in frontmatter) and resolves their effective leaf implementations by the layered rule above.
 - `## Relevance` — rules for deciding which sub-skills apply to the current task. A sub-skill is relevant when its declared `inputs` are satisfied by the orchestrator's provided inputs and the orchestrator has not disabled it via configuration. The super-skill MUST NOT filter sub-skills by task content (for example, by inspecting the diff or the file). Task-level applicability is the sub-skill's own responsibility; sub-skills signal non-applicability by returning `outcome: "not-applicable"` or `outcome: "no-knowledge"`.
 - `## Worklist` — the final list of sub-skills to invoke; the rest go to `skipped-sub-skills`.
 - `## Action` — invoke each worklisted sub-skill with the appropriate subset of inputs, collect its findings-report verbatim into `sub-results`, and copy its `findings[]` into the super-skill's top-level `findings[]` with `from-sub-skill` set. All finding fields, including the optional `domain`, are preserved verbatim unless this contract explicitly requires a transformation. Findings from a sub-skill with `outcome: "failed"` MUST NOT be copied into the super-skill's top-level `findings[]` and MUST NOT contribute to the super-skill's `summary.counts` (their report is still preserved in `sub-results` for traceability, consistent with DO's rule that consumers ignore a failed skill's findings).

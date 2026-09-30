@@ -1,14 +1,18 @@
 codeunit 50219 "Perf Sample LoadFields Bad"
 {
-    procedure ListUSCustomerNames()
+    procedure CollectUSCustomerNamesAndCities(var DisplayNames: List of [Text])
     var
         Customer: Record Customer;
     begin
-        // Loads every Customer column on every row, when only Name is read.
         Customer.SetRange("Country/Region Code", 'US');
         if Customer.FindSet() then
             repeat
-                Message(Customer.Name);
+                DisplayNames.Add(CustomerDisplayText(Customer));
             until Customer.Next() = 0;
+    end;
+
+    local procedure CustomerDisplayText(Customer: Record Customer): Text
+    begin
+        exit(Customer.Name + ' ' + Customer.City);
     end;
 }

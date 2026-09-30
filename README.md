@@ -1,4 +1,4 @@
-# BCQuality
+# BC Quality - Don’t teach one agent. Teach the ecosystem. 🤝
 
 Quality skills and knowledge that help AI tools make better Business Central
 development decisions: catch BC-specific defects, avoid misleading advice,
@@ -62,26 +62,32 @@ the review can still discover knowledge by reading the folders.
 
 | I want to... | Start here |
 | --- | --- |
+| Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](docs/using-bcquality.md#choose-how-to-use-bcquality) |
 | Review a file, changes, a branch, or a particular concern | [Using BCQuality](docs/using-bcquality.md) |
 | Resolve setup problems, incomplete reviews, or incorrect findings | [Troubleshooting and support](docs/troubleshooting.md) |
 | Browse the available guidance | [Knowledge by domain](docs/using-bcquality.md#knowledge-by-domain) |
 | Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |
-| Contribute knowledge or improve a rule | [Contributing](docs/contributing.md) |
-| Connect a host, agent, or CI integration | [How agents consume BCQuality](docs/agent-consumption.md) |
+| Contribute knowledge or improve a rule | [Your first contribution](docs/contributing.md#your-first-contribution) |
+| Connect a host, agent, or CI integration | [Minimal integration example](docs/agent-consumption.md#try-a-minimal-integration) |
 
 [All documentation and technical references](docs/README.md).
 
 ## Scope
 
-Today's curated content focuses on **technical AL code review**. It augments
+Today's curated content covers **technical AL code review** and a focused
+**Supply Chain Management (SCM)** functional domain. It augments
 the agent's judgment; it is not an exhaustive BC manual or a substitute for
 compilation, analyzers, tests, or human review. See
 [coverage and limits](docs/using-bcquality.md#coverage-and-limits) for the
 available domains and the difference between a folder review and a comparison.
+Mechanical issues already enforced by the AL compiler or standard analyzers are
+intentionally left to those deterministic tools rather than duplicated here.
 
-Functional areas such as Finance, Supply Chain Management, Manufacturing, Jobs,
-Warehousing, and Service, and technologies such as PowerShell, pipelines, and
-Power Platform, remain valid future scope, **not current coverage claims**.
+The [SCM domain](microsoft/knowledge/scm/) covers selected inventory, costing,
+reservation, tracking, and warehouse/posting workflows, not exhaustive supply
+chain validation. Broader functional coverage such as Finance, Manufacturing,
+Jobs, and Service, and technologies such as PowerShell, pipelines, and Power
+Platform, remain valid future scope, **not current coverage claims**.
 
 ## What's in this repo
 

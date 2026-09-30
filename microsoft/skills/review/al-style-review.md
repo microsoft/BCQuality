@@ -3,7 +3,7 @@ kind: action-skill
 id: al-style-review
 version: 1
 title: AL style review
-description: Reviews AL source changes against naming, labelling, and code-convention guidance from BCQuality.
+description: Reviews AL source changes against naming, labelling, localization, and code-convention guidance from BCQuality.
 inputs: [pr-diff, file-path, folder-path]
 outputs: [findings-report]
 bc-version: [all]
@@ -16,13 +16,13 @@ application-area: [all]
 
 Reviews AL source changes against the `style` knowledge domain in BCQuality and emits a findings report. This is a leaf action skill: it invokes no sub-skills. It is one of the skills composed by `al-code-review`.
 
-Style findings cover AL conventions that CodeCop and similar analyzers partially enforce — label suffixes, API page naming, temporary-variable prefixes, label properties, named invocations, `FieldCaption`/`TableCaption` in user messages, `OptionCaption` pairing, Error-parameter passing, `this` keyword, required parentheses, file-naming. Use together with a formal analyzer; this skill adds BCQuality's remedial-knowledge explanations of why each rule exists.
+Style findings cover AL conventions that require contextual judgment — API page naming, temporary-variable prefixes, label semantics, date-formula localization, named invocations, `FieldCaption`/`TableCaption` in user messages, error-parameter handling, and file naming. Mechanical compiler and analyzer rules are intentionally outside this skill; run the consuming app's configured analyzers separately.
 
 An orchestrator invokes this skill with a `pr-diff`, `file-path`, or `folder-path`. The skill produces a single JSON document conforming to the DO output contract.
 
 ## Source
 
-Read the BCQuality knowledge index once — the `knowledge-index.json` BCQuality builds at the root of the knowledge checkout (Entry's preparation step regenerates it over the live, already-filtered clone — see `skills/entry.md`). It lists every article that survived layer and allow/deny filtering and carries, per article, its `path`, `layer`, `domain`, frontmatter dimensions, `keywords`, `title`, and a one-line `description` hint — exactly the fields Relevance and Worklist consume. Take the index entries whose `domain` is `style` as this skill's candidate set across every enabled layer; do not open the individual article files at this step. Open an article's full body only once it enters the Worklist below, so a review reads the index plus the handful of worklisted articles instead of every file under `*/knowledge/style/**`.
+Use READ's **Bounded retrieval for review skills** workflow with `-Domain style`. Consume every catalog page across enabled layers before applying this leaf's Relevance and Worklist; preserve each exact catalog path and open complete bodies only for exact paths selected by the Worklist. If the helper or prepared index is unavailable or invalid, use READ's explicit path-discovery and bounded native-read fallback.
 
 ## Relevance
 
@@ -40,8 +40,8 @@ Discard files that are not applicable. Retain conditionally applicable files onl
 Narrow the relevant files to the subset that applies to the changes under review. For each relevant file, compute overlap against:
 
 - Changed AL objects — especially API pages (`PageType = API`), tables and pages declaring Labels/TextConsts, codeunits issuing `Error`/`Message`/`Confirm`, and any file whose name violates the `<ObjectName>.<ObjectType>.al` convention.
-- Changed declarations, weighted toward `: Label '...'`, `: TextConst '...'`, temporary record variables, option fields, error-handling call sites, and codeunit-internal method calls.
-- Tokens extracted from the diff (`Label`, `TextConst`, `Locked`, `Comment`, `MaxLength`, `temporary`, `OptionMembers`, `OptionCaption`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `DelayedInsert`, `FieldCaption`, `TableCaption`, `FieldName`, `TableName`, `Page.RunModal`, `Report.Run`, `this.`, `StrSubstNo`).
+- Changed declarations, weighted toward `: Label '...'`, `: TextConst '...'`, temporary record variables, option fields, `DateFormula` declarations and their `Evaluate` call sites, error-handling call sites, API declarations, and codeunit-internal method calls.
+- Tokens extracted from the diff (`Label`, `TextConst`, `Locked`, `Comment`, `MaxLength`, `temporary`, `DateFormula`, `Evaluate`, `CalcDate`, `OptionMembers`, `OptionCaption`, `APIPublisher`, `APIGroup`, `APIVersion`, `EntityName`, `EntitySetName`, `DelayedInsert`, `FieldCaption`, `TableCaption`, `FieldName`, `TableName`, `Page.RunModal`, `Report.Run`, `this.`, `StrSubstNo`, `namespace`, `using`, `var `).
 
 A file enters the candidate worklist when its `keywords` intersect the extracted tokens or its topic (derived from the index entry's `path`, `title`, and `description`) matches a changed object or declaration. Read an article's full file — its `## Best Practice` / `## Anti Pattern` bodies — only after it makes the worklist; candidate selection uses the index alone.
 
@@ -50,7 +50,18 @@ Do not worklist `temporary-variable-temp-prefix.md` for an event publisher param
 Apply these high-signal mappings before fuzzy topic ranking:
 
 - A `Label` or `TextConst` contains multiple or ambiguous placeholders but has no `Comment`, or its Comment does not explain every placeholder — `label-comment-explains-placeholders.md`. A single placeholder whose meaning is explicit in the text, such as `Customer %1`, is allowed without a Comment and must not be flagged.
+- A normal two-argument `Evaluate` has a resolved `DateFormula` destination and a hard-coded non-angle-bracket date-formula literal, directly or through a visible constant — `dateformula-evaluate-needs-language-independent-literals.md`. Do not use this cue for dynamic/localized external input, already invariant `<...>` input, or direct `CalcDate(Text, ...)` calls.
 - `function-call-parentheses-required.md` applies only to a zero-argument invocation written without `()`. Never worklist it from an invocation that already has parentheses or supplies arguments, including `Error(Label, Arg1, Arg2)`.
+- A new or changed comment restates what the adjacent code already makes obvious from its own names and structure (a comment that just repeats a variable/field/method name in prose) rather than explaining a non-obvious constraint, invariant, or workaround — `al-comments-must-not-restate-what-code-already-shows.md`. A comment absent entirely is not this anti-pattern; only a present-but-redundant comment is.
+- A `page`/`pageextension` adds or changes a procedure body that performs a calculation, validation, or record mutation belonging to a business operation reused across entry points, rather than presentation-specific state or a call into a codeunit — `pages-must-not-contain-business-logic.md`. A page calling a codeunit procedure, or a page's own presentation-only state and formatting, is not this anti-pattern; nor is a data invariant that belongs on the table itself.
+- Changed source files are added under an object-type folder (`Tables/`, `Pages/`, `Codeunits/`, etc.) in a repository whose existing structure is predominantly feature-based, or vice versa — `source-organized-by-feature-not-object-type.md`. The anti-pattern is inconsistency with the repository's own established convention, not the choice of either scheme; a repository consistently organized by object type throughout is not a violation. Require repository-level folder context; a single new file's path cannot prove the project's convention alone.
+- A new `.app` build artifact appears at the project root or another unversioned/arbitrary location, or is added to source control alongside the AL source that produced it — `al-build-output-must-not-pollute-project-root.md`. A deliberate `--outfolder`/`outputPath` destination added to `.gitignore` is the compliant shape, not the signal to flag.
+- A new or renamed AL identifier (variable, procedure, parameter, field, object, enum value, or label identifier) contains non-English words — `al-identifiers-english.md`. A caption, tooltip, or other user-facing text value in a non-English language is not this anti-pattern; only the identifier itself is in scope.
+- A field or variable is typed `Boolean` and its two possible values are genuinely named domain alternatives (a status pair like Inbound/Outbound, Debit/Credit, Buy/Sell) rather than a true/false predicate, or an `Option`/`Enum`/`Integer` models a domain concept that is intrinsically a yes/no flag — `binary-choice-must-be-boolean.md`. The signal is a semantic mismatch between the type and the domain concept, not the current number of states.
+- A field or variable is typed `Integer` with the meaning of each value tracked only in a comment, or an `Enum` with more than two members is proposed as `Boolean`-like — `fixed-choice-set-must-use-enum-not-integer.md`. Do not flag a genuinely two-state `Enum`/`Option` for having "too few" members; that overlaps `binary-choice-must-be-boolean.md` instead when the domain is a true/false predicate.
+- A new `using` directive is added for an existing AL object without the diff also showing that object's own `namespace` declaration or a symbol-package lookup backing the choice — `namespace-must-be-verified-from-source.md`. Require repository/dependency context; a single new `using` line cannot itself prove whether the namespace was verified or guessed.
+- An intrinsic/built-in AL function call (`MESSAGE`, `ERROR`, `CONFIRM`, `STRSUBSTNO`, etc.) is written in ALL-CAPS or another non-PascalCase form — `intrinsic-al-functions-must-use-modern-casing.md`.
+- A procedure call passes a literal or a computed expression (not a caller-scope variable) to a parameter position the callee declares `var` — `var-parameters-require-an-addressable-variable.md`. This is a compile-time-guaranteed shape; flag it only when the callee's declared signature is visible in the diff or resolvable from context.
 
 Once the candidate worklist is known, resolve layer-precedence conflicts per READ and record suppressions.
 
@@ -60,7 +71,7 @@ When the post-conflict worklist is empty because no applicable style knowledge e
 
 For each worklist entry, evaluate the diff against the file's `## Best Practice` and `## Anti Pattern` sections. Style findings rarely reach `blocker` — reserve it for cases where the knowledge file documents a platform-level requirement (for example, API page property constraints the OData runtime rejects). Most style findings are `minor` or `info`; egregious misuse (`Error` with pre-built Text losing translation and telemetry classification) may reach `major`.
 
-Severity calibration — a formal analyzer already flags the mechanical presence/naming conventions (the `this` keyword AA0248, approved label suffixes AA0074, variable-declaration order by type AA0021, a missing `ToolTip`, required parentheses). On those, BCQuality's value is the *explanation* of why the rule exists, not a second gate; emit them at `info` so a consumer that gates on severity does not re-flag what CodeCop/AppSourceCop already reports. Reserve `minor` for style issues with concrete downstream impact the analyzer does not catch — lost translation or telemetry classification from a string-built `Error`, an `OptionCaption` that does not match its `OptionMembers`, or a misleading named invocation. A procedure-local `Label` is valid and is not a correctness or localization finding; an explicit repository preference for object scope is at most low-severity maintainability guidance. This keeps the domain's default output advisory and prevents analyzer-redundant noise from competing with substantive review.
+Severity calibration — reserve `minor` for style issues with concrete downstream impact that deterministic tooling does not establish, such as lost translation or telemetry classification from a string-built `Error` or a misleading named invocation. A procedure-local `Label` is valid and is not a correctness or localization finding; an explicit repository preference for object scope is at most low-severity maintainability guidance. Do not rediscover or report mechanical compiler or analyzer diagnostics, even at `info`.
 
 Set `confidence` to:
 
@@ -70,7 +81,7 @@ Set `confidence` to:
 
 After evaluating each worklist entry, also consider whether the diff exhibits a style defect the agent recognises from its general AL knowledge that no knowledge file in the worklist covers. Such candidates are agent findings within this skill's domain — emit them with `references: []`, an `id` slug prefixed with `agent:`, `confidence` capped at `medium`, `severity` capped at `minor` (agent findings are advisory and non-gating), and a `message` that is self-contained (describing both the issue and a concrete recommendation, since there is no knowledge-file footer for the consumer to fall back on). Hold every candidate to the precision bar in `skills/do.md` (*Agent findings*): emit only a clear, widely-accepted AL style violation with a concrete basis a knowledgeable BC reviewer would agree on — steelman it first and drop personal preference, speculation, and any single defensible formatting choice among several; when in doubt, omit. The scope is strictly style — naming, labelling, formatting, and analyzer-adjacent conventions. A correctness, logic, data-integrity, or contract defect is NOT a style finding even when it can be reworded as a convention: a method that mutates a shared `Record`'s filters, an unfiltered `DeleteAll`, a violated interface contract, or a wrong boolean guard are behavioural defects, not conventions — do not emit them here under a style framing. If a specific domain leaf covers the concern (performance, security, error-handling, …) it belongs there; if no knowledge file in any domain covers it, it belongs to the `al-code-review` super-skill's cross-cutting self-review agent channel (`from-sub-skill: "agent"`, `severity` capped at `minor`), not to this leaf. A reliable test: if you cannot cite a style `## Best Practice`/`## Anti Pattern` for the concern, it is very likely not a style finding. Before emitting, check the worklist for a knowledge file that matches the candidate — if one exists, upgrade the candidate to a knowledge-backed finding instead. See `skills/do.md` for the full contract.
 
-For every emitted finding, decide whether the fix is mechanical. A fix is mechanical when it is small, local, and unambiguous from the diff context (for example: delete unreachable lines; replace `Count() > 0` with `not IsEmpty()`; add a missing `ToolTip`, `OptionCaption`, or `DataClassification`; replace a string-concatenated `Error` with a Label-backed call; change an over-broad permission token; or add an obvious `else`/guard branch). For mechanical findings, emit `findings[].suggested-code` with the literal replacement for the source lines indicated by `location`. The payload must be a verbatim replacement — no diff markers, no fences, no commentary — that the consumer can render as a one-click suggestion. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, adapt the `.good.al` replacement into `suggested-code`.
+For every emitted finding, decide whether the fix is mechanical. A fix is mechanical when it is small, local, and unambiguous from the diff context (for example: add a missing contextual `ToolTip`, replace a string-concatenated `Error` with a Label-backed call, or correct an API naming property whose intended value is clear). For mechanical findings, emit `findings[].suggested-code` with the literal replacement for the source lines indicated by `location`. The payload must be a verbatim replacement — no diff markers, no fences, no commentary — that the consumer can render as a one-click suggestion. When a `.good.al` companion exists and the diff context matches the `.bad.al` shape, adapt the `.good.al` replacement into `suggested-code`.
 
 Omit `suggested-code` only when the appropriate fix depends on context the skill cannot determine, when multiple defensible replacements exist, or when the fix spans non-contiguous code. If a finding is mechanical-looking but you omit `suggested-code`, set `findings[].suggested-code-omission-reason` to a short explanation. See `skills/do.md` for the full contract.
 
@@ -91,20 +102,20 @@ Output conforms to the DO output contract. Every finding this skill emits MUST s
   "skill": { "id": "al-style-review", "version": 1 },
   "outcome": "completed",
   "summary": {
-    "counts": { "blocker": 0, "major": 0, "minor": 0, "info": 1 },
+    "counts": { "blocker": 0, "major": 0, "minor": 1, "info": 0 },
     "coverage": { "worklist-size": 1, "items-evaluated": 1 }
   },
   "findings": [
     {
-      "id": "microsoft/knowledge/style/label-suffix-approved-list.md",
-      "severity": "info",
-      "message": "A Label named Text000 has no approved suffix (Msg/Err/Qst/Tok/Lbl/Txt). Per the referenced CodeCop AA0074 guidance, every Label and TextConst carries a suffix indicating its consuming call.",
+      "id": "microsoft/knowledge/style/label-comment-explains-placeholders.md",
+      "severity": "minor",
+      "message": "The label has two ambiguous placeholders but no Comment explaining what each value represents to translators.",
       "location": {
         "file": "src/Sales/PostingRoutines.Codeunit.al",
         "line": 42
       },
       "references": [
-        { "path": "microsoft/knowledge/style/label-suffix-approved-list.md" }
+        { "path": "microsoft/knowledge/style/label-comment-explains-placeholders.md" }
       ],
       "confidence": "high",
       "domain": "Style"

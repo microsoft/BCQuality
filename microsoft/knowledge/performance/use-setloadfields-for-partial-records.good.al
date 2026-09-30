@@ -1,15 +1,20 @@
 codeunit 50218 "Perf Sample LoadFields Good"
 {
-    procedure ListUSCustomerNames()
+    procedure CollectUSCustomerNamesAndCities(var DisplayNames: List of [Text])
     var
         Customer: Record Customer;
     begin
         Customer.SetRange("Country/Region Code", 'US');
-        Customer.SetLoadFields(Name);
+        Customer.SetLoadFields(Name, City);
         if Customer.FindSet() then
             repeat
-                Message(Customer.Name);
+                DisplayNames.Add(CustomerDisplayText(Customer));
             until Customer.Next() = 0;
+    end;
+
+    local procedure CustomerDisplayText(Customer: Record Customer): Text
+    begin
+        exit(Customer.Name + ' ' + Customer.City);
     end;
 
     procedure LookupSkuPolicy(LocationCode: Code[10]) Policy: Enum "SKU Creation Method"

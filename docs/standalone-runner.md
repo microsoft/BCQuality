@@ -12,6 +12,9 @@ Use the built-in standalone plugin when the host's default execution is
 sufficient. Build a runner when you need explicit control over cost, latency,
 concurrency, or integration with another review surface.
 
+Start with the [minimal integration example](agent-consumption.md#try-a-minimal-integration)
+to connect your agent to the content before adding runner-specific behavior.
+
 ## Keep BCQuality current
 
 For plugin installation, use the [quick start](../README.md#quick-start).
@@ -46,13 +49,24 @@ only result.
    action skills to run. Do not reproduce its routing logic.
 3. Execute every dispatched action skill with the exact input subset in its
    dispatch record. Read `skills/read.md` and `skills/do.md` on demand.
-4. When an action skill declares `sub-skills`, execute every relevant leaf as a
-   discrete invocation. Leaves are independent and may be scheduled serially
-   or concurrently.
-5. Collect each complete findings-report into `sub-results` in the declared
+4. When an action skill declares `sub-skills`, resolve its ordered leaf slots
+  with `tools/Resolve-SkillWorklist.ps1`, passing the enabled layers and
+  disabled skill paths from the task context. Execute every resolved leaf as
+  a discrete invocation. Leaves are independent and may be scheduled serially
+  or concurrently.
+5. Capture the exact Task return as the immutable raw audit payload and primary
+   transport. Preserve it unchanged in private artifacts or host logs. Before
+   the full DO acceptance gate, create a normalized candidate only for DO's
+   bounded optional-range case, record that normalization separately in private
+   telemetry, and accept the candidate only if the entire copy passes the
+  unchanged strict gate. Use `tools/Validate-FindingsReport.ps1`, passing the
+  exact source paths and fully retrieved article paths; pass `-SkillKind super`
+  for the final rolled-up report. The accepted report contains no undeclared
+  telemetry fields.
+6. Collect each accepted findings-report into `sub-results` in the declared
    `sub-skills` order, not completion order. Run the super-skill self-review
    only after all leaves have finished.
-6. Apply the DO composition, failure, deduplication, reference-integrity, and
+7. Apply the DO composition, failure, deduplication, reference-integrity, and
    outcome rules. Return strict JSON before rendering it for people or another
    system.
 
@@ -82,7 +96,18 @@ A compatible runner:
 
 - invokes every worklisted leaf exactly once unless a documented retry replaces
   a failed attempt;
+- resolves same-ID leaf implementations by `custom > community > microsoft`,
+  preserves declared slot order, and falls back when a higher layer is disabled;
 - keeps leaf contexts isolated and passes only the inputs they declare;
+- preserves each raw Task return unchanged for audit and distinguishes it from
+  any normalized accepted copy;
+- removes only an optional range whose positive integer bounds contain the
+  primary line but start before it, and only when the complete report has no
+  other defect and the finding has no `suggested-code`;
+- records normalization only in private runner telemetry and never adds fields
+  to the findings-report;
+- rejects reversed, invalid, or out-of-bounds ranges, range mismatches attached
+  to `suggested-code`, and every repair outside DO's bounded exception;
 - preserves every leaf report, including failed reports, in `sub-results`;
 - excludes unreliable findings from failed leaves and returns `partial` when
   only part of the review is reliable;

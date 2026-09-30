@@ -1,11 +1,12 @@
 codeunit 50222 "Perf Sample CalcSums Good"
 {
-    procedure TotalRemaining(CustomerNo: Code[20]) Total: Decimal
+    procedure TotalSales(CustomerNo: Code[20]) Total: Decimal
     var
         CustLedgerEntry: Record "Cust. Ledger Entry";
     begin
+        CustLedgerEntry.SetCurrentKey("Customer No.");
         CustLedgerEntry.SetRange("Customer No.", CustomerNo);
-        CustLedgerEntry.CalcSums("Remaining Amount");
-        Total := CustLedgerEntry."Remaining Amount";
+        CustLedgerEntry.CalcSums("Sales (LCY)");
+        Total := CustLedgerEntry."Sales (LCY)";
     end;
 }

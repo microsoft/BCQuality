@@ -3,43 +3,180 @@
   "selection": "first-paired-al-article",
   "minimumExpectedRecall": 1.0,
   "minimumCleanRate": 1.0,
+  "coverageWaivers": [],
   "overrides": {
     "agents": {
       "article": "wire-all-three-agent-interfaces"
     },
-    "appsource": {
-      "context": "AppSourceCop mandatoryAffixes is configured to ABC."
-    },
     "breaking-changes": {
       "article": "do-not-expose-sensitive-data-through-public-api"
     },
+    "data-modeling": {
+      "articles": [
+        "activate-new-price-calculation-handler-via-onfindsupportedsetup",
+        "check-blocked-in-referencing-code-not-in-master",
+        "code-must-not-change-workdate",
+        "custom-document-dispatch-must-not-bypass-report-selections",
+        "document-print-and-email-actions-call-report-selections-directly",
+        "extend-find-entries-navigate-for-new-document-types",
+        "extend-price-source-type-must-sync-document-subset-enum",
+        "extend-report-selection-usage-for-new-document-types",
+        "new-price-source-must-add-candidate-and-trigger-recalculation",
+        "pictures-must-use-media-not-blob",
+        "report-barcodes-must-use-barcode-module-and-production-font-name",
+        "table-design-must-match-bc-table-type-conventions",
+        "transferfields-mirrored-fields-must-match-type-and-length"
+      ]
+    },
+    "error-handling": {
+      "articles": [
+        "collect-validation-errors-with-errorbehavior",
+        "defensive-vs-offensive-code-must-match-blast-radius",
+        "log-writes-must-survive-rollback"
+      ]
+    },
     "events": {
       "article": "reset-ishandled-only-when-the-value-can-carry-over"
+    },
+    "finance": {
+      "articles": [
+        "apply-ledger-entries-through-application-codeunits",
+        "change-ledger-due-dates-through-entry-edit",
+        "do-not-edit-shared-dimension-sets",
+        "do-not-modify-or-delete-posted-ledger-entries",
+        "normal-vat-journal-amount-includes-vat",
+        "post-ledger-entries-through-posting-codeunits",
+        "preserve-journal-batch-document-balance",
+        "reverse-transactions-by-transaction-number",
+        "write-dimensions-as-dimension-set-entries"
+      ],
+      "context": "Target Business Central 28, worldwide standard application (w1). Review each file as an independent source input."
     },
     "interfaces": {
       "article": "set-defaultimplementation-on-enum"
     },
     "performance": {
-      "article": "use-isempty-for-existence-check"
+      "articles": [
+        "use-isempty-for-existence-check",
+        "job-queue-category-code-serializes-conflicting-jobs",
+        "job-queue-external-effects-must-be-idempotent",
+        "job-queue-handlers-must-not-require-ui",
+        "job-queue-handlers-must-propagate-failures",
+        "job-queue-on-hold-does-not-stop-running-work",
+        "store-scheduled-task-id-to-avoid-duplicate-tasks",
+        "design-covering-keys-from-read-pattern",
+        "review-overlapping-keys-before-adding-an-index",
+        "setcurrentkey-sets-sort-order-not-index-hint",
+        "preserve-buffered-inserts-by-separating-target-reads",
+        "aggregate-before-persisting-intermediate-results",
+        "cache-repeated-filtered-results-with-explicit-scope",
+        "avoid-repeating-unchanged-validation",
+        "avoid-get-inside-loop-on-large-table",
+        "isempty-before-findset-is-extra-round-trip",
+        "query-results-bypass-primary-key-cache",
+        "calcsums-instead-of-calcfields-in-loop",
+        "use-setautocalcfields-for-per-row-flowfields",
+        "temporary-tables-have-no-database-cost",
+        "use-setloadfields-for-partial-records",
+        "prefer-modifyall-over-per-row-modify",
+        "al-methods-limited-during-write-transactions",
+        "avoid-user-prompts-inside-transactions"
+      ]
     },
     "privacy": {
       "article": "no-pii-in-telemetry-message-string"
     },
+    "query": {
+      "articles": [
+        "dataitemtablefilter-cannot-be-overwritten-at-runtime",
+        "reopening-query-resets-cursor-but-keeps-filters",
+        "set-query-filters-before-open",
+        "setfilter-overwrites-query-columnfilter"
+      ]
+    },
+    "reporting": {
+      "articles": [
+        "clear-report-variable-before-independent-runmodal",
+        "currreport-break-ends-the-current-trigger",
+        "currreport-quit-rolls-back-and-skips-onpostreport",
+        "currreport-skip-does-not-stop-trigger-code",
+        "report-output-in-a-loop-needs-one-client-download",
+        "reportextension-dataitem-trigger-order-is-explicit",
+        "reportextension-report-triggers-run-after-base-triggers",
+        "settableview-cannot-broaden-dataitemtableview",
+        "stop-when-runrequestpage-returns-empty-parameters"
+      ]
+    },
+    "scm": {
+      "articles": [
+        "post-item-ledger-changes-through-item-journals",
+        "post-revaluation-through-the-item-journal-batch",
+        "change-item-applications-through-posting-routines",
+        "cancel-reservations-through-reservation-management",
+        "transfer-item-tracking-through-source-reservation-codeunits",
+        "reconcile-warehouse-adjustments-with-the-item-ledger",
+        "post-transfers-through-shipment-and-receipt-codeunits",
+        "use-date-aware-availability-for-promising",
+        "carry-out-requisition-actions-through-the-standard-workflow",
+        "derive-base-quantities-through-the-line-unit-of-measure"
+      ]
+    },
+    "security": {
+      "articles": [
+        "al-has-no-built-in-htmlencode",
+        "do-not-concatenate-external-text-into-setfilter",
+        "exposed-objects-must-be-in-a-permission-set"
+      ]
+    },
     "style": {
-      "article": "label-comment-explains-placeholders"
+      "articles": [
+        "label-comment-explains-placeholders",
+        "dateformula-evaluate-needs-language-independent-literals",
+        "al-comments-must-not-restate-what-code-already-shows",
+        "pages-must-not-contain-business-logic"
+      ]
     },
     "telemetry": {
       "article": "telemetry-event-id-stable-unique"
     },
     "testing": {
-      "article": "ui-handlers-in-tests"
+      "articles": [
+        "ui-handlers-in-tests",
+        "reset-per-test-state-before-the-isinitialized-guard",
+        "asserterror-needs-expectederror-and-code",
+        "bcpt-scenarios-must-be-app-specific",
+        "commit-shared-test-fixture-inside-lazy-initialize",
+        "given-blocks-must-cover-full-precondition-chain",
+        "table-relation-test-exclude-known-invalid-relations-via-event",
+        "test-feature-scenario-tags",
+        "test-one-when-per-test",
+        "transactionmodel-attribute-governs-test-transactions",
+        "ui-test-codeunit-naming",
+        "use-assert-isfalse-not-asserterror-for-boolean-checks"
+      ]
+    },
+    "ui": {
+      "articles": [
+        "default-descending-sort-on-historical-pages",
+        "page-design-must-match-bc-page-type-conventions"
+      ]
     },
     "upgrade": {
-      "article": "initvalue-does-not-update-existing-rows",
+      "articles": [
+        "initvalue-does-not-update-existing-rows",
+        "upgrade-tag-logic-must-not-nest-deeply"
+      ],
       "context": "The extended table existed in the previous app version and already contains rows."
     },
     "web-services": {
-      "article": "expose-systemid-as-the-api-key"
+      "articles": [
+        "expose-systemid-as-the-api-key",
+        "handle-httpclient-platform-failure-before-response-access",
+        "check-http-status-before-consuming-response-body",
+        "check-json-null-before-converting-values",
+        "format-exchanged-values-with-standard-format-9",
+        "api-page-least-privilege-write-access"
+      ]
     }
   }
 }

@@ -18,7 +18,9 @@ param(
     [string] $ManifestPath,
     [string] $PrepareDirectory,
     [string] $ResultsPath,
-    [string] $ResultsDirectory
+    [string] $ResultsDirectory,
+    [string] $ChangedPathsFile,
+    [string] $CoverageReportPath
 )
 
 Set-StrictMode -Version Latest
@@ -160,7 +162,23 @@ foreach ($overrideDomain in $overrides.Keys) {
     }
 }
 
+$coverageWaivers = @{}
+if ($manifest.PSObject.Properties.Name -contains 'coverageWaivers') {
+    foreach ($waiver in @($manifest.coverageWaivers)) {
+        if (-not $waiver.path -or -not $waiver.reason) {
+            $problems.Add('Each coverage waiver requires non-empty path and reason values.') | Out-Null
+            continue
+        }
+        if ($coverageWaivers.ContainsKey([string]$waiver.path)) {
+            $problems.Add("Duplicate coverage waiver: $($waiver.path)") | Out-Null
+            continue
+        }
+        $coverageWaivers[[string]$waiver.path] = [string]$waiver.reason
+    }
+}
+
 $caseList = [System.Collections.Generic.List[object]]::new()
+$pairedArticlesByDomain = @{}
 foreach ($domain in $leafDomains) {
     $articleCandidates = @(
         foreach ($layer in $layers) {
@@ -189,18 +207,49 @@ foreach ($domain in $leafDomains) {
             ForEach-Object { $_.Group | Sort-Object Rank -Descending | Select-Object -First 1 } |
             Sort-Object BaseName
     )
+            $pairedArticlesByDomain[$domain] = @($articles)
     if (-not $articles.Count) {
         $problems.Add("${domain}: no enabled knowledge layer has an article with both .good.al and .bad.al companion samples.") | Out-Null
         continue
     }
 
     $override = if ($overrides.ContainsKey($domain)) { $overrides[$domain] } else { $null }
-    $selectedArticle = $null
-    if ($override -and ($override.PSObject.Properties.Name -contains 'article')) {
-        $articleName = [string]$override.article
+    $hasArticleOverride = $override -and ($override.PSObject.Properties.Name -contains 'article')
+    $hasArticlesOverride = $override -and ($override.PSObject.Properties.Name -contains 'articles')
+    if ($hasArticleOverride -and $hasArticlesOverride) {
+        $problems.Add("${domain}: override must specify either 'article' or 'articles', not both.") | Out-Null
+        continue
+    }
+
+    $articleNames = @()
+    if ($hasArticlesOverride) {
+        $articleNames = @($override.articles)
+        if (-not $articleNames.Count) {
+            $problems.Add("${domain}: override 'articles' must contain at least one article.") | Out-Null
+            continue
+        }
+    } elseif ($hasArticleOverride) {
+        $articleNames = @($override.article)
+    } else {
+        $articleNames = @($articles | Select-Object -First 1 | ForEach-Object BaseName)
+    }
+
+    $selectedArticles = [System.Collections.Generic.List[object]]::new()
+    $seenArticleNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($articleNameValue in $articleNames) {
+        if ($articleNameValue -isnot [string] -or [string]::IsNullOrWhiteSpace([string]$articleNameValue)) {
+            $problems.Add("${domain}: override article names must be non-empty strings.") | Out-Null
+            continue
+        }
+        $articleName = [string]$articleNameValue
         if ($articleName.EndsWith('.md')) {
             $articleName = [System.IO.Path]::GetFileNameWithoutExtension($articleName)
         }
+        if (-not $seenArticleNames.Add($articleName)) {
+            $problems.Add("${domain}: override contains duplicate article: $articleName.md") | Out-Null
+            continue
+        }
+
         $selectedArticle = $articles | Where-Object BaseName -eq $articleName | Select-Object -First 1
         if (-not $selectedArticle) {
             $articleExists = @(
@@ -218,33 +267,43 @@ foreach ($domain in $leafDomains) {
             }
             continue
         }
-    } else {
-        $selectedArticle = $articles | Select-Object -First 1
+        $selectedArticles.Add($selectedArticle) | Out-Null
     }
-    if (-not $selectedArticle) {
-        $problems.Add("${domain}: no article has both .good.al and .bad.al companion samples.") | Out-Null
+    if (-not $selectedArticles.Count) {
+        if (-not $articleNames.Count) {
+            $problems.Add("${domain}: no article has both .good.al and .bad.al companion samples.") | Out-Null
+        }
         continue
     }
 
-    $articlePath = [string]$selectedArticle.ArticlePath
-    $sampleDirectory = (Split-Path -Parent $articlePath).Replace('\', '/')
     $context = if ($override -and ($override.PSObject.Properties.Name -contains 'context')) {
         [string]$override.context
     } else {
         $null
     }
-    foreach ($kind in 'bad', 'good') {
-        $case = [pscustomobject]@{
-            id = "$domain-$kind"
-            domain = $domain
-            input = "$sampleDirectory/$($selectedArticle.BaseName).$kind.al"
-            expected = if ($kind -eq 'bad') { @($articlePath) } else { @() }
+    for ($articleIndex = 0; $articleIndex -lt $selectedArticles.Count; $articleIndex++) {
+        $selectedArticle = $selectedArticles[$articleIndex]
+        $articlePath = [string]$selectedArticle.ArticlePath
+        $sampleDirectory = (Split-Path -Parent $articlePath).Replace('\', '/')
+        foreach ($kind in 'bad', 'good') {
+            $caseId = if ($articleIndex -eq 0) {
+                "$domain-$kind"
+            } else {
+                "$domain-$($selectedArticle.BaseName)-$kind"
+            }
+            $case = [pscustomobject]@{
+                id = $caseId
+                domain = $domain
+                input = "$sampleDirectory/$($selectedArticle.BaseName).$kind.al"
+                expected = if ($kind -eq 'bad') { @($articlePath) } else { @() }
+            }
+            if ($context) {
+                $case | Add-Member -NotePropertyName context -NotePropertyValue $context
+            }
+            $caseList.Add($case) | Out-Null
         }
-        if ($context) {
-            $case | Add-Member -NotePropertyName context -NotePropertyValue $context
-        }
-        $caseList.Add($case) | Out-Null
     }
+
 }
 $cases = @($caseList)
 
@@ -297,6 +356,65 @@ foreach ($domain in $leafDomains) {
     }
     if (-not @($domainCases | Where-Object { @($_.expected).Count -eq 0 }).Count) {
         $problems.Add("${domain}: no clean control fixture.") | Out-Null
+    }
+}
+
+$selectedArticlePaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+foreach ($case in $cases) {
+    foreach ($reference in @($case.expected)) {
+        $selectedArticlePaths.Add([string]$reference) | Out-Null
+    }
+}
+$effectivePairedPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+$coverageDomains = @(
+    foreach ($domain in $leafDomains) {
+        $paired = @($pairedArticlesByDomain[$domain])
+        foreach ($article in $paired) {
+            $effectivePairedPaths.Add([string]$article.ArticlePath) | Out-Null
+        }
+        $selected = @($paired | Where-Object { $selectedArticlePaths.Contains([string]$_.ArticlePath) }).Count
+        [pscustomobject][ordered]@{
+            domain = $domain
+            pairedArticles = $paired.Count
+            selectedArticles = $selected
+            coverage = if ($paired.Count) { $selected / $paired.Count } else { 0 }
+        }
+    }
+)
+$pairedTotal = ($coverageDomains | Measure-Object pairedArticles -Sum).Sum
+$selectedTotal = ($coverageDomains | Measure-Object selectedArticles -Sum).Sum
+$coverageReport = [pscustomobject][ordered]@{
+    pairedArticles = $pairedTotal
+    selectedArticles = $selectedTotal
+    coverage = if ($pairedTotal) { $selectedTotal / $pairedTotal } else { 0 }
+    domains = $coverageDomains
+}
+if ($CoverageReportPath) {
+    $coverageParent = Split-Path -Parent $CoverageReportPath
+    if ($coverageParent -and -not (Test-Path -LiteralPath $coverageParent)) {
+        New-Item -ItemType Directory -Path $coverageParent -Force | Out-Null
+    }
+    $coverageReport | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $CoverageReportPath -Encoding utf8NoBOM
+}
+
+if ($ChangedPathsFile) {
+    if (-not (Test-Path -LiteralPath $ChangedPathsFile -PathType Leaf)) {
+        $problems.Add("Changed paths file not found: $ChangedPathsFile") | Out-Null
+    }
+    else {
+        foreach ($changedPathValue in Get-Content -LiteralPath $ChangedPathsFile) {
+            $changedPath = ([string]$changedPathValue).Trim().Replace('\', '/')
+            if ($changedPath -notmatch '^(microsoft|community|custom)/knowledge/[^/]+/(.+?)(?:\.(?:good|bad)\.al|\.md)$') {
+                continue
+            }
+            $articlePath = "$($Matches[1])/knowledge/$($changedPath.Split('/')[2])/$($Matches[2]).md"
+            if (-not $effectivePairedPaths.Contains($articlePath) -or $selectedArticlePaths.Contains($articlePath)) {
+                continue
+            }
+            if (-not $coverageWaivers.ContainsKey($articlePath)) {
+                $problems.Add("Changed paired article is not selected for evaluation and has no coverage waiver: $articlePath") | Out-Null
+            }
+        }
     }
 }
 
@@ -434,7 +552,8 @@ if ($PrepareDirectory) {
 }
 
 if (-not $ResultsPath -and -not $ResultsDirectory) {
-    Write-Host "Review fixture validation PASSED: $($cases.Count) cases cover $($leafDomains.Count) leaf domains." -ForegroundColor Green
+    & (Join-Path $PSScriptRoot 'Test-ReviewContract.ps1') -Root $Root
+    Write-Host "Review fixture validation PASSED: $($cases.Count) cases cover $selectedTotal/$pairedTotal paired articles across $($leafDomains.Count) leaf domains." -ForegroundColor Green
     exit 0
 }
 

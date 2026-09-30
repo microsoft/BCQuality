@@ -15,12 +15,12 @@ application-area: [all]
 
 ## Best Practice
 
-Call `SetAutoCalcFields` before `FindSet` when every returned row needs the same FlowField for a comparison, branch, or per-record action. Use `CalcSums` instead when the required result is one aggregate over the filtered set (see `calcsums-instead-of-calcfields-in-loop.md`).
+Call `SetAutoCalcFields` before `FindSet` when every returned row needs the same FlowField for a comparison, branch, or per-record action. For one total of a **stored source field**, consider `CalcSums` instead (see [stored-field totals versus FlowFields](calcsums-instead-of-calcfields-in-loop.md)). If the required result is a total of selected FlowField values, derive the underlying source filters from `CalcFormula`; do not sum the FlowField directly with `CalcSums`.
 
 See sample: [`use-setautocalcfields-for-per-row-flowfields.good.al`](use-setautocalcfields-for-per-row-flowfields.good.al).
 
 ## Anti Pattern
 
-Calling `CalcFields` inside the loop when every iteration reads the same FlowField. Each `CalcFields` request requires a separate SQL statement unless a compatible recent result is cached. Do not replace row-specific decisions with `CalcSums`; an aggregate cannot preserve which rows met the condition.
+Calling `CalcFields` inside the loop when every iteration reads the same FlowField. A compatible recent result can be cached, so do not equate each call with a SQL statement. Do not replace row-specific decisions with `CalcSums`; an aggregate cannot preserve which rows met the condition.
 
 See sample: [`use-setautocalcfields-for-per-row-flowfields.bad.al`](use-setautocalcfields-for-per-row-flowfields.bad.al).

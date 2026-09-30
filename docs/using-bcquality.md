@@ -2,10 +2,55 @@
 
 [Documentation](README.md) | [Quick start](../README.md#quick-start) | [Troubleshooting](troubleshooting.md)
 
-BCQuality supplies knowledge and reusable skills to your AI host. The plugin
-currently exposes `al-code-review`; the examples below use that skill. The
-host supplies authentication, model access, tools, permissions, and rendering.
-Installing BCQuality does not install a Business Central extension or an agent.
+BCQuality is knowledge you can read and reuse, plus skills that tell an agent
+how to apply it. You do not need an AI tool to read the articles. When using
+an agent, your host supplies authentication, model access, tools, permissions,
+and rendering; BCQuality does not install a BC extension or an agent.
+
+## Choose how to use BCQuality
+
+| Path | What to do |
+| --- | --- |
+| Read the knowledge yourself | Browse [knowledge by domain](#knowledge-by-domain), or search the repository for an AL concept. Read the article and its samples. No installation required. |
+| Use a supplied skill | Follow the [plugin quick start](../README.md#quick-start). The currently exposed skill, `al-code-review`, performs reviews and returns findings. |
+| Use your own agent or workflow | Supply selected articles as context, as described below, or use the [integration bootstrap](agent-consumption.md#try-a-minimal-integration) to execute BCQuality action skills without the plugin. |
+
+### Read and reuse an article
+
+Start with a concern, such as `SetLoadFields`, and search within
+`microsoft/BCQuality` on GitHub or open its domain folder. For example,
+[partial-record guidance](../microsoft/knowledge/performance/use-setloadfields-for-partial-records.md)
+explains the concern and links good/bad samples.
+
+Before applying an article, read its frontmatter, the small metadata block at
+the top:
+
+| Field | How to read it |
+| --- | --- |
+| `bc-version` | `[24..]` means BC 24 and later; `[26..28]` means BC 26 through 28; `[all]` means every version. Use your target BC major version, not your extension's version. |
+| `technologies` | `[al]` means the guidance applies to AL; multiple values identify the technologies the article covers. |
+| `countries` | `[w1]` means worldwide; a code such as `[dk]` limits the guidance to that localization. |
+| `application-area` | `[all]` means any application area; a named area narrows applicability. |
+| `domain` and `keywords` | Help you find the topic; they are not instructions or additional requirements. |
+
+Read `Description` for context, then `Best Practice` and `Anti Pattern` for the
+rule and its exceptions. Follow any sample and source links. Do not turn a
+sample into a production implementation without considering your own context.
+The [READ reference](../skills/read.md) defines the precise matching rules.
+
+To use an article with your own agent, give it access to the full article and
+relevant samples, not just a title or index row. For example, replace the
+bracketed values in this prompt:
+
+> Read [article URL or local path] and its linked samples. Apply the relevant
+> guidance while implementing [task] for BC [major version]. Explain which
+> guidance you used, cite the article, and identify any missing context.
+
+A URL only works if the host can retrieve it; otherwise provide the files
+directly. This is ordinary reuse of knowledge for explanation or code writing,
+**not a packaged code-generation skill or a complete BCQuality review**.
+For the structured review process, invoke a supplied skill or follow the
+integration protocol. The remaining sections describe the review workflow.
 
 ## Hosts and prerequisites
 
@@ -40,6 +85,7 @@ branch names with ones in your project.
 | Uncommitted changes | Use the installed al-code-review skill to review my staged and unstaged tracked changes against HEAD, without changing files. Identify any untracked AL files not included in that diff. |
 | Branch changes | Use the installed al-code-review skill to review changes on this branch since its merge base with `origin/main`. Exclude uncommitted changes and do not edit files. |
 | Focused review | Use the installed al-code-review skill to review performance in the app in this folder, without changing files. Return the complete performance findings report. |
+| Supply chain code | Use the installed al-code-review skill to review SCM posting, inventory, reservations, item tracking, and warehouse workflows in this app folder, without changing files. Return the complete Supply Chain Management findings report. |
 | Agent SDK code | Use the installed al-code-review skill to review Agent SDK implementation and usage in this app folder, without changing files. Return the complete Agents findings report. |
 
 For Git comparisons, the named base ref must exist locally. If it is missing,
@@ -138,7 +184,7 @@ using your normal compilation, analyzer, test, and human-review workflow.
 
 ## Coverage and limits
 
-The Microsoft broad review composes the 16 Microsoft domains listed below.
+The Microsoft broad review composes the Microsoft domains listed below.
 The Community Agents review is a separate skill selected by the request, not
 a nested part of that coordinator. All current review leaves accept app
 folders, files, and diffs; request an Agent SDK review explicitly when that
@@ -148,8 +194,38 @@ Available knowledge is **not** a promise that every rule will run. Selection
 depends on the task, target context, enabled layers, and source evidence.
 A whole-folder review is a current-state snapshot: detecting a published API
 removal or another comparison-only regression requires an actual baseline.
-The corpus is technical AL guidance, not exhaustive functional validation or
-AppSource certification.
+The corpus combines technical AL guidance with targeted functional-domain
+invariants, not exhaustive functional validation or AppSource certification.
+
+The SCM leaf owns selected inventory/value, application, reservation, tracking,
+and warehouse/posting invariants. It prunes unrelated AL using the actual
+tables, codeunits, fields, and operations in scope; an item caption or a broad
+`ApplicationArea` alone is not an SCM review signal. Missing workflow context
+must not be replaced with an assumed posting defect. Manufacturing, assembly,
+planning, and other supply-chain areas are covered only where an article
+explicitly names the shared interface or invariant.
+
+SCM owns Item/Value/Capacity/Warehouse and inventory-application posting
+records. Pure G/L, customer/vendor/detailed/VAT and financial-only posting
+mutations belong to Finance, even when that domain is not enabled. Equivalent
+findings for one inventory-originated posting bypass have one SCM primary
+owner; distinct independent financial defects remain separate.
+
+The Finance leaf reviews journal posting, financial ledger changes,
+applications, and posting-linked dimension handling. It prunes unrelated code
+at the leaf rather than changing broad-review orchestration. Finance articles
+use `application-area: [all]` so missing application-area context does not
+weaken applicable findings; resolved records and operations supply the
+narrowing. Finance owns financial ledgers, not Item, Value, Capacity, Warehouse,
+or inventory-application records owned by SCM. It also does not own generic
+custom-table or master Default Dimension wiring. Request a focused "Finance
+posting review" when only this domain is needed.
+
+BCQuality intentionally does not duplicate mechanical diagnostics already
+enforced by the AL compiler or standard analyzers. Run the consuming app's
+normal compiler and analyzer pipeline alongside review and authoring. Knowledge
+may still discuss a diagnostic when BC-specific context is needed to avoid a
+false positive or choose a correct remediation.
 
 ### Knowledge by domain
 
@@ -164,12 +240,15 @@ Each article describes one concern. Where samples exist, use its linked
 | Data modeling | [Data modeling](../microsoft/knowledge/data-modeling/) |
 | Error handling | [Error handling](../microsoft/knowledge/error-handling/) |
 | Events | [Events](../microsoft/knowledge/events/) |
+| Finance | [Finance](../microsoft/knowledge/finance/) |
 | Interfaces | [Interfaces](../microsoft/knowledge/interfaces/) |
 | Performance | [Performance](../microsoft/knowledge/performance/) |
 | Privacy | [Privacy](../microsoft/knowledge/privacy/) |
 | Query objects | [Query](../microsoft/knowledge/query/) |
+| Reporting | [Reporting](../microsoft/knowledge/reporting/) |
 | Security | [Security](../microsoft/knowledge/security/) |
 | Style | [Style](../microsoft/knowledge/style/) |
+| Supply Chain Management | [SCM](../microsoft/knowledge/scm/) |
 | Telemetry | [Telemetry](../microsoft/knowledge/telemetry/) |
 | Testing | [Testing](../microsoft/knowledge/testing/) |
 | User interface | [UI](../microsoft/knowledge/ui/) |

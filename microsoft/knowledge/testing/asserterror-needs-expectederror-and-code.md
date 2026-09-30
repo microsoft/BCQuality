@@ -23,4 +23,6 @@ See sample: [`asserterror-needs-expectederror-and-code.good.al`](asserterror-nee
 
 `asserterror DoInvalid();` with nothing after it. The test asserts only that the call failed somehow; swap the validation for a different bug and the test still passes, certifying a guard that may no longer fire. A negative test that cannot tell one error from another verifies almost nothing.
 
+Not an instance of this anti-pattern: a trailing `asserterror Error(SomeLabel)` used purely as an end-of-test rollback sentinel to undo a lazily-initialized shared fixture's scratch changes (see `commit-shared-test-fixture-inside-lazy-initialize.md`). That `Error` call exists to force a rollback, not to verify that a specific failure occurred — the sentinel's own text is not meant to be asserted against, and adding an `ExpectedError` there would just duplicate the label without checking anything the test doesn't already control.
+
 See sample: [`asserterror-needs-expectederror-and-code.bad.al`](asserterror-needs-expectederror-and-code.bad.al).

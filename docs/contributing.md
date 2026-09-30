@@ -6,6 +6,34 @@ Partners are welcome to contribute shared knowledge, examples, skills, and
 documentation. To report an incorrect finding without preparing a change,
 use the [support guide](troubleshooting.md#reporting-a-problem).
 
+## Your first contribution
+
+You can propose shared guidance without write access to the upstream
+repository. Use this path for a correction or a new article:
+
+1. Search the [existing knowledge](using-bcquality.md#knowledge-by-domain) and
+   [open issues](https://github.com/microsoft/BCQuality/issues). Correct or
+   extend an existing article when it already owns the concern; add a new
+   article only for a distinct concern that meets the admission test below.
+2. [Fork BCQuality](https://github.com/microsoft/BCQuality/fork) into your GitHub
+   account or organization, clone your fork, and create a working branch from
+   the current upstream `main`. Make edits in that branch, not the plugin cache.
+3. Choose the [owning layer and domain](#choose-the-right-destination), then
+   edit the article or use the [shared-article starter](#shared-article-starter).
+   A contribution intended for everyone does not belong in `custom/`.
+4. Add supporting sources and relevant good/bad samples. For a false positive,
+   explain the valid pattern and the mistaken finding the rule should prevent.
+5. Run the [documented checks](#before-opening-a-pr), then commit and push
+   your branch to your fork.
+6. On GitHub, open a pull request with **base repository
+   `microsoft/BCQuality`, base branch `main`**, and your fork's working branch
+   as the head. Explain why the change is needed and respond to review by
+   pushing further commits to the same branch.
+
+Merged content is not automatically loaded into an existing agent session.
+Consumers must pick up the updated content through their installation or
+checkout; see [updates and versions](customizing-bcquality.md#updates-and-versions).
+
 ## What belongs here
 
 BCQuality is a remedial knowledge base. A knowledge file exists because a
@@ -13,7 +41,9 @@ capable LLM **would get something wrong, or miss something, without it**, not
 simply because the topic is important. Apply this admission test:
 
 > If this file did not exist, would a modern LLM reviewing or generating BC
-> code make a mistake this file would have prevented?
+> code make a BC-specific mistake that the configured compiler, analyzers, and
+> tests would not reliably catch, or would it misinterpret or incorrectly
+> remediate one of their diagnostics?
 
 Good candidates encode a BC-specific mechanic that models get wrong, a
 version-dependent behavior, or a misleading interpretation of an analyzer
@@ -27,6 +57,15 @@ Generic advice such as "use HTTPS," "do not hardcode secrets," or "keep
 transactions short" does not earn a separate knowledge file merely by being
 sound advice. Negative clarifications that prevent false positives are as
 valuable as rules that catch defects.
+
+Do not add knowledge whose anti-pattern is fully and deterministically detected
+by the AL compiler or a standard analyzer. This applies to authoring as well as
+review: an authoring agent should compile with the consuming app's actual
+ruleset and correct the resulting diagnostics instead of carrying prose copies
+of analyzer rules in context. Analyzer-related knowledge belongs here only when
+it adds a BC-specific exception, version boundary, cross-object implication, or
+remediation constraint that the diagnostic itself cannot establish. Merely
+explaining why a deterministic rule exists is not sufficient.
 
 **Skills hold discovery and execution mechanics; knowledge files hold BC
 facts.** Correct or extend a knowledge article when a BC fact is missing or
@@ -69,6 +108,20 @@ to catch in `Anti Pattern`; those are the normative sections. Explain
 legitimate exceptions so a reviewer does not turn a useful rule into a false
 positive. Code fences are not allowed in knowledge articles.
 
+### Shared-article starter
+
+Use [caption-required-on-page-fields.md](../microsoft/knowledge/style/caption-required-on-page-fields.md)
+as a complete shared-knowledge example. It demonstrates all six metadata
+fields, a clear concern, normative guidance and exceptions, linked good/bad
+samples, and authoritative sources.
+
+For a new concern, follow that structure but choose your own descriptive
+filename, domain, applicability, keywords, and guidance. Replace its sources
+and sample links with ones supporting your concern; do not duplicate the
+caption rule. If you are correcting caption guidance itself, edit the
+existing article instead. Use a company-only rule only in your fork's Custom
+layer, following the separate [customization example](customizing-bcquality.md#add-an-organization-specific-rule).
+
 ### Sources and examples
 
 When adding or changing a platform claim, link the authoritative source that
@@ -108,12 +161,15 @@ If PyYAML is not installed in your development environment, install it with
 ```powershell
 python .github\scripts\validate_frontmatter.py --root .
 pwsh .\tools\Test-ReviewFixtures.ps1 -Root .
+pwsh .\tools\Test-ReviewContract.ps1 -Root .
 ```
 
 The first command checks schema, sections, naming, sample references, and
 skill registration. The second checks that every review leaf has a valid
-positive/clean sample pair. Neither proves a model will find every defect.
-See [evaluation](../evaluation/README.md) for optional model-based scoring.
+positive/clean sample pair. The third checks the cross-surface findings-report
+contract and its bounded range-normalization cases. None proves a model will
+find every defect. See [evaluation](../evaluation/README.md) for optional
+model-based scoring.
 
 In the PR description, explain the mistake being prevented, supporting
 evidence, applicable BC versions, and why the chosen domain owns it. For a

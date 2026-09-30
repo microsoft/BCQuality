@@ -1,26 +1,31 @@
 ---
 bc-version: [all]
 domain: performance
-keywords: [calcfields, calcsums, loop, flowfield, n-plus-one, aggregation]
+keywords: [calcfields, calcsums, loop, flowfield, source-field, sumindexfields, aggregation]
 technologies: [al]
 countries: [w1]
 application-area: [all]
 ---
 
-# Use CalcSums to aggregate, not CalcFields inside a loop
+# Use CalcSums for stored-field totals, not as a shortcut for FlowFields
 
 ## Description
 
-`CalcFields` materializes FlowField values for one record. Each call against a persistent table is "a separate SQL query"; running it inside a `repeat ... until Next() = 0` over a large table issues one query per row on top of the iteration itself. `CalcSums` answers the same aggregation question — "give me the sum of this FlowField over the filtered set" — as a single SQL statement. Per the upstream guidance, `CalcFields` inside loops on large persistent tables is "a performance problem"; the aggregation form is `CalcSums()`.
+`CalcFields` evaluates a FlowField for one record; `CalcSums` totals stored numeric fields in a filtered source table. They do not generally answer the same question. A loop that adds a normal source field for one total can often use one `CalcSums`, possibly backed by a compatible SIFT index. A loop that adds calculated FlowFields cannot be replaced with `CalcSums` on those FlowFields: each `CalcFormula` may depend on its parent record, FlowFilters, and the selected parent set. `CalcFields` requests can also use a recent calculation cache, so source-level call counts are not SQL statement counts.
 
 ## Best Practice
 
-When the procedure totals a FlowField (or several) across a filtered set, set the filters, then call `CalcSums("Field 1", "Field 2", ...)`. The platform issues one query; the result is read off the record's FlowField slot. Single `CalcFields` outside loops is fine, and `CalcFields` on the current row in a page's `OnAfterGetRecord` or in `OnValidate` is the standard pattern — those are per-action, not per-row over a large set.
+When only one total over stored source fields is needed, set the source-table filters and call `CalcSums` on those fields; select an appropriate current key with `SumIndexFields` when relying on SIFT, and measure the read/write trade-off. If the inputs are FlowFields, derive any proposed source aggregation from their `CalcFormula`, including the selected parent set and FlowFilters, and verify equivalent results before replacing the loop. When every row needs its own FlowField value, [use `SetAutoCalcFields`](use-setautocalcfields-for-per-row-flowfields.md) where appropriate rather than replacing row values with one total. See [SIFT trade-offs](choose-maintainsiftindex-by-read-write-ratio.md).
 
 See sample: [`calcsums-instead-of-calcfields-in-loop.good.al`](calcsums-instead-of-calcfields-in-loop.good.al).
 
 ## Anti Pattern
 
-`if CustLedgerEntry.FindSet() then repeat CustLedgerEntry.CalcFields("Remaining Amount"); Total += CustLedgerEntry."Remaining Amount"; until CustLedgerEntry.Next() = 0;` — exactly the upstream-flagged shape. The iteration is the cheap part; the per-row `CalcFields` is what scales linearly with table size.
+Looping over filtered `Cust. Ledger Entry` records and adding the stored `"Sales (LCY)"` field when the only output is its total. The opposite mistake is proposing `Customer.CalcSums(Balance)` as a generic replacement for adding selected customers' FlowField balances; that changes or fails to express the required calculation.
 
 See sample: [`calcsums-instead-of-calcfields-in-loop.bad.al`](calcsums-instead-of-calcfields-in-loop.bad.al).
+
+## References
+
+- [CalcFields and CalcSums operate on different field calculations](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-calcfields-calcsums-fielderror-fieldname-init-testfield-and-validate-methods).
+- [Record.CalcSums](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/methods-auto/record/record-calcsums-method).
