@@ -1,13 +1,35 @@
+table 50568 "Contoso Activity Log"
+{
+    DataClassification = SystemMetadata;
+
+    fields
+    {
+        field(1; "Entry No."; Integer) { AutoIncrement = true; }
+        field(2; "Activity"; Text[250]) { }
+    }
+
+    keys
+    {
+        key(PK; "Entry No.") { Clustered = true; }
+    }
+}
+
 codeunit 50564 "Contoso Reten. Pol. Default"
 {
     Access = Internal;
+    Permissions = tabledata "Retention Policy Setup" = ri;
 
     procedure CreateDefaultPolicy()
     var
         RetentionPolicySetup: Record "Retention Policy Setup";
         RetentionPolicySetupMgt: Codeunit "Retention Policy Setup";
+        RetenPolAllowedTables: Codeunit "Reten. Pol. Allowed Tables";
         UpgradeTag: Codeunit "Upgrade Tag";
     begin
+        // A setup can only be created for a table that is already registered.
+        if not RetenPolAllowedTables.IsAllowedTable(Database::"Contoso Activity Log") then
+            exit;
+
         // Created once per company: an administrator who deletes the policy
         // does not get it back on the next upgrade.
         if UpgradeTag.HasUpgradeTag(DefaultPolicyTag()) then

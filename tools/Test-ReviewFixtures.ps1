@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     CI uses the static validation path to prove every registered AL review leaf
-    has one positive and one clean control, every fixture/reference exists, and
+    has at least one positive and one clean control, every fixture/reference exists, and
     the manifest remains internally consistent.
 
     For an actual model run, -PrepareDirectory copies inputs to neutral names and
@@ -226,24 +226,49 @@ foreach ($domain in $leafDomains) {
         continue
     }
 
-    $articlePath = [string]$selectedArticle.ArticlePath
-    $sampleDirectory = (Split-Path -Parent $articlePath).Replace('\', '/')
+    # The primary article keeps the domain-level case IDs; additionalArticles add
+    # further paired cases keyed by slug so existing case hashes stay stable.
+    $selections = [System.Collections.Generic.List[object]]::new()
+    $selections.Add([pscustomobject]@{ Article = $selectedArticle; IdPrefix = $domain }) | Out-Null
+    if ($override -and ($override.PSObject.Properties.Name -contains 'additionalArticles')) {
+        foreach ($additionalName in @($override.additionalArticles)) {
+            $additionalName = [string]$additionalName
+            if ($additionalName.EndsWith('.md')) {
+                $additionalName = [System.IO.Path]::GetFileNameWithoutExtension($additionalName)
+            }
+            if (@($selections | Where-Object { $_.Article.BaseName -eq $additionalName }).Count) {
+                $problems.Add("${domain}: additional article is already selected: $additionalName.md") | Out-Null
+                continue
+            }
+            $additionalArticle = $articles | Where-Object BaseName -eq $additionalName | Select-Object -First 1
+            if (-not $additionalArticle) {
+                $problems.Add("${domain}: additional article does not exist or lacks .good.al and .bad.al companion samples: $additionalName.md") | Out-Null
+                continue
+            }
+            $selections.Add([pscustomobject]@{ Article = $additionalArticle; IdPrefix = "$domain-$additionalName" }) | Out-Null
+        }
+    }
+
     $context = if ($override -and ($override.PSObject.Properties.Name -contains 'context')) {
         [string]$override.context
     } else {
         $null
     }
-    foreach ($kind in 'bad', 'good') {
-        $case = [pscustomobject]@{
-            id = "$domain-$kind"
-            domain = $domain
-            input = "$sampleDirectory/$($selectedArticle.BaseName).$kind.al"
-            expected = if ($kind -eq 'bad') { @($articlePath) } else { @() }
+    foreach ($selection in $selections) {
+        $articlePath = [string]$selection.Article.ArticlePath
+        $sampleDirectory = (Split-Path -Parent $articlePath).Replace('\', '/')
+        foreach ($kind in 'bad', 'good') {
+            $case = [pscustomobject]@{
+                id = "$($selection.IdPrefix)-$kind"
+                domain = $domain
+                input = "$sampleDirectory/$($selection.Article.BaseName).$kind.al"
+                expected = if ($kind -eq 'bad') { @($articlePath) } else { @() }
+            }
+            if ($context) {
+                $case | Add-Member -NotePropertyName context -NotePropertyValue $context
+            }
+            $caseList.Add($case) | Out-Null
         }
-        if ($context) {
-            $case | Add-Member -NotePropertyName context -NotePropertyValue $context
-        }
-        $caseList.Add($case) | Out-Null
     }
 }
 $cases = @($caseList)

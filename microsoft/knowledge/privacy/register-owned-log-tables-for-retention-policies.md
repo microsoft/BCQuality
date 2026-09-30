@@ -1,5 +1,5 @@
 ---
-bc-version: [17..]
+bc-version: [22..]
 domain: privacy
 keywords: [retention-policy, allowed-tables, addallowedtable, reten-pol-allowed-tables, onrefreshallowedtables, append-only-table, log-table-growth, deleteall, mandatory-minimum-retention, install-upgrade-codeunit]
 technologies: [al]

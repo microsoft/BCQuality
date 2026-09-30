@@ -1,3 +1,19 @@
+table 50566 "Contoso Activity Log"
+{
+    DataClassification = SystemMetadata;
+
+    fields
+    {
+        field(1; "Entry No."; Integer) { AutoIncrement = true; }
+        field(2; "Activity"; Text[250]) { }
+    }
+
+    keys
+    {
+        key(PK; "Entry No.") { Clustered = true; }
+    }
+}
+
 codeunit 50560 "Contoso Reten. Pol. Setup"
 {
     Access = Internal;
