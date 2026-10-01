@@ -14,6 +14,22 @@ codeunit 50640 "Sales Doc. VAT Basis Good"
         GrossTotal := SalesLine."Amount Including VAT";
     end;
 
+    procedure GetOutstandingNetAmount(SalesLine: Record "Sales Line"): Decimal
+    var
+        SalesHeader: Record "Sales Header";
+        Currency: Record Currency;
+    begin
+        if SalesLine.Quantity = 0 then
+            exit(0);
+        SalesHeader.Get(SalesLine."Document Type", SalesLine."Document No.");
+        Currency.Initialize(SalesHeader."Currency Code");
+        // Amount is net after line and invoice discounts on every document, so the
+        // uninvoiced share needs no VAT conversion.
+        exit(Round(
+            SalesLine.Amount * (SalesLine.Quantity - SalesLine."Quantity Invoiced") / SalesLine.Quantity,
+            Currency."Amount Rounding Precision"));
+    end;
+
     procedure SetUnitPriceFromNetSourcePrice(var SalesLine: Record "Sales Line"; NetSourcePrice: Decimal)
     var
         SalesHeader: Record "Sales Header";

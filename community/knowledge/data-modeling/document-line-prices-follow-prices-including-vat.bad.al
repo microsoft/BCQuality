@@ -16,6 +16,13 @@ codeunit 50641 "Sales Doc. VAT Basis Bad"
             until SalesLine.Next() = 0;
     end;
 
+    procedure GetOutstandingNetAmount(SalesLine: Record "Sales Line"): Decimal
+    begin
+        // Wrong: despite its name, CalculateOutstandingAmountExclTax is based on "Line Amount"
+        // and therefore includes VAT on a Prices Including VAT document.
+        exit(SalesLine.CalculateOutstandingAmountExclTax());
+    end;
+
     procedure SetUnitPriceFromNetSourcePrice(var SalesLine: Record "Sales Line"; NetSourcePrice: Decimal)
     begin
         // Wrong: on a Prices Including VAT document this net price is read as a gross price,
