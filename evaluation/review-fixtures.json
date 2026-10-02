@@ -37,7 +37,10 @@
       ]
     },
     "events": {
-      "article": "reset-ishandled-only-when-the-value-can-carry-over"
+      "articles": [
+        "reset-ishandled-only-when-the-value-can-carry-over",
+        "changecompany-runs-triggers-in-the-calling-company"
+      ]
     },
     "finance": {
       "articles": [
@@ -167,7 +170,8 @@
     "upgrade": {
       "articles": [
         "initvalue-does-not-update-existing-rows",
-        "upgrade-tag-logic-must-not-nest-deeply"
+        "upgrade-tag-logic-must-not-nest-deeply",
+        "no-changecompany-in-upgrade"
       ],
       "context": "The extended table existed in the previous app version and already contains rows."
     },

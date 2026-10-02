@@ -1,3 +1,20 @@
+table 50263 "Sales Order Ext"
+{
+    DataClassification = CustomerContent;
+
+    fields
+    {
+        field(1; "No."; Code[20]) { }
+        field(2; "Shipping Agent Code"; Code[10]) { TableRelation = "Shipping Agent"; }
+        field(3; "Legacy Carrier Code"; Code[10]) { }
+    }
+
+    keys
+    {
+        key(PK; "No.") { Clustered = true; }
+    }
+}
+
 codeunit 50261 "Upgrade All Companies"
 {
     Subtype = Upgrade;
