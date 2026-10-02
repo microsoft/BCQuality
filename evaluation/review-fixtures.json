@@ -33,13 +33,15 @@
       "articles": [
         "collect-validation-errors-with-errorbehavior",
         "defensive-vs-offensive-code-must-match-blast-radius",
-        "log-writes-must-survive-rollback"
+        "log-writes-must-survive-rollback",
+        "ignored-tryfunction-return-disables-try-semantics"
       ]
     },
     "events": {
       "articles": [
         "reset-ishandled-only-when-the-value-can-carry-over",
-        "changecompany-runs-triggers-in-the-calling-company"
+        "changecompany-runs-triggers-in-the-calling-company",
+        "avoid-raising-events-inside-try-functions"
       ]
     },
     "finance": {
@@ -85,7 +87,8 @@
         "use-setloadfields-for-partial-records",
         "prefer-modifyall-over-per-row-modify",
         "al-methods-limited-during-write-transactions",
-        "avoid-user-prompts-inside-transactions"
+        "avoid-user-prompts-inside-transactions",
+        "use-tryfunction-for-error-catching-not-rollback"
       ]
     },
     "privacy": {

@@ -1,9 +1,17 @@
 codeunit 50300 "Try Return Good"
 {
-    procedure ImportDocument()
+    procedure ImportDocument(): Boolean
     begin
+        // The caller continues on failure, so the result is consumed.
         if not TryImportDocument() then
-            Error(ImportFailedErr);
+            exit(false);
+        exit(true);
+    end;
+
+    procedure ImportRequiredDocument()
+    begin
+        // The error should reach the user, so a bare call is correct.
+        TryImportDocument();
     end;
 
     [TryFunction]
@@ -13,6 +21,5 @@ codeunit 50300 "Try Return Good"
     end;
 
     var
-        ImportFailedErr: Label 'The document could not be imported.';
         SourceRejectedErr: Label 'The source document was rejected.';
 }

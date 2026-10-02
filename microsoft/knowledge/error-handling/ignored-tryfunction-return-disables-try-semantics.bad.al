@@ -1,9 +1,13 @@
 codeunit 50301 "Try Return Bad"
 {
-    procedure ImportDocument()
+    procedure ImportDocument(): Boolean
     begin
-        // Ignoring the Boolean result makes this an ordinary, throwing call.
+        // The bare call is not a try-method call: the error stops this procedure here,
+        // so the check below never sees it.
         TryImportDocument();
+        if GetLastErrorText() <> '' then
+            exit(false);
+        exit(true);
     end;
 
     [TryFunction]
