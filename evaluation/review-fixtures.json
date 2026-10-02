@@ -17,11 +17,13 @@
         "check-blocked-in-referencing-code-not-in-master",
         "code-must-not-change-workdate",
         "custom-document-dispatch-must-not-bypass-report-selections",
+        "delete-master-data-with-trigger",
         "document-line-prices-follow-prices-including-vat",
         "document-print-and-email-actions-call-report-selections-directly",
         "extend-find-entries-navigate-for-new-document-types",
         "extend-price-source-type-must-sync-document-subset-enum",
         "extend-report-selection-usage-for-new-document-types",
+        "master-data-must-be-inserted-with-trigger",
         "new-price-source-must-add-candidate-and-trigger-recalculation",
         "pictures-must-use-media-not-blob",
         "report-barcodes-must-use-barcode-module-and-production-font-name",
@@ -32,6 +34,7 @@
     "error-handling": {
       "articles": [
         "collect-validation-errors-with-errorbehavior",
+        "declined-confirm-must-abort-not-partially-apply",
         "defensive-vs-offensive-code-must-match-blast-radius",
         "log-writes-must-survive-rollback"
       ]
