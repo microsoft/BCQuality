@@ -26,6 +26,7 @@
         "pictures-must-use-media-not-blob",
         "report-barcodes-must-use-barcode-module-and-production-font-name",
         "table-design-must-match-bc-table-type-conventions",
+        "tablerelation-field-length-must-match-related-field",
         "transferfields-mirrored-fields-must-match-type-and-length"
       ]
     },
@@ -157,7 +158,8 @@
         "test-one-when-per-test",
         "transactionmodel-attribute-governs-test-transactions",
         "ui-test-codeunit-naming",
-        "use-assert-isfalse-not-asserterror-for-boolean-checks"
+        "use-assert-isfalse-not-asserterror-for-boolean-checks",
+        "recordref-open-temp-parameter-defeats-real-table-checks"
       ]
     },
     "ui": {
