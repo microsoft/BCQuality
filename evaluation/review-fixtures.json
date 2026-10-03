@@ -39,7 +39,8 @@
     "events": {
       "articles": [
         "reset-ishandled-only-when-the-value-can-carry-over",
-        "changecompany-runs-triggers-in-the-calling-company"
+        "changecompany-runs-triggers-in-the-calling-company",
+        "database-trigger-setup-flags-may-only-be-set-to-true"
       ]
     },
     "finance": {
