@@ -85,7 +85,8 @@
         "use-setloadfields-for-partial-records",
         "prefer-modifyall-over-per-row-modify",
         "al-methods-limited-during-write-transactions",
-        "avoid-user-prompts-inside-transactions"
+        "avoid-user-prompts-inside-transactions",
+        "use-grouped-query-for-distinct-values-and-duplicates"
       ]
     },
     "privacy": {
