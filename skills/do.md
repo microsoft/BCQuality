@@ -182,8 +182,10 @@ Before emitting each leaf report or super-skill rollup:
    `outcome-reason`, not unverified locations.
 
 Validate the complete document against the schema and semantic rules before
-returning it. Consumers MUST NOT strip ID suffixes, downgrade agent findings,
-or clamp locations to make an invalid report pass the acceptance gate.
+returning it. Consumers MUST NOT heuristically strip ID suffixes, downgrade
+agent findings, or clamp locations to make an invalid report pass the acceptance gate. The
+only ID exception is the exact primary-reference copy in the bounded consumer
+procedure below; producers still MUST emit canonical IDs.
 
 ### Consumer acceptance gate
 
@@ -193,36 +195,62 @@ creating any derived value. The accepted findings-report is either that exact
 return or the bounded normalized candidate described below; the raw audit
 payload never changes.
 
-Before the full acceptance gate, a coordinator MAY create a normalized
+Before the full acceptance gate, a coordinator or host MAY create a normalized
 candidate copy only through this deterministic procedure:
 
-1. Parse the exact return as strict JSON and provisionally check the complete
-   report without mutating it. Every acceptance rule below MUST already pass
-   except for one or more findings whose optional `location.range` has
-   `start-line != line`.
-2. Each such finding is eligible only when `location.line`,
-   `location.range.start-line`, and `location.range.end-line` are positive
-   integers, `start-line <= line <= end-line`, and the finding does not contain
-   the `suggested-code` field. Field presence disqualifies normalization even
-   if its value is empty because suggested code may be bound to the reported
-   range.
-3. Deep-copy the complete parsed report. In the candidate copy, remove only
-   `location.range` from every eligible finding. Retain `location.line` and
-   every other value unchanged. Do not add normalization metadata to the
-   findings-report.
-4. Record each removed range separately in private run telemetry or artifacts,
-   associated with the immutable raw audit payload. This record is
-   runner-owned and is not part of the declared report schema.
+1. Validate the exact return as strict JSON and against the complete structural
+   schema before forming a candidate. All required fields, types, enums,
+   conditional requirements, non-empty strings, positive-integer locations,
+   range shape, and additional-property restrictions MUST pass, including
+   nested reports. Do not repair JSON or coerce values. The structural schema
+   deliberately requires only a non-empty string for a cited ID: primary-path
+   equality (including rejecting fragments or scenario suffixes) is semantic,
+   not a global no-`#` pattern that would prevent this bounded procedure.
+   For `references: []`, the schema still enforces agent slug syntax and
+   severity/confidence caps; exact role/producer ownership is semantic.
+2. Verify every cited path through all existing safe-path, live-snapshot
+   existence, and recorded full-body retrieval checks, including every
+   supporting citation. Reject absolute paths, backslashes, dot segments,
+   empty segments, URI escapes, fragments, query strings, and control
+   characters; do not resolve or rewrite them into valid paths. Unknown or
+   unretrieved references disqualify the complete report. An ID with an
+   `(^|:)agent:` marker or `from-sub-skill: "agent"` is an agent encoding,
+   never eligible for ID canonicalization; combining it with citations is
+   invalid.
+3. Deep-copy the complete parsed report. Only for a knowledge-backed finding
+   with non-empty, fully verified `references`, set the candidate `id` exactly
+   to `references[0].path` when it differs (ordinal comparison). Never derive
+   an ID by trimming or parsing the raw ID. Already-canonical IDs are no-ops.
+   Provisionally validate the entire candidate, permitting only optional
+   `location.range` start mismatches. All original range endpoints MUST still
+   be checked against the source snapshot before removing any range.
+4. In the same candidate copy, remove only an eligible `location.range`.
+   Eligibility requires `location.line`, `location.range.start-line`, and
+   `location.range.end-line` to be positive integers,
+   `start-line <= line <= end-line`, `start-line != line`, and the finding
+   does not contain the `suggested-code` field. Field presence disqualifies
+   range removal even if its value is empty. Valid uncited agent findings
+   remain eligible for this range-only operation; their IDs and caps never
+   change. Both operations apply only to the report's own `findings[]`:
+   accepted nested leaf reports are immutable, not re-normalized by rollup.
+   Record each changed ID's zero-based finding index, original ID, and
+   canonical ID, and each removed range with its finding index and original
+   endpoints, separately in private run telemetry or artifacts associated
+   with the exact raw payload. Do not add metadata to the findings-report.
 5. Validate the entire normalized candidate with the existing full consumer
-   acceptance gate below. Only a candidate that passes every rule becomes the
-   accepted copy used for rollup. If any other validation defect exists, or
-   full validation fails, discard the candidate, preserve the raw payload, and
-   fail the complete leaf as before.
+   acceptance gate below, including the complete schema, reference equality,
+   role, source, counts, coverage, and composition checks without exceptions.
+   Only a candidate that passes every rule becomes the accepted copy used for
+   rollup. If any other validation defect exists, or full validation fails,
+   discard the candidate, preserve the raw payload, and fail the complete
+   report as before. Never accept or return a partially normalized subset.
 
 This exception does not infer missing fields, alter references or paths, clamp
 line numbers, repair JSON, normalize a reversed or out-of-bounds range, remove
 a range from a finding containing `suggested-code`, or salvage arbitrary
 individual findings.
+It never canonicalizes agent/uncited IDs or changes messages, reference paths
+or order, `location.line`, severity, confidence, or any other field.
 
 Before accepting either the exact return or an eligible normalized candidate
 as a findings-report, a coordinator or host MUST validate it deterministically:
@@ -275,7 +303,8 @@ returned-and-skipped leaf IDs are invalid even without the artifact. Never
 derive the expected composition from model output.
 Pass
 `-AllowBoundedNormalization` only when the host preserves the immutable raw
-payload and records `removedRanges` in private telemetry as required above.
+payload and records `normalizedIds` and `removedRanges` in private telemetry as
+required above. These fields are returned beside `report`, never inside it.
 
 Validation failure invalidates the complete return; consumers MUST NOT salvage
 individual findings, infer missing fields, reconstruct JSON, clamp ranges,
