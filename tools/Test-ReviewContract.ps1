@@ -56,6 +56,14 @@ function Assert-ThrowsLike {
     throw "Expected error like '$Pattern', but no error was thrown."
 }
 
+function Assert-ReportSchema {
+    param([object] $Report, [bool] $Expected, [string] $Message)
+
+    $valid = $Report | ConvertTo-Json -Depth 30 |
+        Test-Json -SchemaFile (Join-Path $Root 'schemas/findings-report.schema.json') -ErrorAction SilentlyContinue
+    Assert-True ($valid -eq $Expected) $Message
+}
+
 function Test-PositiveInteger {
     param([object] $Value)
 
@@ -116,6 +124,11 @@ foreach ($surface in @(
 
 $normalizedDoContract = $doContract -replace '\s+', ' '
 foreach ($expected in @(
+    'Copy every citation-based `findings[].id` verbatim from `references[0].path`, with no `#` fragment or other suffix.',
+    'For `references: []`, emit only `confidence: "medium"` or `"low"` and `severity: "minor"` or `"info"`.',
+    'Open the final source snapshot for every `location.file`.',
+    '1-based final-file line numbers within that file''s length, never diff/patch-relative line numbers.',
+    'Consumers MUST NOT strip ID suffixes, downgrade agent findings, or clamp locations',
     'positive integers',
     'start-line <= line <= end-line',
     'does not contain the `suggested-code` field',
@@ -285,6 +298,66 @@ try {
     Set-Content -LiteralPath $reportPath -Value ($validSuperReport | ConvertTo-Json -Depth 20) -Encoding utf8NoBOM
     $acceptedSuper = & $validator -ReportPath $reportPath -BCQualityRoot $Root -SkillKind super
     Assert-True (-not $acceptedSuper.normalized) 'valid super-skill report is accepted'
+
+    foreach ($isAgent in @($false, $true)) {
+        foreach ($severity in 'blocker', 'major', 'minor', 'info') {
+            foreach ($confidence in 'high', 'medium', 'low') {
+                $schemaLeaf = $validReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+                $schemaLeaf.findings[0].severity = $severity
+                $schemaLeaf.findings[0].confidence = $confidence
+                $schemaLeaf.summary.counts.minor = 0
+                $schemaLeaf.summary.counts.$severity = 1
+                if ($isAgent) {
+                    $schemaLeaf.findings[0].id = 'agent:uncited-defect'
+                    $schemaLeaf.findings[0].references = @()
+                }
+                $expected = -not $isAgent -or ($severity -in @('minor', 'info') -and $confidence -ne 'high')
+                $caseName = "agent=$isAgent severity=$severity confidence=$confidence"
+                Assert-ReportSchema $schemaLeaf $expected "leaf schema: $caseName"
+
+                $schemaSuper = $validSuperReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+                $schemaSuper.'sub-results'[0] = $schemaLeaf
+                $schemaSuper.summary.counts = $schemaLeaf.summary.counts
+                $schemaSuper.findings = @($schemaLeaf.findings[0] | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+                $schemaSuper.findings[0] | Add-Member -NotePropertyName 'from-sub-skill' -NotePropertyValue 'al-style-review'
+                if ($isAgent) {
+                    $schemaSuper.findings[0].id = "al-style-review:$($schemaLeaf.findings[0].id)"
+                }
+                Assert-ReportSchema $schemaSuper $expected "rolled-up schema: $caseName"
+
+                if ($isAgent) {
+                    $schemaSuper.'sub-results'[0] = $completedLeaf
+                    $schemaSuper.findings[0].id = $schemaLeaf.findings[0].id
+                    $schemaSuper.findings[0].'from-sub-skill' = 'agent'
+                    $schemaSuper.findings[0].domain = 'Agent'
+                    Assert-ReportSchema $schemaSuper $expected "root-owned agent schema: $caseName"
+
+                    $schemaSuper.findings = @()
+                    $schemaSuper.summary.counts = $completedLeaf.summary.counts
+                    $schemaSuper.'sub-results'[0] = $schemaLeaf
+                    Assert-ReportSchema $schemaSuper $expected "nested leaf schema: $caseName"
+                }
+            }
+        }
+    }
+
+    $citationSuper = $validSuperReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+    $citationSuper.'sub-results'[0] = $validReport
+    $citationSuper.summary.counts = $validReport.summary.counts
+    $citationSuper.findings = @($validReport.findings[0] | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $citationSuper.findings[0] | Add-Member -NotePropertyName 'from-sub-skill' -NotePropertyValue 'al-style-review'
+    foreach ($position in 'leaf', 'root', 'nested-leaf') {
+        $fragmentReport = $(if ($position -eq 'leaf') { $validReport } else { $citationSuper }) |
+            ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $fragmentFinding = if ($position -eq 'nested-leaf') {
+            $fragmentReport.'sub-results'[0].findings[0]
+        }
+        else {
+            $fragmentReport.findings[0]
+        }
+        $fragmentFinding.id = "$articlePath#location"
+        Assert-ReportSchema $fragmentReport $false "$position citation id cannot append a fragment"
+    }
 
     $duplicateLeafReport = $validSuperReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json
     $duplicateLeafReport.'sub-results' = @($completedLeaf, $completedLeaf)
@@ -897,8 +970,52 @@ try {
     $invalidAgent.findings[0].references = @()
     $invalidAgent.findings[0].confidence = 'high'
     Set-Content -LiteralPath $reportPath -Value ($invalidAgent | ConvertTo-Json -Depth 20) -Encoding utf8NoBOM
-    Assert-ThrowsLike -Pattern '*AGENT_CONFIDENCE_INVALID*' -Action {
-        & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp -SourcePaths $sourcePath
+    $invalidAgentRaw = [IO.File]::ReadAllText($reportPath)
+    Assert-ThrowsLike -Pattern '*Invalid findings-report JSON or schema*' -Action {
+        & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp -SourcePaths $sourcePath `
+            -AllowBoundedNormalization
+    }
+    Assert-True ([IO.File]::ReadAllText($reportPath) -ceq $invalidAgentRaw) 'invalid agent payload is not silently repaired'
+
+    $mismatchedCitation = $validReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+    $mismatchedCitation.findings[0].id = "${articlePath}:location"
+    Assert-ReportSchema $mismatchedCitation $true 'cross-field citation equality still requires semantic validation'
+    Set-Content -LiteralPath $reportPath -Value ($mismatchedCitation | ConvertTo-Json -Depth 20) -Encoding utf8NoBOM
+    Assert-ThrowsLike -Pattern '*PRIMARY_REFERENCE_MISMATCH*' -Action {
+        & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp `
+            -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath -AllowBoundedNormalization
+    }
+
+    $finalSourcePath = 'src/final-snapshot.al'
+    Set-Content -LiteralPath (Join-Path $tmp $finalSourcePath) -Value (1..22 | ForEach-Object { "line $_" }) -Encoding utf8NoBOM
+    foreach ($bounds in @(
+        @{ Line = 22; End = 22; Error = $null }
+        @{ Line = 44; End = $null; Error = '*SOURCE_LINE_INVALID*' }
+        @{ Line = 22; End = 44; Error = '*SOURCE_RANGE_INVALID*' }
+    )) {
+        $locationReport = $validReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $locationReport.findings[0].location = @{
+            file = $finalSourcePath
+            line = $bounds.Line
+        }
+        if ($bounds.End) {
+            $locationReport.findings[0].location.range = @{ 'start-line' = $bounds.Line; 'end-line' = $bounds.End }
+        }
+        Assert-ReportSchema $locationReport $true 'schema alone cannot verify final-file line bounds'
+        Set-Content -LiteralPath $reportPath -Value ($locationReport | ConvertTo-Json -Depth 20) -Encoding utf8NoBOM
+        $locationRaw = [IO.File]::ReadAllText($reportPath)
+        $validateLocation = {
+            & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp `
+                -SourcePaths $finalSourcePath -RetrievedArticlePaths $articlePath -AllowBoundedNormalization
+        }
+        if ($bounds.Error) {
+            Assert-ThrowsLike -Pattern $bounds.Error -Action $validateLocation
+        }
+        else {
+            $acceptedLocation = & $validateLocation
+            Assert-True (-not $acceptedLocation.normalized) 'the final source line is accepted without normalization'
+        }
+        Assert-True ([IO.File]::ReadAllText($reportPath) -ceq $locationRaw) 'source locations are never clamped in the raw payload'
     }
 
     $normalizable = $validReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json

@@ -122,7 +122,7 @@
       "additionalProperties": false,
       "required": ["id", "severity", "message", "references", "confidence"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1, "pattern": "^[^#]+$" },
         "severity": { "enum": ["blocker", "major", "minor", "info"] },
         "message": { "type": "string", "minLength": 1 },
         "location": { "$ref": "#/definitions/location" },
@@ -135,6 +135,17 @@
         "domain": { "type": "string", "minLength": 1, "pattern": "^[^\\r\\n]+$" },
         "suggested-code": { "type": "string", "minLength": 1 },
         "suggested-code-omission-reason": { "type": "string", "minLength": 1 }
+      },
+      "if": {
+        "properties": {
+          "references": { "maxItems": 0 }
+        }
+      },
+      "then": {
+        "properties": {
+          "confidence": { "enum": ["medium", "low"] },
+          "severity": { "enum": ["minor", "info"] }
+        }
       }
     },
     "suppressed": {
