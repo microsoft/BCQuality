@@ -122,7 +122,7 @@
       "additionalProperties": false,
       "required": ["id", "severity", "message", "references", "confidence"],
       "properties": {
-        "id": { "type": "string", "minLength": 1, "pattern": "^[^#]+$" },
+        "id": { "type": "string", "minLength": 1 },
         "severity": { "enum": ["blocker", "major", "minor", "info"] },
         "message": { "type": "string", "minLength": 1 },
         "location": { "$ref": "#/definitions/location" },
@@ -143,6 +143,7 @@
       },
       "then": {
         "properties": {
+          "id": { "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?agent:[a-z0-9]+(?:-[a-z0-9]+)*$" },
           "confidence": { "enum": ["medium", "low"] },
           "severity": { "enum": ["minor", "info"] }
         }

@@ -128,7 +128,13 @@ foreach ($expected in @(
     'For `references: []`, emit only `confidence: "medium"` or `"low"` and `severity: "minor"` or `"info"`.',
     'Open the final source snapshot for every `location.file`.',
     '1-based final-file line numbers within that file''s length, never diff/patch-relative line numbers.',
-    'Consumers MUST NOT strip ID suffixes, downgrade agent findings, or clamp locations',
+    'Consumers MUST NOT heuristically strip ID suffixes, downgrade agent findings, or clamp locations',
+    'complete structural schema before forming a candidate',
+    'set the candidate `id` exactly to `references[0].path`',
+    'Already-canonical IDs are no-ops.',
+    'Valid uncited agent findings remain eligible for this range-only operation',
+    'accepted nested leaf reports are immutable',
+    'zero-based finding index, original ID, and canonical ID',
     'positive integers',
     'start-line <= line <= end-line',
     'does not contain the `suggested-code` field',
@@ -356,7 +362,34 @@ try {
             $fragmentReport.findings[0]
         }
         $fragmentFinding.id = "$articlePath#location"
-        Assert-ReportSchema $fragmentReport $false "$position citation id cannot append a fragment"
+        Assert-ReportSchema $fragmentReport $true "$position cited fragment defers equality to the semantic gate"
+        Set-Content -LiteralPath $reportPath -Value ($fragmentReport | ConvertTo-Json -Depth 20) -Encoding utf8NoBOM
+        $kind = if ($position -eq 'leaf') { 'leaf' } else { 'super' }
+        Assert-ThrowsLike -Pattern '*PRIMARY_REFERENCE_MISMATCH*' -Action {
+            & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp -SkillKind $kind `
+                -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath
+        }
+        if ($position -eq 'nested-leaf') {
+            Assert-ThrowsLike -Pattern '*PRIMARY_REFERENCE_MISMATCH*' -Action {
+                & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp -SkillKind super `
+                    -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath -AllowBoundedNormalization
+            }
+        }
+        else {
+            $acceptedFragment = & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp -SkillKind $kind `
+                -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath -AllowBoundedNormalization
+            Assert-True ($acceptedFragment.normalizedIds.Count -eq 1) "$position cited fragment is replaced only in the candidate"
+            Assert-True ($acceptedFragment.report.findings[0].id -ceq $articlePath) 'canonical id is the exact primary path'
+        }
+    }
+
+    $citedRootAgent = $citationSuper | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+    $citedRootAgent.findings[0].'from-sub-skill' = 'agent'
+    $citedRootAgent.findings[0].id = 'raw-cited-scenario'
+    Set-Content -LiteralPath $reportPath -Value ($citedRootAgent | ConvertTo-Json -Depth 20) -Encoding utf8NoBOM
+    Assert-ThrowsLike -Pattern '*AGENT_REFERENCE_INVALID*' -Action {
+        & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp -SkillKind super `
+            -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath -AllowBoundedNormalization
     }
 
     $duplicateLeafReport = $validSuperReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json
@@ -983,8 +1016,13 @@ try {
     Set-Content -LiteralPath $reportPath -Value ($mismatchedCitation | ConvertTo-Json -Depth 20) -Encoding utf8NoBOM
     Assert-ThrowsLike -Pattern '*PRIMARY_REFERENCE_MISMATCH*' -Action {
         & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp `
-            -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath -AllowBoundedNormalization
+            -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath
     }
+    $acceptedCitation = & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp `
+        -SourcePaths $sourcePath -RetrievedArticlePaths $articlePath -AllowBoundedNormalization
+    Assert-True ($acceptedCitation.normalizedIds.Count -eq 1 -and $acceptedCitation.removedRanges.Count -eq 0) `
+        'ID-only normalization preserves an aligned range'
+    Assert-True ($acceptedCitation.report.findings[0].id -ceq $articlePath) 'ID-only candidate uses the primary reference'
 
     $finalSourcePath = 'src/final-snapshot.al'
     Set-Content -LiteralPath (Join-Path $tmp $finalSourcePath) -Value (1..22 | ForEach-Object { "line $_" }) -Encoding utf8NoBOM
@@ -1031,6 +1069,259 @@ try {
     Assert-True ($normalized.removedRanges.Count -eq 1) 'normalization records one removed range'
     Assert-True (-not ($normalized.report.findings[0].location.PSObject.Properties.Name -contains 'range')) `
         'accepted normalized report removes only the optional range'
+
+    # Minimal finding fixtures copied verbatim in value from smoke 37310924454 / synthetic__privacy-015.
+    # Source leaf SHA256: 26aead0958e6ffe60c947f740b95ecf016783116a88d1254e87cea5c54c10107.
+    # Final handoff SHA256: c313a4ad40d270f4f77821ac36e375baaf107b8944fb8673e1d27d42c1e8b054.
+    $privacyFindings = @'
+[
+  {
+    "id": "privacy-notice-consent-for-external-data-transfer-ai-context",
+    "severity": "major",
+    "message": "The AI service request sends task and user context to an external service without checking approval for a dedicated privacy notice. No path should issue an external data request without integration-specific approval.",
+    "location": {"file": "src/AIContextBuilder.Codeunit.al", "line": 25, "range": {"start-line": 23, "end-line": 25}},
+    "references": [{"path": "microsoft/knowledge/privacy/privacy-notice-consent-for-external-data-transfer.md"}],
+    "confidence": "high",
+    "domain": "Privacy",
+    "suggested-code-omission-reason": "The fix requires adding and registering a dedicated notice identifier and placing the approval check in the appropriate transaction context."
+  },
+  {
+    "id": "privacy-notice-consent-for-external-data-transfer-customer-export",
+    "severity": "major",
+    "message": "The customer exporter posts names, email addresses, phone numbers, and addresses to a partner without checking approval for a dedicated privacy notice. Consent for another service does not authorize this external transfer.",
+    "location": {"file": "src/CustomerDataExporter.Codeunit.al", "line": 24, "range": {"start-line": 20, "end-line": 24}},
+    "references": [{"path": "microsoft/knowledge/privacy/privacy-notice-consent-for-external-data-transfer.md"}],
+    "confidence": "high",
+    "domain": "Privacy",
+    "suggested-code-omission-reason": "The fix requires adding and registering a dedicated notice identifier and placing the approval check in the appropriate transaction context."
+  },
+  {
+    "id": "privacy-notice-consent-for-external-data-transfer-crm-sync",
+    "severity": "major",
+    "message": "The CRM sync posts customer email addresses, names, phone numbers, and addresses to an external service without checking approval for a dedicated privacy notice. No path should issue the request without approval.",
+    "location": {"file": "src/ExternalCRMSync.Codeunit.al", "line": 23, "range": {"start-line": 19, "end-line": 23}},
+    "references": [{"path": "microsoft/knowledge/privacy/privacy-notice-consent-for-external-data-transfer.md"}],
+    "confidence": "high",
+    "domain": "Privacy",
+    "suggested-code-omission-reason": "The fix requires adding and registering a dedicated notice identifier and placing the approval check in the appropriate transaction context."
+  },
+  {
+    "id": "privacy-notice-consent-for-external-data-transfer-email",
+    "severity": "major",
+    "message": "The email dispatcher sends recipient addresses, subjects, and message bodies to Microsoft Graph without an approval check for the integration's privacy notice. No external data request should proceed without approval.",
+    "location": {"file": "src/OutboxEmailDispatcher.Codeunit.al", "line": 23, "range": {"start-line": 18, "end-line": 23}},
+    "references": [{"path": "microsoft/knowledge/privacy/privacy-notice-consent-for-external-data-transfer.md"}],
+    "confidence": "high",
+    "domain": "Privacy",
+    "suggested-code-omission-reason": "The fix requires determining the integration notice and placing its approval check in the appropriate transaction context before posting."
+  }
+]
+'@ | ConvertFrom-Json -DateKind String
+    $privacyReport = $validReport | ConvertTo-Json -Depth 20 | ConvertFrom-Json -DateKind String
+    $privacyReport.skill.id = 'al-privacy-review'
+    $privacyReport.findings = $privacyFindings
+    $privacyReport.summary.counts.minor = 0
+    $privacyReport.summary.counts.major = 4
+    $privacyReport.summary.coverage.'worklist-size' = 2
+    $privacyReport.summary.coverage.'items-evaluated' = 2
+    $privacyPath = $privacyFindings[0].references[0].path
+    $privacySources = @($privacyFindings | ForEach-Object { $_.location.file })
+    $sourceLengths = @(34, 29, 42, 57)
+    for ($index = 0; $index -lt $privacyFindings.Count; $index++) {
+        # Only source bounds are exercised here, not the AL behavior or a model.
+        Set-Content -LiteralPath (Join-Path $tmp $privacySources[$index]) `
+            -Value (1..$sourceLengths[$index] | ForEach-Object { "line $_" }) -Encoding utf8NoBOM
+    }
+
+    function Assert-PrivacyReport {
+        param(
+            [object] $Candidate,
+            [string] $ErrorPattern,
+            [string[]] $RetrievedPaths = @($privacyPath),
+            [switch] $Strict
+        )
+
+        $json = $Candidate | ConvertTo-Json -Depth 30
+        # Deliberate whitespace, escapes, CRLF, and BOM must survive acceptance and rejection byte-for-byte.
+        $json = " `r`n" + ($json.Replace('Privacy', '\u0050rivacy') -replace '\r?\n', "`r`n") + "`r`n "
+        Set-Content -LiteralPath $reportPath -Value $json -NoNewline -Encoding utf8BOM
+        $before = [Convert]::ToBase64String([IO.File]::ReadAllBytes($reportPath))
+        $objectBefore = $Candidate | ConvertTo-Json -Depth 30 -Compress
+        $invoke = {
+            & $validator -ReportPath $reportPath -BCQualityRoot $Root -SourceRoot $tmp `
+                -SourcePaths $privacySources -RetrievedArticlePaths $RetrievedPaths -AllowBoundedNormalization:(-not $Strict)
+        }
+        try {
+            if ($ErrorPattern) {
+                Assert-ThrowsLike -Pattern $ErrorPattern -Action $invoke
+            }
+            else {
+                & $invoke
+            }
+        }
+        finally {
+            Assert-True ([Convert]::ToBase64String([IO.File]::ReadAllBytes($reportPath)) -ceq $before) `
+                'exact raw bytes are immutable on acceptance and rejection'
+            Assert-True (($Candidate | ConvertTo-Json -Depth 30 -Compress) -ceq $objectBefore) `
+                'the caller-owned report is not mutated'
+        }
+    }
+
+    Assert-PrivacyReport $privacyReport '*PRIMARY_REFERENCE_MISMATCH*' -Strict
+    $acceptedPrivacy = Assert-PrivacyReport $privacyReport
+    Assert-True ($acceptedPrivacy.normalized -and $acceptedPrivacy.normalizedIds.Count -eq 4 -and
+        $acceptedPrivacy.removedRanges.Count -eq 4) 'all four smoke findings require combined ID and range normalization'
+    $canonicalPrivacy = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json -DateKind String
+    for ($index = 0; $index -lt $privacyFindings.Count; $index++) {
+        $canonicalPrivacy.findings[$index].id = $privacyPath
+        $canonicalPrivacy.findings[$index].location.PSObject.Properties.Remove('range')
+        $idRecord = $acceptedPrivacy.normalizedIds[$index]
+        $rangeRecord = $acceptedPrivacy.removedRanges[$index]
+        Assert-True ($idRecord.findingIndex -eq $index -and $idRecord.originalId -ceq $privacyFindings[$index].id -and
+            $idRecord.canonicalId -ceq $privacyPath) 'private ID telemetry identifies the exact original and canonical IDs'
+        Assert-True ($rangeRecord.findingIndex -eq $index -and
+            $rangeRecord.startLine -eq $privacyFindings[$index].location.range.'start-line' -and
+            $rangeRecord.endLine -eq $privacyFindings[$index].location.range.'end-line') 'private range telemetry preserves original endpoints'
+    }
+    Assert-True (($acceptedPrivacy.report | ConvertTo-Json -Depth 30 -Compress) -ceq
+        ($canonicalPrivacy | ConvertTo-Json -Depth 30 -Compress)) 'the entire candidate differs only in the two permitted fields'
+    Assert-ReportSchema $acceptedPrivacy.report $true 'accepted smoke report has no undeclared telemetry fields'
+    $canonicalNoOp = Assert-PrivacyReport $canonicalPrivacy
+    Assert-True (-not $canonicalNoOp.normalized -and $canonicalNoOp.normalizedIds.Count -eq 0 -and
+        $canonicalNoOp.removedRanges.Count -eq 0) 'already-canonical candidate is an idempotent no-op'
+
+    $multipleReferences = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+    $multipleReferences.findings[0].references += [pscustomobject]@{ path = $articlePath; sha = ('a' * 40) }
+    $acceptedMultiple = Assert-PrivacyReport $multipleReferences -RetrievedPaths @($privacyPath, $articlePath)
+    Assert-True ($acceptedMultiple.report.findings[0].id -ceq $privacyPath -and
+        ($acceptedMultiple.report.findings[0].references | ConvertTo-Json -Compress) -ceq
+        ($multipleReferences.findings[0].references | ConvertTo-Json -Compress)) 'primary selection preserves citation order, paths, and SHA'
+    Assert-PrivacyReport $multipleReferences '*REFERENCE_NOT_RETRIEVED*'
+    Assert-PrivacyReport $privacyReport '*REFERENCE_NOT_RETRIEVED*' -RetrievedPaths @()
+    foreach ($referenceCase in @(
+        @{ Path = 'microsoft/knowledge/privacy/unknown-article.md'; Error = '*REFERENCE_MISSING*' }
+        @{ Path = 'microsoft/knowledge/privacy/../privacy/privacy-notice-consent-for-external-data-transfer.md'; Error = '*REFERENCE_PATH_INVALID*' }
+        @{ Path = 'microsoft/knowledge/privacy/./privacy-notice-consent-for-external-data-transfer.md'; Error = '*REFERENCE_PATH_INVALID*' }
+        @{ Path = 'microsoft/knowledge//privacy/privacy-notice-consent-for-external-data-transfer.md'; Error = '*REFERENCE_PATH_INVALID*' }
+        @{ Path = '/microsoft/knowledge/privacy/article.md'; Error = '*REFERENCE_PATH_INVALID*' }
+        @{ Path = 'microsoft/knowledge/privacy/article%2e.md'; Error = '*REFERENCE_PATH_INVALID*' }
+        @{ Path = 'microsoft/knowledge/privacy/article#fragment.md'; Error = '*REFERENCE_PATH_INVALID*' }
+        @{ Path = 'microsoft/knowledge/privacy/article?query.md'; Error = '*REFERENCE_PATH_INVALID*' }
+        @{ Path = 'microsoft\knowledge\privacy\article.md'; Error = '*Invalid findings-report JSON or schema*' }
+    )) {
+        foreach ($referenceIndex in 0, 1) {
+            $badReference = $multipleReferences | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+            $badReference.findings[0].references[$referenceIndex].path = $referenceCase.Path
+            Assert-PrivacyReport $badReference $referenceCase.Error -RetrievedPaths @($privacyPath, $articlePath, $referenceCase.Path)
+        }
+    }
+
+    foreach ($rawId in @("$privacyPath#AI", "${privacyPath}:AI", 'unrelated-scenario', $privacyPath.ToUpperInvariant())) {
+        $idVariant = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+        $idVariant.findings[0].id = $rawId
+        $acceptedVariant = Assert-PrivacyReport $idVariant
+        Assert-True ($acceptedVariant.report.findings[0].id -ceq $privacyPath) 'ID canonicalization copies the path, not a parsed or trimmed ID'
+    }
+    foreach ($rawId in @('', $null, 42, $true, @('scenario'), @{ value = 'scenario' })) {
+        $badId = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+        $badId.findings[0].id = $rawId
+        Assert-PrivacyReport $badId '*Invalid findings-report JSON or schema*'
+    }
+    foreach ($rawId in 'agent:ai-context', 'al-privacy-review:agent:ai-context') {
+        $citedAgent = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+        $citedAgent.findings[0].id = $rawId
+        Assert-PrivacyReport $citedAgent '*AGENT_REFERENCE_INVALID*'
+    }
+
+    $agentReport = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+    $agentReport.findings = @($agentReport.findings[0])
+    $agentReport.findings[0].id = 'agent:ai-context'
+    $agentReport.findings[0].references = @()
+    $agentReport.findings[0].severity = 'minor'
+    $agentReport.findings[0].confidence = 'medium'
+    $agentReport.summary.counts.major = 0
+    $agentReport.summary.counts.minor = 1
+    $acceptedAgent = Assert-PrivacyReport $agentReport -RetrievedPaths @()
+    Assert-True ($acceptedAgent.normalizedIds.Count -eq 0 -and $acceptedAgent.removedRanges.Count -eq 1 -and
+        $acceptedAgent.report.findings[0].id -ceq 'agent:ai-context') 'valid uncited agent supports range-only normalization without ID changes'
+    foreach ($rawId in 'scenario-id', 'agent:AI', 'agent:ai#fragment', 'al-privacy-review:agent:ai-context') {
+        $badAgent = $agentReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+        $badAgent.findings[0].id = $rawId
+        $expectedError = if ($rawId -ceq 'al-privacy-review:agent:ai-context') { '*AGENT_ID_INVALID*' } else { '*Invalid findings-report JSON or schema*' }
+        Assert-PrivacyReport $badAgent $expectedError
+    }
+    foreach ($severity in 'blocker', 'major', 'minor', 'info') {
+        foreach ($confidence in 'high', 'medium', 'low') {
+            $agentCaps = $agentReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+            $agentCaps.findings[0].severity = $severity
+            $agentCaps.findings[0].confidence = $confidence
+            $agentCaps.summary.counts.minor = 0
+            $agentCaps.summary.counts.$severity = 1
+            if ($severity -in @('blocker', 'major') -or $confidence -eq 'high') {
+                Assert-PrivacyReport $agentCaps '*Invalid findings-report JSON or schema*'
+            }
+            else {
+                $acceptedCaps = Assert-PrivacyReport $agentCaps
+                Assert-True ($acceptedCaps.report.findings[0].severity -ceq $severity -and
+                    $acceptedCaps.report.findings[0].confidence -ceq $confidence) 'agent caps are preserved, never downgraded'
+            }
+        }
+    }
+
+    foreach ($defect in @(
+        @{ Edit = { param($r) $r.summary.counts.major = 3 }; Error = '*COUNT_MISMATCH*' }
+        @{ Edit = { param($r) $r.summary.coverage.'items-evaluated' = 1 }; Error = '*COMPLETED_COVERAGE_INCOMPLETE*' }
+        @{ Edit = { param($r) $r.findings[3].location.line = 58 }; Error = '*SOURCE_LINE_INVALID*' }
+        @{ Edit = { param($r) $r.findings[3].location.range.'end-line' = 58 }; Error = '*SOURCE_RANGE_INVALID*' }
+        @{ Edit = { param($r) $r.findings[3].location.range.'end-line' = 17 }; Error = '*SOURCE_RANGE_INVALID*' }
+        @{ Edit = { param($r) $r.findings[3].location.range.'start-line' = 24; $r.findings[3].location.range.'end-line' = 25 }; Error = '*RANGE_START_MISMATCH*' }
+        @{ Edit = { param($r) $r.findings[3].location.range.'end-line' = 22 }; Error = '*RANGE_START_MISMATCH*' }
+        @{ Edit = { param($r) $r.findings[3].location.line = 23.5 }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].location.range.'start-line' = 0 }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].location.range.'end-line' = '23' }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].location.range.PSObject.Properties.Remove('end-line') }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].location.range | Add-Member 'extra' 1 }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].message = '' }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].confidence = 'certain' }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].severity = 'critical' }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].PSObject.Properties.Remove('id') }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].references = $null }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].references[0].path = $null }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].location.file = 'src/missing.al' }; Error = '*SOURCE_MISSING*' }
+        @{ Edit = { param($r) $r.findings[3].location.file = 'src/codeunit.al' }; Error = '*SOURCE_OUT_OF_SCOPE*' }
+        @{ Edit = { param($r) $r.findings[3] | Add-Member 'from-sub-skill' 'al-privacy-review' }; Error = '*LEAF_PRODUCER_INVALID*' }
+        @{ Edit = { param($r) $r.findings[3] | Add-Member 'extra' 'not permitted' }; Error = '*Invalid findings-report JSON or schema*' }
+        @{ Edit = { param($r) $r.findings[3].references[0] | Add-Member 'sha' 'not-a-sha' }; Error = '*Invalid findings-report JSON or schema*' }
+    )) {
+        $defectiveReport = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+        & $defect.Edit $defectiveReport
+        Assert-PrivacyReport $defectiveReport $defect.Error
+    }
+    foreach ($suggestion in @('exit;', '', $null, 1)) {
+        $suggestedRange = $privacyReport | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+        $suggestedRange.findings[3] | Add-Member 'suggested-code' $suggestion
+        $expectedError = if ($suggestion -ceq 'exit;') { '*RANGE_START_MISMATCH*' } else { '*Invalid findings-report JSON or schema*' }
+        Assert-PrivacyReport $suggestedRange $expectedError
+    }
+    $suggestedIdOnly = $canonicalPrivacy | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+    $suggestedIdOnly.findings[0].id = 'scenario-with-safe-suggestion'
+    $suggestedIdOnly.findings[0] | Add-Member 'suggested-code' 'exit;'
+    $acceptedSuggestion = Assert-PrivacyReport $suggestedIdOnly
+    Assert-True ($acceptedSuggestion.normalizedIds.Count -eq 1 -and $acceptedSuggestion.removedRanges.Count -eq 0 -and
+        $acceptedSuggestion.report.findings[0].'suggested-code' -ceq 'exit;') 'ID-only normalization never rewrites suggested code'
+
+    foreach ($invalidJson in @(
+        '{"findings": [],}'
+        '{"findings": [/* no repair */]}'
+        '{"message": "Unescaped "quote""}'
+        '[]'
+    )) {
+        Set-Content -LiteralPath $reportPath -Value $invalidJson -NoNewline -Encoding utf8NoBOM
+        Assert-ThrowsLike -Pattern '*Invalid findings-report JSON or schema*' -Action {
+            & $validator -ReportPath $reportPath -BCQualityRoot $Root -AllowBoundedNormalization
+        }
+        Assert-True ([IO.File]::ReadAllText($reportPath) -ceq $invalidJson) 'strict JSON and structural failures are never reconstructed'
+    }
 }
 finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
