@@ -17,11 +17,15 @@ AL `HttpClient` methods can fail before a usable HTTP response exists because of
 
 When capturing the Boolean return value from `Get`, `Post`, `Put`, `Delete`, or `Send`, stop the current response-processing path immediately when it is `false`. Report or propagate the transport failure without reading status, headers, or content. Omitting the optional Boolean is also valid when fail-fast behavior is intended: the runtime then raises an error if the operation cannot execute.
 
+Both runtime propagation and explicit Boolean handling can be valid. Do not require capturing the Boolean solely to replace the platform exception with a custom error. Report missing transport-error translation only when a visible caller, documented error contract, or concrete user-facing requirement establishes why runtime propagation is insufficient.
+
 See sample: [`handle-httpclient-platform-failure-before-response-access.good.al`](handle-httpclient-platform-failure-before-response-access.good.al).
 
 ## Anti Pattern
 
 Capturing a failed call in a Boolean and then reading `Response.Content()`, parsing the body, or otherwise treating `Response` as usable. Do not report omission of the Boolean by itself; that form deliberately delegates failure propagation to the runtime.
+
+A custom error or label used for completed non-2xx responses does not by itself establish a transport-error translation requirement; its presence or absence alone is not a defect. This allowance does not cover returning success after consuming `false` or interpreting a non-success HTTP response as a success payload.
 
 See sample: [`handle-httpclient-platform-failure-before-response-access.bad.al`](handle-httpclient-platform-failure-before-response-access.bad.al).
 
