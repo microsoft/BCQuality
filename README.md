@@ -26,8 +26,9 @@ copilot plugin install microsoft/BCQuality
 copilot plugin list
 ```
 
-The list should include `bcquality`. The plugin currently exposes the
-[`al-code-review`](skills/al-code-review/SKILL.md) skill. Installation and skill
+The list should include `bcquality`. Its public skill entry points are
+[`al-code-review`](skills/al-code-review/SKILL.md) and
+[`al-knowledge`](skills/al-knowledge/SKILL.md). Installation and skill
 discovery are the general pattern; reviewing an app is one example of using it.
 
 ### Example: Review a complete app folder
@@ -64,6 +65,7 @@ the review can still discover knowledge by reading the folders.
 | --- | --- |
 | Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](docs/using-bcquality.md#choose-how-to-use-bcquality) |
 | Review a file, changes, a branch, or a particular concern | [Using BCQuality](docs/using-bcquality.md) |
+| Support design and specification with cited knowledge | [Knowledge consultation](docs/knowledge-consultation.md) |
 | Resolve setup problems, incomplete reviews, or incorrect findings | [Troubleshooting and support](docs/troubleshooting.md) |
 | Browse the available guidance | [Knowledge by domain](docs/using-bcquality.md#knowledge-by-domain) |
 | Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |

@@ -78,8 +78,9 @@ Add scheduling, retries, and rendering only when needed, using the
   - **Layer content** in `/microsoft/`, `/community/`, and `/custom/` — knowledge files and action skills grouped by authority.
 
 When BCQuality is installed as a standalone plugin, it additionally exposes
-`skills/al-code-review/SKILL.md`. This is a host-format adapter, not another
-action skill: it creates the task context and enters the same flow at Entry.
+`skills/al-code-review/SKILL.md` and `skills/al-knowledge/SKILL.md`. These public
+skill entry points tell the host agent how to create the task context and enter
+the same flow at Entry. They are not additional action skills.
 
 ## Repository structure
 
@@ -88,6 +89,7 @@ action skill: it creates the task context and enters the same flow at Entry.
 | `skills/entry.md` | Routes a task to action skills. |
 | `skills/read.md`, `skills/do.md`, `skills/write.md` | Stable knowledge, action-skill, and authoring contracts. |
 | `skills/al-code-review/SKILL.md` | Host-format plugin adapter. |
+| `skills/al-knowledge/SKILL.md` | Public skill entry point for cited knowledge consultation. |
 | `<layer>/knowledge/<domain>/` | Atomic articles and optional sibling samples. |
 | `<layer>/skills/` | Layer-owned action skills. |
 | `docs/` | Partner guides and integration references. |
@@ -120,10 +122,11 @@ The orchestrator has a URL setting that points at BCQuality (default: `github.co
 The agent reads `/skills/entry.md` and runs it against the task context. Entry applies its Source → Relevance → Worklist → Action steps over the action skills under `*/skills/**/*.md` and returns a **dispatch record**: the set of action skills to invoke, plus a list of candidates it skipped (with reasons). Routing is a skill, not orchestrator logic.
 
 For a standalone plugin installation, the host activates the
-`skills/al-code-review/SKILL.md` adapter first. That adapter preserves the
-caller's actual goal, constructs the task context, and invokes Entry. It does
-not select the internal `microsoft/skills/review/al-code-review.md` action skill
-itself or duplicate Entry's preparation, routing, and failure semantics.
+selected public skill entry point first. It preserves the caller's actual goal,
+constructs the task context, and invokes Entry. It does not select an internal
+action skill itself or duplicate Entry's preparation, routing, and failure
+semantics. For knowledge consultation, it binds the exact question as
+`knowledge-query`; see [knowledge consultation](knowledge-consultation.md).
 
 ### 3. Agent consumes the dispatch record
 The dispatch record names one or more action skills and the subset of inputs each should receive. If the outcome is `no-match` or `failed`, the agent returns the record to the orchestrator unchanged.
@@ -165,7 +168,8 @@ security boundary. See [layer selection](customizing-bcquality.md#select-layers-
 The index changes only *how candidates are discovered*, never *which are selected*. The Worklist predicate is unchanged — `keywords` still drive selection — and the agent still opens each worklisted article **in full** to read its `## Best Practice` / `## Anti Pattern` rule bodies; the index is discovery metadata only and never substitutes for the article body. When no index is present, skills fall back to path-based discovery (collect by domain folder), so review still works.
 
 ### 6. Agent emits structured output
-The output contract is defined in the DO meta-skill so that every action skill — today's and next year's — produces the same shape:
+DO defines each declared output kind so consumers can validate its shared
+contract. Review actions produce `findings-report`, whose structure includes:
 
 - **Outcome** — `completed`, `not-applicable`, `no-knowledge`, `partial`, or `failed`. An orchestrator can distinguish a clean run from a no-op from a failure without guessing.
 - **Findings** — what the skill observed (severity, message, optional location).
@@ -174,10 +178,20 @@ The output contract is defined in the DO meta-skill so that every action skill �
 - **Confidence** — per-finding evidence strength.
 - **Suppressed** — knowledge files that were discarded by layer precedence or configuration, so reviewers can see what was overridden.
 
-The orchestrator parses this **without skill-specific logic**. This is the point of the contract: orchestrators and action skills evolve independently.
+Knowledge-consultation actions produce `knowledge-response`, with the exact
+question, supported answer and article references. See the
+[DO knowledge-response contract](../skills/do.md#knowledge-response-contract)
+and [consumer validation](knowledge-response-validation.md).
+
+The orchestrator validates the declared output kind without interpreting
+private skill-specific fields. Action skills and consumers share the same
+output contracts.
 
 ### 7. Orchestrator integrates
 The orchestrator turns findings into PR comments, build gates, or IDE diagnostics, and links the references back to the knowledge files so the PR author — human or agent — can read the guidance.
+
+For knowledge consultation, it displays validated guidance with citations.
+It does not convert that guidance into findings or use it as an approval gate.
 
 ## Knowledge-backed and agent findings
 

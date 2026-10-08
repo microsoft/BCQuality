@@ -48,7 +48,7 @@
           "type": "array",
           "minItems": 1,
           "maxItems": 1,
-          "items": { "const": "findings-report" }
+          "items": { "enum": ["findings-report", "knowledge-response"] }
         },
         "filters": {
           "type": "object",

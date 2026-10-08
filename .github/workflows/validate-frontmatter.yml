@@ -19,7 +19,13 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml jsonschema
 
       - name: Run validator
         run: python .github/scripts/validate_frontmatter.py --root .
+
+      - name: Validate knowledge response contract
+        run: python .github/scripts/test_knowledge_response.py
+
+      - name: Validate knowledge response semantics
+        run: python .github/scripts/test_knowledge_response_semantics.py

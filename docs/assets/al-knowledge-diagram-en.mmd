@@ -1,0 +1,14 @@
+flowchart TD
+    A["You or the Agent<br/>Ask a question"]
+    B["1 · Skill entry point<br/>Keeps your exact question"]
+    C["2 · Entry<br/>Selects the knowledge action"]
+    D["3 · Find and filter<br/>Topic, BC version, technology and country"]
+    E["4 · Read full articles<br/>The index helps find articles; it is not evidence"]
+    F["5 · Answer with sources<br/>knowledge-response"]
+    G["No useful knowledge<br/>no-knowledge<br/>No invented sources"]
+    A --> B --> C --> D --> E
+    E -->|Evidence found| F
+    E -->|No evidence| G
+    classDef node fill:#fce7f3,stroke:#ddd4da,color:#9e3868,rx:20,ry:20;
+    class A,B,C,D,E,F,G node;
+    linkStyle default stroke:#999,stroke-width:1.5px;

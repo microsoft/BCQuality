@@ -10,6 +10,7 @@ of BCQuality's internal protocol is needed.
 | --- | --- |
 | Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](using-bcquality.md#choose-how-to-use-bcquality) |
 | Review an app, file, changes, or branch | [Using BCQuality](using-bcquality.md) |
+| Support design and specification with cited knowledge | [Knowledge consultation](knowledge-consultation.md) |
 | Understand a report and its limitations | [Reading your results](using-bcquality.md#reading-your-results) |
 | Find a particular rule or example | [Knowledge by domain](using-bcquality.md#knowledge-by-domain) |
 | Fix setup problems or report an incorrect finding | [Troubleshooting and support](troubleshooting.md) |
@@ -27,6 +28,7 @@ prerequisites for using the plugin.
 | [How agents consume BCQuality](agent-consumption.md) | Architecture, repository structure, routing, and delivery of findings. |
 | [Standalone runner](standalone-runner.md) | Optional model selection, scheduling, retries, and telemetry. |
 | [Global skills](../skills/README.md) | Host adapters versus internal protocol files. |
+| [Knowledge-response validation](knowledge-response-validation.md) | Optional consumer checks for question fidelity and complete citation reads. |
 | [Entry](../skills/entry.md) | Task context and skill dispatch. |
 | [READ](../skills/read.md) | Knowledge schema, applicability, and precedence. |
 | [DO](../skills/do.md) | Action-skill format and structured output contract. |

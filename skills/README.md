@@ -1,7 +1,7 @@
 # BCQuality global skills
 
 This folder contains BCQuality's layer-independent protocol files and the
-host-native adapter used by standalone plugin installations.
+public skill entry points used by standalone plugin installations.
 
 The protocol files have two kinds:
 
@@ -26,17 +26,21 @@ Routing logic lives in Entry, not in the orchestrator. An agent that knows only 
 
 READ and DO are read on demand — typically by the first action skill the agent executes after dispatch. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
 
-## Standalone plugin adapter
+## Public skill entry points
 
 | Path | Role |
 |---|---|
-| [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Exposes BCQuality through the standard `SKILL.md` format when this repository is installed as a plugin. |
+| [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Starts a code review through the standard host `SKILL.md` format. |
+| [`al-knowledge/SKILL.md`](al-knowledge/SKILL.md) | Starts a cited knowledge consultation for design, specification or a focused development question. |
 
-The adapter is deliberately thin. It translates the caller's request into an
-Entry task context, then follows Entry's dispatch without owning routing,
-review, index, or output policy. It is not an action skill, is not considered
-by Entry, and should not accumulate behavior already defined by `entry.md`,
-`read.md`, `do.md`, or a layered action skill.
+These files tell the host agent how to start the skill: resolve BCQuality's
+root, prepare the caller's request, and follow Entry's dispatch. They do not
+own routing, article selection, index preparation or output policy. They are
+not action skills and are not candidates for Entry. Their behavior follows
+`entry.md`, `read.md`, `do.md`, and the selected internal action skill.
+
+The same agent can execute the instructions inline when the host has no
+separate skill-invocation tool. A file read alone does not complete execution.
 
 This gives the two skill formats distinct roles:
 

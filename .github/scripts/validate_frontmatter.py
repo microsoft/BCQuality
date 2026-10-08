@@ -45,9 +45,9 @@ ENTRY_SKILL_REQUIRED_KEYS = {"kind", "id", "version", "title"}
 HOST_SKILL_REQUIRED_KEYS = {"name", "description"}
 
 STANDARD_INPUTS = {
-    "pr-diff", "object-list", "file-path", "folder-path", "repository", "telemetry-query",
+    "pr-diff", "object-list", "file-path", "folder-path", "repository", "telemetry-query", "knowledge-query",
 }
-ALLOWED_OUTPUTS = {"findings-report"}
+ALLOWED_OUTPUTS = {"findings-report", "knowledge-response"}
 VALID_SAMPLE_KINDS = {"good", "bad"}
 
 ACTION_SKILL_SECTIONS = ["Source", "Relevance", "Worklist", "Action", "Output"]
@@ -342,7 +342,7 @@ def validate_action_skill(path: Path, parsed: Parsed, report: Report) -> None:
         else:
             bad = [x for x in out if x not in ALLOWED_OUTPUTS]
             if bad:
-                report.error(path, "R18", f"outputs contains non-allowed values {bad}; currently only {sorted(ALLOWED_OUTPUTS)} is defined", 1)
+                report.error(path, "R18", f"outputs contains non-allowed values {bad}; allowed values are {sorted(ALLOWED_OUTPUTS)}", 1)
 
     # R19 optional filter dimensions, if present
     if "bc-version" in fm:
