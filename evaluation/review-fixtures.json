@@ -91,7 +91,8 @@
         "prefer-modifyall-over-per-row-modify",
         "al-methods-limited-during-write-transactions",
         "avoid-user-prompts-inside-transactions",
-        "use-grouped-query-for-distinct-values-and-duplicates"
+        "use-grouped-query-for-distinct-values-and-duplicates",
+        "compute-role-center-headlines-in-the-background"
       ]
     },
     "privacy": {
@@ -149,7 +150,8 @@
         "dateformula-evaluate-needs-language-independent-literals",
         "al-comments-must-not-restate-what-code-already-shows",
         "pages-must-not-contain-business-logic",
-        "mutating-procedure-for-a-page-caller-takes-var-record"
+        "mutating-procedure-for-a-page-caller-takes-var-record",
+        "build-client-links-with-geturl"
       ]
     },
     "telemetry": {
