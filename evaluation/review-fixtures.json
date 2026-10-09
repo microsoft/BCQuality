@@ -27,6 +27,7 @@
         "new-price-source-must-add-candidate-and-trigger-recalculation",
         "pictures-must-use-media-not-blob",
         "report-barcodes-must-use-barcode-module-and-production-font-name",
+        "round-calculated-unit-prices-to-unit-amount-precision",
         "table-design-must-match-bc-table-type-conventions",
         "tablerelation-field-length-must-match-related-field",
         "transferfields-mirrored-fields-must-match-type-and-length"
