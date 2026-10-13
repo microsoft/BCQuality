@@ -80,6 +80,14 @@ shorthand for the supplied review scope. For `folder-path`, every relevant file
 under the folder is in scope. A folder supplies no historical baseline:
 comparison-only rules MUST NOT infer a prior state that was not provided.
 
+For review tasks, a pull request's title, description, and other narrative are
+not specifications or acceptance criteria. Reviewers MUST NOT assess whether
+the changed code implements claims made in that narrative, or emit findings
+solely because the code and narrative differ. Evaluate the supplied source
+against applicable BCQuality knowledge and review requirements stated outside
+the pull request narrative; do not use the narrative to fill gaps in the code
+or task context.
+
 `sub-skills` is an optional field. When present and non-empty, the skill is a **super-skill** that composes other action skills; see *Composition* below. Values are repo-relative paths to action-skill files.
 
 ## Required sections
