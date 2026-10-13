@@ -139,7 +139,8 @@
       "articles": [
         "al-has-no-built-in-htmlencode",
         "do-not-concatenate-external-text-into-setfilter",
-        "exposed-objects-must-be-in-a-permission-set"
+        "exposed-objects-must-be-in-a-permission-set",
+        "rnb-new-objects-in-permission-sets"
       ]
     },
     "style": {
