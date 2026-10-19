@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-`IAgentFactory.GetDefaultAccessControls` fills a temporary `Access Control Buffer` used when an instance is created. Permission sets that exist only as user-created sets in a sandbox are missing in the next environment. Granting `D365 BUS FULL ACCESS` or SUPER gives the agent a user-sized blast radius. Effective rights are still the intersection with the assigning user's permissions.
+`IAgentFactory.GetDefaultAccessControls` fills a temporary `Access Control Buffer` used when an instance is created. Permission sets that exist only as user-created sets in a sandbox are missing in the next environment. Granting `D365 BUS FULL ACCESS` or SUPER gives the agent a user-sized blast radius. Effective task rights are still the intersection with the scheduling user's permissions, or the responding user's permission context after an intervention.
 
 ## Best Practice
 
@@ -27,4 +27,4 @@ See sample: [`get-default-access-controls-least-privilege.bad.al`](get-default-a
 
 ## See also
 
-`agent-permissions-intersect-with-assigner.md` explains the platform limits that still apply after default access controls are assigned.
+[Agent task permission intersection](agent-permissions-intersect-with-assigner.md) explains the platform limits that still apply after default access controls are assigned.
