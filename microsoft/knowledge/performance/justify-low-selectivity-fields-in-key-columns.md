@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: performance
-keywords: [selectivity, low-cardinality, boolean-key, status-field, leading-column, key-width, write-amplification, includedfields]
+keywords: [boolean, key, modifyall, selectivity, low-cardinality, leading-column, status-field, write-amplification, includedfields]
 technologies: [al]
 countries: [w1]
 application-area: [all]
