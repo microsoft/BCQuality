@@ -21,6 +21,20 @@ codeunit 50153 "Test Sample TransModel Good"
     begin
         PostingRoutine.PostCustomer();
     end;
+
+    // No TransactionModel attribute declared at all: the test exercises no Commit
+    // call, so it simply runs under the undeclared AutoCommit default. Removing a
+    // mismatched explicit attribute like this is a valid fix, not a bug to flag -
+    // it does not have to be replaced with an explicit AutoRollback declaration.
+    [Test]
+    procedure TestLogicThatDoesNotCommitWithNoAttributeDeclared()
+    var
+        Customer: Record Customer;
+    begin
+        Customer.Init();
+        Customer."No." := 'T-002';
+        Customer.Insert(true);
+    end;
 }
 
 codeunit 50155 "Posting Routine With Commit"
