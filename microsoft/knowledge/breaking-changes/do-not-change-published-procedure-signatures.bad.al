@@ -7,4 +7,14 @@ codeunit 50301 "Discount Api Bad"
     begin
         exit(Amount * Rate);
     end;
+
+    // Breaking: this procedure already returned a value, and that existing
+    // return type was retyped from Integer to Text. Callers that assigned the
+    // old Integer result to an Integer variable now fail to compile. This is
+    // different from adding a return value to a previously void procedure,
+    // which is additive and not flagged.
+    procedure GetStatusCode(): Text
+    begin
+        exit('OK');
+    end;
 }
