@@ -14,7 +14,7 @@ as a plugin, use it from another integration, or browse the knowledge directly.
 | --- | --- | --- |
 | Review your AL code on demand with the Copilot CLI plugin | Available | [Quick start](#quick-start) |
 | Review pull requests automatically in AL-Go for GitHub repositories | In progress in [AL-Go for GitHub](https://github.com/microsoft/AL-Go/pull/2402) | AL-Go documentation once released |
-| Apply BCQuality guidance to a development plan before coding | Preview | [Plan guidance](#preview-guidance-before-implementation) |
+| Apply BCQuality guidance to a development plan before coding | Preview in the plugin | [Plan guidance](#preview-guidance-before-implementation) |
 
 ## Quick start
 
@@ -34,7 +34,9 @@ Copilot Chat panel.
    copilot plugin list
    ```
 
-   The list should include `bcquality`.
+   The list should include `bcquality`. In a Copilot CLI session, `/skills
+   list` shows its two skills: `al-code-review` and the preview
+   `al-plan-guidance`.
 
 2. Start a **new** Copilot CLI session in your app folder, replacing the
    example path:
@@ -116,14 +118,24 @@ coverage claims**.
 ## Preview: guidance before implementation
 
 BCQuality can also apply its knowledge **before code is written**. The
-read-only `al-development-plan` skill takes an existing AL development plan
-and returns the BCQuality constraints and validation considerations that apply
-to it. Your workflow keeps ownership of planning, implementation, tests,
-approvals, and delivery, and should still review the completed change.
+plugin's `al-plan-guidance` skill takes an existing AL development plan and
+returns the BCQuality constraints and validation considerations that apply to
+it. It is read-only: it does not create or rewrite the plan, change your code,
+or implement the change.
 
-This capability is a preview for explicit integrations. It is not yet exposed
-by the standalone plugin, and its contract may change based on pilot feedback.
-To try it, follow the [plan guidance example](docs/agent-consumption.md#try-plan-guidance).
+Save your plan as a file, start a new Copilot CLI session in your app folder,
+and ask:
+
+> Use the installed al-plan-guidance skill to enrich the plan in
+> `plans\my-change.md` with applicable BCQuality guidance, without changing the
+> plan or my source files. Return the complete guidance report.
+
+Give the plan and the report to your coding agent together. After
+implementation, review the finished change with `al-code-review`.
+
+This capability is a preview, and its contract may change based on pilot
+feedback. Integrations can also call it without the plugin; see the
+[plan guidance example](docs/agent-consumption.md#try-plan-guidance).
 
 ## What's in this repo
 
@@ -136,14 +148,23 @@ and apply the relevant knowledge. Both live in three layers:
 | [Community](community/) | Community-owned skills and their knowledge. |
 | [Custom](custom/) | Organization-specific additions and overrides in your own fork. |
 
-Review skills emit a `findings-report`; plan enrichment emits a read-only
-`development-guidance-report`. Both contracts are defined in
-[`skills/do.md`](skills/do.md). See
-[how agents consume BCQuality](docs/agent-consumption.md) for the integration
-flow.
-
 All three are enabled by default; Custom is empty upstream. You do not need
 to configure layers to get started.
+
+### How the pieces fit
+
+You use BCQuality through **capabilities**: `al-code-review` reviews code,
+and `al-plan-guidance` enriches a plan. Behind every capability, BCQuality's
+**Entry** router prepares the knowledge index, applies your layer and skill
+settings, and selects the skill that does the work. You never call Entry
+yourself when using the plugin.
+
+Integrations such as CI workflows can call Entry directly with a free-text
+goal instead. Both paths use the same router, knowledge, and report contracts,
+so a plugin review and an automated review apply the same rules. Review skills
+return a `findings-report`; plan guidance returns a read-only
+`development-guidance-report`. See
+[how agents consume BCQuality](docs/agent-consumption.md).
 
 ## Versioning
 

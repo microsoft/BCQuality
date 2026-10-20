@@ -1,20 +1,20 @@
 # BCQuality global skills
 
 This folder contains BCQuality's layer-independent protocol files and the
-host-native adapter used by standalone plugin installations.
+host-native adapters used by standalone plugin installations.
 
 The protocol files have two kinds:
 
-- **The entry-point skill** — the first skill an agent invokes at runtime.
+- **The entry-point skill** — BCQuality's router: the first skill an agent invokes at runtime.
 - **The three meta-skill contracts** — stable references that define what the rest of BCQuality means.
 
 ## The entry-point skill
 
 | File | Role |
 |---|---|
-| [`entry.md`](entry.md) | **ENTRY** — Given a task context, returns a dispatch record naming the action skill(s) to invoke. The agent's first call when pointed at BCQuality. |
+| [`entry.md`](entry.md) | **ENTRY** — BCQuality's router. Given a task context, returns a dispatch record naming the action skill(s) to invoke. The agent's first call when pointed at BCQuality. |
 
-Routing logic lives in Entry, not in the orchestrator. An agent that knows only "invoke `/skills/entry.md` first" has enough to drive the rest of the repo.
+Routing logic lives in Entry, not in the orchestrator. An agent that knows only "invoke `/skills/entry.md` first" has enough to drive the rest of the repo. Users of the plugin do not call Entry themselves: each host adapter below binds one capability and calls Entry on the user's behalf.
 
 ## The meta-skill contracts
 
@@ -26,34 +26,40 @@ Routing logic lives in Entry, not in the orchestrator. An agent that knows only 
 
 READ and DO are read on demand — typically by the first action skill the agent executes after dispatch. They are not prerequisites for invoking Entry. WRITE is only used when scaffolding new content.
 
-## Standalone plugin adapter
+## Standalone plugin adapters
 
-| Path | Role |
+| Path | Capability |
 |---|---|
-| [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Exposes BCQuality through the standard `SKILL.md` format when this repository is installed as a plugin. |
+| [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Review AL code: an app folder, files, or changes. |
+| [`al-plan-guidance/SKILL.md`](al-plan-guidance/SKILL.md) | Preview. Enrich an existing AL development plan with applicable guidance, read-only. |
 
-The adapter is deliberately thin. It translates the caller's request into an
+Each adapter is deliberately thin. It translates the caller's request into an
 Entry task context, then follows Entry's dispatch without owning routing,
-review, index, or output policy. It is not an action skill, is not considered
-by Entry, and should not accumulate behavior already defined by `entry.md`,
-`read.md`, `do.md`, or a layered action skill.
+review, guidance, index, or output policy. Adapters are not action skills, are
+not considered by Entry, and should not accumulate behavior already defined by
+`entry.md`, `read.md`, `do.md`, or a layered action skill.
 
-A standalone review therefore follows one path, with no second implementation
-in the adapter:
+Each capability therefore follows one path, with no second implementation in
+its adapter:
 
 ```text
-standalone host skill: skills/al-code-review/SKILL.md
-  -> routing contract: skills/entry.md
-    -> review coordinator: microsoft/skills/review/al-code-review.md
-      -> domain review leaves
+review:         skills/al-code-review/SKILL.md
+                  -> router: skills/entry.md
+                    -> review coordinator: microsoft/skills/review/al-code-review.md
+                      -> domain review leaves
+
+plan guidance:  skills/al-plan-guidance/SKILL.md
+                  -> router: skills/entry.md
+                    -> microsoft/skills/development/al-development-plan.md
 ```
 
 This gives the two skill formats distinct roles:
 
-- `skills/al-code-review/SKILL.md` is the public host integration surface for a
-  standalone plugin installation.
-- `microsoft/skills/review/al-code-review.md` is BCQuality's internal
-  Microsoft-layer super-skill for coordinating a broad AL review.
+- `skills/<capability>/SKILL.md` files are the public host integration surface
+  for a standalone plugin installation.
+- Action skills under `<layer>/skills/` are BCQuality's internal units of work,
+  such as the Microsoft-layer `al-code-review` super-skill that coordinates a
+  broad AL review.
 
 The host adapter and internal coordinator deliberately share the
 `al-code-review` name because they represent the same user-facing operation in

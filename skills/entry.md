@@ -37,9 +37,9 @@ task-context:
 `goal` and `inputs-available` are required. Filter dimensions (`technologies`, `bc-version`, `countries`, `application-area`) are optional; omitting a dimension is equivalent to "unconstrained" — see Relevance for the exact matching rule. `enabled-layers` defaults to all three. `disabled-skills` defaults to empty.
 
 `development-plan` and the corresponding `development-guidance-report` output
-kind are provisional. They are available to explicit integrations for review
-and pilot use, but are not registered as standalone plugin capabilities in
-this release.
+kind are a preview. They are available to explicit integrations and through
+the standalone plugin's preview `al-plan-guidance` adapter, and may change
+based on pilot feedback.
 
 ## Preparation — knowledge index
 

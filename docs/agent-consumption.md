@@ -74,21 +74,22 @@ Add scheduling, retries, and rendering only when needed, using the
 - **Orchestrator** — the tool that triggers work. Lives *outside* BCQuality. Knows *when* to run something, not *what* to run.
 - **Agent** — an LLM-driven process supplied by the host. It brings its own coding knowledge and tools; BCQuality adds curated guidance and execution contracts.
 - **BCQuality repo** — two kinds of content:
-  - **Global skills** in `/skills/` — the `entry.md` entry-point skill plus the READ · DO · WRITE contracts that govern the rest of the repo.
+  - **Global skills** in `/skills/` — the `entry.md` router plus the READ · DO · WRITE contracts that govern the rest of the repo.
   - **Layer content** in `/microsoft/`, `/community/`, and `/custom/` — knowledge files and action skills grouped by authority.
 
 When BCQuality is installed as a standalone plugin, it additionally exposes
-`skills/al-code-review/SKILL.md`. This is a host-format adapter, not an
-additional action skill: it creates the task context and enters the same flow
-at Entry.
+one host-format adapter per capability: `skills/al-code-review/SKILL.md` and
+the preview `skills/al-plan-guidance/SKILL.md`. Adapters are not additional
+action skills: each creates the task context for its capability and enters the
+same flow at Entry.
 
 ## Repository structure
 
 | Path | Purpose |
 | --- | --- |
-| `skills/entry.md` | Routes a task to action skills. |
+| `skills/entry.md` | Router: prepares the index and routes a task to action skills. |
 | `skills/read.md`, `skills/do.md`, `skills/write.md` | Stable knowledge, action-skill, and authoring contracts. |
-| `skills/al-code-review/SKILL.md` | Host-format plugin adapter. |
+| `skills/<capability>/SKILL.md` | Host-format plugin adapters, one per capability. |
 | `<layer>/knowledge/<domain>/` | Atomic articles and optional sibling samples. |
 | `<layer>/skills/` | Layer-owned review and plan-guidance action skills. |
 | `schemas/` | JSON Schemas for the skill index and report contracts. |
@@ -194,7 +195,9 @@ changes the plan or the repository.
 
 ### Try plan guidance
 
-Use the same dedicated BCQuality checkout as the
+With the plugin installed, use the `al-plan-guidance` skill as shown in the
+[README](../README.md#preview-guidance-before-implementation). Without the
+plugin, use the same dedicated BCQuality checkout as the
 [minimal integration](#try-a-minimal-integration), and save your existing plan
 as a file. Replace the paths and BC version, then send this prompt to the agent:
 

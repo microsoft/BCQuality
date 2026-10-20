@@ -73,10 +73,10 @@ proceed with the supplied subset MUST return `outcome: "not-applicable"`.
 - `findings-report` — evaluates an input and reports defects or observations.
 - `development-guidance-report` — selects and summarizes applicable BCQuality knowledge for an existing development plan without changing the target repository.
 
-`development-plan` and `development-guidance-report` are provisional contract
-extensions. They are intentionally not exposed by the standalone plugin in this
-release. Consumer-owner agreement and pilot evidence are required before they
-are treated as frozen public integration surfaces.
+`development-plan` and `development-guidance-report` are preview contract
+extensions. The standalone plugin exposes them through the preview
+`al-plan-guidance` adapter. Consumer-owner agreement and pilot evidence are
+required before they are treated as frozen public integration surfaces.
 
 `file-path` is one file. `folder-path` is a directory whose recursively
 contained files form the complete current-state input, such as a Business

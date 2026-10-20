@@ -12,9 +12,9 @@ and rendering; BCQuality does not install a BC extension or an agent.
 | Path | What to do |
 | --- | --- |
 | Read the knowledge yourself | Browse [knowledge by domain](#knowledge-by-domain), or search the repository for an AL concept. Read the article and its samples. No installation required. |
-| Use a supplied skill | Follow the [plugin quick start](../README.md#quick-start). The currently exposed skill, `al-code-review`, performs reviews and returns findings. |
+| Use a supplied skill | Follow the [plugin quick start](../README.md#quick-start). `al-code-review` reviews code and returns findings; the preview `al-plan-guidance` enriches an existing development plan before coding. |
 | Use your own agent or workflow | Supply selected articles as context, as described below, or use the [integration bootstrap](agent-consumption.md#try-a-minimal-integration) to execute BCQuality action skills without the plugin. |
-| Get guidance before coding (preview) | Pass an existing development plan to the read-only plan guidance skill, then review the finished change. See [try plan guidance](agent-consumption.md#try-plan-guidance). |
+| Get guidance before coding (preview) | Ask the plugin's `al-plan-guidance` skill to enrich an existing plan, then review the finished change. See [plan guidance](../README.md#preview-guidance-before-implementation). |
 
 ### Read and reuse an article
 
@@ -58,12 +58,12 @@ integration protocol. The remaining sections describe the review workflow.
 The [quick start](../README.md#quick-start) documents GitHub Copilot CLI. Use a
 current CLI release with plugin support and sign in to an account allowed to
 use it. In an interactive CLI session, `/skills list` should include
-`al-code-review`; in the terminal, `copilot plugin list` should include
-`bcquality`.
+`al-code-review` and `al-plan-guidance`; in the terminal, `copilot plugin list`
+should include `bcquality`.
 
 Do not assume a CLI installation also installs the plugin into VS Code,
 another editor, or another agent host. Follow that host's plugin instructions
-and confirm it discovers `skills/al-code-review/SKILL.md`. Hosts without
+and confirm it discovers the skills under `skills/*/SKILL.md`. Hosts without
 compatible plugin discovery need an [integration](agent-consumption.md).
 
 Source review needs access to your files, not a running BC environment.
