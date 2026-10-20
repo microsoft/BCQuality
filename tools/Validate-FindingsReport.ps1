@@ -425,8 +425,16 @@ function Get-SemanticErrors {
                 Add-Error 'SUPER_PRODUCER_REQUIRED' $findingPath 'A super-skill finding must identify its producer in from-sub-skill.'
             }
             if (-not $references.Count) {
-                if ($finding.id -cnotmatch '(^|:)agent:[a-z0-9]+(?:-[a-z0-9]+)*$') {
-                    Add-Error 'AGENT_ID_INVALID' "$findingPath.id" 'An agent finding id must contain an agent: slug marker.'
+                $agentPrefix = if ($CurrentSkillKind -ceq 'leaf' -or
+                    ($hasProducer -and $finding.'from-sub-skill' -ceq 'agent')) {
+                    '^agent:'
+                }
+                else {
+                    $producer = if ($hasProducer) { $finding.'from-sub-skill' } else { '' }
+                    '^' + [regex]::Escape([string]$producer) + ':agent:'
+                }
+                if ($finding.id -cnotmatch ($agentPrefix + '[a-z0-9]+(?:-[a-z0-9]+)*$')) {
+                    Add-Error 'AGENT_ID_INVALID' "$findingPath.id" 'An agent finding id must use its role-specific agent: prefix.'
                 }
                 if ($finding.confidence -ceq 'high') {
                     Add-Error 'AGENT_CONFIDENCE_INVALID' "$findingPath.confidence" 'Agent confidence cannot be high.'
@@ -436,11 +444,16 @@ function Get-SemanticErrors {
                 }
             }
             else {
+                if ($finding.id -cmatch '(^|:)agent:' -or
+                    ($hasProducer -and $finding.'from-sub-skill' -ceq 'agent')) {
+                    Add-Error 'AGENT_REFERENCE_INVALID' "$findingPath.references" 'An agent finding must not contain citations.'
+                }
                 if ($finding.id -cne $references[0].path) {
                     Add-Error 'PRIMARY_REFERENCE_MISMATCH' "$findingPath.id" 'Finding id must equal the primary reference path.'
                 }
                 foreach ($reference in $references) {
-                    if ($reference.path -cnotmatch '^(microsoft|community|custom)/knowledge/.+\.md$') {
+                    if ($reference.path -cnotmatch '^(microsoft|community|custom)/knowledge/.+\.md$' -or
+                        $reference.path -cmatch '(^|/)\.{1,2}(/|$)|//|[\\:#?%*\x00-\x1F\x7F]') {
                         Add-Error 'REFERENCE_PATH_INVALID' "$findingPath.references" "Invalid knowledge path '$($reference.path)'."
                         continue
                     }
@@ -719,14 +732,29 @@ function Get-SemanticErrors {
 
 $errors = @(Get-SemanticErrors $report)
 $normalized = $false
+$normalizedIds = [Collections.Generic.List[object]]::new()
 $removedRanges = [Collections.Generic.List[object]]::new()
 if ($errors.Count -and $AllowBoundedNormalization) {
-    $otherErrors = @($errors | Where-Object Code -CNE 'RANGE_START_MISMATCH')
-    $rangeErrors = @($errors | Where-Object Code -CEQ 'RANGE_START_MISMATCH')
-    if (-not $otherErrors.Count -and $rangeErrors.Count) {
+    $referenceErrors = @($errors | Where-Object Code -CIN @(
+        'REFERENCE_PATH_INVALID', 'REFERENCE_MISSING', 'REFERENCE_NOT_RETRIEVED', 'AGENT_REFERENCE_INVALID'
+    ))
+    if (-not $referenceErrors.Count) {
         $candidate = $report | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100 -DateKind String
-        $eligible = $true
-        foreach ($finding in @($candidate.findings)) {
+        for ($index = 0; $index -lt $candidate.findings.Count; $index++) {
+            $finding = $candidate.findings[$index]
+            if (@($finding.references).Count -and $finding.id -cne $finding.references[0].path) {
+                $normalizedIds.Add([pscustomobject]@{
+                    findingIndex = $index
+                    originalId = $finding.id
+                    canonicalId = $finding.references[0].path
+                }) | Out-Null
+                $finding.id = $finding.references[0].path
+            }
+        }
+        # Check all original endpoints before any range can be removed.
+        $eligible = -not @(Get-SemanticErrors $candidate -PermitRangeStartMismatch).Count
+        for ($index = 0; $eligible -and $index -lt $candidate.findings.Count; $index++) {
+            $finding = $candidate.findings[$index]
             if (-not (Test-HasProperty $finding 'location') -or
                 -not (Test-HasProperty $finding.location 'range') -or
                 $finding.location.range.'start-line' -eq $finding.location.line) {
@@ -740,6 +768,7 @@ if ($errors.Count -and $AllowBoundedNormalization) {
                 break
             }
             $removedRanges.Add([pscustomobject]@{
+                findingIndex = $index
                 findingId = $finding.id
                 file = $finding.location.file
                 line = $finding.location.line
@@ -748,7 +777,9 @@ if ($errors.Count -and $AllowBoundedNormalization) {
             }) | Out-Null
             $finding.location.PSObject.Properties.Remove('range')
         }
-        if ($eligible -and -not @(Get-SemanticErrors $candidate).Count) {
+        if ($eligible -and
+            ($candidate | ConvertTo-Json -Depth 100 | Test-Json -SchemaFile $schemaPath -ErrorAction Stop) -and
+            -not @(Get-SemanticErrors $candidate).Count) {
             $report = $candidate
             $normalized = $true
             $errors = @()
@@ -764,5 +795,6 @@ if ($errors.Count) {
 return [pscustomobject][ordered]@{
     normalized = $normalized
     report = $report
+    normalizedIds = @($normalizedIds)
     removedRanges = @($removedRanges)
 }

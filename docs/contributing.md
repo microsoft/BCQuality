@@ -168,8 +168,8 @@ pwsh .\tools\Test-ReviewContract.ps1 -Root .
 The first command checks schema, sections, naming, sample references, and
 skill registration. The second checks that every review leaf has a valid
 positive/clean sample pair. The third checks the cross-surface findings-report
-contract and its bounded range-normalization cases. None proves a model will
-find every defect. See [evaluation](../evaluation/README.md) for optional
+contract and its bounded citation-ID/range-normalization cases. None proves a
+model will find every defect. See [evaluation](../evaluation/README.md) for optional
 model-based scoring.
 
 In the PR description, explain the mistake being prevented, supporting
