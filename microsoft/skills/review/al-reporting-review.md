@@ -28,7 +28,7 @@ Return `not-applicable` when the input contains no Report or ReportExtension dec
 
 ## Worklist
 
-Match relevant entries against changed `report` and `reportextension` objects, variables typed as `Report`, and the tokens `CurrReport`, `Skip`, `Break`, `Quit`, `Run`, `RunModal`, `RunRequestPage`, `Execute`, `Print`, `SaveAs`, `DownloadFromStream`, `Data Compression`, `SetTableView`, `DataItemTableView`, `OnPreReport`, `OnPostReport`, `OnPreDataItem`, `OnAfterGetRecord`, and report-extension dataset triggers.
+Match relevant entries against changed `report` and `reportextension` objects, variables typed as `Report`, and the tokens `CurrReport`, `Skip`, `Break`, `Quit`, `Run`, `RunModal`, `RunRequestPage`, `Execute`, `Print`, `SaveAs`, `DownloadFromStream`, `Data Compression`, `SetTableView`, `DataItemTableView`, `OnPreReport`, `OnPostReport`, `OnPreDataItem`, `OnAfterGetRecord`, `rendering`, `layout`, `DefaultRenderingLayout`, `DefaultLayout`, `RDLCLayout`, `WordLayout`, `ExcelLayout`, `column`, and report-extension dataset triggers.
 
 Apply this targeted check even when token overlap would rank the article below the worklist cutoff:
 
@@ -41,6 +41,9 @@ Apply this targeted check even when token overlap would rank the article below t
 - A ReportExtension `OnPreReport` prepares state consumed by the base `OnPreReport`, or its `OnPostReport` prepares state already consumed by the base `OnPostReport` — `reportextension-report-triggers-run-after-base-triggers`. Require visible base behavior or equivalent established evidence.
 - A report's `DataItemTableView` and a caller's `SetTableView` apply mutually exclusive filters to the same field — `settableview-cannot-broaden-dataitemtableview`. Require both views or equivalent direct evidence; `SetTableView` alone is not a finding.
 - The value returned by `Report.RunRequestPage()` reaches `Report.Execute`, `Report.Print`, or `Report.SaveAs` without an empty-string cancellation check — `stop-when-runrequestpage-returns-empty-parameters`.
+- A new or changed `report` declares layouts with `DefaultLayout`, `RDLCLayout`, `WordLayout`, or `ExcelLayout` instead of a `rendering` section with `DefaultRenderingLayout` — `declare-report-layouts-in-the-rendering-section`. Do not match unchanged legacy declarations or a target runtime below 9.0.
+- A `reportextension` adds a `rendering` layout that the change, its description, or its new dataset columns depend on being used by default, with no selection step — `reportextension-layouts-are-not-selected-automatically`. Do not match layouts added as optional alternatives.
+- A diff renames the name of an existing `column(...)` of a released report or report extension, or removes such a column — `do-not-rename-or-remove-shipped-report-dataset-columns`. Requires comparison evidence (a diff or release history); a folder snapshot alone cannot show a rename. Do not match a changed source expression that keeps the column name and type, or a report that has never been released.
 
 Resolve layer conflicts per READ. When no reporting knowledge exists, emit `no-knowledge`; when knowledge exists but no article matches the changed report code, emit `completed` with no findings.
 
