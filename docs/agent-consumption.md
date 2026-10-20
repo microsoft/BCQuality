@@ -188,10 +188,54 @@ The orchestrator turns findings into PR comments, build gates, or IDE diagnostic
 
 ## Plan guidance integration (preview)
 
+The preview `al-development-plan` skill applies BCQuality knowledge to an
+existing AL development plan before implementation. It is read-only: it never
+changes the plan or the repository.
+
+### Try plan guidance
+
+Use the same dedicated BCQuality checkout as the
+[minimal integration](#try-a-minimal-integration), and save your existing plan
+as a file. Replace the paths and BC version, then send this prompt to the agent:
+
+```text
+BCQuality root: C:\Knowledge\BCQuality
+Development plan: C:\Plans\my-change-plan.md
+Repository: C:\Repos\MyBusinessCentralApp
+
+Read BCQuality's skills\entry.md and follow it with this task context:
+task-context:
+  goal: Enrich my existing AL development plan with applicable BCQuality guidance without changing the plan or repository.
+  inputs-available: [development-plan, repository]
+  technologies: [al]
+  bc-version: 28
+  enabled-layers: [microsoft, community, custom]
+  disabled-skills: []
+
+Resolve BCQuality instructions, knowledge, and index preparation against the
+BCQuality root. Pass the plan file's contents as development-plan and the
+repository path as repository. Do not modify the plan or the repository.
+Execute the dispatched skill and return its development guidance report
+unchanged. If Entry returns no-match or failed, return that dispatch record.
+```
+
+A useful plan states the intended change, affected objects or files, proposed
+approach, test strategy, and acceptance criteria. The report lists each
+applicable article, the plan decision it informs, concrete implementation
+constraints, and any validation the change should demonstrate. `no-knowledge`
+means BCQuality has no additional constraints for that plan; it does not mean
+the plan is unsafe.
+
+Give the plan and the report to your coding agent together. After
+implementation, run a normal BCQuality review of the completed change: the
+guidance report is input to the work, not proof that the result is correct.
+
+### Integration boundary
+
 A repository-specific workflow can consume this read-only foundation before
 authoring while retaining its independent final review. This is the intended
-integration boundary for the preview `al-development-plan` skill, not a shipped
-consumer integration or a stable plugin surface:
+integration boundary for the preview skill, not a shipped consumer integration
+or a stable plugin surface:
 
 1. Investigate and produce the consumer's normal initial plan. Normalize any
    consumer-specific format outside BCQuality. A full serialized plan document

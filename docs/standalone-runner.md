@@ -32,7 +32,7 @@ diff, supply the app's root directory as `folder-path`. The review scope is
 every relevant file below that directory, including `app.json` and AL source.
 The folder does not need to be a Git repository.
 
-The [app-review example](../README.md#example-review-a-complete-app-folder)
+The [quick start example](../README.md#quick-start)
 uses this input through the standalone adapter. Because a folder is a
 current-state snapshot, the review must not invent a previous app version
 when evaluating comparison-only rules. Entry can return more than one

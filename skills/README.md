@@ -38,6 +38,16 @@ review, index, or output policy. It is not an action skill, is not considered
 by Entry, and should not accumulate behavior already defined by `entry.md`,
 `read.md`, `do.md`, or a layered action skill.
 
+A standalone review therefore follows one path, with no second implementation
+in the adapter:
+
+```text
+standalone host skill: skills/al-code-review/SKILL.md
+  -> routing contract: skills/entry.md
+    -> review coordinator: microsoft/skills/review/al-code-review.md
+      -> domain review leaves
+```
+
 This gives the two skill formats distinct roles:
 
 - `skills/al-code-review/SKILL.md` is the public host integration surface for a

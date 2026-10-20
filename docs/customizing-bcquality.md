@@ -158,8 +158,8 @@ than the upstream URL. It must still start at [Entry](../skills/entry.md).
 
 | Identifier | What it identifies |
 | --- | --- |
-| Plugin `version` in `plugin.json` | The host-facing package version. It is separate from content-release tags. `copilot plugin list` shows the installed plugin; inspect the resolved source when reproducing a run. |
-| Content tag such as `v1.6` | A release of the repository's knowledge and skills. Available tags are listed on [GitHub](https://github.com/microsoft/BCQuality/tags). |
+| Plugin `version` in `plugin.json` | The host-facing package version shown by `copilot plugin list`. At a content-release tag it is `major.minor.0`; for example, tag `v1.8` carries plugin version `1.8.0`. An unpinned installation from `main` can contain changes before or after that release, so record the commit when reproducing a run. |
+| Content tag such as `v1.8` | A release of the repository's knowledge and skills. Available tags are listed on [GitHub](https://github.com/microsoft/BCQuality/tags). |
 | Skill `version` in frontmatter | That skill's contract version, carried in reports. It does not identify the complete knowledge snapshot. |
 | Git commit SHA | The exact repository snapshot. Record this for reproducibility when using a checkout. |
 

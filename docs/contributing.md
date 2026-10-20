@@ -185,7 +185,9 @@ canonical READ, DO, WRITE, or Entry section instead.
 
 Maintainers cut content releases on demand, roughly monthly, using the
 `Release version` workflow on `main`. It tags the selected commit as
-`v{major}.{minor}`; it does not update the plugin manifest.
+`v{major}.{minor}`. Before running it, merge a PR that sets the `version` in
+both `plugin.json` and `.claude-plugin/marketplace.json` to
+`{major}.{minor}.0`, so hosts show a version that identifies the release.
 
 Use a minor bump for normal content updates and a major bump for breaking
 changes. The minor is a monotonic counter: it increments across releases and
