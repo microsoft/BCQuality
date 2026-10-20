@@ -23,4 +23,6 @@ See sample: [`choose-telemetry-scope-by-audience.good.al`](choose-telemetry-scop
 
 Defaulting every call to `All`, including low-level implementation diagnostics, or defaulting every call to `ExtensionPublisher` and thereby hiding customer-actionable failures from environment telemetry. Review only when the message and surrounding branch make the intended audience clear; an ambiguous diagnostic is not enough to infer the wrong scope.
 
+A scope value that a change leaves untouched is not a new defect. When a diff only migrates or refactors the surrounding call (for example, swapping the HTTP API used to make a request) and keeps the pre-existing `TelemetryScope` literal unchanged, the audience decision predates the change under review; do not suggest widening or narrowing that scope as a fix for this diff.
+
 See sample: [`choose-telemetry-scope-by-audience.bad.al`](choose-telemetry-scope-by-audience.bad.al).
