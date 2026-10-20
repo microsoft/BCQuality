@@ -48,6 +48,7 @@ A file enters the candidate worklist when its `keywords` intersect the extracted
 
 Apply these high-signal mappings before fuzzy topic ranking:
 
+- A changed page field is bound to a global variable assigned directly or through a helper in `OnAfterGetRecord` — `reset-per-row-page-variables-in-onaftergetrecord.md`. Read the article before evaluating initialization of per-record outputs.
 - A tableextension adds a field to `DropDown` while the corresponding lookup-page control remains `Visible = false` — `dropdown-fieldgroup-respects-lookup-page-visibility`.
 - An editable page part affects a total, FlowField, or FactBox on the parent but does not set `UpdatePropagation = Both` — `updatepropagation-both-refreshes-main-page`.
 - A page or pageextension `Enabled`, `Visible`, `Editable`, or `StyleExpr` value contains an `in [...]` list (compiler: "InListExpression is not valid for client expressions", AL0573 or AL0322), or replaces one with a procedure call — `page-client-expression-must-not-use-in-list`. Plain `=`/`<>` comparisons joined with `and`/`or`, and `in [...]` inside a trigger or procedure body, are valid; do not flag them.
