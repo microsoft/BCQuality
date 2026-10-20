@@ -1,5 +1,6 @@
-// The process filters one batch, processes its unprocessed rows, and marks them processed.
-// The key seeks on the selective batch number; Processed stays a residual predicate.
+// The process reads every row of one batch, posts it, and marks the batch processed.
+// The key leads with a flag the read does not filter, so it cannot seek on "Batch No.",
+// while the ModifyAll still maintains the index for every row it changes.
 table 50380 "Perf Staging Entry"
 {
     DataClassification = CustomerContent;
@@ -16,18 +17,17 @@ table 50380 "Perf Staging Entry"
     keys
     {
         key(PK; "Entry No.") { Clustered = true; }
-        key(ByBatch; "Batch No.") { }
+        key(ByProcessedBatch; Processed, "Batch No.") { }
     }
 }
 
-codeunit 50381 "Perf Staging Processor Good"
+codeunit 50381 "Perf Staging Processor Bad"
 {
     procedure ProcessBatch(BatchNo: Code[20])
     var
         Entry: Record "Perf Staging Entry";
     begin
         Entry.SetRange("Batch No.", BatchNo);
-        Entry.SetRange(Processed, false);
         Entry.SetLoadFields("Customer No.", Amount);
         if Entry.FindSet() then
             repeat

@@ -1,5 +1,5 @@
-// The process filters one batch, processes its unprocessed rows, and marks them processed.
-// The key leads with a Boolean and indexes the very field the process rewrites.
+// The process reads every row of one batch, posts it, and marks the batch processed.
+// The key starts with the field the read filters; Processed is not indexed because no read filters it.
 table 50380 "Perf Staging Entry"
 {
     DataClassification = CustomerContent;
@@ -16,21 +16,17 @@ table 50380 "Perf Staging Entry"
     keys
     {
         key(PK; "Entry No.") { Clustered = true; }
-        key(ByProcessedBatch; Processed, "Batch No.")
-        {
-            IncludedFields = "Customer No.", Amount;
-        }
+        key(ByBatch; "Batch No.") { }
     }
 }
 
-codeunit 50381 "Perf Staging Processor Bad"
+codeunit 50381 "Perf Staging Processor Good"
 {
     procedure ProcessBatch(BatchNo: Code[20])
     var
         Entry: Record "Perf Staging Entry";
     begin
         Entry.SetRange("Batch No.", BatchNo);
-        Entry.SetRange(Processed, false);
         Entry.SetLoadFields("Customer No.", Amount);
         if Entry.FindSet() then
             repeat

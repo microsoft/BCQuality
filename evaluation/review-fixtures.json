@@ -76,6 +76,7 @@
         "store-scheduled-task-id-to-avoid-duplicate-tasks",
         "design-covering-keys-from-read-pattern",
         "review-overlapping-keys-before-adding-an-index",
+        "justify-low-selectivity-fields-in-key-columns",
         "setcurrentkey-sets-sort-order-not-index-hint",
         "preserve-buffered-inserts-by-separating-target-reads",
         "aggregate-before-persisting-intermediate-results",
