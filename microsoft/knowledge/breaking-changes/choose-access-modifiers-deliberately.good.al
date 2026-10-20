@@ -18,4 +18,16 @@ codeunit 50325 "Order Processor Good"
     local procedure PostOrder(OrderNo: Code[20])
     begin
     end;
+
+    /// <summary>
+    /// Opens the order card so other extensions can reuse this entry point
+    /// instead of duplicating the lookup logic.
+    /// </summary>
+    /// <param name="OrderNo">Specifies the order number to open.</param>
+    // Deliberately widened from internal to public: the added XML doc comment
+    // documents it for external callers, signaling intentional promotion, not
+    // an accidental "public by default" widening.
+    procedure OpenOrder(OrderNo: Code[20])
+    begin
+    end;
 }
