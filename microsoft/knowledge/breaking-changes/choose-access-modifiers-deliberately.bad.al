@@ -1,7 +1,5 @@
 codeunit 50326 "Order Processor Bad"
 {
-    Access = Public;
-
     // Anti-pattern: every helper is public by default, exposing implementation
     // detail as a de-facto API. Each becomes a contract that cannot be changed
     // without risking breakage for consumers that bound to it.

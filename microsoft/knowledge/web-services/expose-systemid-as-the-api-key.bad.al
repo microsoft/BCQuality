@@ -23,55 +23,6 @@ page 50345 "WS SystemId Key Bad"
                 {
                     Caption = 'number';
                 }
-
-                page 50347 "WS Configuration Key Bad"
-                {
-                    PageType = API;
-                    APIPublisher = 'contoso';
-                    APIGroup = 'configuration';
-                    APIVersion = 'v1.0';
-                    EntityName = 'setting';
-                    EntitySetName = 'settings';
-                    SourceTable = "Name/Value Buffer";
-                    SourceTableTemporary = true;
-                    ODataKeyFields = SystemId;
-                    DelayedInsert = true;
-                    InsertAllowed = false;
-                    ModifyAllowed = false;
-                    DeleteAllowed = false;
-
-                    layout
-                    {
-                        area(content)
-                        {
-                            repeater(settings)
-                            {
-                                field(id; Rec.SystemId)
-                                {
-                                    Caption = 'Id';
-                                    Editable = false;
-                                }
-                                field(name; Rec.Name)
-                                {
-                                    Caption = 'Name';
-                                }
-                                field(value; Rec.Value)
-                                {
-                                    Caption = 'Value';
-                                }
-                            }
-                        }
-                    }
-
-                    trigger OnOpenPage()
-                    begin
-                        Rec.Init();
-                        Rec.ID := 1;
-                        Rec.Name := 'companyName';
-                        Rec.Value := CompanyName();
-                        Rec.Insert();
-                    end;
-                }
                 field(displayName; Rec.Name)
                 {
                     Caption = 'displayName';

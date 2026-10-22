@@ -19,25 +19,3 @@ codeunit 50325 "Order Processor Good"
     begin
     end;
 }
-
-codeunit 50327 "Order Validation Service"
-{
-    Access = Internal;
-
-    procedure HasOrderNumber(OrderNo: Code[20]): Boolean
-    begin
-        exit(OrderNo <> '');
-    end;
-}
-
-codeunit 50328 "Order Validation Caller"
-{
-    Access = Internal;
-
-    procedure CanProcess(OrderNo: Code[20]): Boolean
-    var
-        Validator: Codeunit "Order Validation Service";
-    begin
-        exit(Validator.HasOrderNumber(OrderNo));
-    end;
-}

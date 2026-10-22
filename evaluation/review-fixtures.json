@@ -27,10 +27,7 @@
       "article": "wire-all-three-agent-interfaces"
     },
     "breaking-changes": {
-      "articles": [
-        "do-not-expose-sensitive-data-through-public-api",
-        "choose-access-modifiers-deliberately"
-      ]
+      "article": "do-not-expose-sensitive-data-through-public-api"
     },
     "data-modeling": {
       "articles": [
@@ -175,9 +172,7 @@
         "do-not-concatenate-external-text-into-setfilter",
         "exposed-objects-must-be-in-a-permission-set",
         "secrettext-for-credentials",
-        "indirect-permissions-for-elevated-access",
         "isolatedstorage-access-must-be-local-or-internal",
-        "protect-sensitive-data-in-temporary-tables",
         "page-scope-filters-must-not-be-in-filtergroup-zero",
         "restore-the-filtergroup-after-setting-hidden-filters"
       ]

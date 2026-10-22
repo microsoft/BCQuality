@@ -18,13 +18,11 @@ codeunit 50217 "Sec Internal Secret Store"
 {
     Access = Internal;
 
-    [NonDebuggable]
     procedure GetApiKey(var ApiKey: SecretText): Boolean
     begin
         exit(IsolatedStorage.Get('ApiKey', DataScope::Module, ApiKey));
     end;
 
-    [NonDebuggable]
     procedure SetApiKey(NewKey: SecretText)
     begin
         IsolatedStorage.SetEncrypted('ApiKey', NewKey, DataScope::Module);

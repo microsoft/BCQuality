@@ -11,20 +11,16 @@ application-area: [all]
 
 ## Description
 
-Access is a decision about what you are willing to support forever. A procedure reachable from another extension can become a contract that callers bind to, so assess both its member access and its containing object's access. Omitting `local` does not make a procedure on an `Access = Internal` codeunit an external public API; it remains callable within the app and by explicitly permitted friend apps. The safe default is the narrowest access that works: `local` for implementation detail confined to one object, `internal` for in-app reuse on a public object, and `protected var` for an intended inheritance point. Reserve externally reachable entry points for deliberate, supported APIs.
+Access is a decision about what you are willing to support forever. The moment a procedure or object is reachable from another extension — no `local`, or a removed `[Scope('OnPrem')]` — it becomes a contract: callers bind to it, and changing or removing it later is a breaking change. The safe default is the narrowest access that works. Use `local` for implementation detail confined to one object, `internal` for code shared within the app but not exposed to consumers, and `protected var` for state intended as an inheritance point for extension objects. Reserve `public` for the deliberate, supported entry points you intend to maintain as a stable API. LLMs tend to make everything public "to be safe," which inverts the rule and turns every helper into an accidental contract.
 
 ## Best Practice
 
-Expose a small, intentional surface and keep implementation helpers `internal` for in-app reuse or `local` when single-object. Adding `internal` to a procedure on an already internal codeunit does not narrow its same-app audience. Do not make a service `local` merely because no caller appears in that object; other objects may be its intended callers. Do not drop `[Scope('OnPrem')]` without intent, since that widens platform availability. These are compile-time API decisions, not runtime authorization: see [internal access is not a security boundary](../security/internal-access-is-not-a-security-boundary.md).
+Start everything `local` or `internal` and promote a member to `public` only when you have decided to support it as a stable contract. Expose a small, intentional surface — the supported entry point — and keep validation, posting, and helper routines `internal` for in-app reuse or `local` when single-object. Do not drop `[Scope('OnPrem')]` without intent, since that too widens the contract. Every public member is a maintenance commitment; spend them deliberately.
 
 See sample: [`choose-access-modifiers-deliberately.good.al`](choose-access-modifiers-deliberately.good.al).
 
 ## Anti Pattern
 
-Exposing implementation helpers on an externally reachable object as public procedures, creating a wider contract than the intended entry point requires. Establish the effective access and helper role before recommending a narrower modifier; a missing procedure modifier on an internal object is not evidence of an accidental external contract.
+Declaring every procedure `public` by default, so internal helpers like `ValidateOrder` and `PostOrder` become a de-facto API that consumers bind to and that can no longer be changed freely. Detection: an object where implementation-detail procedures carry no access modifier or are `public` without a reason to support them externally. Default them to `internal`/`local` and make only the intended entry point public.
 
 See sample: [`choose-access-modifiers-deliberately.bad.al`](choose-access-modifiers-deliberately.bad.al).
-
-## References
-
-[Access property](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/properties/devenv-access-property) documents object visibility, friend access and the limits of access modifiers as a security boundary.
