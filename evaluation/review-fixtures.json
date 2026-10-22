@@ -170,6 +170,7 @@
         "al-has-no-built-in-htmlencode",
         "do-not-concatenate-external-text-into-setfilter",
         "exposed-objects-must-be-in-a-permission-set",
+        "secrettext-for-credentials",
         "page-scope-filters-must-not-be-in-filtergroup-zero",
         "restore-the-filtergroup-after-setting-hidden-filters"
       ]
@@ -177,6 +178,7 @@
     "style": {
       "articles": [
         "label-comment-explains-placeholders",
+        "error-passes-parameters-directly-not-strsubstno",
         "dateformula-evaluate-needs-language-independent-literals",
         "al-comments-must-not-restate-what-code-already-shows",
         "pages-must-not-contain-business-logic",

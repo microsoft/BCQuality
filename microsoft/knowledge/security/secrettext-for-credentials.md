@@ -1,7 +1,7 @@
 ---
 bc-version: [23..]
 domain: security
-keywords: [secrettext, credentials, api-key, token, debugger, unwrap]
+keywords: [secrettext, credentials, api-key, token, debugger, unwrap, hardcoded, retrieval]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -11,12 +11,26 @@ application-area: [all]
 
 ## Description
 
-`SecretText` is the AL data type for values that should never appear in a debugger session, in a log, or in a variable watch. The compiler enforces two guarantees: a string literal cannot be assigned directly to a `SecretText` variable, and a `SecretText` cannot be assigned back to a `Text` or `Code` without an explicit `Unwrap` call. Together these prevent the two common accidents — embedding a secret in source code, and quietly converting a secret to plain text where the debugger can read it. Use `SecretText` for parameters, return values, and local variables that carry API keys, tokens, passwords, connection strings, or any other value an attacker with debugger access should not see.
+`SecretText` protects sensitive values from the AL debugger. The compiler rejects a direct literal assignment to `SecretText` and implicit conversion back to `Text` or `Code`, but permits `Text` and `Code` values to become `SecretText`. Consequently, a helper that returns a source literal as `Text` can still feed a `SecretText` destination: the destination type does not prove that the credential was retrieved safely or remove it from source.
 
 ## Best Practice
 
-Declare credential-carrying parameters and variables as `SecretText` from the call site that retrieves the secret all the way to the call site that consumes it (typically an HTTP header or URI). Never round-trip through `Text`. On BC 24 and later, use the `SecretText` overload of `IsolatedStorage.Get` when retrieving stored secrets. See sample: [`secrettext-for-credentials.good.al`](secrettext-for-credentials.good.al).
+Declare credential-carrying parameters, return values, and variables as `SecretText` from retrieval to consumption. When reviewing a credential flow, inspect a visible retrieval helper as well as its destination type. An authentication path that returns a fixed source literal instead of retrieving the configured credential needs a source-level fix: retrieve the value from the appropriate secure store or authentication provider. Changing only the receiving variable to `SecretText` does not fix that path.
+
+On BC 24 and later, use the `SecretText` overload of `IsolatedStorage.Get` for stored secrets. If a retrieval API requires `Text`, keep that temporary value and its conversion inside a `[NonDebuggable]` procedure returning `SecretText`; do not round-trip back to `Text` during transit. A protected retrieval boundary is valid, not evidence of a plaintext-transit defect.
+
+Establish that the value is used as a credential, not merely that its name contains `Token`, `Key`, or `Password`. Non-secret identifiers, empty sentinels, and fake credentials confined to tests or mocks are not leaked production secrets. A placeholder returned on a real authentication path can be a configuration/implementation problem, but its spelling alone does not prove disclosure or justify claiming that a live secret needs rotation.
+
+See sample: [`secrettext-for-credentials.good.al`](secrettext-for-credentials.good.al).
 
 ## Anti Pattern
 
-Holding a credential in a `Text` variable (`BearerToken: Text`) makes it visible in the debugger and in any error that prints the variable, and the compiler offers no help because the type was wrong from the start. Reviewers should flag any local or parameter named like a secret (`ApiKey`, `Token`, `Password`, `ClientSecret`) whose type is `Text` or `Code`. When the same value is visibly sent through an HTTP URI, header, or body, `secrettext-with-httpclient.md` is the more specific primary rule. See sample: [`secrettext-for-credentials.bad.al`](secrettext-for-credentials.bad.al).
+A fixed authentication value passes through a `Text` helper into a `SecretText` variable, and the proposed fix treats the protected destination or `[NonDebuggable]` attribute as sufficient. Neither corrects the fixed source. Identify that source and its use in authentication; distinguish an embedded real secret from a placeholder implementation instead of claiming that every fixed value is a leaked credential.
+
+Unprotected `Text` or `Code` transit of an actual credential also exposes it to the debugger. When reporting that same transit defect at an HTTP URI, header, or body, `secrettext-with-httpclient.md` is the more specific primary rule; it does not replace checking a visible credential source.
+
+See sample: [`secrettext-for-credentials.bad.al`](secrettext-for-credentials.bad.al).
+
+## References
+
+- [SecretText: retrieval, transit, and consumption](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-secret-text)
