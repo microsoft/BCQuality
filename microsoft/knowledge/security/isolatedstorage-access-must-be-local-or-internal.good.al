@@ -13,3 +13,18 @@ codeunit 50215 "Sec Sample IsoStorage Good"
         IsolatedStorage.SetEncrypted('ApiKey', NewKey, DataScope::Module);
     end;
 }
+
+codeunit 50217 "Sec Internal Secret Store"
+{
+    Access = Internal;
+
+    procedure GetApiKey(var ApiKey: SecretText): Boolean
+    begin
+        exit(IsolatedStorage.Get('ApiKey', DataScope::Module, ApiKey));
+    end;
+
+    procedure SetApiKey(NewKey: SecretText)
+    begin
+        IsolatedStorage.SetEncrypted('ApiKey', NewKey, DataScope::Module);
+    end;
+}

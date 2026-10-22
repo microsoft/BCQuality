@@ -7,16 +7,18 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Procedures that read or write IsolatedStorage must not be public
+# Keep IsolatedStorage helpers behind the intended API boundary
 
 ## Description
 
-`IsolatedStorage` partitions its data by extension: values written by one extension are unreadable to another. That guarantee assumes the owning extension does not voluntarily expose its storage through a public API. A `public` procedure on a codeunit that calls `IsolatedStorage.Get`, `IsolatedStorage.Set`, `IsolatedStorage.SetEncrypted`, `IsolatedStorage.Contains`, or `IsolatedStorage.Delete` defeats the isolation: any other extension on the same tenant can call that procedure and obtain (or overwrite) the secret. The platform's per-extension boundary becomes a per-procedure boundary, and there is no per-procedure boundary.
+`IsolatedStorage` partitions its data by extension, but the owning extension can expose stored values through its own API. An unrestricted, externally callable getter or setter for an extension-owned secret can defeat that isolation. A procedure referencing `IsolatedStorage` is not enough to establish exposure: consider what it does and the effective access of both the object and its member. A procedure without a member modifier on an `Access = Internal` codeunit is not thereby a public API for arbitrary dependent apps.
 
 ## Best Practice
 
-Mark every procedure that touches `IsolatedStorage` as `local` (visible only inside its containing object) or `internal` (visible only inside the owning extension). Provide consumers with a narrow, intent-specific API — for example, "send notification to configured webhook" rather than "give me the webhook secret." See sample: [`isolatedstorage-access-must-be-local-or-internal.good.al`](isolatedstorage-access-must-be-local-or-internal.good.al).
+Keep storage helpers local or internal through the appropriate object/member access. Provide consumers with a narrow, intent-specific API — for example, "send notification to configured webhook" rather than "give me the webhook secret." Access modifiers are compile-time encapsulation, not runtime authorization: public wrappers, explicitly permitted friend apps and runtime entry points still need the appropriate authorization. See sample: [`isolatedstorage-access-must-be-local-or-internal.good.al`](isolatedstorage-access-must-be-local-or-internal.good.al).
 
 ## Anti Pattern
 
-A public `GetApiKey()` returning the stored value, or a public `SetApiKey(NewKey: Text)` that calls `IsolatedStorage.SetEncrypted`. Both turn the extension into a confused deputy that hands out (or accepts overwrites of) its own secrets on behalf of any caller on the tenant. Reviewers should flag any procedure whose body references `IsolatedStorage` and whose declaration omits `local` or `internal`. See sample: [`isolatedstorage-access-must-be-local-or-internal.bad.al`](isolatedstorage-access-must-be-local-or-internal.bad.al).
+An unrestricted external `GetApiKey()` returns the extension's stored credential, or a setter allows unauthorized callers to overwrite it. A `SecretText` value still requires recipient authorization. Identify the exposed data or operation and missing authorization; neither a storage call nor a missing member modifier alone establishes that defect. See sample: [`isolatedstorage-access-must-be-local-or-internal.bad.al`](isolatedstorage-access-must-be-local-or-internal.bad.al).
+
+Reference: [Access property and its compile-time limits](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/properties/devenv-access-property).

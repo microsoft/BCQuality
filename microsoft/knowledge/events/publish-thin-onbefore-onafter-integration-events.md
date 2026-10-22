@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: events
-keywords: [integration-event, onbefore, onafter, extension-point, thin-publisher, publisher-body, extensibility]
+keywords: [integration-event, onbefore, onafter, extension-point, thin-publisher, publisher-body, extensibility, integration-requirement, operation-boundary]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -11,16 +11,22 @@ application-area: [all]
 
 ## Description
 
-A key operation — a posting, release, or validation routine — becomes a hard wall for partners when it ships no integration events: the only way to change it is to overwrite or duplicate the base code. The Business Central remedy is to raise thin `OnBeforeX`/`OnAfterX` integration events at the operation's boundaries, passing `var Rec` and the relevant parameters so subscribers have what they need. An equally common defect is the inverse: putting business logic *inside* the publisher method body. An event publisher is a hook, not a procedure — its body must be empty, and the platform even forbids variables, return values, and code other than comments in it. LLMs both omit the extension points and, when they do add an event, wrongly fill its body with logic.
+Integration events expose defined extension points for supported customization scenarios. A posting, release, or validation routine does not need an `OnBefore`/`OnAfter` pair merely because it is public or performs business logic. Establish the required customization and whether existing events or another supported extension mechanism already provide it before recommending a new publisher. An event publisher is a thin hook with an empty body; the calling routine owns the business logic.
 
 ## Best Practice
 
-Wrap the operation's core with events: raise `OnBeforeX(var Rec, var IsHandled)` before the default work and `OnAfterX(var Rec)` once it succeeds, at the natural boundaries of the routine. Declare each publisher `[IntegrationEvent(false, false)] local procedure` with an empty body and let the calling routine — never the publisher — own the logic. Pass records by `var` so subscribers can read and adjust them, and include the parameters a subscriber would need to act. This gives partners a stable seam without touching base code.
+For an established extension requirement, expose a purpose-specific event at the boundary that provides the required data and timing; reuse or extend an existing suitable event before adding a new one. The requirement may be established by a documented extension contract, an accepted customization requirement, or visible integration behavior; an already-present subscriber is not required. Do not mechanically add both `OnBefore` and `OnAfter`, mutable record parameters, or an `IsHandled` override to every routine. Choose parameters for the supported operation, preserving required validation and authorization. Use `IsHandled` only where overriding the operation is genuinely necessary and a better extension mechanism is unavailable. Declare thin publishers with empty bodies and keep business logic in the calling routine. This guidance does not authorize removing or changing shipped events or their subscriber contracts.
 
 See sample: [`publish-thin-onbefore-onafter-integration-events.good.al`](publish-thin-onbefore-onafter-integration-events.good.al).
 
 ## Anti Pattern
 
-Business logic placed inside an `[IntegrationEvent]` publisher method, so the "event" actually mutates state every time it is raised — defeating the hook and surprising every reader — or a core operation that exposes no extension points at all, forcing partners to overwrite or duplicate it. Detection: an `[IntegrationEvent]`/`[BusinessEvent]` method whose body contains statements rather than being empty, or a posting/validation routine with no surrounding `OnBefore`/`OnAfter` publishers.
+For missing-event findings, identify the supported customization that is blocked, the required data or timing, and why an existing event or other supported extension mechanism cannot satisfy it. The absence of surrounding `OnBefore`/`OnAfter` publishers on a posting or validation routine is not sufficient evidence by itself. Conversely, absence of a visible consumer does not prove that an established extension contract is unnecessary.
 
 See sample: [`publish-thin-onbefore-onafter-integration-events.bad.al`](publish-thin-onbefore-onafter-integration-events.bad.al).
+
+## References
+
+- [Using the IsHandled pattern](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-use-ishandled-pattern) — limit overrides to necessary cases; prefer purposeful extensibility that preserves validation.
+- [Types of events for extensibility](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/types-of-events-for-extensibility) — choose events by their purpose and operation boundary, rather than adding hooks mechanically.
+- [Reuse existing events](prefer-reusing-or-extending-existing-events.md) and [preserve subscriber contracts](treat-local-and-internal-events-as-subscriber-contracts.md).

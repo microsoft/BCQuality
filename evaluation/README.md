@@ -15,6 +15,17 @@ is mandatory.
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+The event-boundary pair uses the existing Events override `context` to supply
+an accepted dispatch-completion integration requirement. The same context
+applies to both inputs and only to modules exposing `CompleteDispatch`: dependent
+extensions need the entry number and receipt ID synchronously after persistence
+and before return. It does not prescribe an event name, a before/after pair,
+mutable parameters, or an override of date validation. Both sources implement
+the same local date-order invariant; one also provides the required completion
+notification. These are constructed requirement-based examples, not independent
+holdout evidence or a measured reduction in false positives. Compilation and
+fixture preparation do not execute subscribers or prove runtime timing.
+
 The core AL samples for BLOB loading, isolated shipment events, expense-page
 scope filters, and stream encoding include their minimal demo tables in each
 companion independently. BLOB field types and shipment status members therefore
