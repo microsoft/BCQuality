@@ -1,15 +1,19 @@
 codeunit 50216 "Sec Sample IsoStorage Bad"
 {
-    procedure GetApiKey(): Text
+    Access = Public;
+
+    [NonDebuggable]
+    procedure GetApiKey(): SecretText
     var
-        ApiKey: Text;
+        ApiKey: SecretText;
     begin
         if IsolatedStorage.Contains('ApiKey', DataScope::Module) then
             IsolatedStorage.Get('ApiKey', DataScope::Module, ApiKey);
         exit(ApiKey);
     end;
 
-    procedure SetApiKey(NewKey: Text)
+    [NonDebuggable]
+    procedure SetApiKey(NewKey: SecretText)
     begin
         IsolatedStorage.SetEncrypted('ApiKey', NewKey, DataScope::Module);
     end;

@@ -15,6 +15,18 @@ is mandatory.
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+The permission and API-boundary pairs include lowercase object permission grants,
+callable members on internal objects, caller-owned `SecretText` transformations,
+and ordinary permission-enforced reads into local temporary buffers. Their
+positive counterparts retain excessive grants, unintended external helpers,
+stored-secret disclosure and a temporary-cache getter bypassing the normal
+retrieval check. Internal visibility is not treated as runtime authorization.
+The API-key pair contrasts persistent `SystemId` identity and a stable temporary
+key with newly generated temporary GUIDs. The locking pair retains unnecessary
+update locking while accepting existing `LockTable` or record-isolation intent.
+These are static boundary fixtures; preparing them does not measure model
+behavior or execute AL permission and concurrency semantics.
+
 The core AL samples for BLOB loading, isolated shipment events, expense-page
 scope filters, and stream encoding include their minimal demo tables in each
 companion independently. BLOB field types and shipment status members therefore

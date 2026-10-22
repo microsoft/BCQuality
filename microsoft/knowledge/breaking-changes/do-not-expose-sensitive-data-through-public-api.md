@@ -11,16 +11,20 @@ application-area: [all]
 
 ## Description
 
-Every member you make publicly reachable becomes a contract you must keep — and when that member returns a secret, the contract leaks the secret. Widening access to a credential happens in several shapes: a public getter that returns a raw token or password, an event whose parameter carries a secret to every subscriber, or a global variable holding a key that an extension can read. Once such a surface ships, removing it is itself a breaking change, so the exposure is hard to walk back. Sensitive material — tokens, passwords, connection secrets, `SecretText` values, security internals — must stay inside `internal` or `local` members. Public surfaces should expose only non-sensitive business data. LLMs often add a convenient `GetToken()` getter without recognizing it as a permanent security boundary breach.
+A public API that discloses an extension-owned credential to an unauthorized caller creates both a security problem and a lasting compatibility commitment. Examples include an unrestricted stored-token getter, a broadcast event carrying a secret, or an externally readable variable holding a key. A `SecretText` return type alone does not establish such a disclosure: a caller may supply its own credential to an authentication object and receive a protected authorization header for that same credential. Establish the source, intended recipient and protection of the value before alleging widened access.
 
 ## Best Practice
 
-Keep secrets in `internal` or `local` members, and prefer the `SecretText` type so the value cannot be read back or logged. Where callers genuinely need a credential, pass it inward (a setter) rather than handing it outward (a getter). Public API should return only non-sensitive data — a masked reference, a status, a business identifier — never the raw secret. Treat each public member as a lasting commitment and keep the security-sensitive surface as small as possible.
+Keep extension-owned secrets encapsulated and authorize any operation that uses or releases them. Accepting a caller's credential inward as `SecretText`, or returning a `SecretText` transformation of that caller-owned value, is not by itself a leak. Keep that path secret-preserving; do not convert it to plain text or deliver it to unrelated subscribers or callers. Microsoft's public `Http Authentication Basic` illustrates this boundary: callers initialize it with credentials and receive authorization headers containing `SecretText`. For consumers that do not own or have authority to receive a stored secret, expose an intent-specific operation or non-sensitive result instead. Access modifiers narrow the supported API, but do not replace runtime authorization.
 
 See sample: [`do-not-expose-sensitive-data-through-public-api.good.al`](do-not-expose-sensitive-data-through-public-api.good.al).
 
 ## Anti Pattern
 
-A public `GetAccessToken()` that returns the raw token (or an event parameter carrying a credential to all subscribers), turning a secret into a de-facto public API any dependent can consume. Detection: a non-`local` procedure, event parameter, or global variable that surfaces a token, password, key, or other credential. Keep the secret internal and expose only non-sensitive data.
+An unrestricted public getter reads an extension-owned credential from storage and returns it to arbitrary dependent apps, or an event broadcasts it beyond its intended recipients. Keeping the returned value in `SecretText` does not authorize that transfer: recipients can still use it for authentication. Conversely, do not flag a caller-owned, secret-preserving conversion solely because its parameter or return type is `SecretText`.
 
 See sample: [`do-not-expose-sensitive-data-through-public-api.bad.al`](do-not-expose-sensitive-data-through-public-api.bad.al).
+
+## References
+
+[Http Authentication Basic](https://learn.microsoft.com/en-us/dynamics365/business-central/application/system-application/codeunit/system.restclient.http-authentication-basic) exposes public initialization and `GetAuthorizationHeaders(): Dictionary of [Text, SecretText]`.

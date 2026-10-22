@@ -1,29 +1,19 @@
 codeunit 50100 "Customer Temp Processor"
 {
-    procedure BuildScopedCustomerBuffer(CustomerNoFilter: Text): Boolean
+    procedure CountScopedCustomers(CustomerNoFilter: Text): Integer
     var
         Customer: Record Customer;
         TempCustomer: Record Customer temporary;
     begin
-        // Validate the caller's permission before copying sensitive rows.
-        if not Customer.ReadPermission() then
-            exit(false);
-
         Customer.SetFilter("No.", CustomerNoFilter);
         if not Customer.FindSet() then
-            exit(true);
+            exit(0);
 
         repeat
             TempCustomer := Customer;
             TempCustomer.Insert();
         until Customer.Next() = 0;
 
-        ProcessCustomerBuffer(TempCustomer);
-        exit(true);
-    end;
-
-    local procedure ProcessCustomerBuffer(var TempCustomer: Record Customer temporary)
-    begin
-        // Use the buffer in-place; do not persist values elsewhere.
+        exit(TempCustomer.Count());
     end;
 }

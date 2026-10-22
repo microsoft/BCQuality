@@ -11,16 +11,20 @@ application-area: [all]
 
 ## Description
 
-Every BC table carries a `SystemId` — an immutable GUID assigned at insert and never reused. API consumers must address a record through a key that does not change, otherwise a previously stored URL or `@odata.id` reference breaks the moment a user renames the underlying business key. The convention is to set `ODataKeyFields = SystemId` on the API page and expose the GUID as a non-editable `field(id; Rec.SystemId)`. An LLM left to its own devices often reaches for the human-readable primary key (a customer `No.`, an item code) as the OData key, because that is what a developer types when filtering in AL. That choice is wrong for an external contract: business keys are renamable and the API caller's stored references would dangle. This file is remedial because the correct key (`SystemId`) is rarely the one the model would pick by analogy with ordinary AL code.
+`SystemId` is an immutable GUID for an inserted record. For persistent API resources it provides an identity that survives renaming a business key, so a stored URL or `@odata.id` does not break when a customer `No.` changes. The convention is `ODataKeyFields = SystemId` with a non-editable `field(id; Rec.SystemId)`. Immutability belongs to that record, not to a logical resource recreated later: a temporary API page that inserts fresh rows on each request does not gain stable cross-request identity merely by exposing their newly generated GUIDs.
 
 ## Best Practice
 
-Set `ODataKeyFields = SystemId` so OData routes records by the stable GUID, and expose it as `field(id; Rec.SystemId)` marked `Editable = false`. Clients then address a record at `.../customers(<guid>)`, an identity that survives any rename of the business key. Keep the business key (for example `No.`) as an ordinary exposed field, not as the OData key.
+For persistent resources, set `ODataKeyFields = SystemId` and expose it as `field(id; Rec.SystemId)` marked `Editable = false`. Keep the renamable business key as an ordinary field. For a temporary projection, trace how identity is populated and retained: preserving a persistent source's `SystemId` can work, while generating a new GUID per request cannot. A read-only temporary resource with an intentional stable key need not be rewritten to an ephemeral `SystemId`. Require uniqueness and continuity for the logical resource, not a particular field name without its lifetime.
 
 See sample: [`expose-systemid-as-the-api-key.good.al`](expose-systemid-as-the-api-key.good.al).
 
 ## Anti Pattern
 
-Setting `ODataKeyFields = "No."` so the endpoint addresses records by a renamable business field. As soon as a user changes that `No.`, every external reference built on the old value points at nothing, silently breaking integrations. The detection signal: `ODataKeyFields` set to a business field rather than `SystemId`, or an API page that exposes no `id` field bound to `Rec.SystemId`.
+Addressing a persistent resource by a renamable business field, so renaming invalidates external references. Another unstable design recreates temporary rows and exposes a newly generated `SystemId` as if it identified the same resource across requests. Before recommending a replacement key, establish its stability; absence of `Rec.SystemId` alone is not proof of broken identity.
 
 See sample: [`expose-systemid-as-the-api-key.bad.al`](expose-systemid-as-the-api-key.bad.al).
+
+## References
+
+[Table system fields](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-table-system-fields) documents generated or explicitly assigned `SystemId` values and their per-record immutability.

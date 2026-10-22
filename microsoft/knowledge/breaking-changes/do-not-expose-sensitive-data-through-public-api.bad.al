@@ -1,13 +1,13 @@
 codeunit 50321 "Payment Client Bad"
 {
-    var
-        AccessToken: Text;
+    Access = Public;
 
-    // Crossing the trust boundary: a public getter hands the raw credential to any
-    // caller, turning a secret into a de-facto public API that cannot be removed
-    // later without breaking consumers.
-    procedure GetAccessToken(): Text
+    [NonDebuggable]
+    procedure GetAccessToken(): SecretText
+    var
+        AccessToken: SecretText;
     begin
+        IsolatedStorage.Get('PaymentServiceToken', DataScope::Module, AccessToken);
         exit(AccessToken);
     end;
 }

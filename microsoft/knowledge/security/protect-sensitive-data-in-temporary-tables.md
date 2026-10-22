@@ -11,16 +11,20 @@ application-area: [all]
 
 ## Description
 
-A temporary record copies data out of the source table into session memory. The platform does not automatically enforce the source table's permission model on the copy, and a value written to a temporary buffer can outlive the procedure that put it there if the buffer is a global or is passed upward. Code that places sensitive rows into a temporary table is therefore responsible for the checks and cleanup the source table would otherwise provide.
+A temporary record holds data in session memory; reading the copy does not re-run authorization against its original persistent source. Ordinary source-table reads still enforce the caller's effective permissions before the copy is made. Copying such rows into a local temporary buffer does not itself bypass that check. The risk arises when elevated retrieval or a retained buffer delivers sensitive data to a caller outside the authorized scope.
 
 ## Best Practice
 
-Validate the caller's read permission on the source table before populating the temporary buffer. Keep the buffer's lifetime as short as the work requires, and prefer local temporary variables over globals for anything carrying sensitive data — a local buffer's contents are discarded automatically when the procedure returns. When a buffer must be global or is passed back to callers, delete its contents on every exit path — including error paths — so sensitive values do not linger.
+Trace the source read, effective permissions, buffer lifetime and recipient. A normal `Get` or `FindSet` under the caller's permissions can supply the authorization; do not require a redundant explicit `ReadPermission()` check solely because its result is copied to a local temporary table. When retrieval is elevated or a buffer is handed to another caller, preserve the operation's authorization and data scope rather than assuming the copy enforces them. Prefer local buffers for local work. For retained buffers, bound their lifetime and prevent reuse outside the authorized scope; for intentional output buffers, retain the authorized result until the caller consumes it rather than unconditionally deleting it on return.
 
 See sample: [`protect-sensitive-data-in-temporary-tables.good.al`](protect-sensitive-data-in-temporary-tables.good.al).
 
 ## Anti Pattern
 
-Copying records into a temporary buffer without a preceding permission check, and relying on procedure-exit to clean up. An exception before the explicit cleanup leaves the data in the buffer; a global or var-parameter buffer carries the data back to callers that may have no right to see it.
+Returning elevated or previously authorized data from a temporary cache through a path that bypasses the caller check used by the normal retrieval path. A global or output buffer is not automatically a violation: identify the unauthorized recipient, missing scope check or stale sensitive data path. Missing an explicit check before an ordinary permission-enforced read into a local buffer is not that evidence.
 
 See sample: [`protect-sensitive-data-in-temporary-tables.bad.al`](protect-sensitive-data-in-temporary-tables.bad.al).
+
+## References
+
+[Permissions property](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/properties/devenv-permissions-property) explains that objects without extra permissions use the user's permissions; [temporary tables](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-temporary-tables) describes their in-memory lifetime.
