@@ -186,10 +186,10 @@ foreach ($layer in 'microsoft', 'community', 'custom') {
             inputs       = [string[]]@($frontmatter['inputs'])
             outputs      = [string[]]@($frontmatter['outputs'])
             filters      = [ordered]@{
-                'bc-version'       = [object[]]$(if ($frontmatter.Contains('bc-version')) { $frontmatter['bc-version'] })
-                technologies       = [string[]]$(if ($frontmatter.Contains('technologies')) { $frontmatter['technologies'] })
-                countries          = [string[]]$(if ($frontmatter.Contains('countries')) { $frontmatter['countries'] })
-                'application-area' = [string[]]$(if ($frontmatter.Contains('application-area')) { $frontmatter['application-area'] })
+                'bc-version'       = [object[]]@(if ($frontmatter.Contains('bc-version')) { $frontmatter['bc-version'] })
+                technologies       = [string[]]@(if ($frontmatter.Contains('technologies')) { $frontmatter['technologies'] })
+                countries          = [string[]]@(if ($frontmatter.Contains('countries')) { $frontmatter['countries'] })
+                'application-area' = [string[]]@(if ($frontmatter.Contains('application-area')) { $frontmatter['application-area'] })
             }
             subSkills    = [string[]]$subSkills
             sourceSha256 = $sourceSha256

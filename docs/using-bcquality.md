@@ -16,6 +16,14 @@ and rendering; BCQuality does not install a BC extension or an agent.
 | Use your own agent or workflow | Supply selected articles as context, as described below, or use the [integration bootstrap](agent-consumption.md#try-a-minimal-integration) to execute BCQuality action skills without the plugin. |
 | Get guidance before coding (preview) | Ask the plugin's `al-plan-guidance` skill to enrich an existing plan, then review the finished change. See [plan guidance](../README.md#preview-guidance-before-implementation). |
 
+### Knowledge consultation
+
+Use `al-knowledge` to support design and specification with guidance from the
+articles the agent actually reads. A question needs no app folder, file or diff.
+The response contains the exact question, cited guidance and applicability
+conditions. See [knowledge consultation](knowledge-consultation.md) for the
+request path, prerequisites and validation.
+
 ### Read and reuse an article
 
 Start with a concern, such as `SetLoadFields`, and search within

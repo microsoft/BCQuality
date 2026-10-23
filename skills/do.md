@@ -63,7 +63,7 @@ application-area: [all]
 
 `inputs` is a list of abstract input types the skill **accepts**. Standard values:
 `pr-diff`, `object-list`, `file-path`, `folder-path`, `repository`,
-`telemetry-query`, and `development-plan`. Semantics are any-of: the
+`telemetry-query`, `development-plan`, and `knowledge-query` (a question without source-code scope). Semantics are any-of: the
 orchestrator supplies whichever listed input types it has, and the skill is
 invoked with a non-empty subset of its declared `inputs`. A skill that cannot
 proceed with the supplied subset MUST return `outcome: "not-applicable"`.
@@ -71,12 +71,17 @@ proceed with the supplied subset MUST return `outcome: "not-applicable"`.
 `outputs` is always a single-element list naming the output kind:
 
 - `findings-report` — evaluates an input and reports defects or observations.
+- `knowledge-response` — answers a bound development question with cited knowledge, without a code review.
 - `development-guidance-report` — selects and summarizes applicable BCQuality knowledge for an existing development plan without changing the target repository.
 
 `development-plan` and `development-guidance-report` are preview contract
 extensions. The standalone plugin exposes them through the preview
 `al-plan-guidance` adapter. Consumer-owner agreement and pilot evidence are
 required before they are treated as frozen public integration surfaces.
+
+`knowledge-query` is a bound input value: its exact question travels to a
+dispatched skill, while Entry's `goal` supports routing. Knowledge responses,
+development guidance, and review findings must not be conflated.
 
 `file-path` is one file. `folder-path` is a directory whose recursively
 contained files form the complete current-state input, such as a Business
@@ -109,7 +114,7 @@ Every action skill MUST contain these five sections, in order:
 
 **Worklist.** Narrow the relevant candidates to the subset that applies to the current task. This is where the task-specific signal enters: the objects changed in the PR, the queries being audited, the existing plan being enriched. Typical moves: match `keywords` against task vocabulary, match file topics against changed objects, deduplicate by concern.
 
-**Action.** Execute the skill's work against the worklist. Evaluate each item in the worklist against the task input and emit findings. The action step is where skill behavior differs; the preceding three steps are uniform.
+**Action.** Execute the skill's work against the worklist and produce its declared output kind. Review actions evaluate items against the task input and emit findings; knowledge-consultation actions answer the question using the articles read. The action step is where skill behavior differs; the preceding three steps are uniform.
 
 Review and plan enrichment use different Worklist signals by design. Review
 leaves inspect existing source and use domain-specific code tokens to decide
@@ -484,6 +489,48 @@ The skill is read-only with respect to the target repository: no edits, generate
 
 A reference `sha`, when present, is the commit SHA of the BCQuality checkout the file was read from, matching the findings-report `sha` semantics; it does not prove runtime pinning on its own. The consumer records and verifies the actual immutable BCQuality checkout used for both enrichment and final review, plus its filtering policy and run provenance outside the target repository. See [agent-consumption.md](../docs/agent-consumption.md).
 
+## Knowledge-response contract
+
+An action skill declaring `outputs: [knowledge-response]` emits one strict JSON
+object conforming to [`schemas/knowledge-response.schema.json`](../schemas/knowledge-response.schema.json).
+This output represents cited guidance, never a finding, severity, code location,
+or code-generation artifact. The `question` is the exact bound
+`knowledge-query`; `answer` is readable guidance and identifies the exact
+article paths used. `references[]` contains only paths to articles whose full
+bodies were opened in this run. An optional `sha` is an observed commit, not
+an expected pin. A conditional reference lists each unknown applicability
+dimension in `unknown[]`; fully applicable references use `applicable` with an
+empty `unknown[]`. READ defines matching and conflict precedence. Record
+displaced articles in `suppressed[]` without citing them as supporting guidance.
+
+`completed` requires a useful answer to the bound question and at least one
+verified supporting reference. Applicability under READ does not establish
+question relevance. Articles about an adjacent topic do not justify `completed`
+or `partial` when none addresses the requested subject. In that case use
+`no-knowledge` with no references and explain only the coverage gap.
+`no-knowledge` means no applicable article answers the question; `answer`
+may explain the gap but `references` stays empty. `partial` records the reason
+and cites only articles actually read; `failed` records the reason with no
+references. Never fabricate an article path, infer a finding from article
+applicability, or report advice without an applicable article under the
+BCQuality name. A consumer MUST validate the schema and confirm every cited
+path exists in its live corpus and was read in full before accepting a result.
+If citation integrity cannot be verified, return `failed` with no citations.
+
+For deterministic consumer checks, see
+[knowledge-response validation](../docs/knowledge-response-validation.md).
+The helper checks schema, exact question, and complete-read evidence against
+the live corpus. It does not prove comprehension, source support for every
+claim, or applicability; those checks still follow READ and this contract.
+
+In an inline host, the answering agent checks its own successful full-body tool
+reads. This is self-attestation, not independent citation verification. A
+consumer with a trusted read collector can independently check the evidence
+using the optional validator. Neither mode proves that every claim correctly
+interprets its sources. Record the mode used in the consumer's own run record,
+not in the `knowledge-response` JSON, whose schema has no mode field. Never
+present inline checks as independent verification.
+
 ## Composition (super-skills)
 
 A **super-skill** is an action skill whose frontmatter declares a non-empty `sub-skills: [...]`. A super-skill does not evaluate knowledge files directly; it invokes other action skills and composes their output.
@@ -614,4 +661,12 @@ Conforms to the DO output contract.
 
 ## How orchestrators consume output
 
-An orchestrator invokes an action skill with an input appropriate to the skill's declared `inputs` and uses the single output kind declared in frontmatter. It maps a `findings-report` to PR comments, build gates, or IDE diagnostics, and a `development-guidance-report` to additional constraints for its existing implementation workflow. These are the two output schemas defined by this contract; the consumer retains ownership of implementation and delivery.
+An orchestrator invokes an action skill with an input appropriate to its
+declared `inputs` and validates the JSON against its declared output schema.
+It maps a `findings-report` to PR comments, build gates, or IDE diagnostics,
+and a `development-guidance-report` to additional constraints for its existing
+implementation workflow. It displays a `knowledge-response` as cited guidance,
+without treating that response as findings or applying a review gate to it.
+The consumer retains ownership of implementation and delivery. Skills needing
+richer semantics must change a shared contract deliberately instead of adding
+private fields to an output.

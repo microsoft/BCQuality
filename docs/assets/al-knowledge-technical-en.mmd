@@ -1,0 +1,26 @@
+flowchart TD
+    Q["User or agent<br/>Exact question + known target context"]
+    A["Public skill entry point<br/>The agent reads SKILL.md<br/>Preserve the question and resolve BCQuality root"]
+    E["Entry<br/>Prepare the index when possible<br/>Dispatch by goal and compatible inputs"]
+    D["Internal al-knowledge action"]
+    C[("Enabled knowledge corpus<br/>custom / community / microsoft")]
+    R["READ rules<br/>Find candidates, check applicability<br/>and apply layer precedence"]
+    B["Read complete article bodies<br/>Bounded helpers or native reads through EOF<br/>Follow continuation pages"]
+    O["knowledge-response JSON<br/>completed / no-knowledge / partial / failed"]
+    W["Consumer-collected read evidence<br/>Run ID, exact paths, full-read status,<br/>content hashes and byte counts"]
+    V{"Consumer validation<br/>Schema + exact question<br/>+ same-run full reads against live corpus"}
+    Y["Accept the unchanged response"]
+    N["Reject acceptance<br/>Preserve raw response<br/>Record validation errors separately"]
+    X["Entry no-match or failed<br/>Return the dispatch record unchanged"]
+    Q --> A --> E
+    E -->|routed| D --> R --> B --> O --> V
+    E -->|no-match or failed| X
+    C --> R
+    B -. "successful tool results" .-> W
+    W --> V
+    Q -. "original bound question" .-> V
+    V -->|valid| Y
+    V -->|invalid| N
+    classDef process fill:#fce7f3,stroke:#ddd4da,color:#9e3868;
+    class Q,A,E,D,C,R,B,O,W,V,Y,N,X process;
+    linkStyle default stroke:#999,stroke-width:1.5px;

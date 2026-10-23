@@ -35,8 +35,8 @@ Copilot Chat panel.
    ```
 
    The list should include `bcquality`. In a Copilot CLI session, `/skills
-   list` shows its two skills: `al-code-review` and the preview
-   `al-plan-guidance`.
+   list` shows `al-code-review`, [`al-knowledge`](skills/al-knowledge/SKILL.md)
+   for cited knowledge consultation, and the preview `al-plan-guidance`.
 
 2. Start a **new** Copilot CLI session in your app folder, replacing the
    example path:
@@ -87,6 +87,7 @@ the review can still discover knowledge by reading the folders.
 | --- | --- |
 | Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](docs/using-bcquality.md#choose-how-to-use-bcquality) |
 | Review a file, changes, a branch, or a particular concern | [Using BCQuality](docs/using-bcquality.md) |
+| Support design and specification with cited knowledge | [Knowledge consultation](docs/knowledge-consultation.md) |
 | Resolve setup problems, incomplete reviews, or incorrect findings | [Troubleshooting and support](docs/troubleshooting.md) |
 | Browse the available guidance | [Knowledge by domain](docs/using-bcquality.md#knowledge-by-domain) |
 | Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |
