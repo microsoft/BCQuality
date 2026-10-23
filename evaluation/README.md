@@ -23,6 +23,8 @@ clean control deliberately writes UTF-8 text and downloads the existing bytes
 through a default-encoding InStream: transport alone does not transcode text
 and must not trigger the encoding rule.
 
+An article whose rule is about comments themselves cannot be evaluated once its samples lose their full-line comments. List it under `keepComments` in `review-fixtures.json` (an `article` path and a non-empty `reason`) and preparation keeps that article's sample comments; `Good`/`Bad` tokens are still neutralized. Use it only when the rule is about the comments, and prefer `coverageWaivers` when keeping them would reveal the expected outcome.
+
 The SCM `articles` override deliberately selects every rule in the initial
 functional domain, producing nine positive cases and nine clean controls.
 Business context is executable: document/status `TestField` guards,

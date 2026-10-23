@@ -162,6 +162,22 @@ foreach ($overrideDomain in $overrides.Keys) {
     }
 }
 
+$keepCommentsArticles = @{}
+$keepCommentsSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+if ($manifest.PSObject.Properties.Name -contains 'keepComments') {
+    foreach ($entry in @($manifest.keepComments)) {
+        if (-not $entry.article -or -not $entry.reason) {
+            $problems.Add('Each keepComments entry requires non-empty article and reason values.') | Out-Null
+            continue
+        }
+        if ($keepCommentsArticles.ContainsKey([string]$entry.article)) {
+            $problems.Add("Duplicate keepComments entry: $($entry.article)") | Out-Null
+            continue
+        }
+        $keepCommentsArticles[[string]$entry.article] = [string]$entry.reason
+    }
+}
+
 $coverageWaivers = @{}
 if ($manifest.PSObject.Properties.Name -contains 'coverageWaivers') {
     foreach ($waiver in @($manifest.coverageWaivers)) {
@@ -300,12 +316,21 @@ foreach ($domain in $leafDomains) {
             if ($context) {
                 $case | Add-Member -NotePropertyName context -NotePropertyValue $context
             }
+            if ($keepCommentsArticles.ContainsKey($articlePath)) {
+                $case | Add-Member -NotePropertyName keepComments -NotePropertyValue $true
+                $keepCommentsSeen.Add($articlePath) | Out-Null
+            }
             $caseList.Add($case) | Out-Null
         }
     }
 
 }
 $cases = @($caseList)
+foreach ($keepCommentsArticle in $keepCommentsArticles.Keys) {
+    if (-not $keepCommentsSeen.Contains($keepCommentsArticle)) {
+        $problems.Add("keepComments article is not a selected evaluation article: $keepCommentsArticle") | Out-Null
+    }
+}
 
 $seenIds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 foreach ($case in $cases) {
@@ -464,7 +489,13 @@ if ($PrepareDirectory) {
         # Good, Bad, or Anti-pattern. Strip full-line comments and neutralize those
         # object-name tokens so model-facing fixtures do not reveal the expected
         # outcome while preserving executable AL structure and references.
-        $neutralText = [regex]::Replace($sourceText, '(?m)^\s*//.*(?:\r?\n|$)', '')
+        # An article whose rule is about the comments themselves is listed under
+        # keepComments in review-fixtures.json and keeps them; its samples carry no
+        # answer-revealing labels (Good/Bad is still neutralized below).
+        $neutralText = $sourceText
+        if (-not ($case.PSObject.Properties.Name -contains 'keepComments' -and $case.keepComments)) {
+            $neutralText = [regex]::Replace($neutralText, '(?m)^\s*//.*(?:\r?\n|$)', '')
+        }
         $neutralText = [regex]::Replace($neutralText, '\b(?:Good|Bad)\b', 'Eval')
         Set-Content -LiteralPath (Join-Path $PrepareDirectory $neutralName) -Value $neutralText -Encoding UTF8
         $requestCase = [pscustomobject]@{ id = $modelId; file = $neutralName }
