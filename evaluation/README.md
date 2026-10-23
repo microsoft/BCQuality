@@ -15,6 +15,32 @@ is mandatory.
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+When applicability depends on deployment facts that AL cannot establish, use
+`articleOverrides` within the domain override, keyed by a selected article's
+exact slug (without `.md`). Each entry requires a non-empty `context` string.
+It replaces the domain-wide context for that article's positive and clean pair
+and survives in all prepared request formats. Include all necessary deployment
+facts, but no expected finding, article path, fix, or assessment of code quality.
+Other selected articles retain their existing domain context, if any.
+
+An article entry can also supply `cleanContexts`, an object mapping lowercase
+hyphenated control names to non-empty context strings. Each control reuses the
+article's `.bad.al` source with that context and expects no findings. Its stable
+manifest ID is `<domain>-<slug>-clean-<name>`; model-facing IDs remain opaque.
+Use this only when changing the deployment prerequisite makes the same source
+legitimate. The MCP description article supplies Business Central online 28 and
+MCP exposure to both normal cases, then adds a REST-only, non-MCP clean context.
+This controls applicability without treating every API lacking `AboutText` as
+a defect. Invalid or unselected article overrides fail validation.
+
+The context regression check runs the real preparer and scorer, verifies all
+three request formats, context isolation, unchanged neutralization, mandatory
+clean controls, and rejection of findings on the non-MCP input:
+
+```powershell
+pwsh ./tools/Test-ReviewFixtureContexts.ps1 -Root .
+```
+
 The core AL samples for BLOB loading, isolated shipment events, expense-page
 scope filters, and stream encoding include their minimal demo tables in each
 companion independently. BLOB field types and shipment status members therefore
@@ -72,7 +98,7 @@ pwsh ./tools/Test-ReviewFixtures.ps1 -Root . -ChangedPathsFile .changed-paths.tx
 
 2. For a fast/small model, use one fresh invocation per `request-case-*.json`. Each request embeds the exact leaf instructions, that domain's candidate index rows with authoritative paths, and one opaque case. The model opens only matching articles and copies finding IDs from `candidateArticles[].path`. Save each response with the matching `result-case-*.json` name in the same directory.
 
-  `request-<domain>.json` files provide optional leaf batches containing every selected case for that domain and identify the selected layer-owned skill path; save those as `result-<domain>.json`. A normal convention-selected domain has one bad/good pair, while an `articles` override contributes one pair per listed article. Directory scoring prefers `result-case-*.json` when present and otherwise falls back to `result-*.json`. `review-request.json` is an optional all-domains stress test for larger models. Neither batch form is the preferred fast-model profile.
+  `request-<domain>.json` files provide optional leaf batches containing every selected case for that domain and identify the selected layer-owned skill path; save those as `result-<domain>.json`. A normal convention-selected domain has one bad/good pair, while an `articles` override contributes one pair per listed article plus any registered context controls. Directory scoring prefers `result-case-*.json` when present and otherwise falls back to `result-*.json`. `review-request.json` is an optional all-domains stress test for larger models. Neither batch form is the preferred fast-model profile.
 
 3. Save only this result shape:
 
