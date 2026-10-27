@@ -173,11 +173,17 @@ jobs:
           # Required preparation is performed by deterministic steps above.
           copilot \
             -p "$(cat "$RESULT_DIR/prompt.txt")" \
+            --add-dir="$RESULT_DIR" \
             --allow-tool=read \
             --allow-tool=write \
             --deny-tool=shell \
             --no-ask-user
 
+          if [[ ! -s "$RESULT_DIR/bcquality-findings.json" ]]; then
+            echo "::error::Copilot returned without creating bcquality-findings.json. Check the preceding Copilot output for denied tools or incomplete execution."
+            exit 1
+          fi
+          
       - name: Validate review output
         shell: bash
         run: |
