@@ -176,7 +176,11 @@ jobs:
             --add-dir="$RESULT_DIR" \
             --allow-tool=read \
             --allow-tool=write \
-            --deny-tool=shell \
+            --allow-tool='shell(pwsh:*)' \
+            --allow-tool='shell(git:*)' \
+            --deny-tool='shell(rm:*)' \
+            --deny-tool='shell(curl:*)' \
+            --deny-tool='shell(wget:*)' \
             --no-ask-user
 
           if [[ ! -s "$RESULT_DIR/bcquality-findings.json" ]]; then
