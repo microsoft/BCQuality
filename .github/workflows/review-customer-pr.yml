@@ -114,9 +114,24 @@ jobs:
           4. Save Entry's dispatch record as $RESULT_DIR/dispatch.json.
           5. Read and execute every dispatched skill, including its
              required contracts and applicable knowledge articles.
-          6. Save the original skill reports as
+          6. For every dispatched NON-ENTRY skill, execute each leaf skill
+             separately (no aggregation-only completion).
+          7. Save per-leaf execution reports as
              $RESULT_DIR/skill-reports.json.
-          7. Normalize actionable findings into the output JSON below.
+             Required structure:
+             {
+               "skills": [
+                 {
+                   "id": "al-code-review/some-leaf-skill",
+                   "executed": true,
+                   "contractApplied": true,
+                   "knowledgeArticlesApplied": ["..."],
+                   "status": "completed|incomplete|failed",
+                   "message": "..."
+                 }
+               ]
+             }
+          8. Normalize actionable findings into the output JSON below.
 
           Resolve BCQuality-relative paths against the BCQuality checkout.
           Review customer changes, never the runtime checkout.
@@ -153,8 +168,9 @@ jobs:
 
           Allowed status: completed, incomplete, failed.
           Allowed coverage: full, partial, none.
-          Set completed/full only when Entry and every dispatched skill
-          have finished and required knowledge processing is complete.
+          Set completed/full only when Entry is complete AND every
+          dispatched non-entry leaf skill is individually executed and
+          reported in skill-reports.json with status=completed.
 
           Finding structure:
           {
@@ -215,6 +231,18 @@ jobs:
               assert summary["skillsExecuted"]
               assert (root / "dispatch.json").is_file()
               assert (root / "skill-reports.json").is_file()
+              reports = json.loads(
+                  (root / "skill-reports.json").read_text(encoding="utf-8-sig")
+              )
+              assert isinstance(reports, dict)
+              assert isinstance(reports.get("skills"), list) and reports["skills"]
+              for report in reports["skills"]:
+                  assert isinstance(report, dict)
+                  assert isinstance(report.get("id"), str) and report["id"].strip()
+                  assert report.get("executed") is True
+                  assert report.get("contractApplied") is True
+                  assert isinstance(report.get("knowledgeArticlesApplied"), list)
+                  assert report.get("status") == "completed"
 
           for finding in data["findings"]:
               assert finding["severity"] in ("critical", "high", "medium", "low")
