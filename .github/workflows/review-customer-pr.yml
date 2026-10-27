@@ -1,0 +1,90 @@
+name: Review customer PR with BCQuality rules
+
+on:
+  workflow_call:
+    inputs:
+      bcquality_ref:
+        description: Branch, tag, or SHA of BCQuality to use
+        required: false
+        default: main
+        type: string
+      rules_path:
+        description: Path to an existing rules file inside BCQuality (override the default if absent)
+        required: false
+        default: prompts/al-rules.md
+        type: string
+    secrets:
+      bcquality_pat:
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout customer repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Remove customer-supplied content or symlinks at the central checkout path.
+      - name: Prepare temporary checkout
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        run: rm -rf -- "$GITHUB_WORKSPACE/_bcquality_tmp"
+
+      - name: Checkout central BCQuality
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: rs-tve/BCQuality
+          ref: ${{ inputs.bcquality_ref }}
+          token: ${{ secrets.bcquality_pat }}
+          path: _bcquality_tmp
+          persist-credentials: false
+
+      - name: Validate rules file
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        env:
+          RULES_PATH: ${{ inputs.rules_path }}
+        run: |
+          clone_root="$GITHUB_WORKSPACE/_bcquality_tmp"
+          if [[ -z "$RULES_PATH" || "$RULES_PATH" == /* ]]; then
+            echo "::error::rules_path must be a non-empty relative path inside BCQuality."
+            exit 1
+          fi
+          if ! rules_file="$(realpath -e -- "$clone_root/$RULES_PATH")"; then
+            echo "::error::Rules path does not exist in BCQuality. Set rules_path to an existing rules file at bcquality_ref."
+            exit 1
+          fi
+          case "$rules_file" in
+            "$clone_root"/*) ;;
+            *)
+              echo "::error::rules_path resolves outside the BCQuality clone."
+              exit 1
+              ;;
+          esac
+          if [[ ! -f "$rules_file" ]]; then
+            echo "::error::rules_path must refer to an existing regular rules file in BCQuality."
+            exit 1
+          fi
+
+      # Orchestration only: no reviewer provider or model has been selected.
+      - name: Placeholder — no AI review performed
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        env:
+          RULES_PATH: ${{ inputs.rules_path }}
+        run: |
+          printf 'Rules path: _bcquality_tmp/%s\n' "$RULES_PATH"
+          echo "No AI review was performed. Review engine implementation remains outstanding."
+
+      - name: Cleanup BCQuality temporary checkout
+        if: always()
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        run: rm -rf -- "$GITHUB_WORKSPACE/_bcquality_tmp"
