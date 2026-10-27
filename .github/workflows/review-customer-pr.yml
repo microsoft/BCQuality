@@ -45,6 +45,7 @@ jobs:
           repository: rs-tve/BCQuality
           ref: ${{ inputs.bcquality_ref }}
           path: .bcquality-runtime
+          token: ${{ secrets.copilot_token }}
           persist-credentials: false
 
       - name: Prepare review context
