@@ -345,6 +345,12 @@ jobs:
               owner, repo, issue_number: pull_number, body
             });
 
-            if (!complete) {
+            const hardIncomplete =
+              s.status === 'failed' ||
+              s.entryExecuted !== true ||
+              !Array.isArray(s.skillsExecuted) ||
+              s.skillsExecuted.length === 0;
+
+            if (hardIncomplete) {
               core.setFailed('BCQuality review execution was incomplete.');
             }
