@@ -316,8 +316,11 @@ jobs:
 
             const s = result.summary;
             const complete =
-              s.status === 'completed' && s.coverage === 'full';
-
+              (s.status === 'completed' && (s.coverage === 'full' || s.coverage === 'partial')) &&
+              s.entryExecuted === true &&
+              Array.isArray(s.skillsExecuted) &&
+              s.skillsExecuted.length > 0;
+  
             let body =
               `## BCQuality review\n\n` +
               `- Status: **${s.status}**\n` +
