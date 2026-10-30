@@ -230,8 +230,17 @@
         "check-json-null-before-converting-values",
         "format-exchanged-values-with-standard-format-9",
         "api-page-least-privilege-write-access",
-        "set-text-encoding-on-streams-exchanged-externally"
-      ]
+        "set-text-encoding-on-streams-exchanged-externally",
+        "describe-api-pages-for-mcp-with-abouttext"
+      ],
+      "articleOverrides": {
+        "describe-api-pages-for-mcp-with-abouttext": {
+          "context": "Target Business Central online version 28. The API page and API query in this input are exposed as tools through Business Central's built-in MCP server.",
+          "cleanContexts": {
+            "non-mcp": "Target Business Central online version 28. The API page and API query in this input serve a REST integration only and are not exposed through MCP."
+          }
+        }
+      }
     }
   }
 }
