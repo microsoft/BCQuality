@@ -1,4 +1,4 @@
-page 50231 "Perf Sample API LoadFields Bad"
+page 50231 "Perf API LoadFields Bad"
 {
     PageType = API;
     APIPublisher = 'contoso';
@@ -9,6 +9,7 @@ page 50231 "Perf Sample API LoadFields Bad"
     ODataKeyFields = SystemId;
     SourceTable = Customer;
     Editable = false;
+    DelayedInsert = true;
 
     layout
     {
