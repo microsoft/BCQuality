@@ -26,6 +26,7 @@ task-context:
     - pr-diff
     - file-path
     - folder-path
+    - knowledge-query       # the caller's exact question without code scope
   technologies: [al]
   bc-version: 28
   countries: [w1]
@@ -187,6 +188,7 @@ Populated example (PR review on a repo where only `al-performance-review` is ena
 1. Invoke Entry with the orchestrator-supplied task context.
 2. Receive the dispatch record.
 3. For each entry in `dispatch[]`, inspect `outputs` before invocation, read the referenced action skill, execute its Source → Relevance → Worklist → Action steps per DO, and produce the declared report kind. Verify the file's frontmatter output still equals the dispatch value; return `failed` on drift rather than executing a different contract.
+   A knowledge-only request with only `knowledge-query` cannot dispatch a review skill because its input types do not intersect.
 4. Return the action-skill reports to the orchestrator. When Entry's `outcome` is `no-match` or `failed`, return the dispatch record itself so the orchestrator can log the reason.
 
 READ and DO are the contracts that govern what the dispatched skills do. An agent that has not yet read READ and DO reads them when it executes the first dispatched skill — they are not prerequisites for invoking Entry.
