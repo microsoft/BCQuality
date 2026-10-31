@@ -67,8 +67,10 @@
         "changecompany-runs-triggers-in-the-calling-company",
         "database-trigger-setup-flags-may-only-be-set-to-true",
         "isolated-events-are-isolated-only-outside-a-write-transaction",
-        "isolated-event-rollback-does-not-undo-var-parameters"
-      ]
+        "isolated-event-rollback-does-not-undo-var-parameters",
+        "publish-thin-onbefore-onafter-integration-events"
+      ],
+      "context": "Review each source independently. For a module exposing CompleteDispatch, the accepted integration requirement is that dependent delivery extensions can observe successful dispatch completion synchronously, after the receipt is persisted and before CompleteDispatch returns, receiving the entry number and receipt ID. These sources contain the complete module; there is no additional callback or interface elsewhere. The scheduling rule requires EndDate to be on or after StartDate; no alternative date-validation behavior is part of this contract."
     },
     "finance": {
       "articles": [
@@ -116,6 +118,7 @@
         "prefer-modifyall-over-per-row-modify",
         "al-methods-limited-during-write-transactions",
         "avoid-user-prompts-inside-transactions",
+        "findset-true-applies-updlock-on-read",
         "use-grouped-query-for-distinct-values-and-duplicates",
         "compute-role-center-headlines-in-the-background"
       ]
@@ -170,6 +173,8 @@
         "al-has-no-built-in-htmlencode",
         "do-not-concatenate-external-text-into-setfilter",
         "exposed-objects-must-be-in-a-permission-set",
+        "secrettext-for-credentials",
+        "isolatedstorage-access-must-be-local-or-internal",
         "page-scope-filters-must-not-be-in-filtergroup-zero",
         "restore-the-filtergroup-after-setting-hidden-filters"
       ]
@@ -177,6 +182,7 @@
     "style": {
       "articles": [
         "label-comment-explains-placeholders",
+        "error-passes-parameters-directly-not-strsubstno",
         "dateformula-evaluate-needs-language-independent-literals",
         "al-comments-must-not-restate-what-code-already-shows",
         "pages-must-not-contain-business-logic",
