@@ -13,6 +13,16 @@
       "reason": "The defect is the expectation that the layout becomes the default; the code alone is identical to a legitimate optional layout once comments are removed."
     }
   ],
+  "keepComments": [
+    {
+      "article": "microsoft/knowledge/testing/test-feature-scenario-tags.md",
+      "reason": "The rule is about the [FEATURE]/[SCENARIO]/[GIVEN]/[WHEN]/[THEN] comment tags themselves; stripping full-line comments removes the tags from the good sample."
+    },
+    {
+      "article": "microsoft/knowledge/style/al-comments-must-not-restate-what-code-already-shows.md",
+      "reason": "The rule is about comments themselves; stripping full-line comments leaves its bad sample with no comments, so the rule can never fire."
+    }
+  ],
   "overrides": {
     "copilot": {
       "articles": [
