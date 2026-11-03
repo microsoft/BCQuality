@@ -99,3 +99,5 @@ foreach ($invalid in 'unselected-article', 'empty-context', 'empty-clean-context
     Assert-True ($LASTEXITCODE -eq 1 -and $validation.Contains('articleOverrides')) "Invalid article override was not diagnosed: $invalid"
 }
 Write-Host 'Review fixture context regression checks PASSED: request formats, isolation, neutralization, clean-control scoring, and invalid overrides.' -ForegroundColor Green
+# Expected negative subprocesses must not determine a successful CI step exit.
+exit 0
