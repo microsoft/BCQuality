@@ -153,7 +153,6 @@
         "clear-report-variable-before-independent-runmodal",
         "currreport-break-ends-the-current-trigger",
         "currreport-quit-rolls-back-and-skips-onpostreport",
-        "currreport-skip-does-not-stop-trigger-code",
         "declare-report-layouts-in-the-rendering-section",
         "report-output-in-a-loop-needs-one-client-download",
         "reportextension-dataitem-trigger-order-is-explicit",

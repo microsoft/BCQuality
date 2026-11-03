@@ -15,6 +15,15 @@ is mandatory.
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+The reporting Skip clarification is intentionally unpaired. Its former
+`currreport-skip-does-not-stop-trigger-code` positive assumed that statements
+after a direct `Skip()` ran in the same trigger; BC 28.4 evidence contradicts
+that premise. Both obsolete companions and their override were retired, not
+relabelled as a new defect. Negative knowledge remains available to reviewers
+without inventing a positive for this paired-only harness. The separate Break
+loop-control pair remains selected. No coverage waiver is needed for an
+article without a pair.
+
 The core AL samples for BLOB loading, isolated shipment events, expense-page
 scope filters, and stream encoding include their minimal demo tables in each
 companion independently. BLOB field types and shipment status members therefore
