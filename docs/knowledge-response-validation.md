@@ -80,8 +80,10 @@ python tools/validate_knowledge_response.py response.json `
 
 The tool checks the response schema, exact question, existing canonical citation
 paths within the corpus, and complete-read evidence with matching current file
-hashes and byte counts. A changed article, truncated read, missing evidence,
-different-layer path with the same filename, or mismatched run is rejected.
+hashes and byte counts. Each article path may appear only once across
+`references` and `suppressed`. A changed article, truncated read, missing
+evidence, different-layer path with the same filename, mismatched run, duplicate
+path, or article both cited and suppressed is rejected.
 The tool never repairs or rewrites the response.
 
 Exit codes: `0` means these checks passed, `1` means validation failed, and `2`

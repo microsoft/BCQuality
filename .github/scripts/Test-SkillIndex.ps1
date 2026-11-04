@@ -110,9 +110,12 @@ try {
         throw 'A knowledge-only request must exclude review actions.'
     }
     # Entry applies READ's non-empty technology intersection to indexed actions.
-    $alKnowledge = @($knowledgeCandidates | Where-Object { 'al' -in $_.filters.technologies })
-    if ($alKnowledge.Count -ne 1 -or $alKnowledge[0].id -ne 'al-knowledge') {
-        throw 'Entry must admit knowledge-query with technologies: [al].'
+    # Control add-in consultations may supply only JavaScript context.
+    foreach ($technology in 'al', 'javascript') {
+        $admitted = @($knowledgeCandidates | Where-Object { $technology -in $_.filters.technologies })
+        if ($admitted.Count -ne 1 -or $admitted[0].id -ne 'al-knowledge') {
+            throw "Entry must admit knowledge-query with technologies: [$technology]."
+        }
     }
     foreach ($dimension in 'bc-version', 'countries', 'application-area') {
         $expected = if ($dimension -eq 'countries') { 'w1' } else { 'all' }
