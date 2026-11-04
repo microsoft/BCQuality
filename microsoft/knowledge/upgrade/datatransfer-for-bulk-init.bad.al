@@ -1,23 +1,46 @@
-codeunit 50219 "Upgrade Price List Source"
+codeunit 50219 "Upgrade Entry Flags"
 {
     Subtype = Upgrade;
 
-    local procedure UpdatePriceSourceGroupInPriceListLines()
+    local procedure InitializeMigratedFlag()
     var
-        PriceListLine: Record "Price List Line";
+        Entry: Record "Upgrade Entry";
     begin
-        // One round-trip per row across a potentially large table.
-        PriceListLine.SetRange("Source Group", "Price Source Group"::All);
-        if PriceListLine.FindSet(true) then
+        Entry.SetRange("Legacy Code", 'OLD');
+        if Entry.FindSet(true) then
             repeat
-                if PriceListLine."Source Type" in
-                    ["Price Source Type"::"All Jobs",
-                     "Price Source Type"::Job,
-                     "Price Source Type"::"Job Task"]
-                then begin
-                    PriceListLine."Source Group" := "Price Source Group"::Job;
-                    PriceListLine.Modify();
-                end;
-            until PriceListLine.Next() = 0;
+                Entry.Migrated := true;
+                Entry.Modify();
+            until Entry.Next() = 0;
     end;
+}
+
+table 50222 "Upgrade Entry"
+{
+    Caption = 'Upgrade Entry';
+    DataClassification = CustomerContent;
+
+    fields
+    {
+        field(1; "Entry No."; Integer)
+        {
+            Caption = 'Entry No.';
+        }
+        field(2; "Legacy Code"; Code[20])
+        {
+            Caption = 'Legacy Code';
+        }
+        field(3; Migrated; Boolean)
+        {
+            Caption = 'Migrated';
+        }
+    }
+
+    keys
+    {
+        key(PK; "Entry No.")
+        {
+            Clustered = true;
+        }
+    }
 }
