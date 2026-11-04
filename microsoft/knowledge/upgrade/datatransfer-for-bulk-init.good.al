@@ -8,7 +8,7 @@ codeunit 50218 "Upgrade Entry Codes"
         Transfer: DataTransfer;
     begin
         Transfer.SetTables(Database::"Upgrade Entry", Database::"Upgrade Entry");
-        Transfer.AddSourceFilter(Entry.FieldNo("Legacy Code"), '<>%1', '');
+        Transfer.AddSourceFilter(Entry.FieldNo("Entry No."), '>%1', 0);
         Transfer.AddFieldValue(Entry.FieldNo("Legacy Code"), Entry.FieldNo("Category Code"));
         Transfer.CopyFields();
     end;

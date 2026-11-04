@@ -6,7 +6,7 @@ codeunit 50219 "Upgrade Entry Codes"
     var
         Entry: Record "Upgrade Entry";
     begin
-        Entry.SetFilter("Legacy Code", '<>%1', '');
+        Entry.SetFilter("Entry No.", '>%1', 0);
         if Entry.FindSet(true) then
             repeat
                 Entry."Category Code" := Entry."Legacy Code";
