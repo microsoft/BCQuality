@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: ui
-keywords: [pages, page-design, naming-conventions, page-type, card-page, list-page, factbox, worksheet-page, document-page, rolecenter, cardpageid, autosplitkey]
+keywords: [naming-conventions, page-type, card-page, list-page, factbox, worksheet-page, document-page, rolecenter, cardpageid, autosplitkey]
 technologies: [al]
 countries: [w1]
 application-area: [all]
