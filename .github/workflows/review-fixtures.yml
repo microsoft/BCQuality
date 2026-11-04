@@ -35,3 +35,7 @@ jobs:
             -ChangedPathsFile "$env:RUNNER_TEMP/changed-paths.txt" `
             -CoverageReportPath "$env:RUNNER_TEMP/review-coverage.json"
           Get-Content -LiteralPath "$env:RUNNER_TEMP/review-coverage.json"
+
+      - name: Check context-dependent fixture regressions
+        shell: pwsh
+        run: ./tools/Test-ReviewFixtureContexts.ps1 -Root .
