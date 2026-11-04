@@ -1,7 +1,7 @@
 {
   "name": "bcquality",
   "description": "Quality skills and knowledge for Business Central development. Exposes AL code review, cited knowledge consultation and preview plan guidance skills backed by BCQuality's Entry router.",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "author": {
     "name": "microsoft/BCQuality",
     "url": "https://github.com/microsoft/BCQuality"
