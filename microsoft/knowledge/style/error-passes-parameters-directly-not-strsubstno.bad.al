@@ -8,8 +8,11 @@ codeunit 50207 "Sample Error Params Bad"
         Customer: Record Customer;
     begin
         if not Customer.Get(CustomerNo) then
-            Error(StrSubstNo(CustomerNotFoundErr, CustomerNo));
-        if not Customer.Get(CustomerNo) then
-            Error('Customer ' + CustomerNo + ' not found');
+            Error(FormatCustomerError(CustomerNo));
+    end;
+
+    local procedure FormatCustomerError(CustomerNo: Code[20]): Text
+    begin
+        exit(StrSubstNo(CustomerNotFoundErr, CustomerNo));
     end;
 }

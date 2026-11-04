@@ -1,36 +1,43 @@
-// Demonstration-only AL. Not compiled by CI; illustrates the article.
-table 50226 "Reservation Entry Bad Sample"
+table 50226 "Dispatch Receipt Sample"
 {
+    DataClassification = CustomerContent;
+
     fields
     {
         field(1; "Entry No."; Integer) { }
-        field(2; "Item No."; Code[20]) { }
-        field(3; Quantity; Decimal) { }
-        field(4; Reserved; Boolean) { }
+        field(2; "Receipt Id"; Guid) { }
+        field(3; Completed; Boolean) { }
     }
+
     keys
     {
         key(PK; "Entry No.") { Clustered = true; }
     }
 }
 
-codeunit 50227 "Reservation Post Bad Sample"
+codeunit 50227 "Dispatch Completion Bad"
 {
-    procedure Reserve(var ReservationEntry: Record "Reservation Entry Bad Sample")
+    procedure CompleteDispatch(EntryNo: Integer; ReceiptId: Guid; StartDate: Date; EndDate: Date)
+    var
+        DispatchReceipt: Record "Dispatch Receipt Sample";
     begin
-        // Anti-pattern: the operation exposes no OnBefore/OnAfter seam, and the
-        // logic that should be the routine's own work lives in the event body
-        // below instead. Partners must overwrite this routine to change it.
-        OnReserve(ReservationEntry);
+        ValidateWindow(StartDate, EndDate);
+        if IsNullGuid(ReceiptId) then
+            Error(MissingReceiptErr);
+        DispatchReceipt.Get(EntryNo);
+        DispatchReceipt.TestField(Completed, false);
+        DispatchReceipt."Receipt Id" := ReceiptId;
+        DispatchReceipt.Completed := true;
+        DispatchReceipt.Modify(true);
     end;
 
-    // Anti-pattern: business logic inside an integration-event publisher. A
-    // publisher must be a thin, empty hook; logic placed here runs on every
-    // raise and cannot be overridden, which defeats the event entirely.
-    [IntegrationEvent(false, false)]
-    local procedure OnReserve(var ReservationEntry: Record "Reservation Entry Bad Sample")
+    local procedure ValidateWindow(StartDate: Date; EndDate: Date)
     begin
-        ReservationEntry.Reserved := true;
-        ReservationEntry.Modify(true);
+        if EndDate < StartDate then
+            Error(InvalidWindowErr);
     end;
+
+    var
+        MissingReceiptErr: Label 'A dispatch receipt is required.';
+        InvalidWindowErr: Label 'The end date must not precede the start date.';
 }

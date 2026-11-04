@@ -4,8 +4,7 @@ codeunit 50237 "Perf Sample FindSetTrue Bad"
     var
         Customer: Record Customer;
     begin
-        // Read takes a shared lock; the Modify then needs to upgrade — that gap
-        // is the deadlock window FindSet(true) was designed to close.
+        // Express update intent at the read; the bare call does not request it.
         if Customer.FindSet() then
             repeat
                 Customer.Name := UpperCase(Customer.Name);

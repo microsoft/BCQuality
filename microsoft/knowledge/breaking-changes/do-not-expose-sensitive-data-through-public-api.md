@@ -11,16 +11,18 @@ application-area: [all]
 
 ## Description
 
-Every member you make publicly reachable becomes a contract you must keep — and when that member returns a secret, the contract leaks the secret. Widening access to a credential happens in several shapes: a public getter that returns a raw token or password, an event whose parameter carries a secret to every subscriber, or a global variable holding a key that an extension can read. Once such a surface ships, removing it is itself a breaking change, so the exposure is hard to walk back. Sensitive material — tokens, passwords, connection secrets, `SecretText` values, security internals — must stay inside `internal` or `local` members. Public surfaces should expose only non-sensitive business data. LLMs often add a convenient `GetToken()` getter without recognizing it as a permanent security boundary breach.
+Every member you make publicly reachable becomes a contract you must keep. Returning an extension-owned credential to unauthorized recipients widens access to sensitive data, even if the value remains `SecretText`. Once such a surface ships, removing it is itself a breaking change. However, a `SecretText` return type alone is not a leak: a caller can supply its own credential and receive a protected transformation of that same value. Microsoft's public `Http Authentication Basic` accepts caller credentials and returns authorization headers containing `SecretText`.
 
 ## Best Practice
 
-Keep secrets in `internal` or `local` members, and prefer the `SecretText` type so the value cannot be read back or logged. Where callers genuinely need a credential, pass it inward (a setter) rather than handing it outward (a getter). Public API should return only non-sensitive data — a masked reference, a status, a business identifier — never the raw secret. Treat each public member as a lasting commitment and keep the security-sensitive surface as small as possible.
+Keep extension-owned secrets encapsulated and use `SecretText` to preserve their protection. Prefer intent-specific operations or non-sensitive results when callers are not authorized to receive the credential. A caller-owned transformation must preserve both the secret's protection and its authorized recipient; a parameter or return type does not by itself establish ownership. Treat each public member as a lasting commitment and keep the security-sensitive surface as small as possible. Access modifiers do not replace runtime authorization.
 
 See sample: [`do-not-expose-sensitive-data-through-public-api.good.al`](do-not-expose-sensitive-data-through-public-api.good.al).
 
 ## Anti Pattern
 
-A public `GetAccessToken()` that returns the raw token (or an event parameter carrying a credential to all subscribers), turning a secret into a de-facto public API any dependent can consume. Detection: a non-`local` procedure, event parameter, or global variable that surfaces a token, password, key, or other credential. Keep the secret internal and expose only non-sensitive data.
+A public `GetAccessToken()` exposes an extension-owned stored credential without recipient authorization, or an event forwards it to unrelated subscribers. Establish the source and recipient rather than flagging every public `SecretText` return. Caller-owned, secret-preserving transformations do not justify disclosure of another owner's secret.
 
 See sample: [`do-not-expose-sensitive-data-through-public-api.bad.al`](do-not-expose-sensitive-data-through-public-api.bad.al).
+
+Reference: [Http Authentication Basic](https://learn.microsoft.com/en-us/dynamics365/business-central/application/system-application/codeunit/system.restclient.http-authentication-basic).
