@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/microsoft/BCQuality/schemas/knowledge-response.schema.json",
+  "title": "BCQuality knowledge consultation response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "outcome", "question", "answer", "references", "suppressed"],
+  "properties": {
+    "skill": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version"],
+      "properties": {"id": {"const": "al-knowledge"}, "version": {"type": "integer", "minimum": 1}}
+    },
+    "outcome": {"enum": ["completed", "no-knowledge", "partial", "failed"]},
+    "outcome-reason": {"type": "string", "minLength": 1},
+    "question": {"type": "string", "minLength": 1},
+    "answer": {"type": "string"},
+    "references": {
+      "type": "array", "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "applicability", "unknown"],
+        "properties": {
+          "path": {"type": "string", "pattern": "^(microsoft|community|custom)/knowledge/.+\\.md$"},
+          "sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+          "applicability": {"enum": ["applicable", "conditional"]},
+          "unknown": {"type": "array", "uniqueItems": true, "items": {"enum": ["bc-version", "technologies", "countries", "application-area"]}}
+        },
+        "allOf": [
+          {"if": {"properties": {"applicability": {"const": "applicable"}}}, "then": {"properties": {"unknown": {"maxItems": 0}}}},
+          {"if": {"properties": {"applicability": {"const": "conditional"}}}, "then": {"properties": {"unknown": {"minItems": 1}}}}
+        ]
+      }
+    },
+    "suppressed": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false, "required": ["path", "reason"],
+        "properties": {
+          "path": {"type": "string", "pattern": "^(microsoft|community|custom)/knowledge/.+\\.md$"},
+          "reason": {"enum": ["layer-precedence", "configuration"]}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"outcome": {"enum": ["partial", "failed"]}}}, "then": {"required": ["outcome-reason"]}},
+    {"if": {"properties": {"outcome": {"enum": ["failed", "no-knowledge"]}}}, "then": {"properties": {"references": {"maxItems": 0}}}},
+    {"if": {"properties": {"outcome": {"const": "completed"}}}, "then": {"properties": {"references": {"minItems": 1}, "answer": {"minLength": 1}}}}
+  ]
+}

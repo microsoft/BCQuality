@@ -31,6 +31,7 @@ READ and DO are read on demand — typically by the first action skill the agent
 | Path | Capability |
 |---|---|
 | [`al-code-review/SKILL.md`](al-code-review/SKILL.md) | Review AL code: an app folder, files, or changes. |
+| [`al-knowledge/SKILL.md`](al-knowledge/SKILL.md) | Answer a focused development question with cited knowledge, without code review. |
 | [`al-plan-guidance/SKILL.md`](al-plan-guidance/SKILL.md) | Preview. Enrich an existing AL development plan with applicable guidance, read-only. |
 
 Each adapter is deliberately thin. It translates the caller's request into an
@@ -47,6 +48,10 @@ review:         skills/al-code-review/SKILL.md
                   -> router: skills/entry.md
                     -> review coordinator: microsoft/skills/review/al-code-review.md
                       -> domain review leaves
+
+consultation:   skills/al-knowledge/SKILL.md
+                  -> router: skills/entry.md
+                    -> microsoft/skills/knowledge/al-knowledge.md
 
 plan guidance:  skills/al-plan-guidance/SKILL.md
                   -> router: skills/entry.md

@@ -78,10 +78,10 @@ Add scheduling, retries, and rendering only when needed, using the
   - **Layer content** in `/microsoft/`, `/community/`, and `/custom/` — knowledge files and action skills grouped by authority.
 
 When BCQuality is installed as a standalone plugin, it additionally exposes
-one host-format adapter per capability: `skills/al-code-review/SKILL.md` and
-the preview `skills/al-plan-guidance/SKILL.md`. Adapters are not additional
-action skills: each creates the task context for its capability and enters the
-same flow at Entry.
+one host-format adapter per capability: `skills/al-code-review/SKILL.md`,
+`skills/al-knowledge/SKILL.md`, and the preview
+`skills/al-plan-guidance/SKILL.md`. Adapters are not additional action skills:
+each creates the task context for its capability and enters the same flow at Entry.
 
 ## Repository structure
 
@@ -123,10 +123,12 @@ The orchestrator has a URL setting that points at BCQuality (default: `github.co
 ### 2. Agent invokes Entry
 The agent reads `/skills/entry.md` and runs it against the task context. Entry applies its Source → Relevance → Worklist → Action steps over the action skills under `*/skills/**/*.md` and returns a **dispatch record**: the set of action skills to invoke, plus a list of candidates it skipped (with reasons). Routing is a skill, not orchestrator logic.
 
-For a standalone plugin installation, the host activates the review adapter
-first. The adapter preserves the caller's actual goal, constructs the task
-context, and invokes Entry. It does not select the internal review action skill
-itself or duplicate Entry's preparation, routing, and failure semantics.
+For a standalone plugin installation, the host activates the
+selected public skill entry point first. It preserves the caller's actual goal,
+constructs the task context, and invokes Entry. It does not select an internal
+action skill itself or duplicate Entry's preparation, routing, and failure
+semantics. For knowledge consultation, it binds the exact question as
+`knowledge-query`; see [knowledge consultation](knowledge-consultation.md).
 
 ### 3. Agent consumes the dispatch record
 The dispatch record names one or more action skills, the subset of inputs each
@@ -177,7 +179,14 @@ The output contracts are defined in the DO meta-skill:
 - A **findings report** carries review findings, domain labels, references, confidence, and suppressions.
 - A **development guidance report** carries read-only knowledge constraints and validation considerations for an existing plan.
 
-The orchestrator parses this **without skill-specific logic**. This is the point of the contract: orchestrators and action skills evolve independently.
+Knowledge-consultation actions produce `knowledge-response`, with the exact
+question, supported answer and article references. See the
+[DO knowledge-response contract](../skills/do.md#knowledge-response-contract)
+and [consumer validation](knowledge-response-validation.md).
+
+The orchestrator validates the declared output kind without interpreting
+private skill-specific fields. Action skills and consumers share the same
+output contracts.
 
 For plan enrichment, the skill reads the existing plan and target repository,
 selects applicable knowledge, and returns constraints without changing the
@@ -299,6 +308,9 @@ checkout. Retain external logs, diffs, test/compile outcomes, and independent
 final reviews, including failures and unresolved results. Credential-free
 fixture preparation and scorer regressions do not demonstrate improved repair
 quality, compilation, runtime success, or production integration.
+
+For knowledge consultation, it displays validated guidance with citations.
+It does not convert that guidance into findings or use it as an approval gate.
 
 ## Knowledge-backed and agent findings
 

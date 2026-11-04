@@ -1,7 +1,7 @@
 ---
 bc-version: [all]
 domain: data-modeling
-keywords: [tables, table-design, naming-conventions, primary-key, master-table, ledger-table, journal-table, register-table, document-table, setup-table, subsidiary-table, supplemental-table]
+keywords: [naming-conventions, primary-key, master-table, ledger-table, journal-table, register-table, document-table, setup-table, subsidiary-table, supplemental-table]
 technologies: [al]
 countries: [w1]
 application-area: [all]

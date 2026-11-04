@@ -162,6 +162,22 @@ foreach ($overrideDomain in $overrides.Keys) {
     }
 }
 
+$keepCommentsArticles = @{}
+$keepCommentsSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+if ($manifest.PSObject.Properties.Name -contains 'keepComments') {
+    foreach ($entry in @($manifest.keepComments)) {
+        if (-not $entry.article -or -not $entry.reason) {
+            $problems.Add('Each keepComments entry requires non-empty article and reason values.') | Out-Null
+            continue
+        }
+        if ($keepCommentsArticles.ContainsKey([string]$entry.article)) {
+            $problems.Add("Duplicate keepComments entry: $($entry.article)") | Out-Null
+            continue
+        }
+        $keepCommentsArticles[[string]$entry.article] = [string]$entry.reason
+    }
+}
+
 $coverageWaivers = @{}
 if ($manifest.PSObject.Properties.Name -contains 'coverageWaivers') {
     foreach ($waiver in @($manifest.coverageWaivers)) {
@@ -281,10 +297,53 @@ foreach ($domain in $leafDomains) {
     } else {
         $null
     }
+    $articleOverrides = @{}
+    if ($override -and ($override.PSObject.Properties.Name -contains 'articleOverrides')) {
+        if ($override.articleOverrides -isnot [pscustomobject]) {
+            $problems.Add("${domain}: articleOverrides must be an object keyed by selected article slug.") | Out-Null
+        } else {
+            foreach ($property in $override.articleOverrides.PSObject.Properties) {
+                $slug = $property.Name
+                $entry = $property.Value
+                $problemCount = $problems.Count
+                if ($slug -cnotin @($selectedArticles | ForEach-Object BaseName)) {
+                    $problems.Add("${domain}: articleOverrides names an unselected article: $slug") | Out-Null
+                }
+                if ($entry -isnot [pscustomobject]) {
+                    $problems.Add("${domain}: articleOverrides.$slug must be an object.") | Out-Null
+                    continue
+                }
+                if (($entry.PSObject.Properties.Name -notcontains 'context') -or
+                    ($entry.context -isnot [string]) -or [string]::IsNullOrWhiteSpace($entry.context)) {
+                    $problems.Add("${domain}: articleOverrides.$slug.context must be a non-empty string.") | Out-Null
+                }
+                foreach ($name in $entry.PSObject.Properties.Name) {
+                    if ($name -notin 'context', 'cleanContexts') {
+                        $problems.Add("${domain}: unknown articleOverrides.$slug property: $name") | Out-Null
+                    }
+                }
+                if ($entry.PSObject.Properties.Name -contains 'cleanContexts') {
+                    if ($entry.cleanContexts -isnot [pscustomobject]) {
+                        $problems.Add("${domain}: articleOverrides.$slug.cleanContexts must be an object keyed by control name.") | Out-Null
+                    } else {
+                        foreach ($control in $entry.cleanContexts.PSObject.Properties) {
+                            if ($control.Name -cnotmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$' -or
+                                $control.Value -isnot [string] -or [string]::IsNullOrWhiteSpace($control.Value)) {
+                                $problems.Add("${domain}: articleOverrides.$slug.cleanContexts requires lowercase hyphenated names and non-empty context strings.") | Out-Null
+                            }
+                        }
+                    }
+                }
+                if ($problems.Count -eq $problemCount) { $articleOverrides[$slug] = $entry }
+            }
+        }
+    }
     for ($articleIndex = 0; $articleIndex -lt $selectedArticles.Count; $articleIndex++) {
         $selectedArticle = $selectedArticles[$articleIndex]
         $articlePath = [string]$selectedArticle.ArticlePath
         $sampleDirectory = (Split-Path -Parent $articlePath).Replace('\', '/')
+        $articleOverride = $articleOverrides[[string]$selectedArticle.BaseName]
+        $caseContext = if ($articleOverride) { [string]$articleOverride.context } else { $context }
         foreach ($kind in 'bad', 'good') {
             $caseId = if ($articleIndex -eq 0) {
                 "$domain-$kind"
@@ -297,15 +356,38 @@ foreach ($domain in $leafDomains) {
                 input = "$sampleDirectory/$($selectedArticle.BaseName).$kind.al"
                 expected = if ($kind -eq 'bad') { @($articlePath) } else { @() }
             }
-            if ($context) {
-                $case | Add-Member -NotePropertyName context -NotePropertyValue $context
+            if ($caseContext) {
+                $case | Add-Member -NotePropertyName context -NotePropertyValue $caseContext
+            }
+            if ($keepCommentsArticles.ContainsKey($articlePath)) {
+                $case | Add-Member -NotePropertyName keepComments -NotePropertyValue $true
+                $keepCommentsSeen.Add($articlePath) | Out-Null
             }
             $caseList.Add($case) | Out-Null
+        }
+        if ($articleOverride -and ($articleOverride.PSObject.Properties.Name -contains 'cleanContexts')) {
+            foreach ($control in $articleOverride.cleanContexts.PSObject.Properties) {
+                # Reuse the positive source: the changed deployment context alone
+                # makes the rule inapplicable. Never expose this marker to models.
+                $caseList.Add([pscustomobject]@{
+                    id = "$domain-$($selectedArticle.BaseName)-clean-$($control.Name)"
+                    domain = $domain
+                    input = "$sampleDirectory/$($selectedArticle.BaseName).bad.al"
+                    expected = @()
+                    context = [string]$control.Value
+                    contextControl = $true
+                }) | Out-Null
+            }
         }
     }
 
 }
 $cases = @($caseList)
+foreach ($keepCommentsArticle in $keepCommentsArticles.Keys) {
+    if (-not $keepCommentsSeen.Contains($keepCommentsArticle)) {
+        $problems.Add("keepComments article is not a selected evaluation article: $keepCommentsArticle") | Out-Null
+    }
+}
 
 $seenIds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 foreach ($case in $cases) {
@@ -330,8 +412,10 @@ foreach ($case in $cases) {
     if ($expected.Count -and $inputRelativePath -notmatch '\.bad\.[^.]+$') {
         $problems.Add("${id}: positive case must use a .bad sample: $inputRelativePath") | Out-Null
     }
-    if (-not $expected.Count -and $inputRelativePath -notmatch '\.good\.[^.]+$') {
-        $problems.Add("${id}: clean case must use a .good sample: $inputRelativePath") | Out-Null
+    $isContextControl = ($case.PSObject.Properties.Name -contains 'contextControl') -and $case.contextControl
+    if (-not $expected.Count -and $inputRelativePath -notmatch '\.good\.[^.]+$' -and
+        -not ($isContextControl -and $inputRelativePath -match '\.bad\.al$')) {
+        $problems.Add("${id}: clean case must use a .good sample or a registered context control: $inputRelativePath") | Out-Null
     }
 
     foreach ($reference in $expected) {
@@ -464,7 +548,13 @@ if ($PrepareDirectory) {
         # Good, Bad, or Anti-pattern. Strip full-line comments and neutralize those
         # object-name tokens so model-facing fixtures do not reveal the expected
         # outcome while preserving executable AL structure and references.
-        $neutralText = [regex]::Replace($sourceText, '(?m)^\s*//.*(?:\r?\n|$)', '')
+        # An article whose rule is about the comments themselves is listed under
+        # keepComments in review-fixtures.json and keeps them; its samples carry no
+        # answer-revealing labels (Good/Bad is still neutralized below).
+        $neutralText = $sourceText
+        if (-not ($case.PSObject.Properties.Name -contains 'keepComments' -and $case.keepComments)) {
+            $neutralText = [regex]::Replace($neutralText, '(?m)^\s*//.*(?:\r?\n|$)', '')
+        }
         $neutralText = [regex]::Replace($neutralText, '\b(?:Good|Bad)\b', 'Eval')
         Set-Content -LiteralPath (Join-Path $PrepareDirectory $neutralName) -Value $neutralText -Encoding UTF8
         $requestCase = [pscustomobject]@{ id = $modelId; file = $neutralName }

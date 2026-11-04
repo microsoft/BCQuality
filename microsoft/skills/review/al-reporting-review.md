@@ -33,9 +33,9 @@ Match relevant entries against changed `report` and `reportextension` objects, v
 Apply this targeted check even when token overlap would rank the article below the worklist cutoff:
 
 - The same Report variable has two logically independent `RunModal()` executions without `Clear` before the second configuration — `clear-report-variable-before-independent-runmodal`.
-- `CurrReport.Break()` is used inside an explicit loop while reachable statements after the loop are expected to finish the current trigger — `currreport-break-ends-the-current-trigger`.
+- `CurrReport.Break()` is used to leave only an explicit AL loop or is expected to skip only one record while continuing that dataitem — `currreport-break-ends-the-current-trigger`. Require a visible continuation expectation.
 - `CurrReport.Quit()` follows database writes or the report relies on `OnPostReport` finalization — `currreport-quit-rolls-back-and-skips-onpostreport`.
-- `CurrReport.Skip()` is followed by reachable code in the same trigger, or later record triggers contain work that is unsafe for skipped records — `currreport-skip-does-not-stop-trigger-code`.
+- A skipped row is assumed to suppress later base/reportextension triggers whose work is unsafe for that row — `currreport-skip-current-trigger-and-later-triggers`. Require a visible trigger relationship and unsafe skipped-record processing; apply the article's negative clarification to avoid confusing later triggers with statements after `Skip()` in the calling trigger.
 - A loop reachable from one Web client action calls `Report.Run`, `Report.RunModal`, or `DownloadFromStream` more than once instead of producing one archive download — `report-output-in-a-loop-needs-one-client-download`. Do not select this article when the context is non-Web or the loop is provably single-iteration.
 - A ReportExtension before-trigger establishes a filter or value that visible base-trigger code subsequently replaces — `reportextension-dataitem-trigger-order-is-explicit`. Do not select this article from a before-trigger alone.
 - A ReportExtension `OnPreReport` prepares state consumed by the base `OnPreReport`, or its `OnPostReport` prepares state already consumed by the base `OnPostReport` — `reportextension-report-triggers-run-after-base-triggers`. Require visible base behavior or equivalent established evidence.
