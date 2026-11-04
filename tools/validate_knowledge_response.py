@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from collections import Counter
 from pathlib import Path
 
 from jsonschema import Draft7Validator
@@ -24,6 +25,11 @@ def validate_response(response, *, question, root, evidence=None, run_id, enable
         return errors
     if response["question"] != question:
         errors.append("question must equal the bound input exactly, including whitespace")
+    cited = Counter(reference["path"] for reference in response["references"])
+    excluded = Counter(entry["path"] for entry in response["suppressed"])
+    errors += [f"Duplicate citation path: {name}" for name in sorted(cited) if cited[name] > 1]
+    errors += [f"Duplicate suppression path: {name}" for name in sorted(excluded) if excluded[name] > 1]
+    errors += [f"Path is both cited and suppressed: {name}" for name in sorted(cited.keys() & excluded.keys())]
     known_layers = {"microsoft", "community", "custom"}
     enabled_layers = set(enabled_layers)
     if not enabled_layers <= known_layers:

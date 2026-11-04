@@ -7,7 +7,7 @@ description: Answer a Business Central development question with cited knowledge
 inputs: [knowledge-query]
 outputs: [knowledge-response]
 bc-version: [all]
-technologies: [al]
+technologies: [al, javascript]
 countries: [w1]
 application-area: [all]
 ---

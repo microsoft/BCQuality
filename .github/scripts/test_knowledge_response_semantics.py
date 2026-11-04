@@ -265,6 +265,27 @@ class KnowledgeSemantics(unittest.TestCase):
         self.evidence["reads"].append(copy.deepcopy(self.evidence["reads"][0]))
         self.assertTrue(self.errors())
 
+    def test_duplicate_citation_with_contradictory_applicability(self):
+        duplicate = copy.deepcopy(self.response["references"][0])
+        duplicate.update(applicability="conditional", unknown=["bc-version"])
+        self.response["references"].append(duplicate)
+        self.assertEqual(self.errors(), [f"Duplicate citation path: {self.path}"])
+
+    def test_cited_article_cannot_be_suppressed(self):
+        for reason in ("layer-precedence", "configuration"):
+            with self.subTest(reason=reason):
+                response = copy.deepcopy(self.response)
+                response["suppressed"] = [{"path": self.path, "reason": reason}]
+                errors = module.validate_response(response, question=self.question, root=self.root,
+                    evidence=self.evidence, run_id="test-run")
+                self.assertEqual(errors, [f"Path is both cited and suppressed: {self.path}"])
+
+    def test_duplicate_suppression_path(self):
+        self.response.update(outcome="no-knowledge", references=[], suppressed=[
+            {"path": self.path, "reason": "layer-precedence"},
+            {"path": self.path, "reason": "configuration"}])
+        self.assertEqual(self.errors(evidence=False), [f"Duplicate suppression path: {self.path}"])
+
     def test_cli_preserves_question_and_rejects_changes(self):
         question = self.root / "question.txt"
         question.write_bytes(self.question.encode())

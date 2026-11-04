@@ -502,6 +502,7 @@ an expected pin. A conditional reference lists each unknown applicability
 dimension in `unknown[]`; fully applicable references use `applicable` with an
 empty `unknown[]`. READ defines matching and conflict precedence. Record
 displaced articles in `suppressed[]` without citing them as supporting guidance.
+Each article path appears at most once across `references[]` and `suppressed[]`.
 
 `completed` requires a useful answer to the bound question and at least one
 verified supporting reference. Applicability under READ does not establish
