@@ -8,12 +8,13 @@ BCQuality contains **knowledge and reusable skills**, not agents or a Business
 Central extension. Your host supplies the agent. You can install the content
 as a plugin, use it from another integration, or browse the knowledge directly.
 
-## Three ways to use BCQuality
+## Four ways to use BCQuality
 
 | Use | Status | Start here |
 | --- | --- | --- |
 | Review your AL code on demand with the Copilot CLI plugin | Available | [Quick start](#quick-start) |
-| Review pull requests automatically in AL-Go for GitHub repositories | In progress in [AL-Go for GitHub](https://github.com/microsoft/AL-Go/pull/2402) | AL-Go documentation once released |
+| Review pull requests automatically in AL-Go for GitHub repositories | Available in AL-Go preview | [Enable Copilot code review](https://github.com/microsoft/AL-Go/blob/main/Scenarios/Agents/CopilotCodeReview.md) |
+| Ask a Business Central development question and get answers citing BCQuality's knowledge | Available in the plugin | [Knowledge consultation](docs/knowledge-consultation.md) |
 | Apply BCQuality guidance to a development plan before coding | Preview in the plugin | [Plan guidance](#preview-guidance-before-implementation) |
 
 ## Quick start
@@ -155,7 +156,8 @@ to configure layers to get started.
 ### How the pieces fit
 
 You use BCQuality through **capabilities**: `al-code-review` reviews code,
-and `al-plan-guidance` enriches a plan. Behind every capability, BCQuality's
+`al-knowledge` answers development questions with cited knowledge, and
+`al-plan-guidance` enriches a plan. Behind every capability, BCQuality's
 **Entry** router prepares the knowledge index, applies your layer and skill
 settings, and selects the skill that does the work. You never call Entry
 yourself when using the plugin.
@@ -163,7 +165,8 @@ yourself when using the plugin.
 Integrations such as CI workflows can call Entry directly with a free-text
 goal instead. Both paths use the same router, knowledge, and report contracts,
 so a plugin review and an automated review apply the same rules. Review skills
-return a `findings-report`; plan guidance returns a read-only
+return a `findings-report`; knowledge consultation returns a cited
+`knowledge-response`; plan guidance returns a read-only
 `development-guidance-report`. See
 [how agents consume BCQuality](docs/agent-consumption.md).
 
@@ -175,8 +178,8 @@ Update the installed plugin from your terminal, then start a new session:
 copilot plugin update bcquality
 ```
 
-`copilot plugin list` shows the installed version. Release `v1.8` carries
-plugin version `1.8.0`. Installing from the repository without a tag uses the
+`copilot plugin list` shows the installed version. Release `v1.10` carries
+plugin version `1.10.0`. Installing from the repository without a tag uses the
 current `main`, which can include changes after or before the matching release.
 For reproducible runs and organization forks, see [updates and versions](docs/customizing-bcquality.md#updates-and-versions).
 
