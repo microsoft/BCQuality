@@ -1,21 +1,21 @@
-codeunit 50221 "Upgrade Price Calculation"
+codeunit 50221 "Upgrade Standard Price"
 {
     Subtype = Upgrade;
 
-    local procedure UpdateUnitPrice()
+    local procedure ApplyStandardPrice()
     var
-        PriceLine: Record "Upgrade Price Line";
+        PriceSchedule: Record "Upgrade Price Schedule";
         Transfer: DataTransfer;
     begin
-        Transfer.SetTables(Database::"Upgrade Price Line", Database::"Upgrade Price Line");
-        Transfer.AddConstantValue(50.0, PriceLine.FieldNo("Unit Price"));
+        Transfer.SetTables(Database::"Upgrade Price Schedule", Database::"Upgrade Price Schedule");
+        Transfer.AddConstantValue(50.0, PriceSchedule.FieldNo("Unit Price"));
         Transfer.CopyFields();
     end;
 }
 
-table 50223 "Upgrade Price Line"
+table 50223 "Upgrade Price Schedule"
 {
-    Caption = 'Upgrade Price Line';
+    Caption = 'Upgrade Price Schedule';
     DataClassification = CustomerContent;
 
     fields
@@ -34,12 +34,12 @@ table 50223 "Upgrade Price Line"
 
             trigger OnValidate()
             begin
-                "Line Amount" := Quantity * "Unit Price";
+                Amount := Quantity * "Unit Price";
             end;
         }
-        field(4; "Line Amount"; Decimal)
+        field(4; Amount; Decimal)
         {
-            Caption = 'Line Amount';
+            Caption = 'Amount';
         }
         field(5; "Invoiced Amount"; Decimal)
         {
@@ -61,6 +61,6 @@ table 50223 "Upgrade Price Line"
 
     trigger OnModify()
     begin
-        "Outstanding Amount" := "Line Amount" - "Invoiced Amount";
+        "Outstanding Amount" := Amount - "Invoiced Amount";
     end;
 }

@@ -235,10 +235,10 @@
       "context": "The extended table existed in the previous app version and already contains rows.",
       "articleOverrides": {
         "datatransfer-for-bulk-init": {
-          "context": "Target Business Central 28, worldwide. The Upgrade Entry table existed in the previous app version, currently contains 12 rows in this company, and has no enforced row-count limit. The Migrated field is added by this version. There are no table triggers or subscribers for writes to this table. The shown helper is called from an existing per-company upgrade-tag guard outside this example."
+          "context": "Target Business Central 28, worldwide. The Upgrade Entry table existed in the previous app version, currently contains 12 rows in this company, and has no enforced row-count limit. The Category Code field is added by this version and is initialized from Legacy Code. There are no table triggers or subscribers for writes to this table. The shown helper is called from an existing per-company upgrade-tag guard outside this example."
         },
         "datatransfer-skips-triggers-and-subscribers": {
-          "context": "Target Business Central 28, worldwide. The Upgrade Price Line table and its fields existed in the previous app version and contain rows with nonzero Quantity and a previous Unit Price other than 50. Line Amount equals Quantity multiplied by Unit Price; Outstanding Amount equals Line Amount minus Invoiced Amount. There are no external subscribers for this table. The shown helper is called from an existing per-company upgrade-tag guard outside this example."
+          "context": "Target Business Central 28, worldwide. The Upgrade Price Schedule table existed in the previous app version and contains rows with nonzero Quantity and Amount values other than Quantity multiplied by 50. The Unit Price field is added by this version; the other fields already existed. Amount equals Quantity multiplied by Unit Price; Outstanding Amount equals Amount minus Invoiced Amount. There are no external subscribers for this table. The shown helper is called from an existing per-company upgrade-tag guard outside this example."
         }
       }
     },

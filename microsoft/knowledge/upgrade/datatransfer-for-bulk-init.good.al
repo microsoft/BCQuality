@@ -1,15 +1,15 @@
-codeunit 50218 "Upgrade Entry Flags"
+codeunit 50218 "Upgrade Entry Codes"
 {
     Subtype = Upgrade;
 
-    local procedure InitializeMigratedFlag()
+    local procedure CopyLegacyCode()
     var
         Entry: Record "Upgrade Entry";
         Transfer: DataTransfer;
     begin
         Transfer.SetTables(Database::"Upgrade Entry", Database::"Upgrade Entry");
-        Transfer.AddSourceFilter(Entry.FieldNo("Legacy Code"), '=%1', 'OLD');
-        Transfer.AddConstantValue(true, Entry.FieldNo(Migrated));
+        Transfer.AddSourceFilter(Entry.FieldNo("Legacy Code"), '<>%1', '');
+        Transfer.AddFieldValue(Entry.FieldNo("Legacy Code"), Entry.FieldNo("Category Code"));
         Transfer.CopyFields();
     end;
 }
@@ -29,9 +29,9 @@ table 50222 "Upgrade Entry"
         {
             Caption = 'Legacy Code';
         }
-        field(3; Migrated; Boolean)
+        field(3; "Category Code"; Code[20])
         {
-            Caption = 'Migrated';
+            Caption = 'Category Code';
         }
     }
 

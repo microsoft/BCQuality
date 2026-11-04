@@ -1,22 +1,22 @@
-codeunit 50220 "Upgrade Price Calculation"
+codeunit 50220 "Upgrade Standard Price"
 {
     Subtype = Upgrade;
 
-    local procedure UpdateUnitPrice()
+    local procedure ApplyStandardPrice()
     var
-        PriceLine: Record "Upgrade Price Line";
+        PriceSchedule: Record "Upgrade Price Schedule";
     begin
-        if PriceLine.FindSet(true) then
+        if PriceSchedule.FindSet(true) then
             repeat
-                PriceLine.Validate("Unit Price", 50.0);
-                PriceLine.Modify(true);
-            until PriceLine.Next() = 0;
+                PriceSchedule.Validate("Unit Price", 50.0);
+                PriceSchedule.Modify(true);
+            until PriceSchedule.Next() = 0;
     end;
 }
 
-table 50223 "Upgrade Price Line"
+table 50223 "Upgrade Price Schedule"
 {
-    Caption = 'Upgrade Price Line';
+    Caption = 'Upgrade Price Schedule';
     DataClassification = CustomerContent;
 
     fields
@@ -35,12 +35,12 @@ table 50223 "Upgrade Price Line"
 
             trigger OnValidate()
             begin
-                "Line Amount" := Quantity * "Unit Price";
+                Amount := Quantity * "Unit Price";
             end;
         }
-        field(4; "Line Amount"; Decimal)
+        field(4; Amount; Decimal)
         {
-            Caption = 'Line Amount';
+            Caption = 'Amount';
         }
         field(5; "Invoiced Amount"; Decimal)
         {
@@ -62,6 +62,6 @@ table 50223 "Upgrade Price Line"
 
     trigger OnModify()
     begin
-        "Outstanding Amount" := "Line Amount" - "Invoiced Amount";
+        "Outstanding Amount" := Amount - "Invoiced Amount";
     end;
 }
