@@ -25,4 +25,19 @@ codeunit 50218 "Perf Sample LoadFields Good"
         if Location.Get(LocationCode) then
             Policy := Location."SKU Creation Policy";
     end;
+
+    // IterateSourceEntriesIntoBuffer receives ItemLedgerEntry as a var parameter set up by an
+    // unknown caller and copies each row wholesale into a temporary buffer for later callers to
+    // read. SetLoadFields before this FindSet would leave the buffer's unlisted fields blank
+    // instead of fetched, so it is correctly omitted here.
+    procedure IterateSourceEntriesIntoBuffer(var ItemLedgerEntry: Record "Item Ledger Entry"; var TempItemLedgerEntryBuffer: Record "Item Ledger Entry" temporary)
+    begin
+        TempItemLedgerEntryBuffer.Reset();
+        TempItemLedgerEntryBuffer.DeleteAll();
+        if ItemLedgerEntry.FindSet() then
+            repeat
+                TempItemLedgerEntryBuffer := ItemLedgerEntry;
+                TempItemLedgerEntryBuffer.Insert();
+            until ItemLedgerEntry.Next() = 0;
+    end;
 }
