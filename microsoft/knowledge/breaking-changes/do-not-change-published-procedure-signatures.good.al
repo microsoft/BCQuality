@@ -13,4 +13,12 @@ codeunit 50300 "Discount Api Good"
     begin
         Discount := Amount * Rate;
     end;
+
+    // Previously void, now returns a Boolean. Existing callers that invoked this
+    // as a standalone statement and never looked at a return value still
+    // compile, so adding a return value here is additive, not breaking.
+    procedure ValidateRecord(RecordId: Integer): Boolean
+    begin
+        exit(RecordId > 0);
+    end;
 }
