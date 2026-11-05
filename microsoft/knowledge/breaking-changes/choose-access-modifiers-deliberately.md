@@ -17,6 +17,8 @@ Access is a decision about what you are willing to support forever. The moment a
 
 Start everything `local` or `internal` and promote a member to `public` only when you have decided to support it as a stable contract. Expose a small, intentional surface — the supported entry point — and keep validation, posting, and helper routines `internal` for in-app reuse or `local` when single-object. Do not drop `[Scope('OnPrem')]` without intent, since that too widens the contract. Every public member is a maintenance commitment; spend them deliberately.
 
+The object-level `Access` property only applies to Codeunit, Query, Table, Table field, Enum Type, Interface, and Permission Set objects. Page, Report, XmlPort, and PageExtension/TableExtension/ReportExtension objects do not support `Access`; adding it there is a compile error (AL0124). Do not suggest `Access = Internal` on a page (including an implementation-detail dialog page) — there is no object-level way to narrow a page's accessibility, so review it under other criteria instead (for example, whether it is reachable from a menu/role center, not whether `Access` is set).
+
 See sample: [`choose-access-modifiers-deliberately.good.al`](choose-access-modifiers-deliberately.good.al).
 
 ## Anti Pattern
