@@ -59,9 +59,11 @@ only result.
 5. Capture the exact Task return as the immutable raw audit payload and primary
    transport. Preserve it unchanged in private artifacts or host logs. Before
    the full DO acceptance gate, create a normalized candidate only for DO's
-   bounded optional-range case, record that normalization separately in private
-   telemetry, and accept the candidate only if the entire copy passes the
-  unchanged strict gate. Use `tools/Validate-FindingsReport.ps1`, passing the
+   bounded citation-ID and optional-range cases after strict JSON, full
+   structural schema, and reference-integrity checks. Record `normalizedIds`
+   and `removedRanges` separately in private telemetry, and accept the
+   candidate only if the entire copy passes the unchanged strict gate.
+  Use `tools/Validate-FindingsReport.ps1`, passing the
   exact source paths and fully retrieved article paths; pass `-SkillKind super`
   and `-ExpectedCompositionPath` for the final rolled-up report. The accepted report contains no undeclared
   telemetry fields.
