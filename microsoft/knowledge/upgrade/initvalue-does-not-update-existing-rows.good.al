@@ -51,16 +51,3 @@ codeunit 50225 "Upgrade Tag Definitions"
         PerCompanyUpgradeTags.Add(MyTableNewFlagTag());
     end;
 }
-
-codeunit 50226 "Install MyTable NewFlag"
-{
-    Subtype = Install;
-
-    trigger OnInstallAppPerCompany()
-    var
-        UpgradeTag: Codeunit "Upgrade Tag";
-        Tags: Codeunit "Upgrade Tag Definitions";
-    begin
-        UpgradeTag.SetUpgradeTag(Tags.MyTableNewFlagTag());
-    end;
-}
