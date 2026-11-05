@@ -1,0 +1,33 @@
+name: Authoring-assist self-test
+
+# Regression-guards the authoring-assist feature (suggestion engine + JSON
+# contract + comment renderer) against this repo's own corpus. Runs on changes
+# to the tool, renderer, the optional routing seed, or the test itself.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/Suggest-ArticleSignals.ps1'
+      - 'tools/New-AuthoringAssistComment.ps1'
+      - 'tools/Test-SuggestArticleSignals.ps1'
+      - 'tools/routing-seed.json'
+      - '.github/workflows/authoring-assist*.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/Suggest-ArticleSignals.ps1'
+      - 'tools/New-AuthoringAssistComment.ps1'
+      - 'tools/Test-SuggestArticleSignals.ps1'
+      - 'tools/routing-seed.json'
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run authoring-assist smoke test
+        shell: pwsh
+        run: ./tools/Test-SuggestArticleSignals.ps1 -BCQualityRoot .
