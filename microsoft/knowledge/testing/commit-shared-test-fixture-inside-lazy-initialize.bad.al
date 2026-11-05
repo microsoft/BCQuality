@@ -1,3 +1,4 @@
+// [FEATURE] Item master data
 codeunit 50142 "Sample Test Library"
 {
     Subtype = Test;
@@ -32,12 +33,16 @@ codeunit 50142 "Sample Test Library"
     var
         Item: Record Item;
     begin
+        // [SCENARIO] A test changes the description of the shared item and reverts the change
+        // [GIVEN] the shared item fixture is initialized
         Initialize();
 
+        // [WHEN] the description of the shared item is changed
         Item.Get(SharedItemNo);
         Item.Description := 'Scratch change this test makes and does not need to keep.';
         Item.Modify();
 
+        // [THEN] the scratch change is rolled back
         asserterror Error(RollBackMsg);
         // The deliberate rollback above also erases the never-committed
         // fixture from CreateSharedFixtureData(). Initialized still reads
@@ -49,8 +54,12 @@ codeunit 50142 "Sample Test Library"
     var
         Item: Record Item;
     begin
+        // [SCENARIO] The shared item can be read by a second test
+        // [GIVEN] the shared item fixture is initialized
         Initialize();
 
+        // [WHEN] the shared item is read by its number
+        // [THEN] the shared item is found
         // Fails here: Initialize() saw Initialized = true and returned
         // immediately, so it never recreated the fixture - and the first
         // test's rollback took the original row with it.

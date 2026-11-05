@@ -1,3 +1,4 @@
+// [FEATURE] Purchase document amount verification
 codeunit 50143 "Sample Doc Amount Test"
 {
     Subtype = Test;
@@ -8,6 +9,9 @@ codeunit 50143 "Sample Doc Amount Test"
         Assert: Codeunit Assert;
         PurchHeader: Record "Purchase Header";
     begin
+        // [SCENARIO] A purchase header with no lines does not pass document amount verification
+        // [WHEN] the document amount of a purchase header with no lines is verified
+        // [THEN] the document amount is not verified
         asserterror Assert.IsTrue(VerifyDocAmount(PurchHeader), 'Doc. amount should not verify with no lines.');
     end;
 

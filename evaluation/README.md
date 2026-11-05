@@ -15,6 +15,8 @@ is mandatory.
 
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
+One kind of full-line comment is kept in every sample, the standalone BDD tag line: `//`, optional spaces or tabs, then one of the uppercase tags `[FEATURE]`, `[SCENARIO]`, `[GIVEN]`, `[WHEN]` or `[THEN]`, followed by a space, a tab or the end of the line. These tags are the evidence the testing articles read (`test-feature-scenario-tags`, `given-blocks-must-cover-full-precondition-chain`, `test-one-when-per-test`), so every selected testing sample with `[Test]` procedures carries them, except the untagged `test-feature-scenario-tags` positive. Other case or spelling (`[Given]`), longer tokens (`[WHENEVER]`), punctuation after the bracket (`[WHEN]:`), `///` comments and tags after code are not tag lines; inline comments after code are never removed. A kept tag line reaches the model, so it must describe the step neutrally and on one line: validation fails when a tag line in a selected sample contains `Good`, `Bad` or `anti-pattern`, checked before neutralization, and an explanation for human readers belongs in an ordinary comment line, which preparation removes. The patterns live in `tools/Review-FixtureText.ps1`.
+
 When applicability depends on deployment facts that AL cannot establish, use
 `articleOverrides` within the domain override, keyed by a selected article's
 exact slug (without `.md`). Each entry requires a non-empty `context` string.
@@ -35,7 +37,10 @@ a defect. Invalid or unselected article overrides fail validation.
 
 The context regression check runs the real preparer and scorer, verifies all
 three request formats, context isolation, unchanged neutralization, mandatory
-clean controls, and rejection of findings on the non-MCP input:
+clean controls, and rejection of findings on the non-MCP input. It also checks
+exact and near-miss BDD tag lines, that every prepared input minus its kept tag
+lines equals the previous preparation, and that an outcome label in a tag line
+fails validation:
 
 ```powershell
 pwsh ./tools/Test-ReviewFixtureContexts.ps1 -Root .

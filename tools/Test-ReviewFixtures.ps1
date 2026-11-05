@@ -37,6 +37,8 @@ if (-not (Test-Path -LiteralPath $ManifestPath)) {
     throw "Review fixture manifest not found: $ManifestPath"
 }
 
+. (Join-Path $PSScriptRoot 'Review-FixtureText.ps1')
+
 $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
 $problems = [System.Collections.Generic.List[string]]::new()
 
@@ -389,6 +391,20 @@ foreach ($keepCommentsArticle in $keepCommentsArticles.Keys) {
     }
 }
 
+# BDD tag lines reach the model in every case, so check their source text for
+# outcome labels here, before Good/Bad neutralization could hide one.
+foreach ($inputRelativePath in @($cases | ForEach-Object { [string]$_.input } | Sort-Object -Unique)) {
+    $inputFullPath = Join-Path $Root $inputRelativePath
+    if (-not (Test-Path -LiteralPath $inputFullPath -PathType Leaf)) {
+        continue
+    }
+    foreach ($tagLine in @(Get-BddTagLine -Text (Get-Content -LiteralPath $inputFullPath -Raw))) {
+        if (Test-BddTagLineLabel -TagLineText $tagLine.Text) {
+            $problems.Add("${inputRelativePath}:$($tagLine.Line): retained BDD tag line names an outcome (Good, Bad or anti-pattern): $($tagLine.Text)") | Out-Null
+        }
+    }
+}
+
 $seenIds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 foreach ($case in $cases) {
     $id = [string]$case.id
@@ -544,18 +560,8 @@ if ($PrepareDirectory) {
         $modelId = Get-ModelCaseId -ManifestId ([string]$case.id)
         $neutralName = "$modelId$extension"
         $sourceText = Get-Content -LiteralPath (Join-Path $Root ([string]$case.input)) -Raw
-        # Companion samples are human-facing and often label objects/comments as
-        # Good, Bad, or Anti-pattern. Strip full-line comments and neutralize those
-        # object-name tokens so model-facing fixtures do not reveal the expected
-        # outcome while preserving executable AL structure and references.
-        # An article whose rule is about the comments themselves is listed under
-        # keepComments in review-fixtures.json and keeps them; its samples carry no
-        # answer-revealing labels (Good/Bad is still neutralized below).
-        $neutralText = $sourceText
-        if (-not ($case.PSObject.Properties.Name -contains 'keepComments' -and $case.keepComments)) {
-            $neutralText = [regex]::Replace($neutralText, '(?m)^\s*//.*(?:\r?\n|$)', '')
-        }
-        $neutralText = [regex]::Replace($neutralText, '\b(?:Good|Bad)\b', 'Eval')
+        $keepCaseComments = $case.PSObject.Properties.Name -contains 'keepComments' -and $case.keepComments
+        $neutralText = ConvertTo-ReviewFixtureText -Text $sourceText -KeepComments:$keepCaseComments
         Set-Content -LiteralPath (Join-Path $PrepareDirectory $neutralName) -Value $neutralText -Encoding UTF8
         $requestCase = [pscustomobject]@{ id = $modelId; file = $neutralName }
         if ($case.PSObject.Properties.Name -contains 'context') {

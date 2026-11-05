@@ -1,3 +1,4 @@
+// [FEATURE] Customer maintenance
 codeunit 50154 "Test Sample TransModel Bad"
 {
     Subtype = Test;
@@ -8,6 +9,8 @@ codeunit 50154 "Test Sample TransModel Bad"
     var
         PostingRoutine: Codeunit "Posting Routine Commit Bad";
     begin
+        // [SCENARIO] A customer record is created by the customer routine
+        // [WHEN] the routine that creates the customer is run
         // Runtime error: AutoRollback forbids the Commit reached below.
         PostingRoutine.PostCustomer();
     end;
