@@ -2,6 +2,7 @@ table 50370 "Loyalty Member"
 {
     Caption = 'Loyalty Member';
     DataClassification = CustomerContent;
+    Permissions = tabledata "Loyalty Point Entry" = rd;
 
     fields
     {
@@ -27,6 +28,14 @@ table 50370 "Loyalty Member"
             Clustered = true;
         }
     }
+
+    trigger OnDelete()
+    var
+        LoyaltyPointEntry: Record "Loyalty Point Entry";
+    begin
+        LoyaltyPointEntry.SetRange("Member No.", "No.");
+        LoyaltyPointEntry.DeleteAll(true);
+    end;
 }
 
 table 50371 "Loyalty Point Entry"
