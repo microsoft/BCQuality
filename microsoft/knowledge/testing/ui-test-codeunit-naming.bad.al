@@ -1,3 +1,4 @@
+// [FEATURE] Sales
 codeunit 50104 "Item Price Testing"
 {
     Subtype = Test;
@@ -7,6 +8,9 @@ codeunit 50104 "Item Price Testing"
     var
         Assert: Codeunit "Library Assert";
     begin
+        // [SCENARIO] A ten percent discount lowers a unit price of 100
+        // [WHEN] a 10 percent discount is applied to a unit price of 100
+        // [THEN] the discounted price is 90
         // logic test — fine on its own, but not paired with a UI test below
         Assert.AreEqual(90, ApplyDiscount(100, 10), 'A 10% discount on 100 must yield 90');
     end;
@@ -21,6 +25,8 @@ codeunit 50104 "Item Price Testing"
     var
         CustomerCard: TestPage "Customer Card";
     begin
+        // [SCENARIO] A new customer can be started from the customer card
+        // [WHEN] the customer card is opened for a new record
         // UI test mixed into a logic-test codeunit, and the codeunit lacks the _UT suffix
         CustomerCard.OpenNew();
     end;

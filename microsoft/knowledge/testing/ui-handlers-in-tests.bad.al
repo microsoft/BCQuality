@@ -1,3 +1,4 @@
+// [FEATURE] Customer management
 codeunit 50401 "Test UI Handler Proof Bad"
 {
     Subtype = Test;
@@ -8,11 +9,15 @@ codeunit 50401 "Test UI Handler Proof Bad"
     var
         Customer: Record Customer;
     begin
+        // [SCENARIO] The customer card is opened for a newly created customer
+        // [GIVEN] a newly created customer and a status flag
         LibrarySales.CreateCustomer(Customer);
         ActionSucceeded := true;
 
+        // [WHEN] the customer card is opened for the customer
         Page.RunModal(Page::"Customer Card", Customer);
 
+        // [THEN] the status flag is checked
         // This only proves a value assigned before the action stayed true.
         Assert.IsTrue(ActionSucceeded, 'The customer card action failed.');
     end;
@@ -23,8 +28,11 @@ codeunit 50401 "Test UI Handler Proof Bad"
     var
         Customer: Record Customer;
     begin
+        // [SCENARIO] A message follows the customer card for a newly created customer
+        // [GIVEN] a newly created customer
         LibrarySales.CreateCustomer(Customer);
 
+        // [WHEN] the customer card is opened for the customer and a message is raised afterwards
         Page.RunModal(Page::"Customer Card", Customer);
         Message('Customer card closed.');
     end;
@@ -35,8 +43,11 @@ codeunit 50401 "Test UI Handler Proof Bad"
     var
         Customer: Record Customer;
     begin
+        // [SCENARIO] The customer card is opened and closed for a newly created customer
+        // [GIVEN] a newly created customer
         LibrarySales.CreateCustomer(Customer);
 
+        // [WHEN] the customer card is opened for the customer
         Page.RunModal(Page::"Customer Card", Customer);
     end;
 
@@ -46,8 +57,11 @@ codeunit 50401 "Test UI Handler Proof Bad"
     var
         Customer: Record Customer;
     begin
+        // [SCENARIO] The customer card is opened and closed for a newly created customer
+        // [GIVEN] a newly created customer
         LibrarySales.CreateCustomer(Customer);
 
+        // [WHEN] the customer card is opened for the customer
         Page.RunModal(Page::"Customer Card", Customer);
     end;
 
