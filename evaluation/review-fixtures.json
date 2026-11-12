@@ -191,7 +191,9 @@
         "al-comments-must-not-restate-what-code-already-shows",
         "pages-must-not-contain-business-logic",
         "mutating-procedure-for-a-page-caller-takes-var-record",
-        "build-client-links-with-geturl"
+        "build-client-links-with-geturl",
+        "setfilter-date-operands-must-be-replacement-values",
+        "use-productname-instead-of-hardcoded-product-name"
       ]
     },
     "telemetry": {
