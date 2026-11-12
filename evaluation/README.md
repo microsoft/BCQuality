@@ -87,6 +87,14 @@ Clean samples also retain supported operational edits, temporary ledger/set
 buffers, legitimate entry-number APIs, and reads of individual shortcut
 dimensions so these exceptions are exercised rather than blanket-excluded.
 
+The testing license-failure pair supplies BC 29.2 deployment context only to
+that article: the codeunit is newly introduced, purchase posting is licensed,
+and direct insertion into the real posted header is not. Both companions
+retain their fixture construction and retrieval after neutralization. This
+pair exercises the introduced-fixture branch of the rule; it does not prove
+baseline-relative attribution from a standalone file, reproduce a tenant's
+license checks, or establish that every SaaS identity has these rights.
+
 ## Validate the corpus
 
 ```powershell

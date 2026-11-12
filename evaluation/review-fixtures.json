@@ -211,8 +211,14 @@
         "transactionmodel-attribute-governs-test-transactions",
         "ui-test-codeunit-naming",
         "use-assert-isfalse-not-asserterror-for-boolean-checks",
-        "recordref-open-temp-parameter-defeats-real-table-checks"
-      ]
+        "recordref-open-temp-parameter-defeats-real-table-checks",
+        "triage-posted-table-license-failures-against-baseline"
+      ],
+      "articleOverrides": {
+        "triage-posted-table-license-failures-against-baseline": {
+          "context": "Target Business Central 29.2, worldwide standard application (w1), online sandbox. This entire test codeunit is newly added by the change. Microsoft Application Test Library and its dependencies are installed. The executing user is licensed and permitted to post purchase invoices and read posted invoices, but the effective license grants only indirect Insert on TableData 122 Purch. Inv. Header. The company has valid purchase posting groups, VAT setup, number series, and an allowed posting date for the library-created item invoice. The standard test runner applies TestPermissions and uses TestIsolation = Function."
+        }
+      }
     },
     "ui": {
       "articles": [
