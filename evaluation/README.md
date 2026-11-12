@@ -13,6 +13,14 @@ substitute for domain coverage. The generated coverage report includes totals
 and per-domain ratios; the ratio is informational, while changed-file coverage
 is mandatory.
 
+On pull requests, changed paths are measured from the first parent of the
+checked-out synthetic merge to that merge, so coverage uses the base actually
+tested rather than a potentially stale event `base.sha`. Pushes retain the
+event's before-to-after comparison (or last-commit fallback for an absent/zero
+before SHA). The collector fails if a PR checkout is not a two-parent merge or
+Git cannot resolve a requested comparison. Regression checks run in fixture CI
+and can also be run with `pwsh .github/scripts/Test-ReviewChangedPaths.ps1`.
+
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
 
 One kind of full-line comment is kept in every sample, the standalone BDD tag line: `//`, optional spaces or tabs, then one of the uppercase tags `[FEATURE]`, `[SCENARIO]`, `[GIVEN]`, `[WHEN]` or `[THEN]`, followed by a space, a tab or the end of the line. These tags are the evidence the testing articles read (`test-feature-scenario-tags`, `given-blocks-must-cover-full-precondition-chain`, `test-one-when-per-test`), so every selected testing sample with `[Test]` procedures carries them, except the untagged `test-feature-scenario-tags` positive. Other case or spelling (`[Given]`), longer tokens (`[WHENEVER]`), punctuation after the bracket (`[WHEN]:`), `///` comments and tags after code are not tag lines; inline comments after code are never removed. A kept tag line reaches the model, so it must describe the step neutrally and on one line: validation fails when a tag line in a selected sample contains `Good`, `Bad` or `anti-pattern`, checked before neutralization, and an explanation for human readers belongs in an ordinary comment line, which preparation removes. The patterns live in `tools/Review-FixtureText.ps1`.
@@ -86,6 +94,18 @@ Do not move these prerequisites into comments that preparation removes.
 Clean samples also retain supported operational edits, temporary ledger/set
 buffers, legitimate entry-number APIs, and reads of individual shortcut
 dimensions so these exceptions are exercised rather than blanket-excluded.
+
+The testing license-failure pair supplies BC 29.2 deployment context only to
+that article: the codeunit is newly introduced, purchase posting is licensed,
+and direct insertion into the real posted header is not. Both companions
+retain their fixture construction and retrieval after neutralization. The
+clean companion visibly creates the vendor and invoice and sets the posting
+date, consistent with the separate GIVEN-chain rule. The specific posted-write
+cue owns that construction defect instead of emitting duplicate generic
+fixture or missing-field findings. The pair exercises the introduced-fixture
+branch of the rule; it does not prove
+baseline-relative attribution from a standalone file, reproduce a tenant's
+license checks, or establish that every SaaS identity has these rights.
 
 ## Validate the corpus
 

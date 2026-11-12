@@ -67,6 +67,25 @@ foreach ($case in $finance.cases) {
     Assert-True ($case.context -ceq 'Target Business Central 28, worldwide standard application (w1). Review each file as an independent source input.') 'Existing domain-wide context changed.'
 }
 
+$licenseSlug = 'triage-posted-table-license-failures-against-baseline'
+$fixtureManifest = Get-Content -LiteralPath (Join-Path $Root 'evaluation/review-fixtures.json') -Raw | ConvertFrom-Json
+$licenseContext = $fixtureManifest.overrides.testing.articleOverrides.$licenseSlug.context
+$testing = Get-Content -LiteralPath (Join-Path $prepared 'request-testing.json') -Raw | ConvertFrom-Json
+$licenseIds = @('bad', 'good' | ForEach-Object { Get-OpaqueId "testing-$licenseSlug-$_" })
+foreach ($id in $licenseIds) {
+    $single = Get-Content -LiteralPath (Join-Path $prepared "request-$id.json") -Raw | ConvertFrom-Json
+    foreach ($request in $all, $testing, $single) {
+        $case = @($request.cases | Where-Object id -eq $id)
+        Assert-True ($case.Count -eq 1) 'The posted-table license case must occur once in each request format.'
+        Assert-True ($case[0].context -ceq $licenseContext) 'The posted-table license case lost its deployment context.'
+        $keys = @($case[0].PSObject.Properties.Name | Sort-Object) -join ','
+        Assert-True ($keys -ceq 'context,file,id') 'The posted-table license case reveals internal fixture metadata.'
+    }
+}
+foreach ($case in @($testing.cases | Where-Object id -notin $licenseIds)) {
+    Assert-True ($case.PSObject.Properties.Name -notcontains 'context') 'License-specific context leaked to another testing article.'
+}
+
 # Exercise scoring through the public CLI. Other positive cases intentionally
 # have no findings; only the context control's specific diagnostics are asserted.
 $results = [pscustomobject]@{ cases = @($all.cases | ForEach-Object { [pscustomobject]@{ id = $_.id; findings = @() } }) }
