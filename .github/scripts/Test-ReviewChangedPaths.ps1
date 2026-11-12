@@ -92,3 +92,5 @@ try {
     Set-Location $originalLocation
     Remove-Item -LiteralPath $work -Recurse -Force
 }
+# Expected negative subprocesses must not determine a successful CI step exit.
+exit 0
