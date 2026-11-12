@@ -8,16 +8,6 @@ codeunit 50543 "Posted Fixture Bad"
     var
         LibraryUtility: Codeunit "Library - Utility";
 
-    local procedure CreatePostedPurchaseInvoice(): Code[20]
-    var
-        PurchInvHeader: Record "Purch. Inv. Header";
-    begin
-        PurchInvHeader.Init();
-        PurchInvHeader."No." := LibraryUtility.GenerateGUID();
-        PurchInvHeader.Insert();
-        exit(PurchInvHeader."No.");
-    end;
-
     // [FEATURE] Purchase invoice fixtures
     [Test]
     procedure PostedInvoiceIsAvailable()
@@ -26,9 +16,12 @@ codeunit 50543 "Posted Fixture Bad"
         PostedInvoiceNo: Code[20];
     begin
         // [SCENARIO] Retrieve a posted purchase invoice
-        // [GIVEN] Purchase posting setup is available
+        // [GIVEN] An invoice number for the fixture
+        PostedInvoiceNo := LibraryUtility.GenerateGUID();
         // [WHEN] The invoice fixture is created
-        PostedInvoiceNo := CreatePostedPurchaseInvoice();
+        PurchInvHeader.Init();
+        PurchInvHeader."No." := PostedInvoiceNo;
+        PurchInvHeader.Insert();
         // [THEN] The posted invoice can be retrieved by number
         PurchInvHeader.Get(PostedInvoiceNo);
     end;

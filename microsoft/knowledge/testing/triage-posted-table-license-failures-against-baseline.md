@@ -11,7 +11,7 @@ application-area: [all]
 
 ## Description
 
-A test fixture that directly inserts into a posted or ledger table can fail with `Your license does not grant you the following permissions on TableData <table>: Insert` when that environment's license allows only indirect insertion through an authorized object. This is not a universal restriction on every SaaS identity or every posted table: establish the effective rights and failing operation. `TestPermissions = Disabled` changes the test permission-set execution context; neither it nor `SUPER` expands the user's license entitlement. A pass in a container/development-license environment known to permit that direct access does not prove the fixture works with the target user's rights; a pipeline can target SaaS too.
+A test fixture that directly inserts into a posted or ledger table can fail with `Your license does not grant you the following permissions on TableData <table>: Insert` when that environment's license allows only indirect insertion through an authorized object. This is not a universal restriction on every SaaS identity or every posted table: establish the effective rights and failing operation. `TestPermissions` governs the runner's permission-set execution context; `Disabled` skips permission lowering in the standard runner (tests execute as `SUPER`), but neither setting nor `SUPER` expands the user's license entitlement. A pass in a container/development-license environment known to permit that direct access does not prove the fixture works with the target user's rights; a pipeline can target SaaS too.
 
 ## Best Practice
 
@@ -23,7 +23,7 @@ See sample: [`triage-posted-table-license-failures-against-baseline.good.al`](tr
 
 ## Anti Pattern
 
-Dismissing a newly introduced direct insert into a real posted table as "just SaaS", blaming an unrelated diff for an identical same-environment baseline failure, or broadening permission sets/adding `TestPermissions = Disabled` to repair a confirmed license denial. Treating every `Init`/`Insert` or every permission error as this scenario also misdiagnoses the problem: identify the real table, operation, effective rights and baseline first.
+Dismissing a newly introduced direct insert into a real posted table as "just SaaS", blaming an unrelated diff for an identical same-environment baseline failure, or broadening permission sets/adding `TestPermissions = Disabled` to repair a confirmed license denial. Adding an object `Permissions` property can enable indirect access, but turning the direct insert green that way does not repair the ordinary posted-data fixture or exercise posting invariants. Treating every `Init`/`Insert` or every permission error as this scenario also misdiagnoses the problem: identify the real table, operation, effective rights and baseline first.
 
 See sample: [`triage-posted-table-license-failures-against-baseline.bad.al`](triage-posted-table-license-failures-against-baseline.bad.al).
 

@@ -1,5 +1,6 @@
 using Microsoft.Purchases.Document;
 using Microsoft.Purchases.History;
+using Microsoft.Purchases.Vendor;
 
 codeunit 50542 "Posted Fixture Good"
 {
@@ -9,25 +10,24 @@ codeunit 50542 "Posted Fixture Good"
     var
         LibraryPurchase: Codeunit "Library - Purchase";
 
-    local procedure CreatePostedPurchaseInvoice(): Code[20]
-    var
-        PurchaseHeader: Record "Purchase Header";
-    begin
-        LibraryPurchase.CreatePurchaseInvoice(PurchaseHeader);
-        exit(LibraryPurchase.PostPurchaseDocument(PurchaseHeader, true, true));
-    end;
-
     // [FEATURE] Purchase invoice fixtures
     [Test]
     procedure PostedInvoiceIsAvailable()
     var
+        Vendor: Record Vendor;
+        PurchaseHeader: Record "Purchase Header";
         PurchInvHeader: Record "Purch. Inv. Header";
         PostedInvoiceNo: Code[20];
     begin
         // [SCENARIO] Retrieve a posted purchase invoice
-        // [GIVEN] Purchase posting setup is available
-        // [WHEN] The invoice fixture is created
-        PostedInvoiceNo := CreatePostedPurchaseInvoice();
+        // [GIVEN] A vendor with library-assigned posting groups
+        LibraryPurchase.CreateVendor(Vendor);
+        // [GIVEN] An invoice for the vendor with an explicit posting date
+        LibraryPurchase.CreatePurchaseInvoiceForVendorNo(PurchaseHeader, Vendor."No.");
+        PurchaseHeader.Validate("Posting Date", WorkDate());
+        PurchaseHeader.Modify(true);
+        // [WHEN] The invoice is posted
+        PostedInvoiceNo := LibraryPurchase.PostPurchaseDocument(PurchaseHeader, true, true);
         // [THEN] The posted invoice can be retrieved by number
         PurchInvHeader.Get(PostedInvoiceNo);
     end;
