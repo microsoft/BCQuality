@@ -24,6 +24,23 @@ codeunit 50114 "Payment Processor"
             Error('Payment gateway call failed. Check connectivity and retry.');
     end;
 
+    procedure ConfirmPayment(PaymentAmount: Decimal)
+    begin
+        // Bare call: no try boundary is active, so subscriber errors propagate to the caller.
+        TryPublishPaymentConfirmed(PaymentAmount);
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterConfirmPayment(PaymentAmount: Decimal)
+    begin
+    end;
+
+    [TryFunction]
+    local procedure TryPublishPaymentConfirmed(PaymentAmount: Decimal)
+    begin
+        OnAfterConfirmPayment(PaymentAmount);
+    end;
+
     [TryFunction]
     local procedure TryCallPaymentGateway(PaymentAmount: Decimal)
     var
