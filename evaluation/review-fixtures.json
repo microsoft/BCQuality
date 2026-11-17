@@ -54,6 +54,7 @@
         "extend-price-source-type-must-sync-document-subset-enum",
         "extend-report-selection-usage-for-new-document-types",
         "master-data-must-be-inserted-with-trigger",
+        "modify-does-not-rename-primary-key",
         "new-price-source-must-add-candidate-and-trigger-recalculation",
         "pictures-must-use-media-not-blob",
         "report-barcodes-must-use-barcode-module-and-production-font-name",
