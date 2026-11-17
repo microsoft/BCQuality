@@ -68,7 +68,8 @@
         "collect-validation-errors-with-errorbehavior",
         "declined-confirm-must-abort-not-partially-apply",
         "defensive-vs-offensive-code-must-match-blast-radius",
-        "log-writes-must-survive-rollback"
+        "log-writes-must-survive-rollback",
+        "ignored-tryfunction-return-disables-try-semantics"
       ]
     },
     "events": {
@@ -77,7 +78,8 @@
         "changecompany-runs-triggers-in-the-calling-company",
         "database-trigger-setup-flags-may-only-be-set-to-true",
         "isolated-events-are-isolated-only-outside-a-write-transaction",
-        "isolated-event-rollback-does-not-undo-var-parameters"
+        "isolated-event-rollback-does-not-undo-var-parameters",
+        "avoid-raising-events-inside-try-functions"
       ]
     },
     "finance": {
@@ -128,7 +130,8 @@
         "al-methods-limited-during-write-transactions",
         "avoid-user-prompts-inside-transactions",
         "use-grouped-query-for-distinct-values-and-duplicates",
-        "compute-role-center-headlines-in-the-background"
+        "compute-role-center-headlines-in-the-background",
+        "use-tryfunction-for-error-catching-not-rollback"
       ]
     },
     "privacy": {
