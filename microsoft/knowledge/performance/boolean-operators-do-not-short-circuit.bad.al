@@ -20,8 +20,9 @@ codeunit 50541 "Perf Sample NoShortCircuit Bad"
     var
         SampleEntry: Record "G/L Entry";
     begin
-        // Nothing breaks here, but Get still runs for EntryNo = 0 and sends a
-        // database query that cannot find a record.
+        // Nothing breaks here, but Get still runs for EntryNo = 0 (meaning "not set")
+        // although the guard already excludes its result.
+        SampleEntry.SetLoadFields(Description);
         if (EntryNo <> 0) and SampleEntry.Get(EntryNo) then
             exit(SampleEntry.Description);
         exit('');

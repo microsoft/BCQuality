@@ -29,6 +29,7 @@ codeunit 50540 "Perf Sample NoShortCircuit Good"
         // The guard clause exits before any database access for an unset key.
         if EntryNo = 0 then
             exit('');
+        SampleEntry.SetLoadFields(Description);
         if not SampleEntry.Get(EntryNo) then
             exit('');
         exit(SampleEntry.Description);
