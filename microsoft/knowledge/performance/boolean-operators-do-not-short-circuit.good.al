@@ -22,6 +22,19 @@ codeunit 50540 "Perf Sample NoShortCircuit Good"
         exit(Customer.Blocked <> Customer.Blocked::" ");
     end;
 
+    procedure GetEntryDescription(EntryNo: Integer): Text[100]
+    var
+        SampleEntry: Record "G/L Entry";
+    begin
+        // The guard clause exits before any database access for an unset key.
+        if EntryNo = 0 then
+            exit('');
+        SampleEntry.SetLoadFields(Description);
+        if not SampleEntry.Get(EntryNo) then
+            exit('');
+        exit(SampleEntry.Description);
+    end;
+
     procedure IsEligibleForFreeShipping(SalesHeader: Record "Sales Header"): Boolean
     begin
         // 'or' is unsafe here: nesting would also be wrong, since it would drop the
