@@ -97,7 +97,8 @@ try {
         'microsoft/skills/review/al-appsource-review.md',
         'microsoft/skills/review/al-telemetry-review.md',
         'microsoft/skills/review/al-scm-review.md',
-        'microsoft/skills/review/al-finance-review.md'
+        'microsoft/skills/review/al-finance-review.md',
+        'microsoft/skills/review/al-xmlport-review.md'
     )
     $review = @($skills | Where-Object id -eq 'al-code-review')
     $knowledge = @($skills | Where-Object id -eq 'al-knowledge')
