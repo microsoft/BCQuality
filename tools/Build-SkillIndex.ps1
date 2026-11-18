@@ -31,7 +31,7 @@ if (-not $BCQualityRoot) {
 if (-not (Test-Path -LiteralPath $BCQualityRoot -PathType Container)) {
     throw "BCQuality root not found: $BCQualityRoot"
 }
-$BCQualityRoot = (Resolve-Path -LiteralPath $BCQualityRoot).Path
+$BCQualityRoot = (Get-Item -LiteralPath $BCQualityRoot).FullName
 if (-not $IndexPath) {
     $IndexPath = Join-Path $BCQualityRoot 'skill-index.json'
 }
