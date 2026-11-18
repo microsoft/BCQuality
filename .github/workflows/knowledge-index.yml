@@ -12,6 +12,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   validate-index:
     runs-on: ubuntu-latest
