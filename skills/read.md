@@ -50,7 +50,7 @@ All six fields are required. Missing or empty fields invalidate the file.
 
 `[all]` is mutually exclusive with explicit versions; do not combine. Consumers MUST expand closed ranges to the full set before comparison; an open-ended range `[N..]` is not enumerable and instead matches any target version greater than or equal to `N`.
 
-**`domain`** — String. A single domain tag that places the file within a broader area of concern. Standard values include `performance`, `security`, `ux`, `telemetry`, `testing`, `api`, `pipelines`, `finance`, `supply-chain`, `manufacturing`, `jobs`. New domains may be introduced by contributors; no closed enumeration is enforced at the schema level. Consumers MUST treat unknown domains as valid.
+**`domain`** — String. A single domain tag that places the file within a broader area of concern. A file's domain is the name of its `knowledge/<domain>/` folder. Values in use include `performance`, `security`, `ui`, `telemetry`, `testing`, `web-services`, `finance`, `scm`, `data-modeling`, `upgrade`. New domains may be introduced by contributors; no closed enumeration is enforced at the schema level. Consumers MUST treat unknown domains as valid.
 
 **`keywords`** — Array of strings. Free-text tags used for retrieval. Between 3 and 10 tags is typical. Tags are lowercase, kebab-case, and describe the concern in the vocabulary an engineer or agent would search for.
 
