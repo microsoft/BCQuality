@@ -17,15 +17,15 @@ The behavior also depends on the environment. The masking is controlled by the *
 
 ## Best Practice
 
-Use `MaskType` for what it is: a way to keep personal identifiers, financial details, or confidential notes from being read over a shoulder or captured in a screenshot. Decide who sees the value separately: leave it off pages whose audience should not read it, and govern the page that shows it with permissions and data classification. Keep credentials out of table fields altogether; that is a separate rule, see [`secrets-isolated-storage.md`](secrets-isolated-storage.md).
+Use `MaskType` for what it is: a way to keep personal identifiers, financial details, or confidential notes from being read over a shoulder or captured in a screenshot. Decide who sees the value separately: leave it off pages whose audience should not read it, keep it in a table that permissions can restrict, and govern the page that shows it with permissions and data classification. Keep credentials out of table fields altogether; that is a separate rule, see [`secrets-isolated-storage.md`](secrets-isolated-storage.md).
 
 See sample: [`masktype-conceals-in-the-ui-only.good.al`](masktype-conceals-in-the-ui-only.good.al).
 
 ## Anti Pattern
 
-Treating `MaskType = Concealed` as the control that decides who can read a value: a salary or personal identifier shown on a page that every user opens, such as a directory or a broadly used list, and considered private because it is masked; or a review that accepts a sensitive field as secured on that basis. Every user who can open the page receives the value and can reveal it, and it remains readable through every other access path.
+Treating `MaskType = Concealed` as the control that decides who can read a value: a salary or personal identifier shown on a page that every user can open, such as an employee profile or a broadly used list, and considered private because it is masked; or a review that accepts a sensitive field as secured on that basis. Every user who can open the page receives the value and can reveal it, and it remains readable through every other access path.
 
-The property also has placement limits that the compiler enforces: it is not allowed in repeater controls or on `ConfigurationDialog` pages, and it cannot be combined with `ExtendedDatatype = Masked`. A masked field in a list repeater is therefore both a misplaced value and an invalid declaration.
+The property also has placement limits, which are usage errors rather than design choices. It is not allowed in repeater controls or on `ConfigurationDialog` pages; a masked field in a repeater still compiles, and the UICop analyzer reports it as AW0017. It cannot be combined with `ExtendedDatatype = Masked`; the compiler rejects that combination.
 
 See sample: [`masktype-conceals-in-the-ui-only.bad.al`](masktype-conceals-in-the-ui-only.bad.al).
 

@@ -186,7 +186,12 @@
         "page-scope-filters-must-not-be-in-filtergroup-zero",
         "restore-the-filtergroup-after-setting-hidden-filters",
         "masktype-conceals-in-the-ui-only"
-      ]
+      ],
+      "articleOverrides": {
+        "masktype-conceals-in-the-ui-only": {
+          "context": "Target Business Central online version 29, where the feature key for masking sensitive data is enabled. The permission set assigned to every employee grants read access to the Employee table and execute access to the Employee Profile page, so every employee can open any employee's profile. Where the input defines an Employee Pay table and an Employee Pay Card page, they are granted only through a payroll permission set assigned to HR payroll staff; other employees have no access to that table or page. Annual salaries are confidential between each employee and HR payroll staff."
+        }
+      }
     },
     "style": {
       "articles": [

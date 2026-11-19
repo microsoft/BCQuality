@@ -29,12 +29,11 @@ table 50365 "Sample Employee Bad"
     }
 }
 
-page 50365 "Sample Employee Directory Bad"
+page 50365 "Sample Employee Profile Bad"
 {
-    Caption = 'Employee Directory';
-    PageType = List;
+    Caption = 'Employee Profile';
+    PageType = Card;
     SourceTable = "Sample Employee Bad";
-    UsageCategory = Lists;
     ApplicationArea = All;
     Editable = false;
 
@@ -42,13 +41,15 @@ page 50365 "Sample Employee Directory Bad"
     {
         area(Content)
         {
-            repeater(Employees)
+            group(General)
             {
+                Caption = 'General';
+
                 field("No."; Rec."No.") { }
                 field(Name; Rec.Name) { }
                 field("Phone No."; Rec."Phone No.") { }
-                // The directory is open to every employee; masking is relied on to keep
-                // salaries private, and MaskType is not allowed in a repeater at all.
+                // Every employee opens this page; the mask is relied on to keep
+                // colleagues' salaries private, yet any of them can reveal it.
                 field("Annual Salary"; Rec."Annual Salary")
                 {
                     MaskType = Concealed;
