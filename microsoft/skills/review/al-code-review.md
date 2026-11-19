@@ -30,6 +30,7 @@ sub-skills:
   - microsoft/skills/review/al-telemetry-review.md
   - microsoft/skills/review/al-scm-review.md
   - microsoft/skills/review/al-finance-review.md
+  - microsoft/skills/review/al-xmlport-review.md
 ---
 
 # AL code review
