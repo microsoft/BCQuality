@@ -1,5 +1,5 @@
 ---
-bc-version: ["23.."]
+bc-version: [23..]
 domain: performance
 keywords: [tableextension, companion-table, gl-entry, related-table, flowfield, hot-table]
 technologies: [al]

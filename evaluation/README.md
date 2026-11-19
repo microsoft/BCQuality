@@ -107,6 +107,13 @@ branch of the rule; it does not prove
 baseline-relative attribution from a standalone file, reproduce a tenant's
 license checks, or establish that every SaaS identity has these rights.
 
+The DataAccessIntent and hot-ledger related-table pairs are explicitly selected.
+Their article-specific contexts supply BC 28; the latter also states that one
+integration alone supplies and consumes the metadata, with no native ledger
+list-column requirement. Those workload facts cannot be inferred from the
+standalone table declarations after comments are stripped. The contexts reach
+both positive and clean inputs without affecting other performance pairs.
+
 ## Validate the corpus
 
 ```powershell
