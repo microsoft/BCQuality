@@ -8,25 +8,51 @@ BCQuality contains **knowledge and reusable skills**, not agents or a Business
 Central extension. Your host supplies the agent. You can install the content
 as a plugin, use it from another integration, or browse the knowledge directly.
 
-## Four ways to use BCQuality
+## 🦸 Community heroes
+
+🎉 **19 community contributors have added 229 knowledge articles to BCQuality. Thank you!**
+
+<table>
+  <tr>
+    <th colspan="3">📚 Most knowledge articles added</th>
+    <th colspan="3">🔀 Most merged contributions</th>
+  </tr>
+  <tr>
+    <td align="center" valign="top" width="16.66%"><a href="https://github.com/demiliani"><img src="https://avatars.githubusercontent.com/u/33155438?v=4&amp;s=144" width="72" height="72" alt=""><br><b>@demiliani</b></a><br><sub>📚 <b>100</b> articles<br>🔀 <b>17</b> merged</sub></td>
+    <td align="center" valign="top" width="16.66%"><a href="https://github.com/MichaelDieringer"><img src="https://avatars.githubusercontent.com/u/65093775?v=4&amp;s=144" width="72" height="72" alt=""><br><b>@MichaelDieringer</b></a><br><sub>📚 <b>69</b> articles<br>🔀 <b>17</b> merged</sub></td>
+    <td align="center" valign="top" width="16.66%"><a href="https://github.com/JeremyVyska"><img src="https://avatars.githubusercontent.com/u/35526546?v=4&amp;s=144" width="72" height="72" alt=""><br><b>@JeremyVyska</b></a><br><sub>📚 <b>31</b> articles<br>🔀 <b>6</b> merged</sub></td>
+    <td align="center" valign="top" width="16.66%"><a href="https://github.com/pri-kise"><img src="https://avatars.githubusercontent.com/u/56249171?v=4&amp;s=144" width="72" height="72" alt=""><br><b>@pri-kise</b></a><br><sub>📚 <b>7</b> articles<br>🔀 <b>7</b> merged</sub></td>
+    <td align="center" valign="top" width="16.66%"><a href="https://github.com/Nikolaj1407"><img src="https://avatars.githubusercontent.com/u/242577394?v=4&amp;s=144" width="72" height="72" alt=""><br><b>@Nikolaj1407</b></a><br><sub>📚 <b>0</b> articles<br>🔀 <b>4</b> merged</sub></td>
+    <td align="center" valign="top" width="16.66%"><a href="https://github.com/javiarmesto"><img src="https://avatars.githubusercontent.com/u/25327760?v=4&amp;s=144" width="72" height="72" alt=""><br><b>@javiarmesto</b></a><br><sub>📚 <b>2</b> articles<br>🔀 <b>3</b> merged</sub></td>
+  </tr>
+</table>
+
+Thanks also to <a href="https://github.com/microsoft"><img src="https://avatars.githubusercontent.com/u/6154722?v=4&amp;s=40" width="20" height="20" align="middle" alt=""> <b>Microsoft</b></a>, recognized collectively for **105 merged contributions**.
+
+👉 **[Meet all contributors and see how credit works](docs/contributors.md)** · *Manual snapshot: 20 November 2026*
+
+## 🚀 Four ways to use BCQuality
 
 | Use | Status | Start here |
 | --- | --- | --- |
-| Review your AL code on demand with the Copilot CLI plugin | Available | [Quick start](#quick-start) |
-| Review pull requests automatically in AL-Go for GitHub repositories | Available in AL-Go preview | [Enable Copilot code review](https://github.com/microsoft/AL-Go/blob/main/Scenarios/Agents/CopilotCodeReview.md) |
-| Ask a Business Central development question and get answers citing BCQuality's knowledge | Available in the plugin | [Knowledge consultation](docs/knowledge-consultation.md) |
-| Apply BCQuality guidance to a development plan before coding | Preview in the plugin | [Plan guidance](#preview-guidance-before-implementation) |
+| 🔍 Review your AL code on demand with the Copilot CLI plugin | ✅ Available | [Quick start](#quick-start) |
+| 🤖 Review pull requests automatically in AL-Go for GitHub repositories | 🧪 Available in AL-Go preview | [Enable Copilot code review](https://github.com/microsoft/AL-Go/blob/main/Scenarios/Agents/CopilotCodeReview.md) |
+| 💬 Ask a Business Central development question and get answers citing BCQuality's knowledge | ✅ Available in the plugin | [Knowledge consultation](docs/knowledge-consultation.md) |
+| 🗺️ Apply BCQuality guidance to a development plan before coding | 🧪 Preview in the plugin | [Plan guidance](#preview-guidance-before-implementation) |
 
-## Quick start
+<a name="quick-start"></a>
+
+## ⚡ Quick start
 
 Install the plugin and run your first review. You need
 [GitHub Copilot CLI, installed and signed in](https://docs.github.com/en/copilot/get-started/cli-quickstart),
 with an account and organization policy that allow its use. You do not need to
 clone BCQuality, build a runner, or deploy an app to Business Central.
 
-Copilot CLI runs in any terminal, including the **integrated terminal in VS
-Code**. A plugin installed in Copilot CLI is not automatically available in the
-Copilot Chat panel.
+> [!TIP]
+> Copilot CLI runs in any terminal, including the **integrated terminal in VS
+> Code**. A plugin installed in Copilot CLI is not automatically available in the
+> Copilot Chat panel.
 
 1. Install the plugin:
 
@@ -56,7 +82,7 @@ Copilot Chat panel.
 The folder should contain `app.json` and your AL source; it does **not** need
 to be a Git repository. On macOS or Linux, use your app's local path instead.
 
-### What you get
+### 📋 What you get
 
 Each selected review returns findings with a source location, severity,
 confidence, and the guidance behind them. For example, a performance finding
@@ -70,10 +96,11 @@ might read:
 >
 > Guidance: [Apply filters before iterating](microsoft/knowledge/performance/apply-filters-before-iterating.md)
 
-This example is illustrative; your host may show the same information as text,
-a table, or JSON. `completed` with no findings means nothing was flagged in
-that review's scope; `partial` or `failed` is **not** a clean result. See
-[reading your results](docs/using-bcquality.md#reading-your-results).
+> [!IMPORTANT]
+> This example is illustrative; your host may show the same information as text,
+> a table, or JSON. `completed` with no findings means nothing was flagged in
+> that review's scope; `partial` or `failed` is **not** a clean result. See
+> [reading your results](docs/using-bcquality.md#reading-your-results).
 
 Next, try a focused request, such as reviewing performance only or reviewing
 your uncommitted changes. See [common review requests](docs/using-bcquality.md#common-review-requests).
@@ -82,22 +109,22 @@ your uncommitted changes. See [common review requests](docs/using-bcquality.md#c
 (`pwsh`) is recommended for fast knowledge discovery. If it is unavailable,
 the review can still discover knowledge by reading the folders.
 
-## Documentation
+## 📖 Documentation
 
 | I want to... | Start here |
 | --- | --- |
-| Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](docs/using-bcquality.md#choose-how-to-use-bcquality) |
-| Review a file, changes, a branch, or a particular concern | [Using BCQuality](docs/using-bcquality.md) |
-| Support design and specification with cited knowledge | [Knowledge consultation](docs/knowledge-consultation.md) |
-| Resolve setup problems, incomplete reviews, or incorrect findings | [Troubleshooting and support](docs/troubleshooting.md) |
-| Browse the available guidance | [Knowledge by domain](docs/using-bcquality.md#knowledge-by-domain) |
-| Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |
-| Contribute knowledge or improve a rule | [Your first contribution](docs/contributing.md#your-first-contribution) |
-| Connect a host, agent, or CI integration | [Minimal integration example](docs/agent-consumption.md#try-a-minimal-integration) |
+| 🧭 Choose direct reading, a supplied skill, or my own agent | [Ways to use BCQuality](docs/using-bcquality.md#choose-how-to-use-bcquality) |
+| 🔍 Review a file, changes, a branch, or a particular concern | [Using BCQuality](docs/using-bcquality.md) |
+| 💬 Support design and specification with cited knowledge | [Knowledge consultation](docs/knowledge-consultation.md) |
+| 🔧 Resolve setup problems, incomplete reviews, or incorrect findings | [Troubleshooting and support](docs/troubleshooting.md) |
+| 📚 Browse the available guidance | [Knowledge by domain](docs/using-bcquality.md#knowledge-by-domain) |
+| ⚙️ Configure the plugin or use my organization's rules | [Customizing BCQuality](docs/customizing-bcquality.md) |
+| ✍️ Contribute knowledge or improve a rule | [Your first contribution](docs/contributing.md#your-first-contribution) |
+| 🔌 Connect a host, agent, or CI integration | [Minimal integration example](docs/agent-consumption.md#try-a-minimal-integration) |
 
 [All documentation and technical references](docs/README.md).
 
-## Scope
+## 🎯 Scope
 
 Today's curated content covers **technical AL code review** and focused
 **Supply Chain Management (SCM)** and **Finance** functional domains. It augments
@@ -117,7 +144,9 @@ Manufacturing, Jobs, and Service, and technologies such as PowerShell,
 pipelines, and Power Platform, remain valid future scope, **not current
 coverage claims**.
 
-## Preview: guidance before implementation
+<a name="preview-guidance-before-implementation"></a>
+
+## 🗺️ Preview: guidance before implementation
 
 BCQuality can also apply its knowledge **before code is written**. The
 plugin's `al-plan-guidance` skill takes an existing AL development plan and
@@ -135,25 +164,26 @@ and ask:
 Give the plan and the report to your coding agent together. After
 implementation, review the finished change with `al-code-review`.
 
-This capability is a preview, and its contract may change based on pilot
-feedback. Integrations can also call it without the plugin; see the
-[plan guidance example](docs/agent-consumption.md#try-plan-guidance).
+> [!NOTE]
+> This capability is a preview, and its contract may change based on pilot
+> feedback. Integrations can also call it without the plugin; see the
+> [plan guidance example](docs/agent-consumption.md#try-plan-guidance).
 
-## What's in this repo
+## 🗂️ What's in this repo
 
 Knowledge articles cover one concern each. Skills tell an agent how to find
 and apply the relevant knowledge. Both live in three layers:
 
 | Layer | Purpose |
 | --- | --- |
-| [Microsoft](microsoft/) | Microsoft-endorsed skills and their knowledge. |
-| [Community](community/) | Community-owned skills and their knowledge. |
-| [Custom](custom/) | Organization-specific additions and overrides in your own fork. |
+| 🏢 [Microsoft](microsoft/) | Microsoft-endorsed skills and their knowledge. |
+| 🌍 [Community](community/) | Community-owned skills and their knowledge. |
+| 🛠️ [Custom](custom/) | Organization-specific additions and overrides in your own fork. |
 
 All three are enabled by default; Custom is empty upstream. You do not need
 to configure layers to get started.
 
-### How the pieces fit
+### 🧩 How the pieces fit
 
 You use BCQuality through **capabilities**: `al-code-review` reviews code,
 `al-knowledge` answers development questions with cited knowledge, and
@@ -170,7 +200,7 @@ return a `findings-report`; knowledge consultation returns a cited
 `development-guidance-report`. See
 [how agents consume BCQuality](docs/agent-consumption.md).
 
-## Versioning
+## 🏷️ Versioning
 
 Update the installed plugin from your terminal, then start a new session:
 
@@ -183,19 +213,19 @@ plugin version `1.10.0`. Installing from the repository without a tag uses the
 current `main`, which can include changes after or before the matching release.
 For reproducible runs and organization forks, see [updates and versions](docs/customizing-bcquality.md#updates-and-versions).
 
-## What belongs here
+## 🚦 What belongs here
 
 Knowledge belongs here when it prevents a BC-specific mistake an otherwise
 capable agent would make, including false-positive findings. BC facts belong
 in knowledge articles, not skill instructions. See the
 [admission test and examples](docs/contributing.md#what-belongs-here).
 
-## Contributing
+## 🙌 Contributing
 
 Partners are welcome to contribute to the layer that owns the domain,
 regardless of affiliation. Start with the [contribution guide](docs/contributing.md).
 To report a problem without authoring a rule, see [support](docs/troubleshooting.md#reporting-a-problem).
 
-## License
+## ⚖️ License
 
 [MIT](LICENSE)
