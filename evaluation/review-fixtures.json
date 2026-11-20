@@ -131,8 +131,18 @@
         "avoid-user-prompts-inside-transactions",
         "use-grouped-query-for-distinct-values-and-duplicates",
         "compute-role-center-headlines-in-the-background",
-        "use-tryfunction-for-error-catching-not-rollback"
-      ]
+        "use-tryfunction-for-error-catching-not-rollback",
+        "dataaccessintent-readonly-on-analytical-objects",
+        "prefer-related-table-over-extension-on-hot-ledgers"
+      ],
+      "articleOverrides": {
+        "dataaccessintent-readonly-on-analytical-objects": {
+          "context": "Target Business Central 28, worldwide standard application (w1)."
+        },
+        "prefer-related-table-over-extension-on-hot-ledgers": {
+          "context": "Target Business Central 28, worldwide standard application (w1). The external reference and payload are supplied only for entries processed by one integration and are consumed only by that integration. No native ledger list column is required."
+        }
+      }
     },
     "privacy": {
       "articles": [
@@ -184,8 +194,14 @@
         "do-not-concatenate-external-text-into-setfilter",
         "exposed-objects-must-be-in-a-permission-set",
         "page-scope-filters-must-not-be-in-filtergroup-zero",
-        "restore-the-filtergroup-after-setting-hidden-filters"
-      ]
+        "restore-the-filtergroup-after-setting-hidden-filters",
+        "masktype-conceals-in-the-ui-only"
+      ],
+      "articleOverrides": {
+        "masktype-conceals-in-the-ui-only": {
+          "context": "Target Business Central online version 29, where the feature key for masking sensitive data is enabled. The permission set assigned to every employee grants read access to the Employee table and execute access to the Employee Profile page, so every employee can open any employee's profile. Where the input defines an Employee Pay table and an Employee Pay Card page, they are granted only through a payroll permission set assigned to HR payroll staff; other employees have no access to that table or page. Annual salaries are confidential between each employee and HR payroll staff."
+        }
+      }
     },
     "style": {
       "articles": [
@@ -196,7 +212,8 @@
         "mutating-procedure-for-a-page-caller-takes-var-record",
         "build-client-links-with-geturl",
         "setfilter-date-operands-must-be-replacement-values",
-        "use-productname-instead-of-hardcoded-product-name"
+        "use-productname-instead-of-hardcoded-product-name",
+        "ml-properties-and-textconst-are-not-exported-to-xliff"
       ]
     },
     "telemetry": {
@@ -233,7 +250,10 @@
         "rolecenter-permission-gating-must-use-accessbypermission",
         "notification-recall-needs-known-id",
         "list-page-document-routing-uses-page-management",
-        "reset-per-row-page-variables-in-onaftergetrecord"
+        "reset-per-row-page-variables-in-onaftergetrecord",
+        "navigatepage-footer-actions-need-infooterbar-and-standard-images",
+        "register-assisted-setup-on-every-registration-event",
+        "wizard-collects-input-in-a-temporary-source-table"
       ]
     },
     "upgrade": {
@@ -263,7 +283,8 @@
         "format-exchanged-values-with-standard-format-9",
         "api-page-least-privilege-write-access",
         "set-text-encoding-on-streams-exchanged-externally",
-        "describe-api-pages-for-mcp-with-abouttext"
+        "describe-api-pages-for-mcp-with-abouttext",
+        "api-query-is-read-only-and-has-no-webhooks"
       ],
       "articleOverrides": {
         "describe-api-pages-for-mcp-with-abouttext": {
@@ -273,6 +294,14 @@
           }
         }
       }
+    },
+    "xmlport": {
+      "articles": [
+        "pass-the-filtered-record-to-limit-xmlport-data",
+        "xmlport-import-export-return-value-controls-failure-handling",
+        "xmlport-run-import-argument-must-match-direction",
+        "xmlport-text-encoding-defaults-to-msdos"
+      ]
     }
   }
 }
