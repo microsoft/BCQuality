@@ -16,6 +16,7 @@ of BCQuality's internal protocol is needed.
 | Fix setup problems or report an incorrect finding | [Troubleshooting and support](troubleshooting.md) |
 | Select layers, add company rules, or maintain a fork | [Customizing BCQuality](customizing-bcquality.md) |
 | Add or improve shared knowledge | [Your first contribution](contributing.md#your-first-contribution) |
+| Meet the people building BCQuality | [Contributors and how credit works](contributors.md) |
 
 ## Integration and technical reference
 
