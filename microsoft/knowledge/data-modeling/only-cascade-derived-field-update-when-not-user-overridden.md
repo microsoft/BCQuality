@@ -29,7 +29,7 @@ See sample: [`only-cascade-derived-field-update-when-not-user-overridden.good.al
 
 ## Anti Pattern
 
-A new or changed source-field `OnValidate` copies the source into a derived `Text`/`Code` field (directly, or through `UpperCase`/`CopyStr`/`DelChr`) unconditionally — `"Search Name" := Name;` — while the target is presented to users as their own alias: an editable page field, or a caption/ToolTip calling it an alternate or search name. Any value a user entered there is lost the next time the source is validated. Not this anti-pattern: a target declared `Editable = false`; a target on no page and with no other writer (a pure cache, such as Assembly Header's `"Search Description"`); arithmetic or quantity recomputes; or a guard comparing against a re-read stored value instead of `xRec`.
+A new or changed source-field `OnValidate` copies the source into a derived `Text`/`Code` field (directly, or through `UpperCase`/`CopyStr`/`DelChr`) unconditionally — `"Search Name" := Name;` — while the target is shown as an editable field on a page of the app, so users can type their own value into it. Any value a user entered there is lost the next time the source is validated. Not this anti-pattern: a target declared `Editable = false` or shown on pages only as non-editable; a target the app shows on no page (a pure cache, such as Assembly Header's `"Search Description"`); arithmetic or quantity recomputes; or a guard comparing against a re-read stored value instead of `xRec`.
 
 See sample: [`only-cascade-derived-field-update-when-not-user-overridden.bad.al`](only-cascade-derived-field-update-when-not-user-overridden.bad.al).
 

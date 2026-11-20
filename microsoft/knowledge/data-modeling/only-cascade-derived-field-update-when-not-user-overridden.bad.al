@@ -35,3 +35,28 @@ table 50800 "Equipment Model"
         }
     }
 }
+
+page 50800 "Equipment Model Card"
+{
+    PageType = Card;
+    SourceTable = "Equipment Model";
+
+    layout
+    {
+        area(Content)
+        {
+            group(General)
+            {
+                field("No."; Rec."No.")
+                {
+                }
+                field(Name; Rec.Name)
+                {
+                }
+                field("Search Name"; Rec."Search Name")
+                {
+                }
+            }
+        }
+    }
+}

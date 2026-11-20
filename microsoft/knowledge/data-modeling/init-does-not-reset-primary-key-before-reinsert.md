@@ -25,7 +25,7 @@ Make the key of the inserted row the key you intend, by one of these means:
 - `Clear` the variable before `Init()` when the same variable must be reused.
 - Reset an `AutoIncrement` key explicitly after `Init()` or `TransferFields`, as Base Application code does: `EDocMappingLog."Entry No." := 0;` after `TransferFields` in a copy loop in the E-Documents app, and `Rec."Entry No." := 0;` after `Rec.Init()` in the Data Archive app.
 
-Not affected: a variable that has not read, copied or inserted anything since it was declared or cleared; code that assigns a new value to the key field(s) that distinguish each new row between `Init()` and `Insert()` (for example a `"Line No."` counter, while `"Document Type"` and `"Document No."` stay the same); the singleton shape `if not Get() then begin Init(); Insert(); end;`, where the failed `Get` read nothing; and temporary records, where Learn states that `AutoIncrement` does not work, so the code assigns the key itself.
+Not affected: a variable that has not read, copied or inserted anything since it was declared or cleared; code that assigns a new value to the key field(s) that distinguish each new row between `Init()` and `Insert()` (for example a `"Line No."` counter, while `"Document Type"` and `"Document No."` stay the same); the singleton shape `if not Get() then begin Init(); Insert(); end;`, where the failed `Get` read nothing. Temporary records are not an exception by themselves: `Init()` keeps their key as well, and Learn states that `AutoIncrement` does not work on them, so a temporary insert is clean only when the code assigns a new key before each `Insert`.
 
 See sample: [`init-does-not-reset-primary-key-before-reinsert.good.al`](init-does-not-reset-primary-key-before-reinsert.good.al).
 
