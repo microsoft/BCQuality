@@ -1,20 +1,20 @@
 permissionset 50480 "LIMITED USER"
 {
-    Assignable = false;
+    Assignable = true;
     Permissions =
         tabledata Customer = R,
-        codeunit "Protected Setup Action Test" = X;
+        codeunit "Protected Setup Action" = X;
 }
 
 permissionset 50485 "CUSTOMER EDITOR"
 {
-    Assignable = false;
+    Assignable = true;
     Permissions =
         tabledata Customer = RI,
-        codeunit "Protected Setup Action Test" = X;
+        codeunit "Protected Setup Action" = X;
 }
 
-codeunit 50481 "Protected Setup Action Test"
+codeunit 50481 "Protected Setup Action"
 {
     trigger OnRun()
     var
@@ -26,45 +26,54 @@ codeunit 50481 "Protected Setup Action Test"
     end;
 }
 
-codeunit 50482 "Permission Test Good"
+codeunit 50482 "Customer Permission Tests"
 {
     Subtype = Test;
     TestPermissions = Restrictive;
 
-    [Test]
-    procedure LimitedUserCannotRunSetup()
     var
-        PermissionsMock: Codeunit "Permissions Mock";
-        SetupAction: Codeunit "Protected Setup Action Test";
-    begin
-        PermissionsMock.Start();
-        PermissionsMock.SetExactPermissionSet('LIMITED USER');
+        Assert: Codeunit "Library Assert";
 
-        asserterror SetupAction.Run();
-        Assert.ExpectedError('permission');
+    [Test]
+    procedure LimitedUserHasNoWriteAccessToCustomers()
+    var
+        Customer: Record Customer;
+        PermissionsMock: Codeunit "Permissions Mock";
+    begin
+        // [FEATURE] [Permissions]
+        // [SCENARIO] A user with LIMITED USER cannot write customers
+        // [GIVEN] The execution context is lowered to LIMITED USER
+        PermissionsMock.Start();
+        PermissionsMock.Set('LIMITED USER');
+
+        // [WHEN] The test reads the user's write permission on Customer
+        // [THEN] Write permission is not granted
+        Assert.IsFalse(Customer.WritePermission(), 'LIMITED USER must not grant write access to Customer.');
 
         PermissionsMock.Stop();
     end;
 
     [Test]
-    procedure EditorCanRunSetup()
+    procedure CustomerEditorCanRunSetupAction()
     var
         Customer: Record Customer;
         PermissionsMock: Codeunit "Permissions Mock";
-        SetupAction: Codeunit "Protected Setup Action Test";
+        SetupAction: Codeunit "Protected Setup Action";
     begin
-        // The positive side: the set grants what the operation needs.
-        // Removing 'I' from CUSTOMER EDITOR makes SetupAction.Run fail with a permission error.
+        // [FEATURE] [Permissions]
+        // [SCENARIO] A user with CUSTOMER EDITOR can run the setup action
+        // [GIVEN] The execution context is lowered to CUSTOMER EDITOR
         PermissionsMock.Start();
         PermissionsMock.Set('CUSTOMER EDITOR');
 
+        // [WHEN] The setup action runs
         SetupAction.Run();
 
-        // Verify within what the set grants (R); the test runner stops the mock after the test.
+        // [THEN] The customer exists, read within what the set grants
+        // Removing Insert from CUSTOMER EDITOR makes SetupAction.Run fail with a permission error.
         Customer.SetRange("No.", 'NO-INSERT');
         Assert.RecordCount(Customer, 1);
-    end;
 
-    var
-        Assert: Codeunit "Library Assert";
+        PermissionsMock.Stop();
+    end;
 }

@@ -25,6 +25,8 @@ See sample: [`permission-tests-must-lower-the-execution-context.good.al`](permis
 
 ## Anti Pattern
 
-Setting `TestPermissions = Disabled` or leaving the effective D365 Full Access context in place while asserting that a limited user is denied, or adding a `[TestPermissions(...)]` attribute without any runner/test-library code that applies the intended permission set. Changing a `permissionset` or `permissionsetextension` without any test that runs an allowed operation in a context lowered to it is the same gap from the other side. Do not report the mirror image: a test that lowers the context through a role including the permission set under test, and then asserts the boundary, has exercised that permission set and is not a coverage gap.
+Setting `TestPermissions = Disabled` or leaving the effective D365 Full Access context in place while asserting that a limited user is denied, or adding a `[TestPermissions(...)]` attribute without any runner/test-library code that applies the intended permission set. Changing a `permissionset` or `permissionsetextension` while no test, in the change or already in the test app, runs an allowed operation in a context lowered to it is the same gap from the other side. The gap is the missing coverage, not a missing test edit: when an existing test already lowers the context to the changed set (or to a set or role that includes it) and runs the operation the change is about, the change needs no new test. Do not report the mirror image: a test that lowers the context through a role including the permission set under test, and then asserts the boundary, has exercised that permission set and is not a coverage gap.
+
+The sample shows the permission-set side: the change grants Insert so that users can run a setup action, and nothing runs that action under the set.
 
 See sample: [`permission-tests-must-lower-the-execution-context.bad.al`](permission-tests-must-lower-the-execution-context.bad.al).
