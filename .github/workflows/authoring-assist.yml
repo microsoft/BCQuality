@@ -1,0 +1,50 @@
+name: Authoring-assist advisory
+
+# Unprivileged intake. Fires on PRs that add/modify knowledge articles and
+# captures PR metadata as an artifact. All privileged work (reading the PR head,
+# generating suggestions, posting the advisory comment) happens in the companion
+# `Authoring-assist advisory runner` workflow, which runs in the trusted
+# `workflow_run` context. This split lets the advisory comment on fork PRs
+# without ever exposing a write-scoped token to a job that reads untrusted PR
+# content. The advisory is NON-BLOCKING: it only suggests, never fails a check.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - '**/knowledge/**/*.md'
+
+concurrency:
+  group: authoring-assist-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  intake:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Save PR metadata
+        run: |
+          $outputDir = Join-Path $env:GITHUB_WORKSPACE 'advisory-input'
+          New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
+
+          @{
+            prNumber   = "${{ github.event.pull_request.number }}"
+            headSha    = "${{ github.event.pull_request.head.sha }}"
+            baseRef    = "${{ github.event.pull_request.base.ref }}"
+            repository = "${{ github.repository }}"
+          } | ConvertTo-Json -Depth 5 | Set-Content -Path (Join-Path $outputDir 'pr-metadata.json') -Encoding UTF8
+
+      - name: Upload advisory input
+        uses: actions/upload-artifact@v4
+        with:
+          name: authoring-assist-input-${{ github.event.pull_request.number }}
+          path: ${{ github.workspace }}/advisory-input
+          if-no-files-found: error
