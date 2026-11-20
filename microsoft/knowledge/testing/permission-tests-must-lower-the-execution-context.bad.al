@@ -1,26 +1,21 @@
-codeunit 50483 "Protected Setup Action Bad"
+// The change adds Insert to CUSTOMER EDITOR so that its users can run the setup action.
+// No test lowers the execution context to CUSTOMER EDITOR and runs that action.
+permissionset 50485 "CUSTOMER EDITOR"
+{
+    Assignable = true;
+    Permissions =
+        tabledata Customer = RI,
+        codeunit "Protected Setup Action" = X;
+}
+
+codeunit 50481 "Protected Setup Action"
 {
     trigger OnRun()
     var
         Customer: Record Customer;
     begin
         Customer.Init();
-        Customer."No." := 'SUPER-INSERT';
+        Customer."No." := 'NO-INSERT';
         Customer.Insert();
-    end;
-}
-
-codeunit 50484 "Permission Test Bad"
-{
-    Subtype = Test;
-    TestPermissions = Disabled;
-
-    [Test]
-    procedure LimitedUserCannotRunSetup()
-    var
-        SetupAction: Codeunit "Protected Setup Action Bad";
-    begin
-        // Disabled runs as SUPER; no limited-user boundary is exercised.
-        asserterror SetupAction.Run();
     end;
 }
