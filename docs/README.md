@@ -37,3 +37,16 @@ prerequisites for using the plugin.
 | [DO](../skills/do.md) | Action-skill format and structured output contract. |
 | [WRITE](../skills/write.md) | Knowledge-authoring rules. |
 | [Review evaluation](../evaluation/README.md) | Sample conventions, fixture preparation, and scoring. |
+
+### Community integrations
+
+These are external projects maintained by community members. They are not
+part of BCQuality, and BCQuality does not support, test, or validate them.
+Setup, supported versions, limitations, and support belong to each project;
+report problems there.
+
+| Project | Purpose |
+| --- | --- |
+| [ADO-BCQuality-Linux](https://github.com/MattTraxinger/ADO-BCQuality-Linux) (external, community-maintained) | Example runner for Azure DevOps pull-request reviews on Linux agents. |
+| [ADO-BCQuality-Windows](https://github.com/MattTraxinger/ADO-BCQuality-Windows) (external, community-maintained) | Example runner for Azure DevOps pull-request reviews on Windows agents. |
+
