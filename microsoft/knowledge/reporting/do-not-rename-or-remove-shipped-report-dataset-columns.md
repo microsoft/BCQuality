@@ -19,13 +19,15 @@ Agents treat a column name like a private identifier and "tidy" names (`No_` to 
 
 Once a report has been released, keep existing column names and keep columns that layouts may use. Add new columns instead of renaming, and keep old ones populated (they can stay unused by your own layouts). If a column must change, ship a new report or a new layout-compatible column alongside the old one, and communicate it as a breaking change for custom layouts.
 
+Compare the effective dataset, including corresponding report extensions. [Supported same-app extraction](../breaking-changes/relocating-a-field-to-a-tableextension-is-not-a-deletion.md) that retains the column's name, type, dataitem context, and population in an extension of the same report is not deletion of that column. Review actual dataset or layout changes separately from declaration relocation.
+
 See sample: [`do-not-rename-or-remove-shipped-report-dataset-columns.good.al`](do-not-rename-or-remove-shipped-report-dataset-columns.good.al).
 
 ## Anti Pattern
 
 A diff that renames the name of an existing `column(Name; Source)` in a released report or report extension, or removes such a column, justified by naming style or by "no layout uses it" based only on the layouts in the repository.
 
-Changing a column's source expression while keeping its name and type is not this defect. Neither is changing a report that has never been released (see the unreleased-symbol guidance in breaking-changes).
+Changing a column's source expression while keeping its name and type is not this defect. Neither is preserving the column in the effective dataset through supported same-app extraction, or changing a report that has never been released (see the unreleased-symbol guidance in breaking-changes).
 
 See sample: [`do-not-rename-or-remove-shipped-report-dataset-columns.bad.al`](do-not-rename-or-remove-shipped-report-dataset-columns.bad.al).
 
