@@ -1,15 +1,16 @@
-// A pre-existing table with millions of rows. Changing the primary key or
-// widening a field type without an upgrade plan can fail at deployment.
-tableextension 50233 "Cust Ledger Entry Ext" extends "Cust. Ledger Entry"
+// Published field 1 was BigInteger and can contain values above 2,147,483,647.
+// Narrowing it to Integer is not the supported Integer-to-BigInteger conversion.
+table 50233 "Sample Ledger Entry Bad"
 {
     fields
     {
-        // Widening Integer to BigInteger on an existing column with persisted data
-        // requires an upgrade plan and value-range evidence; not safe as a bare edit.
-        modify("Entry No.")
-        {
-            // (hypothetical: field type change goes here)
-        }
+        field(1; "Entry No."; Integer) { }
+        field(2; "Customer No."; Code[20]) { }
+        field(3; "Posting Date"; Date) { }
     }
-    // No accompanying upgrade codeunit, no upgrade tag, no overflow verification.
+    keys
+    {
+        key(PK; "Entry No.") { Clustered = true; }
+        key(ByCustomer; "Customer No.", "Posting Date") { }
+    }
 }

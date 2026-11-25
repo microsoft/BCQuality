@@ -6,11 +6,29 @@ codeunit 50300 "Discount Api Good"
         exit(Amount * 0.05);
     end;
 
-    // New capability added as a separate overload, so existing callers of
-    // CalculateDiscount(Amount) keep compiling. The return value is named, which
-    // is the one signature change that is always safe to make.
+    // New capability uses a separate procedure, preserving existing callers.
+    // Naming a previously unnamed return value is also safe.
     procedure CalculateDiscountWithRate(Amount: Decimal; Rate: Decimal) Discount: Decimal
     begin
         Discount := Amount * Rate;
+    end;
+}
+
+codeunit 50301 "Ledger Entry Api Good"
+{
+    // Previously Integer parameter, local, and return; widened on runtime 18.0+.
+    // Integer consumers must still handle overflow when using the larger range.
+    procedure GetNextEntryNo(LastEntryNo: BigInteger): BigInteger
+    var
+        NextEntryNo: BigInteger;
+    begin
+        NextEntryNo := LastEntryNo + 1;
+        exit(NextEntryNo);
+    end;
+
+    // Widening preserves the existing var modifier.
+    procedure AdvanceEntryNo(var EntryNo: BigInteger)
+    begin
+        EntryNo += 1;
     end;
 }

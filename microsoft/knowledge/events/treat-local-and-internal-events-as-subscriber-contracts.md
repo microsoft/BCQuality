@@ -17,10 +17,16 @@ The `local` and `internal` access modifiers on Business and Integration event pu
 
 Preserve a shipped Business or Integration event's identity and every existing parameter's name, type/subtype, and passing mode regardless of the procedure access modifier. AS0025 protects names and types, while AS0063 and AS0077 protect removal and addition of `var`. New parameters may be added at any position on a `local` or `internal` event because subscribers can omit them; public event procedures follow the stricter caller contract described by `add-new-event-parameters-at-the-end`.
 
+Apply the runtime 18.0+ (BC 29+) `Integer`-to-`BigInteger` parameter-widening exception rather than treating every numeric retype as an unconditional subscriber break. Preserve parameter names and `var` modifiers, check the target runtime and analyzer diagnostics, and review dependent subscribers for narrowing or output paths that still use `Integer`. Platform-supported widening does not guarantee that an old subscriber can process values above 2,147,483,647; report that concrete range risk separately. See [published procedure signatures](../breaking-changes/do-not-change-published-procedure-signatures.md).
+
 See sample: [`treat-local-and-internal-events-as-subscriber-contracts.good.al`](treat-local-and-internal-events-as-subscriber-contracts.good.al).
 
 ## Anti Pattern
 
-Renaming or removing an existing parameter, changing its type/subtype, or adding/removing its `var` modifier because the event publisher procedure is `local` or `internal`. AppSourceCop checks these subscriber-breaking changes because dependent event subscribers can still bind to the event. Reordering unchanged parameters, or inserting a new parameter among them, is not this anti-pattern.
+Renaming or removing an existing parameter, making an unsupported type/subtype change, or adding/removing its `var` modifier because the event publisher procedure is `local` or `internal`. AppSourceCop checks these subscriber-breaking changes because dependent event subscribers can still bind to the event. Reordering unchanged parameters, inserting a new parameter among them, and supported `Integer`-to-`BigInteger` widening on runtime 18.0+ are not this anti-pattern.
 
 See sample: [`treat-local-and-internal-events-as-subscriber-contracts.bad.al`](treat-local-and-internal-events-as-subscriber-contracts.bad.al).
+
+## References
+
+- [AS0147: supported Integer-to-BigInteger parameter widening and dependent-extension risks](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/analyzers/appsourcecop-as0147).
