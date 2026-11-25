@@ -7,20 +7,29 @@ countries: [w1]
 application-area: [all]
 ---
 
-# Primary-key and field-type changes are safe only on tables without existing data
+# Distinguish supported field widening from breaking schema changes
 
 ## Description
 
-Primary-key changes and field-type changes (for example widening `Integer` to `BigInteger`) rewrite the on-disk layout of every row in the table. On a new feature table that ships in the same change as the modification, no rows exist and the change is free. On an existing table that already holds tenant data — base-app tables, ledger entries, anything that has been live across releases — the same change can fail outright (key uniqueness violations, value overflow on conversion) or require a full table rewrite during the upgrade window. Either way, the change needs an explicit migration design, not just a metadata edit.
+Not every field-type change is an unsupported schema break. Starting with runtime 18.0 (BC 29 / 2026 release wave 2), the platform supports widening an existing table field from `Integer` to `BigInteger`, including a ledger's `Entry No.`, while retaining existing data. This does not authorize narrowing, arbitrary type conversions, or changing the primary-key field list. A new table's initial schema remains free to choose; changes to published tables must be assessed against the actual platform-supported upgrade rules.
 
 ## Best Practice
 
-Treat primary-key and field-type changes as restricted to tables introduced in the same change. For changes on tables with existing data, design and ship the corresponding upgrade procedure (typically backed by `DataTransfer` and an upgrade tag) that guarantees the new layout is achievable for every row, and verify with concrete evidence that the existing values fit the new constraint (no PK collisions, no value-range overflow).
+On runtime 18.0+, widen an existing `Integer` field to `BigInteger` in place when needed, retaining its field ID and the existing primary/clustered key field list and order. Do not require a replacement table, deletion of ledger data, force synchronization, `DataTransfer`, or an upgrade tag solely for this supported conversion. Before runtime 18.0, do not assume the conversion is supported.
+
+Review deployment impact and dependent code separately. Related identifier fields, register bounds, variables, procedure parameters, and returns must accommodate the widened values; existing `Integer` consumers can still overflow above 2,147,483,647. AS0146 is a warning about dependent-extension compatibility, not a blanket prohibition on the field conversion.
+
+For unsupported schema changes, preserve the published schema or design a supported migration, such as a replacement table populated by upgrade code with `DataTransfer` and an upgrade tag. Merely adding an upgrade codeunit does not legalize an otherwise rejected field or key edit. [Changing a published key's field list](../data-modeling/do-not-change-primary-key.md) remains a separate breaking change.
 
 See sample: [`breaking-changes-only-on-tables-without-data.good.al`](breaking-changes-only-on-tables-without-data.good.al).
 
 ## Anti Pattern
 
-Changing the primary key on a base-app table, or widening / narrowing a field type on a table that has been shipping for releases, with no accompanying upgrade plan. The change compiles cleanly and may even deploy on an empty-ish tenant, then fails on customers who actually have data.
+Narrowing a published `BigInteger` field to `Integer`, changing the published primary-key field list, or assuming arbitrary type conversions are supported because the target table is empty in a test tenant. Conversely, rejecting supported runtime 18.0+ `Integer`-to-`BigInteger` widening merely because the table contains data is a false positive.
 
 See sample: [`breaking-changes-only-on-tables-without-data.bad.al`](breaking-changes-only-on-tables-without-data.bad.al).
+
+## References
+
+- [AS0146: field widening from runtime 18.0 and dependent-extension caveats](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/analyzers/appsourcecop-as0146).
+- [Base Application ledger entry numbers expanded to 64 bit](https://github.com/microsoft/BCApps/pull/10834).

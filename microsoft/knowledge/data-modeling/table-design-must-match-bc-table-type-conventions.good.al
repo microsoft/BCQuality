@@ -2,8 +2,8 @@ table 50120 "Sample Ledger Entry"
 {
     fields
     {
-        // Ledger primary key: Integer "Entry No.", set only by posting.
-        field(1; "Entry No."; Integer) { AutoIncrement = true; }
+        // BigInteger is a valid ledger key; Integer remains valid where sufficient.
+        field(1; "Entry No."; BigInteger) { AutoIncrement = true; }
         field(2; "Posting Date"; Date) { }
         field(3; Amount; Decimal) { }
     }

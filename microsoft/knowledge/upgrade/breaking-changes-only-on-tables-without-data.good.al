@@ -1,6 +1,6 @@
-// New feature table introduced in the same change as the keys / field types.
-// No existing data, so the layout is free to choose.
-table 50232 "New Feature Table"
+// Existing published table, upgraded on runtime 18.0+.
+// Field 1 was Integer; widening preserves its ID, key shape, and existing data.
+table 50232 "Sample Ledger Entry"
 {
     fields
     {
