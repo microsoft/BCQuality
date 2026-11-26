@@ -185,7 +185,20 @@ returned `body`, then request `remainingPaths` with
 `continuation.snapshot` as `-Snapshot` until `complete` is `true`, preserving
 the other request settings. Continuation is confined to that chunk. Bodies are
 original strict UTF-8 text with source byte counts and SHA-256 content hashes;
-they are never summarized or truncated. Samples are not loaded unless
+they are never summarized or truncated. Never clip helper output with
+`Substring`, `Select-Object -First`, or a file-reader display limit. Parse one
+bounded JSON page and expose its article bodies as multiline text for reading:
+
+```powershell
+$page = & (Join-Path $root 'tools\Get-KnowledgeArticles.ps1') -Paths @($exactPath) | ConvertFrom-Json
+$page.articles | ForEach-Object { $_.path; $_.body }
+```
+
+Inspect `complete`, `remainingPaths`, and `continuation.snapshot` on that page
+before requesting the next page as described above. Printing a body is not
+proof that the host received it through EOF: if the host truncates the display,
+continue with bounded native reads through EOF or use a smaller batch. Never
+cite an article whose complete body could not be read. Samples are not loaded unless
 requested explicitly with `-Samples` and exact sibling paths; their sibling
 article must match its prepared hash and contain the exact READ link.
 

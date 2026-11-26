@@ -2,6 +2,7 @@ table 50372 "Loyalty Member"
 {
     Caption = 'Loyalty Member';
     DataClassification = CustomerContent;
+    Permissions = tabledata "Loyalty Point Entry" = rd;
 
     fields
     {
@@ -33,6 +34,14 @@ table 50372 "Loyalty Member"
     trigger OnModify()
     begin
         TestField(Blocked, false);
+    end;
+
+    trigger OnDelete()
+    var
+        LoyaltyPointEntry: Record "Loyalty Point Entry";
+    begin
+        LoyaltyPointEntry.SetRange("Member No.", "No.");
+        LoyaltyPointEntry.DeleteAll(true);
     end;
 }
 

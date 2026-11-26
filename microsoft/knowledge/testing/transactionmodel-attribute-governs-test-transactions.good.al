@@ -1,3 +1,4 @@
+// [FEATURE] Customer maintenance
 codeunit 50153 "Test Sample TransModel Good"
 {
     Subtype = Test;
@@ -8,8 +9,11 @@ codeunit 50153 "Test Sample TransModel Good"
     var
         Customer: Record Customer;
     begin
+        // [SCENARIO] A customer record is created in the test body
+        // [GIVEN] a new customer record
         Customer.Init();
         Customer."No." := 'T-001';
+        // [WHEN] the customer record is inserted
         Customer.Insert(true);
     end;
 
@@ -19,6 +23,8 @@ codeunit 50153 "Test Sample TransModel Good"
     var
         PostingRoutine: Codeunit "Posting Routine With Commit";
     begin
+        // [SCENARIO] A customer record is created by the customer routine
+        // [WHEN] the routine that creates the customer is run
         PostingRoutine.PostCustomer();
     end;
 }

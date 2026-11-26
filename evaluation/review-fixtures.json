@@ -3,8 +3,36 @@
   "selection": "first-paired-al-article",
   "minimumExpectedRecall": 1.0,
   "minimumCleanRate": 1.0,
-  "coverageWaivers": [],
+  "coverageWaivers": [
+    {
+      "path": "microsoft/knowledge/reporting/do-not-rename-or-remove-shipped-report-dataset-columns.md",
+      "reason": "The defect is a change relative to a released version; a single neutralized sample cannot show which column names shipped before."
+    },
+    {
+      "path": "microsoft/knowledge/reporting/reportextension-layouts-are-not-selected-automatically.md",
+      "reason": "The defect is the expectation that the layout becomes the default; the code alone is identical to a legitimate optional layout once comments are removed."
+    }
+  ],
+  "keepComments": [
+    {
+      "article": "microsoft/knowledge/testing/test-feature-scenario-tags.md",
+      "reason": "The rule is about the [FEATURE]/[SCENARIO]/[GIVEN]/[WHEN]/[THEN] comment tags themselves; stripping full-line comments removes the tags from the good sample."
+    },
+    {
+      "article": "microsoft/knowledge/style/al-comments-must-not-restate-what-code-already-shows.md",
+      "reason": "The rule is about comments themselves; stripping full-line comments leaves its bad sample with no comments, so the rule can never fire."
+    }
+  ],
   "overrides": {
+    "copilot": {
+      "articles": [
+        "call-azure-openai-through-the-ai-module",
+        "check-aoai-operation-response-before-using-output",
+        "keep-user-input-out-of-the-system-message",
+        "register-copilot-capability-on-install-and-upgrade",
+        "save-promptdialog-proposals-only-when-the-user-keeps-them"
+      ]
+    },
     "agents": {
       "article": "wire-all-three-agent-interfaces"
     },
@@ -14,6 +42,8 @@
     "data-modeling": {
       "articles": [
         "activate-new-price-calculation-handler-via-onfindsupportedsetup",
+        "business-state-must-have-a-domain-owner",
+        "calcfields-blob-before-reading-its-stream",
         "check-blocked-in-referencing-code-not-in-master",
         "code-must-not-change-workdate",
         "custom-document-dispatch-must-not-bypass-report-selections",
@@ -27,6 +57,7 @@
         "new-price-source-must-add-candidate-and-trigger-recalculation",
         "pictures-must-use-media-not-blob",
         "report-barcodes-must-use-barcode-module-and-production-font-name",
+        "round-calculated-unit-prices-to-unit-amount-precision",
         "table-design-must-match-bc-table-type-conventions",
         "tablerelation-field-length-must-match-related-field",
         "transferfields-mirrored-fields-must-match-type-and-length"
@@ -44,7 +75,9 @@
       "articles": [
         "reset-ishandled-only-when-the-value-can-carry-over",
         "changecompany-runs-triggers-in-the-calling-company",
-        "database-trigger-setup-flags-may-only-be-set-to-true"
+        "database-trigger-setup-flags-may-only-be-set-to-true",
+        "isolated-events-are-isolated-only-outside-a-write-transaction",
+        "isolated-event-rollback-does-not-undo-var-parameters"
       ]
     },
     "finance": {
@@ -76,6 +109,7 @@
         "store-scheduled-task-id-to-avoid-duplicate-tasks",
         "design-covering-keys-from-read-pattern",
         "review-overlapping-keys-before-adding-an-index",
+        "justify-low-selectivity-fields-in-key-columns",
         "setcurrentkey-sets-sort-order-not-index-hint",
         "preserve-buffered-inserts-by-separating-target-reads",
         "aggregate-before-persisting-intermediate-results",
@@ -83,15 +117,18 @@
         "avoid-repeating-unchanged-validation",
         "avoid-get-inside-loop-on-large-table",
         "isempty-before-findset-is-extra-round-trip",
+    "boolean-operators-do-not-short-circuit",
         "query-results-bypass-primary-key-cache",
         "calcsums-instead-of-calcfields-in-loop",
         "use-setautocalcfields-for-per-row-flowfields",
         "temporary-tables-have-no-database-cost",
         "use-setloadfields-for-partial-records",
+        "addloadfields-for-trigger-only-fields-on-api-pages",
         "prefer-modifyall-over-per-row-modify",
         "al-methods-limited-during-write-transactions",
         "avoid-user-prompts-inside-transactions",
-        "use-grouped-query-for-distinct-values-and-duplicates"
+        "use-grouped-query-for-distinct-values-and-duplicates",
+        "compute-role-center-headlines-in-the-background"
       ]
     },
     "privacy": {
@@ -104,6 +141,8 @@
     "query": {
       "articles": [
         "dataitemtablefilter-cannot-be-overwritten-at-runtime",
+        "every-non-aggregated-query-column-is-a-group-key",
+        "query-dataitems-default-to-left-outer-join",
         "reopening-query-resets-cursor-but-keeps-filters",
         "set-query-filters-before-open",
         "setfilter-overwrites-query-columnfilter"
@@ -114,7 +153,7 @@
         "clear-report-variable-before-independent-runmodal",
         "currreport-break-ends-the-current-trigger",
         "currreport-quit-rolls-back-and-skips-onpostreport",
-        "currreport-skip-does-not-stop-trigger-code",
+        "declare-report-layouts-in-the-rendering-section",
         "report-output-in-a-loop-needs-one-client-download",
         "reportextension-dataitem-trigger-order-is-explicit",
         "reportextension-report-triggers-run-after-base-triggers",
@@ -140,7 +179,9 @@
       "articles": [
         "al-has-no-built-in-htmlencode",
         "do-not-concatenate-external-text-into-setfilter",
-        "exposed-objects-must-be-in-a-permission-set"
+        "exposed-objects-must-be-in-a-permission-set",
+        "page-scope-filters-must-not-be-in-filtergroup-zero",
+        "restore-the-filtergroup-after-setting-hidden-filters"
       ]
     },
     "style": {
@@ -149,7 +190,8 @@
         "dateformula-evaluate-needs-language-independent-literals",
         "al-comments-must-not-restate-what-code-already-shows",
         "pages-must-not-contain-business-logic",
-        "mutating-procedure-for-a-page-caller-takes-var-record"
+        "mutating-procedure-for-a-page-caller-takes-var-record",
+        "build-client-links-with-geturl"
       ]
     },
     "telemetry": {
@@ -169,8 +211,14 @@
         "transactionmodel-attribute-governs-test-transactions",
         "ui-test-codeunit-naming",
         "use-assert-isfalse-not-asserterror-for-boolean-checks",
-        "recordref-open-temp-parameter-defeats-real-table-checks"
-      ]
+        "recordref-open-temp-parameter-defeats-real-table-checks",
+        "triage-posted-table-license-failures-against-baseline"
+      ],
+      "articleOverrides": {
+        "triage-posted-table-license-failures-against-baseline": {
+          "context": "Target Business Central 29.2, worldwide standard application (w1), online sandbox. This entire test codeunit is newly added by the change. Microsoft Application Test Library and its dependencies are installed. The executing user is licensed and permitted to post purchase invoices and read posted invoices, but the effective license grants only indirect Insert on TableData 122 Purch. Inv. Header. The company has valid purchase posting groups and VAT setup for the library-created vendor/item, a populated purchase invoice posting number series, and permits posting on WorkDate(). The standard test runner applies TestPermissions and uses TestIsolation = Function."
+        }
+      }
     },
     "ui": {
       "articles": [
@@ -179,16 +227,27 @@
         "page-client-expression-must-not-use-in-list",
         "rolecenter-permission-gating-must-use-accessbypermission",
         "notification-recall-needs-known-id",
-        "list-page-document-routing-uses-page-management"
+        "list-page-document-routing-uses-page-management",
+        "reset-per-row-page-variables-in-onaftergetrecord"
       ]
     },
     "upgrade": {
       "articles": [
         "initvalue-does-not-update-existing-rows",
         "upgrade-tag-logic-must-not-nest-deeply",
-        "no-changecompany-in-upgrade"
+        "no-changecompany-in-upgrade",
+        "datatransfer-for-bulk-init",
+        "datatransfer-skips-triggers-and-subscribers"
       ],
-      "context": "The extended table existed in the previous app version and already contains rows."
+      "context": "The extended table existed in the previous app version and already contains rows.",
+      "articleOverrides": {
+        "datatransfer-for-bulk-init": {
+          "context": "Target Business Central 28, worldwide. The Upgrade Entry table existed in the previous app version, currently contains 12 rows in this company, and has no enforced row-count limit. It is an accumulating entry history that can realistically grow to large volumes in other companies. The Category Code field is added by this version and is initialized from Legacy Code for positive entry numbers. There are no table triggers or subscribers for writes to this table. The shown helper is called from an existing per-company upgrade-tag guard outside this example."
+        },
+        "datatransfer-skips-triggers-and-subscribers": {
+          "context": "Target Business Central 28, worldwide. The Upgrade Price Schedule table existed in the previous app version and contains rows with nonzero Quantity and Amount values other than Quantity multiplied by 50. The Unit Price field is added by this version; the other fields already existed. Amount equals Quantity multiplied by Unit Price; Outstanding Amount equals Amount minus Invoiced Amount. There are no external subscribers for this table. The shown helper is called from an existing per-company upgrade-tag guard outside this example."
+        }
+      }
     },
     "web-services": {
       "articles": [
@@ -197,8 +256,18 @@
         "check-http-status-before-consuming-response-body",
         "check-json-null-before-converting-values",
         "format-exchanged-values-with-standard-format-9",
-        "api-page-least-privilege-write-access"
-      ]
+        "api-page-least-privilege-write-access",
+        "set-text-encoding-on-streams-exchanged-externally",
+        "describe-api-pages-for-mcp-with-abouttext"
+      ],
+      "articleOverrides": {
+        "describe-api-pages-for-mcp-with-abouttext": {
+          "context": "Target Business Central online version 28. The API page and API query in this input are exposed as tools through Business Central's built-in MCP server.",
+          "cleanContexts": {
+            "non-mcp": "Target Business Central online version 28. The API page and API query in this input serve a REST integration only and are not exposed through MCP."
+          }
+        }
+      }
     }
   }
 }

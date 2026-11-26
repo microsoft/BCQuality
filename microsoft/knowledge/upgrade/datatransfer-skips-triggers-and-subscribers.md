@@ -1,7 +1,7 @@
 ---
 bc-version: [21..]
 domain: upgrade
-keywords: [datatransfer, validate-trigger, event-subscriber, side-effects, business-logic]
+keywords: [datatransfer, validate, onvalidate, onmodify, event-subscriber, derived-data, copyfields, business-logic]
 technologies: [al]
 countries: [w1]
 application-area: [all]
@@ -11,18 +11,26 @@ application-area: [all]
 
 ## Description
 
-`DataTransfer` writes sets directly at the database layer, so row-based triggers and events do not run. For `CopyFields`, that includes the table `OnModify` trigger and `OnBeforeModifyEvent`/`OnAfterModifyEvent`; direct field assignment also does not call field `OnValidate` or its validation events. These are separate behaviors: `Record.Validate(Field, Value)` runs field validation, while `Record.Modify(true)` runs the table `OnModify` trigger. Calling `Modify(true)` does not retroactively validate assigned fields.
+`DataTransfer` writes sets directly at the database layer, so row-based triggers and events do not run. `CopyFields` skips the table `OnModify` trigger and modification events; `CopyRows` skips the corresponding insert trigger and events. Direct field assignment does not call field `OnValidate` or its validation events: `Record.Validate(Field, Value)` runs field validation, while `Record.Modify(true)` separately runs the table `OnModify` trigger.
 
-For *new fields and tables added in the same change* this is fine: nothing yet depends on the validation. For *pre-existing fields with validation logic*, `DataTransfer` quietly bypasses business logic that may be load-bearing for posting, calculation, or integration scenarios.
+A field or table being newly introduced does not by itself prove that bypassing logic is safe. A new field can have validation logic that maintains derived data, and an existing table can already have triggers and subscribers that must observe writes, including subscribers in other extensions.
 
 ## Best Practice
 
-Use `DataTransfer` when set-based transfer is safe and row-level business logic is intentionally unnecessary — initial population of a new field is the canonical case. When an existing field's validation must run, loop through records and call `Validate(Field, Value)`; if the table's modify trigger must also run, follow with `Modify(true)`. If performance requires `DataTransfer`, document exactly which field-validation and row-modification triggers or subscribers are intentionally bypassed and verify that derived data remains correct.
+Use `DataTransfer` when set-based transfer preserves the required result and row-level business logic can safely be skipped. Establish which field-validation, insert/modify, and subscriber logic is bypassed and verify that affected invariants and derived data remain correct or are populated explicitly by the migration. For existing load-bearing logic, record the specific bypass and how correctness was verified; intent or a comment alone is not proof of safety.
+
+When field validation must run, loop through records and call `Validate(Field, Value)`. If the table's `OnModify` trigger must also run, follow with `Modify(true)`; `Modify(true)` does not retroactively validate assigned fields. The required business effects, not record count or field newness, determine whether a record loop is needed.
 
 See sample: [`datatransfer-skips-triggers-and-subscribers.good.al`](datatransfer-skips-triggers-and-subscribers.good.al).
 
 ## Anti Pattern
 
-Reaching for `DataTransfer` to update an existing field with non-trivial `OnValidate` or `OnModify` logic, without confirming that both validation and row-modification subscribers can be skipped. Replacing it with only `Modify(true)` is also incomplete when field validation is required; call `Validate` for that field first.
+Using `DataTransfer` when skipped validation, table triggers, or subscribers are required to keep related or derived data correct, including when the field being written is new. Replacing it with only `Modify(true)` is also incomplete when field validation is required. Missing documentation alone is not evidence of a functional defect; identify the required effect that would be lost.
 
 See sample: [`datatransfer-skips-triggers-and-subscribers.bad.al`](datatransfer-skips-triggers-and-subscribers.bad.al).
+
+## References
+
+- [Microsoft Learn: Transferring data between tables using DataTransfer](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-data-transfer) — row-based triggers and events are not executed.
+- [Microsoft Learn: Record.Validate](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/methods-auto/record/record-validate-method) — runs field validation.
+- [Microsoft Learn: Record.Modify](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/methods-auto/record/record-modify-method) — `RunTrigger` controls the table `OnModify` trigger.

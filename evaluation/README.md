@@ -13,7 +13,65 @@ substitute for domain coverage. The generated coverage report includes totals
 and per-domain ratios; the ratio is informational, while changed-file coverage
 is mandatory.
 
+On pull requests, changed paths are measured from the first parent of the
+checked-out synthetic merge to that merge, so coverage uses the base actually
+tested rather than a potentially stale event `base.sha`. Pushes retain the
+event's before-to-after comparison (or last-commit fallback for an absent/zero
+before SHA). The collector fails if a PR checkout is not a two-parent merge or
+Git cannot resolve a requested comparison. Regression checks run in fixture CI
+and can also be run with `pwsh .github/scripts/Test-ReviewChangedPaths.ps1`.
+
 Model-facing preparation hashes case IDs, neutralizes `Good`/`Bad` object-name tokens, and removes full-line sample comments so neither the article slug, domain, nor expected outcome reveals the answer.
+
+One kind of full-line comment is kept in every sample, the standalone BDD tag line: `//`, optional spaces or tabs, then one of the uppercase tags `[FEATURE]`, `[SCENARIO]`, `[GIVEN]`, `[WHEN]` or `[THEN]`, followed by a space, a tab or the end of the line. These tags are the evidence the testing articles read (`test-feature-scenario-tags`, `given-blocks-must-cover-full-precondition-chain`, `test-one-when-per-test`), so every selected testing sample with `[Test]` procedures carries them, except the untagged `test-feature-scenario-tags` positive. Other case or spelling (`[Given]`), longer tokens (`[WHENEVER]`), punctuation after the bracket (`[WHEN]:`), `///` comments and tags after code are not tag lines; inline comments after code are never removed. A kept tag line reaches the model, so it must describe the step neutrally and on one line: validation fails when a tag line in a selected sample contains `Good`, `Bad` or `anti-pattern`, checked before neutralization, and an explanation for human readers belongs in an ordinary comment line, which preparation removes. The patterns live in `tools/Review-FixtureText.ps1`.
+
+When applicability depends on deployment facts that AL cannot establish, use
+`articleOverrides` within the domain override, keyed by a selected article's
+exact slug (without `.md`). Each entry requires a non-empty `context` string.
+It replaces the domain-wide context for that article's positive and clean pair
+and survives in all prepared request formats. Include all necessary deployment
+facts, but no expected finding, article path, fix, or assessment of code quality.
+Other selected articles retain their existing domain context, if any.
+
+An article entry can also supply `cleanContexts`, an object mapping lowercase
+hyphenated control names to non-empty context strings. Each control reuses the
+article's `.bad.al` source with that context and expects no findings. Its stable
+manifest ID is `<domain>-<slug>-clean-<name>`; model-facing IDs remain opaque.
+Use this only when changing the deployment prerequisite makes the same source
+legitimate. The MCP description article supplies Business Central online 28 and
+MCP exposure to both normal cases, then adds a REST-only, non-MCP clean context.
+This controls applicability without treating every API lacking `AboutText` as
+a defect. Invalid or unselected article overrides fail validation.
+
+The context regression check runs the real preparer and scorer, verifies all
+three request formats, context isolation, unchanged neutralization, mandatory
+clean controls, and rejection of findings on the non-MCP input. It also checks
+exact and near-miss BDD tag lines, that every prepared input minus its kept tag
+lines equals the previous preparation, and that an outcome label in a tag line
+fails validation:
+
+```powershell
+pwsh ./tools/Test-ReviewFixtureContexts.ps1 -Root .
+```
+
+The reporting Skip clarification is intentionally unpaired. Its former
+`currreport-skip-does-not-stop-trigger-code` positive assumed that statements
+after a direct `Skip()` ran in the same trigger; BC 28.4 evidence contradicts
+that premise. Both obsolete companions and their override were retired, not
+relabelled as a new defect. Negative knowledge remains available to reviewers
+without inventing a positive for this paired-only harness. The separate Break
+loop-control pair remains selected. No coverage waiver is needed for an
+article without a pair.
+
+The core AL samples for BLOB loading, isolated shipment events, expense-page
+scope filters, and stream encoding include their minimal demo tables in each
+companion independently. BLOB field types and shipment status members therefore
+survive preparation without relying on another sample. The stream-encoding
+clean control deliberately writes UTF-8 text and downloads the existing bytes
+through a default-encoding InStream: transport alone does not transcode text
+and must not trigger the encoding rule.
+
+An article whose rule is about comments themselves cannot be evaluated once its samples lose their full-line comments. List it under `keepComments` in `review-fixtures.json` (an `article` path and a non-empty `reason`) and preparation keeps that article's sample comments; `Good`/`Bad` tokens are still neutralized. Use it only when the rule is about the comments, and prefer `coverageWaivers` when keeping them would reveal the expected outcome.
 
 The SCM `articles` override deliberately selects every rule in the initial
 functional domain, producing nine positive cases and nine clean controls.
@@ -36,6 +94,18 @@ Do not move these prerequisites into comments that preparation removes.
 Clean samples also retain supported operational edits, temporary ledger/set
 buffers, legitimate entry-number APIs, and reads of individual shortcut
 dimensions so these exceptions are exercised rather than blanket-excluded.
+
+The testing license-failure pair supplies BC 29.2 deployment context only to
+that article: the codeunit is newly introduced, purchase posting is licensed,
+and direct insertion into the real posted header is not. Both companions
+retain their fixture construction and retrieval after neutralization. The
+clean companion visibly creates the vendor and invoice and sets the posting
+date, consistent with the separate GIVEN-chain rule. The specific posted-write
+cue owns that construction defect instead of emitting duplicate generic
+fixture or missing-field findings. The pair exercises the introduced-fixture
+branch of the rule; it does not prove
+baseline-relative attribution from a standalone file, reproduce a tenant's
+license checks, or establish that every SaaS identity has these rights.
 
 ## Validate the corpus
 
@@ -64,7 +134,7 @@ pwsh ./tools/Test-ReviewFixtures.ps1 -Root . -ChangedPathsFile .changed-paths.tx
 
 2. For a fast/small model, use one fresh invocation per `request-case-*.json`. Each request embeds the exact leaf instructions, that domain's candidate index rows with authoritative paths, and one opaque case. The model opens only matching articles and copies finding IDs from `candidateArticles[].path`. Save each response with the matching `result-case-*.json` name in the same directory.
 
-  `request-<domain>.json` files provide optional leaf batches containing every selected case for that domain and identify the selected layer-owned skill path; save those as `result-<domain>.json`. A normal convention-selected domain has one bad/good pair, while an `articles` override contributes one pair per listed article. Directory scoring prefers `result-case-*.json` when present and otherwise falls back to `result-*.json`. `review-request.json` is an optional all-domains stress test for larger models. Neither batch form is the preferred fast-model profile.
+  `request-<domain>.json` files provide optional leaf batches containing every selected case for that domain and identify the selected layer-owned skill path; save those as `result-<domain>.json`. A normal convention-selected domain has one bad/good pair, while an `articles` override contributes one pair per listed article plus any registered context controls. Directory scoring prefers `result-case-*.json` when present and otherwise falls back to `result-*.json`. `review-request.json` is an optional all-domains stress test for larger models. Neither batch form is the preferred fast-model profile.
 
 3. Save only this result shape:
 

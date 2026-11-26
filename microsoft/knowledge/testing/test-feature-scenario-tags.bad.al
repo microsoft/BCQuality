@@ -18,7 +18,6 @@ codeunit 50102 "Item Price Testing"
         SalesHeader: Record "Sales Header";
         SalesLine: Record "Sales Line";
     begin
-        // setup mixed with assertions, no clear layers, no FEATURE/SCENARIO/GIVEN/WHEN/THEN tags
         LibrarySales.CreateCustomer(Customer);
         LibraryInventory.CreateItem(Item);
         LibraryPriceCalculation.CreatePriceHeader(

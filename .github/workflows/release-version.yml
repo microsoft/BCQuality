@@ -64,6 +64,18 @@ jobs:
             echo "::error::Tag ${tag} already exists"
             exit 1
           fi
+
+          # The plugin version shown by hosts must identify this content
+          # release. Bump both manifests in a PR before running this workflow.
+          expected="${major}.${minor}.0"
+          for manifest in plugin.json .claude-plugin/marketplace.json; do
+            actual="$(grep -oE '"version"[[:space:]]*:[[:space:]]*"[^"]+"' "$manifest" | head -1 | sed -E 's/.*"([^"]+)"$/\1/')"
+            if [[ "$actual" != "$expected" ]]; then
+              echo "::error file=${manifest}::Plugin version is '${actual}', expected '${expected}' for release ${tag}. Update both plugin manifests before releasing."
+              exit 1
+            fi
+          done
+
           git tag "$tag" "${{ github.sha }}"
           git push origin "$tag"
           echo "Released BCQuality ${tag} at ${{ github.sha }}"

@@ -1,3 +1,4 @@
+// [FEATURE] Item master data
 codeunit 50142 "Sample Test Library"
 {
     Subtype = Test;
@@ -31,12 +32,16 @@ codeunit 50142 "Sample Test Library"
     var
         Item: Record Item;
     begin
+        // [SCENARIO] A test changes the description of the shared item and reverts the change
+        // [GIVEN] the shared item fixture is initialized
         Initialize();
 
+        // [WHEN] the description of the shared item is changed
         Item.Get(SharedItemNo);
         Item.Description := 'Scratch change this test makes and does not need to keep.';
         Item.Modify();
 
+        // [THEN] the scratch change is rolled back
         asserterror Error(RollBackMsg);
         // Rolls back the Modify() above, but not the fixture: that was
         // already committed inside Initialize().
@@ -47,11 +52,15 @@ codeunit 50142 "Sample Test Library"
     var
         Item: Record Item;
     begin
+        // [SCENARIO] The shared item can be read by a second test
+        // [GIVEN] the shared item fixture is initialized
         // Runs after FirstTestUsesSharedFixture's deliberate rollback.
         // Initialize() sees Initialized = true and does nothing, but the
         // committed fixture it created earlier is still there to Get().
         Initialize();
 
+        // [WHEN] the shared item is read by its number
+        // [THEN] the shared item is found
         Item.Get(SharedItemNo);
     end;
 }

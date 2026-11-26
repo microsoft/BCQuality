@@ -1,3 +1,4 @@
+// [FEATURE] Customer master data
 codeunit 50408 "Test AssertError Good"
 {
     Subtype = Test;
@@ -7,13 +8,16 @@ codeunit 50408 "Test AssertError Good"
     var
         Customer: Record Customer;
     begin
+        // [SCENARIO] A customer record with a blank name raises a mandatory field error
+        // [GIVEN] a customer record with a blank name
         Customer.Init();
         Customer.Name := '';
 
-        // [WHEN] a mandatory field is blank
+        // [WHEN] the name field is checked as mandatory
         asserterror Customer.TestField(Name);
 
-        // [THEN] verify the SPECIFIC failure through a reusable Library helper
+        // [THEN] the blank name is rejected by the mandatory field check
+        // Verify the SPECIFIC failure through a reusable Library helper
         // instead of hardcoding the localized message and the 'TestField' code.
         // ExpectedTestFieldError centralizes that knowledge, so the test keeps
         // working when the caption or code changes; FieldCaption avoids pinning

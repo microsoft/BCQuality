@@ -5,11 +5,13 @@ var
     SalesInvoiceHeader: Record "Sales Invoice Header";
     InvoiceNo: Code[20];
 begin
-    // [GIVEN] a sales order — posting groups left to whatever exists in the test company
+    // [SCENARIO] Posting a sales order results in a posted sales invoice record
+    // [GIVEN] a sales order
+    // Posting groups are left to whatever exists in the test company.
     LibrarySales.CreateSalesOrder(SalesHeader);
-    // [WHEN]
+    // [WHEN] the sales order is posted
     InvoiceNo := LibrarySales.PostSalesDocument(SalesHeader, false, true);
-    // [THEN]
+    // [THEN] the posted sales invoice record exists
     SalesInvoiceHeader.Get(InvoiceNo);
     Assert.RecordIsNotEmpty(SalesInvoiceHeader);
 end;
