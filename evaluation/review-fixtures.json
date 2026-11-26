@@ -79,8 +79,14 @@
         "database-trigger-setup-flags-may-only-be-set-to-true",
         "isolated-events-are-isolated-only-outside-a-write-transaction",
         "isolated-event-rollback-does-not-undo-var-parameters",
-        "avoid-raising-events-inside-try-functions"
-      ]
+        "avoid-raising-events-inside-try-functions",
+        "register-workflow-libraries-through-extension-points"
+      ],
+      "articleOverrides": {
+        "register-workflow-libraries-through-extension-points": {
+          "context": "Target Business Central 29, worldwide. The shown file contains all code that registers or recreates this extension's custom workflow library entries. An enabled workflow uses the custom purchase approval event and the standard Create Approval Requests response."
+        }
+      }
     },
     "finance": {
       "articles": [
