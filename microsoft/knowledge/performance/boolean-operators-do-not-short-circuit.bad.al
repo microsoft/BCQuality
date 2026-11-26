@@ -16,6 +16,18 @@ codeunit 50541 "Perf Sample NoShortCircuit Bad"
         exit((CustomerNo <> '') and Customer.Get(CustomerNo) and (Customer.Blocked <> Customer.Blocked::" "));
     end;
 
+    procedure GetEntryDescription(EntryNo: Integer): Text[100]
+    var
+        SampleEntry: Record "G/L Entry";
+    begin
+        // Nothing breaks here, but Get still runs for EntryNo = 0 (meaning "not set")
+        // although the guard already excludes its result.
+        SampleEntry.SetLoadFields(Description);
+        if (EntryNo <> 0) and SampleEntry.Get(EntryNo) then
+            exit(SampleEntry.Description);
+        exit('');
+    end;
+
     procedure IsEligibleForFreeShipping(SalesHeader: Record "Sales Header"): Boolean
     begin
         // HasActiveLoyaltyBenefit runs even when the amount alone already qualifies,

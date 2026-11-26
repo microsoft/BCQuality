@@ -189,6 +189,11 @@ Maintainers cut content releases on demand, roughly monthly, using the
 both `plugin.json` and `.claude-plugin/marketplace.json` to
 `{major}.{minor}.0`, so hosts show a version that identifies the release.
 
+The maintainer preparing each release also owns refreshing the
+[contributor snapshot](contributors.md#corrections-and-updates) and README
+spotlight. Merge their matching counts, source revision, and snapshot dates
+before running the workflow; the workflow does not update them automatically.
+
 Use a minor bump for normal content updates and a major bump for breaking
 changes. The minor is a monotonic counter: it increments across releases and
 does **not** reset on a major bump. See

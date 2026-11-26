@@ -29,4 +29,4 @@ See sample: [`use-tryfunction-for-error-catching-not-rollback.bad.al`](use-tryfu
 
 ## See also
 
-`microsoft/knowledge/error-handling/ignored-tryfunction-return-disables-try-semantics.md` owns the separate call-site rule that a try method's Boolean result must be consumed.
+`microsoft/knowledge/error-handling/ignored-tryfunction-return-disables-try-semantics.md` owns the separate call-site rule that only a call that consumes the Boolean result catches errors; `microsoft/knowledge/error-handling/bare-tryfunction-call-propagates-errors.md` records that a bare call propagates them as intended.
