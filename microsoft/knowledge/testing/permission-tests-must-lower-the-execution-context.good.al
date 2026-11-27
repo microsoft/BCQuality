@@ -1,11 +1,5 @@
-permissionset 50480 "LIMITED USER"
-{
-    Assignable = true;
-    Permissions =
-        tabledata Customer = R,
-        codeunit "Protected Setup Action" = X;
-}
-
+// The change adds Insert to CUSTOMER EDITOR so that its users can run the setup action.
+// A test lowers the execution context to CUSTOMER EDITOR and runs that action.
 permissionset 50485 "CUSTOMER EDITOR"
 {
     Assignable = true;
@@ -33,25 +27,6 @@ codeunit 50482 "Customer Permission Tests"
 
     var
         Assert: Codeunit "Library Assert";
-
-    [Test]
-    procedure LimitedUserHasNoWriteAccessToCustomers()
-    var
-        Customer: Record Customer;
-        PermissionsMock: Codeunit "Permissions Mock";
-    begin
-        // [FEATURE] [Permissions]
-        // [SCENARIO] A user with LIMITED USER cannot write customers
-        // [GIVEN] The execution context is lowered to LIMITED USER
-        PermissionsMock.Start();
-        PermissionsMock.Set('LIMITED USER');
-
-        // [WHEN] The test reads the user's write permission on Customer
-        // [THEN] Write permission is not granted
-        Assert.IsFalse(Customer.WritePermission(), 'LIMITED USER must not grant write access to Customer.');
-
-        PermissionsMock.Stop();
-    end;
 
     [Test]
     procedure CustomerEditorCanRunSetupAction()
