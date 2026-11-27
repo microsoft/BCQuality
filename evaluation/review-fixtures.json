@@ -53,15 +53,22 @@
         "extend-find-entries-navigate-for-new-document-types",
         "extend-price-source-type-must-sync-document-subset-enum",
         "extend-report-selection-usage-for-new-document-types",
+        "init-does-not-reset-primary-key-before-reinsert",
         "master-data-must-be-inserted-with-trigger",
         "new-price-source-must-add-candidate-and-trigger-recalculation",
+        "only-cascade-derived-field-update-when-not-user-overridden",
         "pictures-must-use-media-not-blob",
         "report-barcodes-must-use-barcode-module-and-production-font-name",
         "round-calculated-unit-prices-to-unit-amount-precision",
         "table-design-must-match-bc-table-type-conventions",
         "tablerelation-field-length-must-match-related-field",
         "transferfields-mirrored-fields-must-match-type-and-length"
-      ]
+      ],
+      "articleOverrides": {
+        "only-cascade-derived-field-update-when-not-user-overridden": {
+          "context": "Target Business Central 29.2, worldwide standard application (w1). The table \"Equipment Model\" and its card page already exist with numbering in place: a No. Series field, its setup and the assignment in OnInsert exist unchanged and are omitted from this file, which shows only what the change touches. The change under review adds only the \"Search Name\" field with its key, the Name OnValidate code that derives it, and the \"Search Name\" field on the card page."
+        }
+      }
     },
     "error-handling": {
       "articles": [
