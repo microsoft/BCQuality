@@ -82,8 +82,16 @@ foreach ($id in $licenseIds) {
         Assert-True ($keys -ceq 'context,file,id') 'The posted-table license case reveals internal fixture metadata.'
     }
 }
-foreach ($case in @($testing.cases | Where-Object id -notin $licenseIds)) {
-    Assert-True ($case.PSObject.Properties.Name -notcontains 'context') 'License-specific context leaked to another testing article.'
+$permissionSlug = 'permission-tests-must-lower-the-execution-context'
+$permissionContext = $fixtureManifest.overrides.testing.articleOverrides.$permissionSlug.context
+$permissionIds = @('bad', 'good' | ForEach-Object { Get-OpaqueId "testing-$permissionSlug-$_" })
+foreach ($id in $permissionIds) {
+    $case = @($testing.cases | Where-Object id -eq $id)
+    Assert-True ($case.Count -eq 1) 'The permission-set coverage case must occur once in the testing request.'
+    Assert-True ($case[0].context -ceq $permissionContext) 'The permission-set coverage case lost its test-app context.'
+}
+foreach ($case in @($testing.cases | Where-Object { $_.id -notin $licenseIds -and $_.id -notin $permissionIds })) {
+    Assert-True ($case.PSObject.Properties.Name -notcontains 'context') 'Article-specific context leaked to another testing article.'
 }
 
 $performance = Get-Content -LiteralPath (Join-Path $prepared 'request-performance.json') -Raw | ConvertFrom-Json
