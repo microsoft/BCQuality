@@ -1,5 +1,5 @@
 ---
-bc-version: ["16.."]
+bc-version: [16..]
 domain: performance
 keywords: [dataaccessintent, read-only, read-scale-out, report, api-page, query]
 technologies: [al]

@@ -86,6 +86,30 @@ foreach ($case in @($testing.cases | Where-Object id -notin $licenseIds)) {
     Assert-True ($case.PSObject.Properties.Name -notcontains 'context') 'License-specific context leaked to another testing article.'
 }
 
+$performance = Get-Content -LiteralPath (Join-Path $prepared 'request-performance.json') -Raw | ConvertFrom-Json
+$performanceContextIds = @()
+foreach ($performanceSlug in 'dataaccessintent-readonly-on-analytical-objects', 'prefer-related-table-over-extension-on-hot-ledgers') {
+    $context = $fixtureManifest.overrides.performance.articleOverrides.$performanceSlug.context
+    Assert-True (-not [string]::IsNullOrWhiteSpace($context)) "Missing performance deployment context: $performanceSlug"
+    foreach ($kind in 'bad', 'good') {
+        $id = Get-OpaqueId "performance-$performanceSlug-$kind"
+        $performanceContextIds += $id
+        $single = Get-Content -LiteralPath (Join-Path $prepared "request-$id.json") -Raw | ConvertFrom-Json
+        foreach ($request in $all, $performance, $single) {
+            $case = @($request.cases | Where-Object id -eq $id)
+            Assert-True ($case.Count -eq 1) "Performance case $performanceSlug/$kind must occur once in each request format."
+            Assert-True ($case[0].context -ceq $context) "Performance case $performanceSlug/$kind lost its deployment context."
+            $keys = @($case[0].PSObject.Properties.Name | Sort-Object) -join ','
+            Assert-True ($keys -ceq 'context,file,id') "Performance case $performanceSlug/$kind reveals internal fixture metadata."
+        }
+        $articlePath = "microsoft/knowledge/performance/$performanceSlug.md"
+        Assert-True ($articlePath -cin @($single.candidateArticles.path)) "Performance case $performanceSlug/$kind lost its primary candidate."
+    }
+}
+foreach ($case in @($performance.cases | Where-Object id -notin $performanceContextIds)) {
+    Assert-True ($case.PSObject.Properties.Name -notcontains 'context') 'Article-specific context leaked to another performance article.'
+}
+
 # Exercise scoring through the public CLI. Other positive cases intentionally
 # have no findings; only the context control's specific diagnostics are asserted.
 $results = [pscustomobject]@{ cases = @($all.cases | ForEach-Object { [pscustomobject]@{ id = $_.id; findings = @() } }) }

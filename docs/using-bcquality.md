@@ -251,6 +251,7 @@ Each article describes one concern. Where samples exist, use its linked
 | User interface | [UI](../microsoft/knowledge/ui/) |
 | Upgrades | [Upgrade](../microsoft/knowledge/upgrade/) |
 | APIs and web services | [Web services](../microsoft/knowledge/web-services/) |
+| XMLports | [XMLport](../microsoft/knowledge/xmlport/) |
 
 ## Permissions and data
 
